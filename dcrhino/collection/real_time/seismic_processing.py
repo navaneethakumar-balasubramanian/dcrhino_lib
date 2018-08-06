@@ -20,9 +20,9 @@ from scipy.interpolate import interp1d
 import scipy.linalg
 import scipy.signal as ssig
 
-from dcrhino.analysis.util.general_helper_functions import init_logging
-from dcrhino.common.signal_processing.supporting_segy_processing import sampling_rate_segy_trace
-logger = init_logging(__name__)
+#from dcrhino.analysis.util.general_helper_functions import init_logging
+#from dcrhino.common.signal_processing.supporting_segy_processing import sampling_rate_segy_trace
+#logger = init_logging(__name__)
 
 ACOUSTIC_VELOCITY = 4755
 MOUNT_POINTS_MONT_WRIGHT = ['mount_24_inch', 'mount_10_inch', 'mount_24_inch_180deg', 'mount_10_inch_180deg']

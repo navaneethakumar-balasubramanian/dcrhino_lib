@@ -35,25 +35,33 @@ def main():
 #                    plt.figure(1)
 #                    plt.plot(du.digitizer_timestamps,du.axial_data,'k',marker=".");
                     uniformly_sampled_data = du.interpolate_data(du.axial_data)
+                    uniformly_sampled_data_var = np.var(uniformly_sampled_data)
+                    raw_var = np.var(du.axial_data)
+                    var_ratio = raw_var/uniformly_sampled_data_var
+                    if var_ratio > 2:
+                        pdb.set_trace()
                     deconvolved_data, r_xx0 = du.deconvolve_trace(uniformly_sampled_data)
                     pdb.set_trace()
                     correlated_trace = du.correlate_trace(uniformly_sampled_data, deconvolved_data)
                     filtered_correlated_trace = du.bandpass_filter_trace(correlated_trace)
                     trimmed_corr_trace = du.trim_trace(filtered_correlated_trace)
-                    status = write_to_db_using_thiago_function()
+                    #status = write_to_db_using_thiago_function()
 
                     pdb.set_trace()
-                    plt.plot(du.ideal_timestamps,int_data,'r',marker=".");
-                    plt.figure(2)
-                    plt.plot(du.digitizer_timestamps,du.tangential_data,'k',marker=".");
-                    int_data = du.interpolate_data(du.tangential_data)
-                    plt.plot(du.ideal_timestamps,int_data,'r',marker=".");
-                    plt.show()
+#                    plt.figure(1)
+#                    plt.plot(du.digitizer_timestamps, du.axial_data, 'k', marker=".")
+#                    plt.plot(du.ideal_timestamps, uniformly_sampled_data, 'r', marker=".")
+                     plt.title("Axial Data Var: {}, Interp Data Var:{}, Ratio: {}".format(raw_var,uniformly_sampled_data_var,var_ratio))
+#                    plt.figure(2)
+#                    plt.plot(du.digitizer_timestamps,du.tangential_data,'k',marker=".");
+#                    uniformly_sampled_data = du.interpolate_data(du.tangential_data)
+#                    plt.plot(du.ideal_timestamps,uniformly_sampled_data,'r',marker=".");
+#                    plt.show()
                     du.move_to_next_data_interval()
                     t1 = datetime.now()
                     collection_time = t1-t0
                     print("Took {} seconds to fetch new data".format(collection_time))
-                    print(du.metadata)
+#                    print(du.metadata)
 #                    time.sleep(1-collection_time.total_seconds())
     #                pdb.set_trace()
             #           print('natal wrote data, going to sleep')

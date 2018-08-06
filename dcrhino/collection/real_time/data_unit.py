@@ -131,7 +131,7 @@ class DataUnit(object):
             if self.data_exists_in_database():
 #                pdb.set_trace()
                 print("fetching {} to {}".format(self.data_interval.starttime,self.data_interval.endtime))
-                query = "select ts_secs,ts_micro,x,y from rhino where ts_secs >= {} and ts_secs < {}".format(self.data_interval.starttime.strftime('%s'),self.data_interval.endtime.strftime('%s'))
+                query = "select ts_secs,ts_micro,x,y from rhino where ts_secs >= {} and ts_secs < {} order by ts_secs,ts_micro".format(self.data_interval.starttime.strftime('%s'),self.data_interval.endtime.strftime('%s'))
                 print(query)
 
                 #Fetch data from the database
