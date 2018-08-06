@@ -1,0 +1,112 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="RHINO">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Mine">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="Country"/>
+              <xs:element type="xs:string" name="Company"/>
+              <xs:element type="xs:string" name="Name"/>
+			  <xs:element type="xs:string" name="Engineer"/>
+              <xs:element name="Drills">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Drill" maxOccurs="unbounded" minOccurs="0">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element type="xs:string" name="Rig_Type"/>
+                          <xs:element type="xs:string" name="Rig_Manufacturer"/>
+                          <xs:element type="xs:string" name="Rig_ID"/>
+                          <xs:element type="xs:string" name="Drill_Type"/>
+                          <xs:element type="xs:string" name="MWD_Type"/>
+                          <xs:element type="xs:string" name="Bit_Type"/>
+                          <xs:element type="xs:string" name="Bit_Date"/>
+                          <xs:element name="Drillstring">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element type="xs:string" name="Total_Length"/>
+                                <xs:element type="xs:string" name="Component1"/>
+                                <xs:element type="xs:string" name="Component2"/>
+                                <xs:element type="xs:string" name="Component3"/>
+                                <xs:element type="xs:string" name="Component4"/>
+                                <xs:element type="xs:string" name="Component5"/>
+                                <xs:element type="xs:string" name="Component6"/>
+                                <xs:element type="xs:string" name="Component7"/>
+                                <xs:element type="xs:string" name="Component8"/>
+                                <xs:element type="xs:string" name="Component9"/>
+                                <xs:element type="xs:string" name="Component10"/>
+                              </xs:sequence>
+                            </xs:complexType>
+                          </xs:element>
+                          <xs:element name="Sensors">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="Sensor" maxOccurs="unbounded" minOccurs="0">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element type="xs:string" name="Type"/>
+                                      <xs:element type="xs:string" name="Serial_Number"/>
+                                      <xs:element type="xs:string" name="Position"/>
+                                      <xs:element type="xs:string" name="Piezo_Sample_Rate"/>
+                                      <xs:element type="xs:string" name="Piezo_Max_G"/>
+                                      <xs:element type="xs:string" name="MEMS_Sample_Rate"/>
+                                      <xs:element type="xs:string" name="MEMS_Max_G"/>
+                                      <xs:element type="xs:string" name="Axial_Axis"/>
+                                      <xs:element type="xs:string" name="Tangential_Axis"/>
+                                      <xs:element name="Data">
+                                        <xs:complexType>
+                                          <xs:sequence>
+                                            <xs:element name="Files">
+                                              <xs:complexType>
+                                                <xs:sequence>
+                                                  <xs:element name="File" maxOccurs="unbounded" minOccurs="0">
+                                                    <xs:complexType>
+                                                      <xs:sequence>
+                                                        <xs:element type="xs:string" name="Date"/>
+                                                        <xs:element type="xs:string" name="Filename"/>
+                                                        <xs:element name="Blastholes">
+                                                          <xs:complexType>
+                                                            <xs:sequence>
+                                                              <xs:element name="Blasthole" maxOccurs="unbounded" minOccurs="0">
+                                                                <xs:complexType>
+                                                                  <xs:sequence>
+                                                                    <xs:element type="xs:string" name="Record_ID" minOccurs="0"/>
+                                                                    <xs:element type="xs:string" name="Number"/>
+                                                                    <xs:element type="xs:string" name="StartTime"/>
+                                                                    <xs:element type="xs:string" name="EndTime"/>
+                                                                  </xs:sequence>
+                                                                </xs:complexType>
+                                                              </xs:element>
+                                                            </xs:sequence>
+                                                          </xs:complexType>
+                                                        </xs:element>
+                                                        <xs:element type="xs:string" name="Comments"/>
+                                                      </xs:sequence>
+                                                    </xs:complexType>
+                                                  </xs:element>
+                                                </xs:sequence>
+                                              </xs:complexType>
+                                            </xs:element>
+                                          </xs:sequence>
+                                        </xs:complexType>
+                                      </xs:element>
+                                    </xs:sequence>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
