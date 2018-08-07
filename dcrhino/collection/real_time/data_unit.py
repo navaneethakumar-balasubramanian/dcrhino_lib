@@ -59,10 +59,11 @@ class DataInterval(object):
 
 class DataUnit(object):
 
-    def __init__(self):
-
+    def __init__(self,logger_file):
+       self._temp_starttime_of_database = None
        self._parameters = self._read_config_file()
        self.metadata = Metadata()
+       self.logger = logger_file
        self.output_sampling_rate = int(self._parameters["OUTPUTSAMPLINGRATE"]["Value"])
        self.trace_length = int(self._parameters["TRACELENGTH"]["Value"])
        self.channels_per_sensor = int(self._parameters["CHANNELSPERSENSOR"]["Value"])
@@ -82,6 +83,7 @@ class DataUnit(object):
 #       pdb.set_trace()
 #       self.gpsd = gps(mode=WATCH_ENABLE)
        self._fetch_data()
+       
 
 
 
@@ -89,16 +91,18 @@ class DataUnit(object):
     #Returns a datetime object with the initial second
     @property
     def effective_starttime_of_database(self):
-        #get the timestamp of the first full second of the database
-#        pdb.set_trace()
-        query = "select ts_secs from rhino where ts in (select min(ts) from rhino where ts_micro<={})".format(int(math.ceil(1000000/self.output_sampling_rate)))
-#        print(query)
-        ts_secs = dbc.query(self.dbconn,query)
-        if len(ts_secs)>0:
-            return datetime.fromtimestamp(ts_secs[0][2])
-        else:
-            return datetime.fromtimestamp(int(datetime.now().strftime("%s")))
+        if self._temp_starttime_of_database == None:
+            #get the timestamp of the first full second of the database
+    #        pdb.set_trace()
+            query = "select ts_secs from rhino where ts in (select min(ts) from rhino where ts_micro<={})".format(int(math.ceil(1000000/self.output_sampling_rate)))
+    #        print(query)
+            ts_secs = dbc.query(self.dbconn,query)
+            if len(ts_secs)>0:
+                self._temp_starttime_of_database = datetime.fromtimestamp(ts_secs[0][2])
+            else:
+                return datetime.fromtimestamp(int(datetime.now().strftime("%s")))
 
+        return self._temp_starttime_of_database
 #        query = "select ts_secs,ts_micro from rhino where ts in (select min(ts) from rhino)"
 #        time_components = dbc.query(self.dbconn,query)
 #        seconds = int(time_components[0][2])
@@ -131,8 +135,10 @@ class DataUnit(object):
             if self.data_exists_in_database():
 #                pdb.set_trace()
                 print("fetching {} to {}".format(self.data_interval.starttime,self.data_interval.endtime))
+                self.write_to_log("fetching {} to {}".format(self.data_interval.starttime,self.data_interval.endtime))
                 query = "select ts_secs,ts_micro,x,y from rhino where ts_secs >= {} and ts_secs < {} order by ts_secs,ts_micro".format(self.data_interval.starttime.strftime('%s'),self.data_interval.endtime.strftime('%s'))
                 print(query)
+                self.write_to_log(query)
 
                 #Fetch data from the database
                 raw_data = dbc.query(self.dbconn,query)
@@ -298,6 +304,9 @@ class DataUnit(object):
             return True
         else:
             return False
+        
+    def write_to_log(self,message):
+        self.logger.write(message+"\n")
 
     @property
     def status(self):

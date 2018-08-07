@@ -23,17 +23,18 @@ import os
 def main():
     try:
 #        pdb.set_trace()
-        du = DataUnit()
-        log = open("log.txt","w")
+        log = open("log-{}.txt".format(str(datetime.now())),"w")
+        du = DataUnit(log)
     #    STATUS_PATH = du.params["PATH"]
         while True:
+            t0 = datetime.now()
 #            du.gpsd.next()
             if du.data_exists_in_database():
         #        if du.status == 'busy':
                 #pdb.set_trace()
                 if du.data_interval_in_database():
                     print('Fetching')
-                    t0 = datetime.now()
+                    
                     du._fetch_data()
 #                    plt.figure(1)
 #                    plt.plot(du.digitizer_timestamps,du.axial_data,'k',marker=".");
@@ -42,7 +43,7 @@ def main():
                     raw_var = np.var(du.axial_data)
                     var_ratio = raw_var/uniformly_sampled_data_var
                     if var_ratio > 2:
-                        log.write("Bad trace at {}".format(du.data_interval.starttime))
+                        du.write_to_log("Bad trace at {}".format(du.data_interval.starttime))
                     deconvolved_data, r_xx0 = du.deconvolve_trace(uniformly_sampled_data)
                     correlated_trace = du.correlate_trace(uniformly_sampled_data, deconvolved_data)
                     filtered_correlated_trace = du.bandpass_filter_trace(correlated_trace)
@@ -65,9 +66,6 @@ def main():
                     fig1.clf()
                     fig2.clf()
                     du.move_to_next_data_interval()
-                    t1 = datetime.now()
-                    collection_time = t1-t0
-                    print("Took {} seconds to fetch new data".format(collection_time))
 #                    print(du.metadata)
 #                    time.sleep(1-collection_time.total_seconds())
     #                pdb.set_trace()
@@ -86,6 +84,10 @@ def main():
                 os.system( 'clear' )
                 print("No Data in Database - Sleeping")
 #                time.sleep(5)
+            t1 = datetime.now()
+            processing_time = t1-t0
+            print("Took {} seconds to process new data".format(processing_time))
+            du.write_to_log("Took {} seconds to process new data".format(processing_time))
 
     except (KeyboardInterrupt, SystemExit): #when you press ctrl+c
         log.close()
