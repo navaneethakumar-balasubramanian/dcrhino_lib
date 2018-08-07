@@ -13,14 +13,16 @@ from __future__ import absolute_import, division, print_function
 from data_unit import DataUnit
 from datetime import datetime
 import time
+import numpy as np
 import matplotlib.pyplot as plt
 import pdb
 import sys
+import os
 
 
 def main():
     try:
-        pdb.set_trace()
+#        pdb.set_trace()
         du = DataUnit()
     #    STATUS_PATH = du.params["PATH"]
         while True:
@@ -41,22 +43,23 @@ def main():
                     if var_ratio > 2:
                         pdb.set_trace()
                     deconvolved_data, r_xx0 = du.deconvolve_trace(uniformly_sampled_data)
-                    pdb.set_trace()
                     correlated_trace = du.correlate_trace(uniformly_sampled_data, deconvolved_data)
                     filtered_correlated_trace = du.bandpass_filter_trace(correlated_trace)
                     trimmed_corr_trace = du.trim_trace(filtered_correlated_trace)
+                    
                     #status = write_to_db_using_thiago_function()
 
-                    pdb.set_trace()
-#                    plt.figure(1)
-#                    plt.plot(du.digitizer_timestamps, du.axial_data, 'k', marker=".")
-#                    plt.plot(du.ideal_timestamps, uniformly_sampled_data, 'r', marker=".")
-                     plt.title("Axial Data Var: {}, Interp Data Var:{}, Ratio: {}".format(raw_var,uniformly_sampled_data_var,var_ratio))
-#                    plt.figure(2)
+#                    pdb.set_trace()
+                    plt.figure(1)
+                    plt.plot(du.digitizer_timestamps, du.axial_data, 'k', marker=".")
+                    plt.plot(du.ideal_timestamps, uniformly_sampled_data, 'r', marker=".")
+                    plt.title("Axial Data Var: {}, Interp Data Var:{}, Ratio: {}".format(raw_var,uniformly_sampled_data_var,var_ratio))
+                    plt.figure(2)
 #                    plt.plot(du.digitizer_timestamps,du.tangential_data,'k',marker=".");
 #                    uniformly_sampled_data = du.interpolate_data(du.tangential_data)
 #                    plt.plot(du.ideal_timestamps,uniformly_sampled_data,'r',marker=".");
-#                    plt.show()
+                    plt.plot(trimmed_corr_trace)
+                    plt.show()
                     du.move_to_next_data_interval()
                     t1 = datetime.now()
                     collection_time = t1-t0
@@ -72,9 +75,11 @@ def main():
             #            print("Processing {}".format(du.status))
             #            du.change_status()
                 else:
+                    os.system( 'cls' )
                     print("Data Interval not in Database - Sleeping")
 #                    time.sleep(5)
-            else:
+            else:    
+                os.system( 'cls' )
                 print("No Data in Database - Sleeping")
 #                time.sleep(5)
 

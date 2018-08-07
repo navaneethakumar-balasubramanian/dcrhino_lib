@@ -92,7 +92,7 @@ class DataUnit(object):
         #get the timestamp of the first full second of the database
 #        pdb.set_trace()
         query = "select ts_secs from rhino where ts in (select min(ts) from rhino where ts_micro<={})".format(int(math.ceil(1000000/self.output_sampling_rate)))
-        print(query)
+#        print(query)
         ts_secs = dbc.query(self.dbconn,query)
         if len(ts_secs)>0:
             return datetime.fromtimestamp(ts_secs[0][2])
