@@ -280,7 +280,7 @@ class DataUnit(object):
 
     def go_to_specific_interval(self,date_time):
         self.data_interval.starttime = date_time
-        self._fetch_data()
+        #self._fetch_data()
         return
 
     def data_exists_in_database(self):

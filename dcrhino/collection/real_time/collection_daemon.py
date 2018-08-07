@@ -24,6 +24,7 @@ def main():
     try:
 #        pdb.set_trace()
         du = DataUnit()
+        log = open("log.txt","w")
     #    STATUS_PATH = du.params["PATH"]
         while True:
 #            du.gpsd.next()
@@ -32,8 +33,8 @@ def main():
                 #pdb.set_trace()
                 if du.data_interval_in_database():
                     print('Fetching')
-                    print("Sensor True Sampling Rate: {}".format(du.metadata.sensor_true_sampling_rate))
                     t0 = datetime.now()
+                    du._fetch_data()
 #                    plt.figure(1)
 #                    plt.plot(du.digitizer_timestamps,du.axial_data,'k',marker=".");
                     uniformly_sampled_data = du.interpolate_data(du.axial_data)
@@ -41,7 +42,7 @@ def main():
                     raw_var = np.var(du.axial_data)
                     var_ratio = raw_var/uniformly_sampled_data_var
                     if var_ratio > 2:
-                        pdb.set_trace()
+                        log.write("Bad trace at {}".format(du.data_interval.starttime))
                     deconvolved_data, r_xx0 = du.deconvolve_trace(uniformly_sampled_data)
                     correlated_trace = du.correlate_trace(uniformly_sampled_data, deconvolved_data)
                     filtered_correlated_trace = du.bandpass_filter_trace(correlated_trace)
@@ -50,16 +51,19 @@ def main():
                     #status = write_to_db_using_thiago_function()
 
 #                    pdb.set_trace()
-                    plt.figure(1)
+                    fig1 = plt.figure(1)
                     plt.plot(du.digitizer_timestamps, du.axial_data, 'k', marker=".")
                     plt.plot(du.ideal_timestamps, uniformly_sampled_data, 'r', marker=".")
-                    plt.title("Axial Data Var: {}, Interp Data Var:{}, Ratio: {}".format(raw_var,uniformly_sampled_data_var,var_ratio))
-                    plt.figure(2)
+                    plt.title("Data Interval From {} to {}\n Original Sampling Rate {} \nAxial Data Var: {}, Interp Data Var:{}, Ratio: {}".format(du.data_interval.starttime,du.data_interval.endtime,du.metadata.sensor_true_sampling_rate,raw_var,uniformly_sampled_data_var,var_ratio))
+                    fig2 = plt.figure(2)
 #                    plt.plot(du.digitizer_timestamps,du.tangential_data,'k',marker=".");
 #                    uniformly_sampled_data = du.interpolate_data(du.tangential_data)
 #                    plt.plot(du.ideal_timestamps,uniformly_sampled_data,'r',marker=".");
                     plt.plot(trimmed_corr_trace)
-                    plt.show()
+                    plt.show(block=False)
+                    plt.pause(0.05)
+                    fig1.clf()
+                    fig2.clf()
                     du.move_to_next_data_interval()
                     t1 = datetime.now()
                     collection_time = t1-t0
@@ -75,19 +79,17 @@ def main():
             #            print("Processing {}".format(du.status))
             #            du.change_status()
                 else:
-                    os.system( 'cls' )
+                    os.system( 'clear' )
                     print("Data Interval not in Database - Sleeping")
 #                    time.sleep(5)
             else:    
-                os.system( 'cls' )
+                os.system( 'clear' )
                 print("No Data in Database - Sleeping")
 #                time.sleep(5)
 
-#    except (KeyboardInterrupt, SystemExit): #when you press ctrl+c
-#        print ("\nKilling Thread...")
-#        du.gpsp.running = False
-#        du.gpsp.join() # wait for the thread to finish what it's doing
-#        print ("Done.\nExiting.")
+    except (KeyboardInterrupt, SystemExit): #when you press ctrl+c
+        log.close()
+        print ("Done.\nExiting.")
     except:
         print(sys.exc_info())
         pdb.set_trace()
