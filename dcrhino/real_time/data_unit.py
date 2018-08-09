@@ -25,6 +25,10 @@ from copy import copy
 import math
 from time import *
 import sys
+
+import calendar
+
+
 #from gps import *
 
 #from dcrhino.analysis.signal_processing.firls_bandpass import FIRLSFilter
@@ -56,10 +60,12 @@ class DataInterval(object):
         self._starttime = self.endtime
 
     def starttime_timestamp(self):
-        return int(self.starttime.strftime('%s'))
+        return calendar.timegm(self.starttime.utctimetuple())
+        #return int(self.starttime.strftime('%s'))
 
     def endtime_timestamp(self):
-        return int(self.endtime.strftime('%s'))
+        return calendar.timegm(self.endtime.utctimetuple())
+        #return int(self.endtime.strftime('%s'))
 
 
 class DataUnit(object):
@@ -119,13 +125,16 @@ class DataUnit(object):
         if self._temp_starttime_of_database == None:
             #get the timestamp of the first full second of the database
     #        pdb.set_trace()
+
             query = "select ts_secs from {} where ts in (select min(ts) from {} where ts_micro<={})".format(self.db_raw_data_table,self.db_raw_data_table,int(math.ceil(1000000/self.output_sampling_rate)))
     #        print(query)
             ts_secs = dbc.query(self.dbconn,query)
             if len(ts_secs)>0:
-                self._temp_starttime_of_database = datetime.fromtimestamp(ts_secs[0][2])
+                #print("UTC HERE : " + str( datetime.utcfromtimestamp(ts_secs[0][2])))
+                self._temp_starttime_of_database = datetime.utcfromtimestamp(ts_secs[0][2])
+
             else:
-                return datetime.fromtimestamp(int(datetime.now().strftime("%s")))
+                return datetime.utcnow()
 
         return self._temp_starttime_of_database
 #        query = "select ts_secs,ts_micro from rhino where ts in (select min(ts) from rhino)"
@@ -145,7 +154,7 @@ class DataUnit(object):
         query = "select max(ts_secs) as ts_secs from " + self.db_raw_data_table
         ts_secs = dbc.query(self.dbconn,query)
         if len(ts_secs)>0:
-            return datetime.fromtimestamp(ts_secs[0][2])
+            return datetime.utcfromtimestamp(ts_secs[0][2])
         else:
             return None
 
@@ -158,10 +167,13 @@ class DataUnit(object):
     def _fetch_data(self):
         try:
             if self.data_exists_in_database():
-#                pdb.set_trace()
+                #db_raw_data_tableselfpdb.set_trace()
                 print("fetching {} to {}".format(self.data_interval.starttime,self.data_interval.endtime))
                 self.write_to_log("fetching {} to {}".format(self.data_interval.starttime,self.data_interval.endtime))
-                query = "select ts_secs,ts_micro,x,y from {} where ts_secs >= {} and ts_secs < {} order by ts_secs,ts_micro".format(self.db_raw_data_table,self.data_interval.starttime.strftime('%s'),self.data_interval.endtime.strftime('%s'))
+
+                startdate_utc_timestamp = calendar.timegm(self.data_interval.starttime.utctimetuple())
+                enddate_utc_timestamp = calendar.timegm(self.data_interval.endtime.utctimetuple())
+                query = "select ts_secs,ts_micro,x,y from {} where ts_secs >= {} and ts_secs < {} order by ts_secs,ts_micro".format(self.db_raw_data_table,startdate_utc_timestamp,enddate_utc_timestamp)
                 self.write_to_log(query)
                 print(query)
                 #Fetch data from the database
@@ -215,10 +227,10 @@ class DataUnit(object):
         if count > 0:
             self.go_to_specific_interval(self.data_interval.endtime)
         else:
-            query = "select ts_secs from {} where ts in (select min(ts) from {} where ts_secs>{} and ts_micro<={})".format(self.db_raw_data_table,self.db_raw_data_tableself.data_interval.endtime_timestamp(),int(math.ceil(1000000/self.output_sampling_rate)))
+            query = "select ts_secs from {} where ts in (select min(ts) from {} where ts_secs>{} and ts_micro<={})".format(self.db_raw_data_table,self.db_raw_data_table,self.data_interval.endtime_timestamp(),int(math.ceil(1000000/self.output_sampling_rate)))
 #            print(query)
             ts_secs = dbc.query(self.dbconn,query)[0][2]
-            self.go_to_specific_interval(datetime.fromtimestamp(ts_secs))
+            self.go_to_specific_interval(datetime.utcfromtimestamp(ts_secs))
         return
 
     def interpolate_data(self, data):

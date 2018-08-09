@@ -22,7 +22,7 @@ class RawDataModel(models.Model):
 
     def set_date_fields(self,date_time):
         my_date = date_time.date()
-        #print (date_time.strftime("%Y-%m-%d") ,date_time.strftime("%s.%f"))
+        #print (str(date_time) ,date_time.strftime("%s.%f"))
         self.dt = my_date.strftime("%Y-%m-%d")
         self.ts = date_time.strftime("%s.%f")
         self.ts_secs = date_time.strftime("%s")
