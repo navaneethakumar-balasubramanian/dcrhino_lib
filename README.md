@@ -8,3 +8,8 @@ git clone git@github.com:DatacloudIntl/dcrhino_lib.git
 cd dcrhino_lib
 
 pip install .
+
+
+or for editmode
+
+pip install -e .
