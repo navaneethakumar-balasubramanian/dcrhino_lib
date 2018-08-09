@@ -15,6 +15,8 @@ class RawDataModel(models.Model):
     z = fields.Int32Field()
     seq2 = fields.Int64Field()
     txseq2 = fields.Int64Field()
+    srl_nmbr = fields.StringField()
+
 
     engine = engines.MergeTree('dt', ('ts_secs', 'ts_micro'))
 
