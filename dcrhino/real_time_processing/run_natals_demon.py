@@ -1,2 +1,0 @@
-from dcrhino.real_time_processing.develop_v01_20180718 import natals_demon_do
-natals_demon_do()
