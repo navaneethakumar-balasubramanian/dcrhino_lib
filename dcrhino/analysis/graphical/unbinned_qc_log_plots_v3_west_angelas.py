@@ -182,7 +182,7 @@ def primary_times_panel(ax, qc_plot_input, x_limits=[None, None], sample_or_poly
 class QCLogPlotter():
     def __init__(self, qc_plot_input, **kwargs):
         self.plot_vs_depth(qc_plot_input)
-
+        
 
 
     def plot_vs_depth(self, qc_plot_input, multi_mode=False):
@@ -234,7 +234,7 @@ class QCLogPlotter():
                             x_limits=[pseudodensity_xlim_min, pseudodensity_xlim_max])
 
         plt.savefig(full_out_file)
-        #plt.show()
+        plt.show()
         plt.clf()
 
 

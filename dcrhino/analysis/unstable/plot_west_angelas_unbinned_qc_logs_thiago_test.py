@@ -98,7 +98,7 @@ def make_qc_log(row):
 
 
 
-    pdb.set_trace()
+    #pdb.set_trace()
 
     QCLogPlotter(qc_input)#, plot_meta=plot_meta)
 
