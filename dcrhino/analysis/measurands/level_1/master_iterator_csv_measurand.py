@@ -16,7 +16,7 @@ import pandas as pd
 import pdb
 from string import zfill
 
-
+from dcrhino.analysis.data_manager.temp_paths import ensure_dir
 from dcrhino.analysis.measurands.data_cloud_measurands import DerivedDataCloudMeasurand
 
 class MasterIterator(DerivedDataCloudMeasurand):

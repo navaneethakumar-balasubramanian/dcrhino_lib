@@ -30,12 +30,12 @@ from dcrhino.analysis.measurands.level_1.slamstix_metadata_table_measurand impor
 from dcrhino.analysis.measurands.level_2.correlated_deconvolved_segy_measurand2 import CorrelatedDeconvolvedSEGY2
 from dcrhino.analysis.measurands.level_2.deconvolved_segy_measurand import DeconvolvedSEGY
 
-from dcrhino.analysis.measurands.level_3.trace_header_features_measurand import TraceHeaderFeaturesMeasurand
+#from dcrhino.analysis.measurands.level_3.trace_header_features_measurand import TraceHeaderFeaturesMeasurand
 from dcrhino.analysis.measurands.level_3.trace_header_features_measurand_v2_EDA import TraceHeaderFeaturesMeasurandEDA
 #from dcrhino.analysis.measurands.level_3.binned_trace_header_features_measurand import BinnedTraceHeaderFeaturesMeasurand
-from dcrhino.analysis.measurands.level_3.binned_trace_header_features_measurand_2_WA import BinnedTraceHeaderFeaturesMeasurand
+#from dcrhino.analysis.measurands.level_3.binned_trace_header_features_measurand_2_WA import BinnedTraceHeaderFeaturesMeasurand
 #from dcrhino.analysis.measurands.level_3.rock_properties_log_measurand_20180702_v1 import RockPropertiesLogMeasurand
-from dcrhino.analysis.measurands.level_3.rock_properties_log_measurand_20180716_v2 import RockPropertiesLogMeasurand
+#from dcrhino.analysis.measurands.level_3.rock_properties_log_measurand_20180716_v2 import RockPropertiesLogMeasurand
 
 from dcrhino.analysis.signal_processing.firls_bandpass import FIRLSFilter
 
@@ -377,13 +377,12 @@ def _create_level2_segy_measurands():
 def _create_level3_measurands():
     """
     """
-    _create_trace_header_measurands()
+#    _create_trace_header_measurands()
     _create_trace_header_eda_measurands()
-    _create_binned_trace_eda_measurands()
+    #_create_binned_trace_eda_measurands()
     #pdb.set_trace()
-    _create_binned_trace_header_measurands()
-    _create_binned_trace_eda_measurands()
-    _create_rock_properties_measurands()
+    #_create_binned_trace_header_measurands()
+    #_create_rock_properties_measurands()
 
 def registered_measurands():
     """
