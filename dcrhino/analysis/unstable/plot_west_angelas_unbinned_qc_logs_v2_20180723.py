@@ -18,13 +18,13 @@ import pandas as pd
 import pdb
 from string import zfill
 
-
 from dcrhino.analysis.graphical.unbinned_qc_log_plots_v3_west_angelas import QCLogPlotter
 import dcrhino.analysis.measurands.measurand_registry_west_angelas as MEASURAND_REGISTRY
 from dcrhino.analysis.measurands.keys.data_key import DigitizerSamplingRateDateDataKey
 from dcrhino.analysis.util.general_helper_functions import init_logging
 #from dcrhino.collection.IDEtoSEGY.trace_header import define_obspy_trace_header
 from dcrhino.analysis.signal_processing.mwd_tools import interpolate_to_assign_depths_to_log_csv
+from dcrhino.analysis.signal_processing.mwd_tools import interpolate_arbitrary_mwd_column
 from dcrhino.analysis.data_manager.temp_paths import ensure_dir
 
 logger = init_logging(__name__)
@@ -42,51 +42,22 @@ level3_csv_out_measurand_id = MEASURAND_REGISTRY._hash_dict[level3_csv_out_measu
 level3_csv_out_measurand = MEASURAND_REGISTRY.measurand(level3_csv_out_measurand_id)
 #pdb.set_trace()
 merged_level_3_path_placeholder = level3_csv_out_measurand.data_level_path()
+
 merged_csv_basename = 'west_angelas_csv_dump_v01_20180815.csv'
 warts_and_all_csv_file = os.path.join(merged_level_3_path_placeholder, merged_csv_basename)
 #warts_and_all_csv_file = '/home/kkappler/west_angelas_csv_dump_v01_20180815.csv'
 output_csv_file = warts_and_all_csv_file
 
-#def extract_unique_hole_ssx_pair_data(df_csv, starttime_str, ):
-#    """
-#    """
-#    dff = df_csv[(df_csv['datetime'] >= starttime_str) & (df_csv['datetime'] <= endtime_str)]
-#    hole_df = hole_profile_df[hole_profile_df['hole_uid']==hole_uid]
-#def set_plotting_metadata(row):
-#    """
-#    This belongs in some class that works with master_iterator.
-#    TODO: merge this function in with master_iterator measurand
-#    """
-#    plot_meta = {}
-#    plot_meta['path'] = os.path.join(level3_csv_out_measurand.data_level_path(), 'unbinned', row.area)
-#    plot_meta['log_path'] = os.path.join(plot_meta['path'], 'logs')
-#    plot_meta['time_log_path'] = os.path.join(plot_meta['path'], 'time_logs')
-#    plot_meta['rop_path'] = os.path.join(plot_meta['path'], 'rop')
-#    #pdb.set_trace()
-#    ensure_dir(plot_meta['log_path'])
-#    ensure_dir(plot_meta['time_log_path'])
-#    ensure_dir(plot_meta['rop_path'])
-#
-#    plot_meta['time_log_filename'] = os.path.join(plot_meta['time_log_path'], '{}{}.png'.format(zfill(row.hole,3),row.hole_uid[-2:]))
-#    plot_meta['log_filename'] = os.path.join(plot_meta['log_path'], '{}{}.png'.format(zfill(row.hole,3),row.hole_uid[-2:]))
-#    plot_meta['rop_filename'] = os.path.join(plot_meta['rop_path'], '{}.png'.format(zfill(row.hole,3)))
-#
-#    plot_meta['row'] = row
-#    return plot_meta
 
 def make_qc_log(row):
     """
     """
-    print(row)
-    #pdb.set_trace()
-    hole = row['hole']
-    hole_uid = row['hole_uid']
+    print(row)#pdb.set_trace()
+    hole = row['hole']; hole_uid = row['hole_uid']; print(hole, hole_uid)
     print("identify the CSV file to load")
     dummy_digitizer_id = row.dummy_digitizer_id
     spoof_date = datetime.datetime.strptime(dummy_digitizer_id[:8], '%Y%m%d').date()
     #print("WARNING: spoof date indicates a findamental issue with data_date and file labelling")
-    print(hole, hole_uid)
-    #pdb.set_trace()
     data_key = DigitizerSamplingRateDateDataKey(dummy_digitizer_id, spoof_date, row.sampling_rate)
 
     try:
@@ -94,23 +65,33 @@ def make_qc_log(row):
     except IOError:
         print("NO CSV {}".format(level3_csv_out_measurand.expected_filename(data_key)))
         return
-    if df_csv is None:
-        return
+#    if df_csv is None:
+#        return
     starttime_str = '{}'.format(row['time_start'])
     endtime_str = '{}'.format(row['time_end'])
-    #pdb.set_trace()
+
     dff = df_csv[(df_csv['datetime'] >= starttime_str) & (df_csv['datetime'] <= endtime_str)]
     hole_df = hole_profile_df[hole_profile_df['hole']==hole]
-    #pdb.set_trace()
+
     plot_meta = master_iterator_measurand.set_plotting_metadata(row)
 
     #TODO: modify so that this fucntion returns dataframe with depth column
     depth = interpolate_to_assign_depths_to_log_csv(dff, hole_df, plot_meta=plot_meta)
+    #FORCE_ON_BIT (N)
+    #pdb.set_trace()
+    wob = interpolate_arbitrary_mwd_column(dff, hole_df, plot_meta=plot_meta)
     dff['depth'] = pd.Series(depth, index = dff.index)
+    dff['wob'] = pd.Series(wob, index = dff.index)
+    #pdb.set_trace()
+    dff['x'] = hole_profile_df[' X']
+    dff['y'] = hole_profile_df[' Y']
+    dff['z'] = hole_profile_df[' Z']
+    #unkerfungle the top of hole
     n_obs_top_of_hole = 10
     top_of_hole = dff[:n_obs_top_of_hole].sort_values('depth', axis=0, ascending=True, inplace=False, kind='quicksort', na_position='last')
     frames = [top_of_hole, dff[n_obs_top_of_hole:]]
     dff = pd.concat(frames)
+
     #spdb.set_trace()
     dff['hole'] = pd.Series(hole, index = dff.index)
     dff['hole_uid'] = pd.Series(hole_uid, index = dff.index)
