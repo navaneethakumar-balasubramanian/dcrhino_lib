@@ -11,6 +11,28 @@ from dcrhino.analysis.supporting_datetime import get_seconds_into_day
 #from dcrhino.constants import DATA_PATH, ROOT_PATH
 #from dcrhino.interval import TimePeriod
 
+def plot_mwd_quantity(plot_meta, column_name, interpolated_data, t_mwd, t_rhino, mwd_data):
+    """
+    """
+    if plot_meta is not None:
+        #if os.path.isfile(plot_meta['rop_filename']):
+        if os.path.isfile(plot_meta[column_name]):
+            return
+    #pdb.set_trace()
+    plt.figure(22)
+    plt.clf()
+    plt.plot(t_mwd, mwd_data, 'b*');
+    plt.plot(t_rhino, interpolated_data, 'r');
+    plt.title("Depth vs Time From Raw MWD hole {}".format(plot_meta['row'].hole))
+    plt.xlabel('Time (s)')
+    plt.ylabel('Depth (m)')
+    plt.grid()
+    plt.savefig(plot_meta[column_name])
+    #plt.show()
+    plt.clf()
+
+    pass
+
 def interpolate_to_assign_depths_to_log_csv(df_peak_info, df_hole_profile, plot_meta=None):
     """
     It is not unusual that the start and end second for the mwd file are the same
@@ -54,10 +76,17 @@ def interpolate_to_assign_depths_to_log_csv(df_peak_info, df_hole_profile, plot_
     seconds_into_day_rhino_start = get_seconds_into_day(t0_rhino)
     seconds_into_day_rhino = seconds_into_day_rhino_start + np.arange(num_traces)
     seconds_into_day_rhino[0] += 1e-9
+
+    t_mwd = seconds_into_day_mwd
+    t_rhino = seconds_into_day_rhino
     #</RHINO TIME>
-    interp_function = interp1d(seconds_into_day_mwd, depths_mwd, kind='linear', bounds_error=False, fill_value='extrapolate')
+    interp_function = interp1d(t_mwd, depths_mwd, kind='linear', bounds_error=False, fill_value='extrapolate')
     #pdb.set_trace()
-    depths = interp_function(seconds_into_day_rhino)
+
+    depths = interp_function(t_rhino)
+    interpolated_depths = depths
+    #this is not working, need to sort out rop_filename meta crap
+    #plot_mwd_quantity(plot_meta, 'depths', interpolated_depths, t_mwd, t_rhino, depths_mwd)
     if plot_meta is not None:
         if os.path.isfile(plot_meta['rop_filename']):
             return depths
@@ -76,12 +105,8 @@ def interpolate_to_assign_depths_to_log_csv(df_peak_info, df_hole_profile, plot_
     return depths
 
 
-def interpolate_arbitrary_mwd_column(df_peak_info, df_hole_profile, plot_meta=None):
+def interpolate_arbitrary_mwd_column(df_peak_info, df_hole_profile, column_label, plot_meta=None):
     """
-    79-142
-    It is not unusual that the start and end second for the mwd file are the same
-    when the drill is cranking fast.  To handle this we should group  somehow..
-
     df_hole_profile: has already been reduced to the hole you are working with
 
     Note: you dont need the df_peak info, just its length and start_datetime
@@ -91,21 +116,12 @@ def interpolate_arbitrary_mwd_column(df_peak_info, df_hole_profile, plot_meta=No
     TODO: address possible wraparound effects of get_seconds_into_day by referencing to
     an absolute time
     """
-    qty_string = 'force_on_bit_newtons'
-    #dummy_hole_id = df_peak_info.dummy_hole_id.min()
-    #t0_mwd = df_hole_profile['time_start'].iloc[0]
-    #z0 = df_hole_profile['start_depth'].iloc[0]
+#    column_label = 'force_on_bit_newtons'
     t0_rhino = df_peak_info['datetime'].iloc[0]
 
-
 #    pdb.set_trace()
-    #row0_time = get_seconds_into_day(t0_mwd)
-    #row0_depth = z0#df_hole_profile['start_depth'][0]
     seconds_into_day_mwd = pd.Series([get_seconds_into_day(x) for x in df_hole_profile['time_end']])
-    mwd_quantity = df_hole_profile[qty_string]
-    #pdb.set_trace()
-#    seconds_into_day_mwd = pd.concat((pd.Series(row0_time), seconds_into_day_mwd), axis=0, ignore_index=True)
-    #depths_mwd = pd.concat((pd.Series(row0_depth), depths))
+    mwd_quantity = df_hole_profile[column_label]
     num_traces = len(df_peak_info)
     seconds_into_day_rhino_start = get_seconds_into_day(t0_rhino)
     seconds_into_day_rhino = seconds_into_day_rhino_start + np.arange(num_traces)
@@ -114,20 +130,20 @@ def interpolate_arbitrary_mwd_column(df_peak_info, df_hole_profile, plot_meta=No
     interp_function = interp1d(seconds_into_day_mwd, mwd_quantity, kind='linear', bounds_error=False, fill_value='extrapolate')
     #pdb.set_trace()
     out_qty = interp_function(seconds_into_day_rhino)
-#    if plot_meta is not None:
-##        if os.path.isfile(plot_meta['rop_filename']):
-##            return depths
-##        #pdb.set_trace()
-#        plt.figure(22)
-#        plt.clf()
-#        plt.plot(seconds_into_day_mwd, mwd_quantity, 'b*');
-#        plt.plot(seconds_into_day_rhino, out_qty, 'r');
-#        plt.title("{} vs Time From Raw MWD hole {}".format('fobn', plot_meta['row'].hole))
-#        plt.xlabel('Time (s)')
-#        plt.ylabel('{}'.format(qty_string))
-#        plt.grid()
-##        plt.savefig(plot_meta['rop_filename'])
-#        plt.show()
+    if plot_meta is not None:
+#        if os.path.isfile(plot_meta['rop_filename']):
+#            return depths
+#        #pdb.set_trace()
+        plt.figure(22)
+        plt.clf()
+        plt.plot(seconds_into_day_mwd, mwd_quantity, 'b*');
+        plt.plot(seconds_into_day_rhino, out_qty, 'r');
+        plt.title("{} vs Time From Raw MWD hole {}".format(column_label, plot_meta['row'].hole))
+        plt.xlabel('Time (s)')
+        plt.ylabel('{}'.format(column_label))
+        plt.grid()
+#        plt.savefig(plot_meta['rop_filename'])
+        plt.show()
 #        plt.clf()
     return out_qty
 

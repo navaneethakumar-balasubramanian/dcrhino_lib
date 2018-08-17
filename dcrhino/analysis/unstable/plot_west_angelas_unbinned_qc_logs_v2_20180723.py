@@ -22,13 +22,10 @@ from dcrhino.analysis.graphical.unbinned_qc_log_plots_v3_west_angelas import QCL
 import dcrhino.analysis.measurands.measurand_registry_west_angelas as MEASURAND_REGISTRY
 from dcrhino.analysis.measurands.keys.data_key import DigitizerSamplingRateDateDataKey
 from dcrhino.analysis.util.general_helper_functions import init_logging
-#from dcrhino.collection.IDEtoSEGY.trace_header import define_obspy_trace_header
 from dcrhino.analysis.signal_processing.mwd_tools import interpolate_to_assign_depths_to_log_csv
 from dcrhino.analysis.signal_processing.mwd_tools import interpolate_arbitrary_mwd_column
-from dcrhino.analysis.data_manager.temp_paths import ensure_dir
 
 logger = init_logging(__name__)
-#define_obspy_trace_header()
 
 MEASURAND_REGISTRY.print_measurand_registry()
 
@@ -48,7 +45,6 @@ warts_and_all_csv_file = os.path.join(merged_level_3_path_placeholder, merged_cs
 #warts_and_all_csv_file = '/home/kkappler/west_angelas_csv_dump_v01_20180815.csv'
 output_csv_file = warts_and_all_csv_file
 
-
 def make_qc_log(row):
     """
     """
@@ -65,8 +61,7 @@ def make_qc_log(row):
     except IOError:
         print("NO CSV {}".format(level3_csv_out_measurand.expected_filename(data_key)))
         return
-#    if df_csv is None:
-#        return
+
     starttime_str = '{}'.format(row['time_start'])
     endtime_str = '{}'.format(row['time_end'])
 
@@ -77,12 +72,35 @@ def make_qc_log(row):
 
     #TODO: modify so that this fucntion returns dataframe with depth column
     depth = interpolate_to_assign_depths_to_log_csv(dff, hole_df, plot_meta=plot_meta)
-    #FORCE_ON_BIT (N)
-    #pdb.set_trace()
-    wob = interpolate_arbitrary_mwd_column(dff, hole_df, plot_meta=plot_meta)
     dff['depth'] = pd.Series(depth, index = dff.index)
-    dff['wob'] = pd.Series(wob, index = dff.index)
+
+#    column_name = 'force_on_bit_newtons'
+#    wob = interpolate_arbitrary_mwd_column(dff, hole_df, column_name, plot_meta=plot_meta)
+#    #dff['wob'] = pd.Series(wob, index = dff.index)
+#    dff[column_name] = pd.Series(wob, index = dff.index)
+
+    columns_to_interpolate = ['force_on_bit_newtons', 'dip', 'BEARING','kRPM','force_on_bit_newtons',
+                             'torque_newtonmeters','AIR_PRESSURE_Pa','VIBRATION',
+                             'ROP(m/hr)','APR','BLASTABILITY']
+
+    for column_name in columns_to_interpolate:
+        print("about to calculate {}".format(column_name))
+        #mwd_data = interpolate_arbitrary_mwd_column(dff, hole_df, column_name, plot_meta=None)#plot_meta)
+        mwd_data = interpolate_arbitrary_mwd_column(dff, hole_df, column_name, plot_meta=plot_meta)
+        dff[column_name] = pd.Series(mwd_data, index = dff.index)
     #pdb.set_trace()
+    """
+    area, hole, machine_id, time_start, time_end, X, Y, Z, ENDX, ENDY, ENDZ,start_depth,end_depth, DEPTH,
+
+    DIP,
+    BEARING,
+    kRPM,
+    FORCE_ON_BIT (N),
+    TORQUE (Nm),
+    AIR_PRESSURE (Pa), VIBRATION, ROCK_TYPE_ID, BIT_TYPE, OPERATOR_MODE, ROP (m/hr), APR, BLASTABILITY,hole_valid
+0,DBC2/710/197,70, 21R15, 2018-07-06 00:32:07, 2018-07-06 00:32:08,13184.536,12072.663,720.068,13184.535,12072.642,719.534,0.0,0.017,0.535,1.53081,3.21236, 0, 37990.5, 1.0071, 0, 0, Unknown, Rotary, Unknown, 288.000, 1.000, 0,1
+
+    """
     dff['x'] = hole_profile_df[' X']
     dff['y'] = hole_profile_df[' Y']
     dff['z'] = hole_profile_df[' Z']
@@ -92,7 +110,7 @@ def make_qc_log(row):
     frames = [top_of_hole, dff[n_obs_top_of_hole:]]
     dff = pd.concat(frames)
 
-    #spdb.set_trace()
+   #pdb.set_trace()
     dff['hole'] = pd.Series(hole, index = dff.index)
     dff['hole_uid'] = pd.Series(hole_uid, index = dff.index)
     qc_log_input = level3_csv_out_measurand.generate_qc_plot_input(df=dff,
@@ -106,11 +124,11 @@ def make_qc_log(row):
     dff['pseudo_density'] = pd.Series(qc_log_input.primary_pseudo_density_sample, index = dff.index)
 
 
-
-    if os.path.isfile(output_csv_file):
-        dff.to_csv(output_csv_file, mode='a', header=False)
-    else:
-        dff.to_csv(output_csv_file)
+#
+#    if os.path.isfile(output_csv_file):
+#        dff.to_csv(output_csv_file, mode='a', header=False)
+#    else:
+#        dff.to_csv(output_csv_file)
 
 
     #QCLogPlotter(qc_log_input, plot_time=True)#, plot_meta=plot_meta)
