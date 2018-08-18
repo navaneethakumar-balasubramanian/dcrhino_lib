@@ -127,7 +127,7 @@ def process_from_ssx_csv_2_eda():
 #        if data_key.digitizer_id in dummy_digitizer_ids_with_density_logs:
 #            print('okwws')
 #            #pdb.set_trace()
-        level3_csv_out_measurand._split_to_npy(data_key)
+        #level3_csv_out_measurand._split_to_npy(data_key)
         #try:
         level3_csv_out_measurand.make(data_key)
 
@@ -141,8 +141,8 @@ def process_from_ssx_csv_2_eda():
 def main():
     """
     """
-    process_from_ssx_csv_2_eda()
-    pdb.set_trace()
+    #process_from_ssx_csv_2_eda()
+    #pdb.set_trace()
     configure_processing_run()
     print("finito {}".format(datetime.datetime.now()))
 
