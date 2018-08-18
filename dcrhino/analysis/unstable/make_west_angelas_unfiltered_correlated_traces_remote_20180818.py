@@ -81,6 +81,7 @@ def configure_processing_run():
                 decon_measurand.make(data_key)
 
                 corr_stream = corr_measurand.make(data_key)
+                #pdb.set_trace()
                 #corr_stream = corr_measurand._make_from_parents(data_key)
                 #corr_measurand._make_from_parents(data_key)
                 corr_measurand._split_to_npy(data_key, st=corr_stream)

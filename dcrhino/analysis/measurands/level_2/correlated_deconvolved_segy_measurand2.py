@@ -211,7 +211,7 @@ class CorrelatedDeconvolvedSEGY2(BoreholeAccelerometerMeasurand):
         #tr = get_segy_trace_by_index(filename, 0)
         #st = DummyStream(); st.traces = [tr,tr, tr, tr, tr, tr,tr, tr, tr]
         #</debug>
-        if st is None:
+        if (st is None) or (st==0):
             #segy_file_to_read = self.expected_filename(data_key)
             st = self.load(data_key)
         tr = st.traces[0]
