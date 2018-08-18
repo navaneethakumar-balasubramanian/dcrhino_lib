@@ -17,6 +17,8 @@ import os
 import pandas as pd
 import pdb
 
+import obspy
+
 import dcrhino.analysis.measurands.measurand_registry_west_angelas as MEASURAND_REGISTRY
 from dcrhino.analysis.measurands.keys.data_key import DigitizerSamplingRateDateDataKey
 from dcrhino.analysis.signal_processing.trace_header import define_obspy_trace_header

@@ -16,7 +16,6 @@ import numpy as np
 import os
 import pandas as pd
 import pdb
-from string import zfill
 
 from dcrhino.analysis.graphical.unbinned_qc_log_plots_v3_west_angelas import QCLogPlotter
 import dcrhino.analysis.measurands.measurand_registry_west_angelas as MEASURAND_REGISTRY
@@ -39,7 +38,6 @@ level3_csv_out_measurand_id = MEASURAND_REGISTRY._hash_dict[level3_csv_out_measu
 level3_csv_out_measurand = MEASURAND_REGISTRY.measurand(level3_csv_out_measurand_id)
 #pdb.set_trace()
 merged_level_3_path_placeholder = level3_csv_out_measurand.data_level_path()
-
 merged_csv_basename = 'west_angelas_csv_dump_v01_20180815.csv'
 warts_and_all_csv_file = os.path.join(merged_level_3_path_placeholder, merged_csv_basename)
 output_csv_file = warts_and_all_csv_file
