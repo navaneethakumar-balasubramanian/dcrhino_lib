@@ -80,10 +80,10 @@ def configure_processing_run():
                 #pdb.set_trace()
                 decon_measurand.make(data_key)
 
-                #corr_stream = corr_measurand.make(data_key)
-                corr_stream = corr_measurand._make_from_parents(data_key)
-                corr_measurand._make_from_parents(data_key)
-                corr_measurand._split_to_npy(data_key)
+                corr_stream = corr_measurand.make(data_key)
+                #corr_stream = corr_measurand._make_from_parents(data_key)
+                #corr_measurand._make_from_parents(data_key)
+                corr_measurand._split_to_npy(data_key, st=corr_stream)
                 #corr_measurand.to_qc_plot(data_key, upper_num_ms=26, show=False)
 #                if isinstance(corr_stream, obspy.core.stream.Stream):
 #                    corr_measurand.to_qc_plot(data_key, st=corr_stream)

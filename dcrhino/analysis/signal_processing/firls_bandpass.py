@@ -68,6 +68,10 @@ class FIRLSFilter(object):
     def make(self, data_key):
         self.nyquist = data_key.sampling_rate / 2.0
 
+        if self.duration is None:
+            self.taps = np.asarray([1.0], dtype='float32')
+            return self.taps
+
         corner_tuple = (0, self.corners[0], self.corners[1], self.corners[2],
                         self.corners[3], self.nyquist)
         taps = ssig.firls(self.n_taps, corner_tuple,
