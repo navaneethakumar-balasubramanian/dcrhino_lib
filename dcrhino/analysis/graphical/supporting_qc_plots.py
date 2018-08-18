@@ -177,7 +177,7 @@ def qc_plot(qc_plot_input, out_filename, data_date, client_project_id,
 #    y_tick_locations = 10*np.arange(7)
 
     ax[1], heatmap1 = plot_hole_as_heatmap(ax[1], cbal.v_min_1, cbal.v_max_1, X, Y,
-      trace_array_dict['vertical'], cmap_string, y_tick_locations,
+      trace_array_dict['axial'], cmap_string, y_tick_locations,
       two_way_travel_time_ms=qc_plot_input.two_way_travel_time_ms,
       multiple_search_back_ms=qc_plot_input.multiple_search_back_ms,
       multiple_search_forward_ms=qc_plot_input.multiple_search_forward_ms)
@@ -201,7 +201,7 @@ def qc_plot(qc_plot_input, out_filename, data_date, client_project_id,
 
     ax[0].text(1.01, 0.8, '{}'.format(data_date), fontsize=13, transform=ax[0].transAxes)
     ax[0].text(1.01, 0.6, '{}'.format(client_project_id), fontsize=13, transform=ax[0].transAxes)
-    ax[1].text(1.01, 0.5, 'vertical', fontsize=11.5, rotation='vertical', transform=ax[1].transAxes)
+    ax[1].text(1.01, 0.5, 'axial', fontsize=11.5, rotation='vertical', transform=ax[1].transAxes)
     ax[2].text(1.01, 0.6, 'tangential', fontsize=11.5, rotation='vertical', transform=ax[2].transAxes)
     ax[3].text(1.01, 0.5, 'radial', fontsize=11.5, rotation='vertical', transform=ax[3].transAxes)
     #ax[0].text(1.01, 0.6, '{}'.format(client_project_id), fontsize=13, transform=ax[0].transAxes)
@@ -268,7 +268,7 @@ def qc_plot_v3(qc_plot_input, out_filename, data_date, client_project_id,
 #    y_tick_locations = 10*np.arange(7)
 
     ax[1], heatmap1 = plot_hole_as_heatmap(ax[1], cbal.v_min_1, cbal.v_max_1, X, Y,
-      trace_array_dict['vertical'], cmap_string, y_tick_locations,
+      trace_array_dict['axial'], cmap_string, y_tick_locations,
       two_way_travel_time_ms=qc_plot_input.two_way_travel_time_ms,
       multiple_max_search_window=qc_plot_input.multiple_max_search_window)
 
@@ -281,7 +281,7 @@ def qc_plot_v3(qc_plot_input, out_filename, data_date, client_project_id,
     cbaxes.yaxis.set_ticks_position('right')
     ax[0].text(1.01, 0.8, '{}'.format(data_date), fontsize=13, transform=ax[0].transAxes)
     ax[0].text(1.01, 0.6, '{}'.format(client_project_id), fontsize=13, transform=ax[0].transAxes)
-    ax[1].text(1.01, 0.5, 'vertical', fontsize=11.5, rotation='vertical', transform=ax[1].transAxes)
+    ax[1].text(1.01, 0.5, 'axial', fontsize=11.5, rotation='vertical', transform=ax[1].transAxes)
 
     if qc_plot_input.center_trace_dict is not None:
         for hole_id, center_trace in qc_plot_input.center_trace_dict.iteritems():

@@ -25,11 +25,11 @@ logger = init_logging(__name__)
 #home = os.path.expanduser("~/")
 
 COMPONENT_WAVELET_MAP = {}
-COMPONENT_WAVELET_MAP['vertical'] = ['primary', 'multiple']
+COMPONENT_WAVELET_MAP['axial'] = ['primary', 'multiple']
 COMPONENT_WAVELET_MAP['tangential'] = ['primary',]# 'multiple']
 COMPONENT_WAVELET_MAP['radial'] = ['primary',]# 'multiple']
 WAVELET_FEATURES = {}
-WAVELET_FEATURES['vertical'] = ['peak_amplitude', 'peak_sample', 'peak_time',
+WAVELET_FEATURES['axial'] = ['peak_amplitude', 'peak_sample', 'peak_time',
                 'peak_time_sample', 'zero_crossing_prior', 'zero_crossing_after',
                 'area', 'pk_error', 'zx_error', 'zero_crossing_prior_sample',
                 'zero_crossing_after_sample', 'left_trough_time', 'left_trough_time_sample']
@@ -75,7 +75,7 @@ class WaveletForFeatureExtraction(object):
         """
         TODO: Factor the case of multiple from primary!
         """
-        if self.component != 'vertical':
+        if self.component != 'axial':
         #    self.peak_amplitude = np.max(self.data)
             return
         if poly_ord is None:

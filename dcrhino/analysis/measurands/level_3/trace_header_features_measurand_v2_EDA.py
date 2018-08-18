@@ -127,7 +127,7 @@ class TraceHeaderFeaturesMeasurandEDA(UniformlySampledMeasurand):
         """
         parent_filename = self.parent_measurands[0].expected_filename(data_key)
         output_dir = os.path.dirname(parent_filename)
-        output_dir = os.path.join(output_dir, 'split', component)
+        output_dir = os.path.join(output_dir, 'split', data_key.digitizer_id, component)
         return output_dir
 
     def _split_to_npy(self, data_key):
@@ -137,12 +137,13 @@ class TraceHeaderFeaturesMeasurandEDA(UniformlySampledMeasurand):
 
         """
         trace_header_operator = DataCloudTraceHeader()
-        pdb.set_trace()
+        #pdb.set_trace()
         parent_filename = self.parent_measurands[0].expected_filename(data_key)
         tr = get_segy_trace_by_index(parent_filename, 0)
 
         #st = DummyStream(); st.traces = [tr,tr, tr, tr, tr, tr,tr, tr, tr]
-        st = _read_segy(self.parent_measurands[0].expected_filename(data_key))
+        segy_file_to_read = self.parent_measurands[0].expected_filename(data_key)
+        st = _read_segy(segy_file_to_read)
         rhino_channel_component_map = self.parent_measurands[0].rhino_channel_map(data_key, tr)
 
         component_labels = [rhino_channel_component_map[x] for x in [0,1,2]]
@@ -246,7 +247,7 @@ class TraceHeaderFeaturesMeasurandEDA(UniformlySampledMeasurand):
             i_comp_obs_ndx = i_trace // 3
 
             for wavelet_type in COMPONENT_WAVELET_MAP[component]:
-                if component == 'vertical':
+                if component == 'axial':
                     print(wavelet_type)
                     if wavelet_type=='primary':
                         wffe = extract_features_from_primary_wavelet(tr, time_vector,
@@ -276,15 +277,15 @@ class TraceHeaderFeaturesMeasurandEDA(UniformlySampledMeasurand):
         features_df['dummy_hole_id'] = pd.Series(dummy_hole_ids_by_time, index=features_df.index)
 
         #pdb.set_trace()
-        cond1 = (features_df['tangential_primary_peak_sample'] > 2 * features_df['vertical_primary_peak_amplitude'])
+        cond1 = (features_df['tangential_primary_peak_sample'] > 2 * features_df['axial_primary_peak_amplitude'])
         features_df.drop(features_df[cond1].index, inplace=True)
         print(len(features_df))
         # above eqivalent to
         #features_df = features_df.drop(features_df[cond1].index)
-        cond2 = (features_df['radial_primary_peak_sample'] > 2 * features_df['vertical_primary_peak_amplitude'])
+        cond2 = (features_df['radial_primary_peak_sample'] > 2 * features_df['axial_primary_peak_amplitude'])
         features_df.drop(features_df[cond2].index, inplace=True)
         print(len(features_df))
-        cond3 = (features_df['vertical_primary_peak_amplitude'] < 0.125)
+        cond3 = (features_df['axial_primary_peak_amplitude'] < 0.125)
         features_df.drop(features_df[cond3].index, inplace=True)
         print(len(features_df))
         self.save_to_csv(data_key, features_df)

@@ -172,7 +172,7 @@ class CorrelatedDeconvolvedSEGY2(BoreholeAccelerometerMeasurand):
                 final_trace.stats.segy.trace_header.peak_index = float(max_refl_ndx)
 
                 trace_channel = rhino_channel_map[i_trace % 3]
-                if trace_channel == 'vertical':
+                if trace_channel == 'axial':
                     max_mult_ampl, max_mult_ndx  = max_multiple_amplitude2(final_trace, search_backward_ms=self.multiple_search_back_ms,
                                                                            search_forward_ms=self.multiple_search_forward_ms)
                     final_trace.stats.segy.trace_header.mult_ampl = max_mult_ampl
@@ -230,8 +230,6 @@ class CorrelatedDeconvolvedSEGY2(BoreholeAccelerometerMeasurand):
             st = self.load(data_key)
 
         rhino_channel_map = rhino_channel_map_from_trace(st.traces[0])
-        #vertical_channel = rhino_channel_map['vertical']
-        #tangential_channel = rhino_channel_map['tangential']
         dt = 1./sampling_rate_segy_trace(st.traces[0])
         travel_distance = 2 * st.traces[0].stats.segy.trace_header.sensor_distance_to_source
         theoretical_two_way_travel_time = travel_distance / ACOUSTIC_VELOCITY
@@ -251,7 +249,7 @@ class CorrelatedDeconvolvedSEGY2(BoreholeAccelerometerMeasurand):
         for unique_hole_id in unique_hole_ids:
             center_trace_dict[unique_hole_id] = int(np.median(np.where(hole_ids_x==unique_hole_id)[0]))
 
-        num_traces_per_component, num_samples = trace_array_dict['vertical'].T.shape
+        num_traces_per_component, num_samples = trace_array_dict['axial'].T.shape
         trace_header_attributes = TraceHeaderAttributes(num_traces_per_component)
         trace_header_attributes.populate_from_stream(st)
 
@@ -278,7 +276,7 @@ class CorrelatedDeconvolvedSEGY2(BoreholeAccelerometerMeasurand):
         #pdb.set_trace()
         TRD = trace_array_dict.copy()
         #TRD[component] = TRD[component]
-        TRD['vertical'] = TRD['vertical'][half_way-samples_back:half_way+samples_fwd,:]
+        TRD['axial'] = TRD['axial'][half_way-samples_back:half_way+samples_fwd,:]
         TRD['tangential'] = TRD['tangential'][half_way-samples_back:half_way+samples_fwd,:]
         TRD['radial'] = TRD['radial'][half_way-samples_back:half_way+samples_fwd,:]
         #</sort out spanning milliseconds>
@@ -288,10 +286,10 @@ class CorrelatedDeconvolvedSEGY2(BoreholeAccelerometerMeasurand):
         trace_array_dict = TRD
         #pdb.set_trace()
         qc_plot_input = QCPlotInputs(trace_array_dict=trace_array_dict,
-                                     peak_ampl_x=trace_header_attributes.peak_ampl_vertical,
+                                     peak_ampl_x=trace_header_attributes.peak_ampl_axial,
                                      peak_ampl_y=trace_header_attributes.peak_ampl_tangential,
                                      peak_ampl_z=trace_header_attributes.peak_ampl_radial,
-                                     peak_mult_x=trace_header_attributes.peak_mult_vertical,
+                                     peak_mult_x=trace_header_attributes.peak_mult_axial,
                                      lower_number_ms=lower_num_ms, upper_number_ms=upper_num_ms,
                                      center_trace_dict=center_trace_dict,
                                      two_way_travel_time_ms=theoretical_two_way_travel_time*1000.,

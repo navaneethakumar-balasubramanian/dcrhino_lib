@@ -19,15 +19,15 @@ import pdb
 
 import dcrhino.analysis.measurands.measurand_registry_west_angelas as MEASURAND_REGISTRY
 from dcrhino.analysis.measurands.keys.data_key import DigitizerSamplingRateDateDataKey
+from dcrhino.analysis.signal_processing.trace_header import define_obspy_trace_header
 from dcrhino.analysis.util.general_helper_functions import init_logging
-#from dcrhino.collection.IDEtoSEGY.trace_header import define_obspy_trace_header
 
 #from dcrhino.analysis.unstable.sanity_checks import sanity_check_mwd_start_end_matches_rhino#(trace_header_df, metadata_df):
 
 logger = init_logging(__name__)
 
 #metadata_file = os.path.join(DATA_PATH, MEASURAND_REGISTRY.PROJECT_ID, 'merged_observer_notes.csv')
-#define_obspy_trace_header()
+define_obspy_trace_header()
 MEASURAND_REGISTRY.print_measurand_registry()
 
 
@@ -101,7 +101,10 @@ def configure_processing_run():
                 #pass
     #<Execute Processing>
 
-
+dummy_digitizer_ids_with_density_logs = ['20180707_SSX15883_5206_Ch08',
+                                         '20180709_SSX34512_5451_Ch08',
+                                         '20180709_SSX64802_5452_Ch08',
+                                         '20180710_SSX34747_5451_Ch08',]
 def process_from_ssx_csv_2_eda():
     """
     """
@@ -111,8 +114,8 @@ def process_from_ssx_csv_2_eda():
     level3_csv_out_measurand_id = MEASURAND_REGISTRY._hash_dict[level3_csv_out_measurand_id_hash]
     level3_csv_out_measurand = MEASURAND_REGISTRY.measurand(level3_csv_out_measurand_id)
 
-    corr_measurand_id = 'correlated2_minlag-0.1-maxlag0.1_firls_80-100-300-350_20ms_deconvolved_sgy_100ms_level1_sgy_piezo'
-    corr_measurand = MEASURAND_REGISTRY.measurand(corr_measurand_id)
+    #corr_measurand_id = 'correlated2_minlag-0.1-maxlag0.1_firls_80-100-300-350_20ms_deconvolved_sgy_100ms_level1_sgy_piezo'
+    #corr_measurand = MEASURAND_REGISTRY.measurand(corr_measurand_id)
 #    level3_csv_out_measurand_id = 'trace_header_features_correlated2_minlag-0.1-maxlag0.1_firls_80-100-300-350_20ms_deconvolved_sgy_100ms_level1_sgy_piezo'
 #    level3_csv_out_measurand = MEASURAND_REGISTRY.measurand(level3_csv_out_measurand_id)
     df = ssx_measurand.load()
@@ -129,17 +132,15 @@ def process_from_ssx_csv_2_eda():
 
         #corr_measurand.to_qc_plot(data_key, upper_num_ms=26, show=True)
         print('about to l3 {} {} {}'.format(data_key.digitizer_id, data_key.data_date, data_key.sampling_rate))
-        pdb.set_trace()
-        #level3_csv_out_measurand._split_to_npy(data_key)
-        try:
-            level3_csv_out_measurand.make(data_key)
-        except IOError:
-            #pdb.set_trace()
-            data_key.data_date += datetime.timedelta(days=1)
-            level3_csv_out_measurand.make(data_key)
-            print('whoops')
-            print('about to l3 {} {} {}'.format(data_key.digitizer_id, data_key.data_date, data_key.sampling_rate))
-        features_df = level3_csv_out_measurand.load(data_key)
+#        pdb.set_trace()
+#        if data_key.digitizer_id in dummy_digitizer_ids_with_density_logs:
+#            print('okwws')
+#            #pdb.set_trace()
+        level3_csv_out_measurand._split_to_npy(data_key)
+        #try:
+        level3_csv_out_measurand.make(data_key)
+
+        #features_df = level3_csv_out_measurand.load(data_key)
 
     print('ok')
 

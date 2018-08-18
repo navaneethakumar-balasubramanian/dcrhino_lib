@@ -26,8 +26,8 @@ from dcrhino.analysis.signal_processing.mwd_tools import interpolate_to_assign_d
 from dcrhino.analysis.signal_processing.mwd_tools import interpolate_arbitrary_mwd_column
 
 logger = init_logging(__name__)
+#MEASURAND_REGISTRY.print_measurand_registry()
 
-MEASURAND_REGISTRY.print_measurand_registry()
 
 mwd_measurand = MEASURAND_REGISTRY.measurand('mwd_with_mse')
 hole_profile_df = mwd_measurand.load()
@@ -42,8 +42,9 @@ merged_level_3_path_placeholder = level3_csv_out_measurand.data_level_path()
 
 merged_csv_basename = 'west_angelas_csv_dump_v01_20180815.csv'
 warts_and_all_csv_file = os.path.join(merged_level_3_path_placeholder, merged_csv_basename)
-#warts_and_all_csv_file = '/home/kkappler/west_angelas_csv_dump_v01_20180815.csv'
 output_csv_file = warts_and_all_csv_file
+create_csv_dump = False
+problem_holes = [121, 170]
 
 def make_qc_log(row):
     """
@@ -74,10 +75,6 @@ def make_qc_log(row):
     depth = interpolate_to_assign_depths_to_log_csv(dff, hole_df, plot_meta=plot_meta)
     dff['depth'] = pd.Series(depth, index = dff.index)
 
-#    column_name = 'force_on_bit_newtons'
-#    wob = interpolate_arbitrary_mwd_column(dff, hole_df, column_name, plot_meta=plot_meta)
-#    #dff['wob'] = pd.Series(wob, index = dff.index)
-#    dff[column_name] = pd.Series(wob, index = dff.index)
 
     columns_to_interpolate = ['force_on_bit_newtons', 'dip', 'BEARING','kRPM','force_on_bit_newtons',
                              'torque_newtonmeters','AIR_PRESSURE_Pa','VIBRATION',
@@ -85,8 +82,8 @@ def make_qc_log(row):
 
     for column_name in columns_to_interpolate:
         print("about to calculate {}".format(column_name))
-        #mwd_data = interpolate_arbitrary_mwd_column(dff, hole_df, column_name, plot_meta=None)#plot_meta)
-        mwd_data = interpolate_arbitrary_mwd_column(dff, hole_df, column_name, plot_meta=plot_meta)
+        mwd_data = interpolate_arbitrary_mwd_column(dff, hole_df, column_name, plot_meta=None)#plot_meta)
+        #mwd_data = interpolate_arbitrary_mwd_column(dff, hole_df, column_name, plot_meta=plot_meta)
         dff[column_name] = pd.Series(mwd_data, index = dff.index)
     #pdb.set_trace()
     """
@@ -124,14 +121,12 @@ def make_qc_log(row):
     dff['pseudo_density'] = pd.Series(qc_log_input.primary_pseudo_density_sample, index = dff.index)
 
 
-#
-#    if os.path.isfile(output_csv_file):
-#        dff.to_csv(output_csv_file, mode='a', header=False)
-#    else:
-#        dff.to_csv(output_csv_file)
+    if create_csv_dump:
+        if os.path.isfile(output_csv_file):
+            dff.to_csv(output_csv_file, mode='a', header=False)
+        else:
+            dff.to_csv(output_csv_file)
 
-
-    #QCLogPlotter(qc_log_input, plot_time=True)#, plot_meta=plot_meta)
     QCLogPlotter(qc_log_input)
 
     return
@@ -140,9 +135,7 @@ def configure_plotting_run():
     """
     """
     pdb.set_trace()
-    problem_holes = [121, 170]
     for i_row in range(len(df_master))[:]:
-        #c
         #pdb.set_trace()
         row = df_master.iloc[i_row]
         if row.hole in problem_holes:

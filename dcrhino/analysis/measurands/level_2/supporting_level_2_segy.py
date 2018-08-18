@@ -23,10 +23,10 @@ from dcrhino.analysis.supporting_processing import rhino_channel_map_from_trace
 class TraceHeaderAttributes(object):
     def __init__(self, num_traces_per_component, **kwargs):
         self.num_traces_per_component = num_traces_per_component
-        self.peak_ampl_vertical = np.full(num_traces_per_component, np.nan, dtype='float32')
-        self.peak_mult_vertical = np.full(num_traces_per_component, np.nan, dtype='float32')
-        self.peak_ampl_vert_ndx = np.full(num_traces_per_component, np.nan, dtype='float32')
-        self.peak_mult_vert_ndx = np.full(num_traces_per_component, np.nan, dtype='float32')
+        self.peak_ampl_axial = np.full(num_traces_per_component, np.nan, dtype='float32')
+        self.peak_mult_axial = np.full(num_traces_per_component, np.nan, dtype='float32')
+        self.peak_ampl_axial_ndx = np.full(num_traces_per_component, np.nan, dtype='float32')
+        self.peak_mult_axial_ndx = np.full(num_traces_per_component, np.nan, dtype='float32')
 
         self.peak_ampl_tangential = np.full(num_traces_per_component, np.nan, dtype='float32')
         self.peak_ampl_tangential_ndx = np.full(num_traces_per_component, np.nan, dtype='float32')
@@ -40,7 +40,7 @@ class TraceHeaderAttributes(object):
         """
         """
         rhino_channel_map = rhino_channel_map_from_trace(st.traces[0])
-        vertical_channel = rhino_channel_map['vertical']
+        axial_channel = rhino_channel_map['axial']
         tangential_channel = rhino_channel_map['tangential']
 
         num_traces_total = 3 * self.num_traces_per_component
@@ -49,14 +49,14 @@ class TraceHeaderAttributes(object):
         for i_ndx, ndx in enumerate(x_trace_indices):
             #dummy_hole_id = dummy_hole_id_from_trace(st.traces[ndx])
             #   if dummy_hole_id != 0:
-            vert_ndx = ndx + vertical_channel
+            axial_ndx = ndx + axial_channel
             tang_ndx = ndx + tangential_channel
-            self.peak_ampl_vertical[i_ndx] = st.traces[vert_ndx].stats.segy.trace_header.peak_ampl
-            self.peak_mult_vertical[i_ndx] = st.traces[vert_ndx].stats.segy.trace_header.mult_ampl
+            self.peak_ampl_axial[i_ndx] = st.traces[axial_ndx].stats.segy.trace_header.peak_ampl
+            self.peak_mult_axial[i_ndx] = st.traces[axial_ndx].stats.segy.trace_header.mult_ampl
             self.peak_ampl_tangential[i_ndx] = st.traces[tang_ndx].stats.segy.trace_header.peak_ampl
             self.peak_ampl_radial[i_ndx] = st.traces[ndx+2].stats.segy.trace_header.peak_ampl
-            self.peak_ampl_vert_ndx[i_ndx] = st.traces[vert_ndx].stats.segy.trace_header.peak_index
-            self.peak_mult_vert_ndx[i_ndx] = st.traces[vert_ndx].stats.segy.trace_header.mult_index
+            self.peak_ampl_axial_ndx[i_ndx] = st.traces[axial_ndx].stats.segy.trace_header.peak_index
+            self.peak_mult_axial_ndx[i_ndx] = st.traces[axial_ndx].stats.segy.trace_header.mult_index
 
 
 

@@ -19,7 +19,7 @@ from dcrhino.analysis.util.general_helper_functions import init_logging
 logger = init_logging(__name__)
 
 RHINO_CHANNEL_MAP = {}
-COMPONENT_LABELS = ['vertical', 'tangential', 'radial']
+COMPONENT_LABELS = ['axial', 'tangential', 'radial']
 
 normal_config = {}
 normal_config[0] = COMPONENT_LABELS[0]
@@ -37,12 +37,6 @@ rotate_90_config.update(inv_map)
 
 RHINO_CHANNEL_MAP['normal'] = normal_config
 RHINO_CHANNEL_MAP['rotate_90'] = rotate_90_config
-#normal_config[0] = 'vertical'
-#normal_config[1] = 'tangential'
-#normal_config[2] = 'radial'
-#
-#for k,v in normal_config.iteritems():
-#    normal_config[v] = k
 
 
 def get_rhino_channel_map_key(drill_string_axis_ch, tangential_axis_ch):
@@ -55,7 +49,7 @@ def get_rhino_channel_map_key(drill_string_axis_ch, tangential_axis_ch):
             #return RHINO_CHANNEL_MAP['normal']
     elif drill_string_axis_ch ==2:
         if tangential_axis_ch == 1:
-            logger.info("normal channel mapping detected")
+            logger.info("90 degree rotated channel mapping detected")
             return 'rotate_90'#RHINO_CHANNEL_MAP['rotate_90']
 
 def get_rhino_channel_map(drill_string_axis_ch, tangential_axis_ch):
@@ -75,7 +69,7 @@ def orientation_channel_remap(self, tr=None):
     TODO: if no trace is passed, go load one from the segy using iread
     """
     default_map = {}
-    default_map[0] = 'vertical';default_map['vertical'] = 0;
+    default_map[0] = 'axial';default_map['axial'] = 0;
     if tr is None:
         logger.error("Was expecting a trace ... make default behaviour to \
                      load a trace from file ")
