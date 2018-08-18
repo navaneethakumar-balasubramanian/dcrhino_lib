@@ -41,15 +41,11 @@ def configure_processing_run():
     decon_measurand_id = 'deconvolved_sgy_100ms_level1_sgy_piezo'
     #corr_measurand_id = 'correlated2_minlag-0.1-maxlag0.1_firls_80-100-300-350_20ms_deconvolved_sgy_100ms_level1_sgy_piezo'
     corr_measurand_id = 'correlated2_minlag-0.1-maxlag0.1_firls_75-100-230-280_20ms_deconvolved_sgy_100ms_level1_sgy_piezo'
-    #correlated2_minlag-0.1-maxlag0.1_firls_80-100-300-350_N65_deconvolved_sgy_100ms_level1_sgy_piezo'
-    #level3_csv_out_measurand_id_hash = 'trace_header_features_dc47b7e0c7893'#
-    level3_csv_out_measurand_id = 'trace_header_features_correlated2_minlag-0.1-maxlag0.1_firls_80-100-300-350_20ms_deconvolved_sgy_100ms_level1_sgy_piezo'
 
     level_1_measurand = MEASURAND_REGISTRY.measurand(level_1_measurand_id)
     decon_measurand = MEASURAND_REGISTRY.measurand(decon_measurand_id)
     corr_measurand = MEASURAND_REGISTRY.measurand(corr_measurand_id)
 
-    level3_csv_out_measurand = MEASURAND_REGISTRY.measurand(level3_csv_out_measurand_id)
     #level3_csv_out_measurand_id_hash = 'trace_features_eda_a39021e29a61e'
     level3_csv_out_measurand_id_hash = 'trace_features_eda_37e21fa225dc7'
     level3_csv_out_measurand_id = MEASURAND_REGISTRY._hash_dict[level3_csv_out_measurand_id_hash]
@@ -87,14 +83,7 @@ def configure_processing_run():
 #                pdb.set_trace()
                 print('about to l3')
                 level3_csv_out_measurand.make(data_key)
-                #<QC_LOGS#
-                #trace_header_df = level3_csv_out_measurand.load(data_key)
-                #metadata_df = pd.read_csv(metadata_file, parse_dates=['time_start', 'time_end'])
-                #sanity_check_mwd_start_end_matches_rhino(trace_header_df, metadata_df)
 
-
-                #pdb.set_trace()
-                #pass
     #<Execute Processing>
 
 dummy_digitizer_ids_with_density_logs = ['20180707_SSX15883_5206_Ch08',
