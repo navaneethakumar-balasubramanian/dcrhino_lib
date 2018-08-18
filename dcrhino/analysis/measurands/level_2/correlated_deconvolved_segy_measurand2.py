@@ -191,8 +191,7 @@ class CorrelatedDeconvolvedSEGY2(BoreholeAccelerometerMeasurand):
     def _split_folder(self, data_key, component):
         """
         """
-        parent_filename = self.expected_filename(data_key)
-        output_dir = os.path.dirname(parent_filename)
+        output_dir = os.path.dirname(self.expected_filename(data_key))
         output_dir = os.path.join(output_dir, 'split', data_key.digitizer_id, component)
         return output_dir
 
@@ -200,7 +199,9 @@ class CorrelatedDeconvolvedSEGY2(BoreholeAccelerometerMeasurand):
         """
         flow: load the traces all as an obspy stream
         Then loop over the traces and save as vert_datetime, tang_datetime, radial_datetime
-
+        WARNING: This is NOT a proper measurand and does not have a unique path
+        multip;le corr data could wind up in same place, this is basically just for
+        EDA at this point
         """
         trace_header_operator = DataCloudTraceHeader()
 
