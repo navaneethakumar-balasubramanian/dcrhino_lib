@@ -35,7 +35,7 @@ from dcrhino.analysis.data_manager.temp_paths import ensure_dir
 from dcrhino.analysis.graphical.unbinned_qc_log_plots_v3_west_angelas import QCLogPlotInput
 from dcrhino.analysis.measurands.uniformly_sampled_measurand import UniformlySampledMeasurand
 from dcrhino.analysis.signal_processing.seismic_processing import get_earliest_expected_mulitple_time
-from dcrhino.analysis.signal_processing.seismic_processing import get_wavelet_window_indices#(time_vector, start_time, end_time):
+#from dcrhino.analysis.signal_processing.seismic_processing import get_wavelet_window_indices#(time_vector, start_time, end_time):
 from dcrhino.analysis.signal_processing.supporting_segy_processing import DataCloudTraceHeader
 from dcrhino.analysis.supporting_processing import get_dummy_hole_ids_from_segy
 from dcrhino.analysis.util.general_helper_functions import init_logging
@@ -57,6 +57,7 @@ logger = init_logging(__name__)
 class DummyStream():
     def __init__(self):
         self.traces = None
+
 class TraceHeaderFeaturesMeasurandEDA(UniformlySampledMeasurand):
     """
     TODO: NR to ensure n_components (integer) divides n_traces
@@ -70,12 +71,7 @@ class TraceHeaderFeaturesMeasurandEDA(UniformlySampledMeasurand):
         self.primary_window_halfwidth_ms = kwargs.get('primary_window_halfwidth_ms', 2.0)
         self.multiple_window_halfwidth_ms = kwargs.get('multiple_window_halfwidth_ms', 1.0)
         self.multiple_window_search_width_ms = kwargs.get('multiple_window_search_width_ms', 3.126)
-#    def sensor_directory(self, data_date):
-#        date_string = data_date.date().__str__()
-#        sensor_directory = os.path.join(self.data_level_path(2), date_string, self.sensor_type)
-#        print("sensor_directory",sensor_directory)
-#        #spdb.set_trace()
-#        return sensor_directory
+
 
     @property
     def hash_id_string(self):

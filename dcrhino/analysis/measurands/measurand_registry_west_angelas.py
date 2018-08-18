@@ -193,8 +193,8 @@ def _create_correlated_segy_measurands2():
                                            project_id=PROJECT_ID)
 
     #fir_specs = (corners, duration)
-    #fir_specs = [(None, None), ([80, 100, 300, 350 ], 0.02)]
-    fir_specs = [([80, 100, 300, 350 ], 0.02), ]
+    fir_specs = [(None, None), ([80, 100, 300, 350 ], 0.02)]
+    #fir_specs = [([80, 100, 300, 350 ], 0.02), ]
     min_lag = -0.1; max_lag = 0.1;
     parent_measurand_strings = []
     for registry_key in _registry.keys():
