@@ -25,12 +25,12 @@ import os
 import pdb
 
 from obspy.io.segy.core import _read_segy
+
+from dcrhino.analysis.data_manager.temp_paths import ensure_dir
 from dcrhino.analysis.graphical.supporting_qc_plots import qc_plot
 #from dcrhino.analysis.graphical.supporting_qc_plots import qc_plot_v3
 from dcrhino.analysis.graphical.supporting_qc_plots import QCPlotInputs
 from dcrhino.analysis.instrumentation.rhino import get_rhino_channel_map_key#(drill_string_axis_ch, tangential_axis_ch)
-#from dcrhino.analysis.instrumentation.rhino import get_rhino_channel_map
-#from dcrhino.analysis.instrumentation.rhino import RHINO_CHANNEL_MAP
 from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
 from dcrhino.analysis.measurands.borehole_accelerometer_measurand import BoreholeAccelerometerMeasurand
 from dcrhino.analysis.measurands.level_2.supporting_level_2_segy import TraceHeaderAttributes
@@ -38,6 +38,10 @@ from dcrhino.analysis.signal_processing.seismic_processing import process_from_d
 from dcrhino.analysis.signal_processing.seismic_processing import max_reflection_amplitude2
 from dcrhino.analysis.signal_processing.seismic_processing import max_multiple_amplitude2
 from dcrhino.analysis.signal_processing.seismic_processing  import ACOUSTIC_VELOCITY
+
+from dcrhino.analysis.signal_processing.supporting_segy_processing import DataCloudTraceHeader
+from dcrhino.analysis.signal_processing.supporting_segy_processing import sampling_rate_segy_trace
+
 from dcrhino.analysis.supporting_processing import concatenate_traces
 from dcrhino.analysis.supporting_processing import concatenate_traces2
 from dcrhino.analysis.supporting_processing import get_dummy_hole_ids_from_segy
@@ -47,8 +51,8 @@ from dcrhino.analysis.supporting_processing import get_segy_trace_by_index#(segy
 from dcrhino.analysis.supporting_processing import rhino_channel_map_from_trace
 from dcrhino.analysis.util.general_helper_functions import find_files
 from dcrhino.analysis.util.general_helper_functions import init_logging
-#from dcrhino.common.signal_processing.supporting_segy_processing import sampling_rate_segy_trace
-from dcrhino.analysis.signal_processing.supporting_segy_processing import sampling_rate_segy_trace
+
+
 logger = init_logging(__name__)
 
 class CorrelatedDeconvolvedSEGY2(BoreholeAccelerometerMeasurand):
@@ -182,6 +186,48 @@ class CorrelatedDeconvolvedSEGY2(BoreholeAccelerometerMeasurand):
         print("about to write SEGY")
         st_parent.write(output_filename, format="SEGY")
         return st_parent
+
+
+    def _split_folder(self, data_key, component):
+        """
+        """
+        parent_filename = self.expected_filename(data_key)
+        output_dir = os.path.dirname(parent_filename)
+        output_dir = os.path.join(output_dir, 'split', data_key.digitizer_id, component)
+        return output_dir
+
+    def _split_to_npy(self, data_key, st=None):
+        """
+        flow: load the traces all as an obspy stream
+        Then loop over the traces and save as vert_datetime, tang_datetime, radial_datetime
+
+        """
+        trace_header_operator = DataCloudTraceHeader()
+
+        #pdb.set_trace()
+        #filename = self.expected_filename(data_key)
+        #<debug>
+        #tr = get_segy_trace_by_index(filename, 0)
+        #st = DummyStream(); st.traces = [tr,tr, tr, tr, tr, tr,tr, tr, tr]
+        #</debug>
+        if st is None:
+            #segy_file_to_read = self.expected_filename(data_key)
+            st = self.load(data_key)
+        tr = st.traces[0]
+        rhino_channel_component_map = self.rhino_channel_map(data_key, tr)
+
+        component_labels = [rhino_channel_component_map[x] for x in [0,1,2]]
+        for component_label in component_labels:
+            output_dir = self._split_measurand_folder(data_key, component_label)
+            ensure_dir(output_dir)
+        for i_trace, tr in enumerate(st.traces):
+            data_datetime = trace_header_operator.get_tracetime(tr)
+            component = rhino_channel_component_map[i_trace % 3]
+            output_dir = self._split_folder(data_key, component)
+
+            filebase = '{}.npy'.format(data_datetime.strftime('%Y%m%d%H%M%S'))
+            full_filename = os.path.join(output_dir, filebase)
+            np.save(full_filename, tr.data)
 
 
     def extract_peak_amplitudes(self):

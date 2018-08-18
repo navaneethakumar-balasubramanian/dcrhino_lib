@@ -116,14 +116,9 @@ def process_from_ssx_csv_2_eda():
 
     #corr_measurand_id = 'correlated2_minlag-0.1-maxlag0.1_firls_80-100-300-350_20ms_deconvolved_sgy_100ms_level1_sgy_piezo'
     #corr_measurand = MEASURAND_REGISTRY.measurand(corr_measurand_id)
-#    level3_csv_out_measurand_id = 'trace_header_features_correlated2_minlag-0.1-maxlag0.1_firls_80-100-300-350_20ms_deconvolved_sgy_100ms_level1_sgy_piezo'
-#    level3_csv_out_measurand = MEASURAND_REGISTRY.measurand(level3_csv_out_measurand_id)
     df = ssx_measurand.load()
-    #pdb.set_trace()
-#    drill_15_list = [2, 3, 4, 5, 6, 11, 12, 13,14,  15]
 
     for i_row in range(len(df)):
-        #i_row = 14
         row = df.iloc[i_row]
 
         data_date_hack = datetime.datetime.strptime(row.dummy_digitizer_id[0:8], '%Y%m%d').date()
