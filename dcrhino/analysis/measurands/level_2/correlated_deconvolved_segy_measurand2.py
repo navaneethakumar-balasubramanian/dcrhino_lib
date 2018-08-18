@@ -219,7 +219,7 @@ class CorrelatedDeconvolvedSEGY2(BoreholeAccelerometerMeasurand):
 
         component_labels = [rhino_channel_component_map[x] for x in [0,1,2]]
         for component_label in component_labels:
-            output_dir = self._split_measurand_folder(data_key, component_label)
+            output_dir = self._split_folder(data_key, component_label)
             ensure_dir(output_dir)
         for i_trace, tr in enumerate(st.traces):
             data_datetime = trace_header_operator.get_tracetime(tr)
