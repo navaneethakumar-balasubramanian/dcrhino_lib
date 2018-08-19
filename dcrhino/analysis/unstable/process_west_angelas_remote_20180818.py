@@ -42,8 +42,8 @@ def configure_processing_run():
     level_1_measurand_id = 'level1_sgy_piezo'
     decon_measurand_id = 'deconvolved_sgy_100ms_level1_sgy_piezo'
     #corr_measurand_id = 'correlated2_minlag-0.1-maxlag0.1_firls_80-100-300-350_20ms_deconvolved_sgy_100ms_level1_sgy_piezo'
-    corr_measurand_id = 'correlated2_minlag-0.1-maxlag0.1_firls_75-100-230-280_20ms_deconvolved_sgy_100ms_level1_sgy_piezo'
-
+    #corr_measurand_id = 'correlated2_minlag-0.1-maxlag0.1_firls_75-100-230-280_20ms_deconvolved_sgy_100ms_level1_sgy_piezo'
+    corr_measurand_id = 'correlated2_minlag-0.1-maxlag0.1_firls_None__deconvolved_sgy_100ms_level1_sgy_piezo'
     level_1_measurand = MEASURAND_REGISTRY.measurand(level_1_measurand_id)
     decon_measurand = MEASURAND_REGISTRY.measurand(decon_measurand_id)
     corr_measurand = MEASURAND_REGISTRY.measurand(corr_measurand_id)
@@ -78,13 +78,13 @@ def configure_processing_run():
                 decon_measurand.make(data_key)#data_date, 'SSX50598.sgy')
                 corr_stream = corr_measurand.make(data_key)
                 #corr_measurand.to_qc_plot(data_key, upper_num_ms=26, show=True)
-                if isinstance(corr_stream, obspy.core.stream.Stream):
-                    corr_measurand.to_qc_plot(data_key, st=corr_stream)
+#                if isinstance(corr_stream, obspy.core.stream.Stream):
+#                    corr_measurand.to_qc_plot(data_key, st=corr_stream)
     #
 #                ef = level3_csv_out_measurand.expected_filename(data_key)
 #                pdb.set_trace()
                 print('about to l3')
-                level3_csv_out_measurand.make(data_key)
+                #level3_csv_out_measurand.make(data_key)
 
     #<Execute Processing>
 
