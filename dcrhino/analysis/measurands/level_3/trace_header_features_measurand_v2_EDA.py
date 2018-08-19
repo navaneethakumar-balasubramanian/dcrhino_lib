@@ -158,7 +158,7 @@ class TraceHeaderFeaturesMeasurandEDA(UniformlySampledMeasurand):
         #pdb.set_trace()
         #filebase = '{}.npy'.format(t0.strftime('%Y%m%d%H%M%S'))
 
-    def _make_from_parents(self, data_key):
+    def _make_from_parents(self, data_key, apply_thresholds=False):
         """
          #TODO: Add peak index
          How to do this?  Check if the parrent label is correllated2
@@ -204,11 +204,7 @@ class TraceHeaderFeaturesMeasurandEDA(UniformlySampledMeasurand):
         rhino_channel_component_map = self.parent_measurands[0].rhino_channel_map(data_key, tr)
         trace_header_operator = DataCloudTraceHeader()
         t0 = trace_header_operator.get_tracetime(tr)
-        #<get global meta data from trace>
-
-
-
-
+        #</get global meta data from trace>
 
         #needs all traces loaded
         dummy_hole_ids, unique_hole_ids = get_dummy_hole_ids_from_segy(st)
@@ -225,13 +221,9 @@ class TraceHeaderFeaturesMeasurandEDA(UniformlySampledMeasurand):
         feature_dict = create_correlated_features_dictionary(rng)
         #</PREP CONTAINER FOR FEATURES>
 
-#        filemapper = pd.DataFrame()
-#        meta_trace_index = np.arange(num_traces_total)
-#        meta_componets = num_traces_total * [None]
-#        meta_wavelet_types = num_traces_total * [None]
-        bad_traces = [2469, 2499, 2559, 4467]
-        bad_traces = [4467, ]
-        bad_traces = [88551]
+#        bad_traces = [2469, 2499, 2559, 4467]
+#        bad_traces = [4467, ]
+#        bad_traces = [88551]
         bad_traces = []
         #pdb.set_trace()
 
@@ -262,31 +254,26 @@ class TraceHeaderFeaturesMeasurandEDA(UniformlySampledMeasurand):
                                                                   component, wavelet_type)
                 #<File the answer in the master dictionary>
                 feature_dict = add_wffe_to_feature_dict(wffe, feature_dict, i_comp_obs_ndx)
-#                for feature in WAVELET_FEATURES:
-#                    #print(feature, wffe.component, wffe.wavelet_type)
-#                    key = '{}_{}_{}'.format(wffe.component, wffe.wavelet_type, feature)
-#                    feature_dict[key][i_comp_obs_ndx] = wffe.__getattribute__(feature)
-                #</File the answer in the master dictionary>
-#        for k, v in data_dict.iteritems():
-#            data_dict[k] = pd.Series(v, index=rng)
+
+
         features_df = pd.DataFrame(data=feature_dict)
         features_df['dummy_hole_id'] = pd.Series(dummy_hole_ids_by_time, index=features_df.index)
 
         #pdb.set_trace()
-        cond1 = (features_df['tangential_primary_peak_sample'] > 2 * features_df['axial_primary_peak_amplitude'])
-        features_df.drop(features_df[cond1].index, inplace=True)
-        print(len(features_df))
-        # above eqivalent to
-        #features_df = features_df.drop(features_df[cond1].index)
-        cond2 = (features_df['radial_primary_peak_sample'] > 2 * features_df['axial_primary_peak_amplitude'])
-        features_df.drop(features_df[cond2].index, inplace=True)
-        print(len(features_df))
-        cond3 = (features_df['axial_primary_peak_amplitude'] < 0.125)
-        features_df.drop(features_df[cond3].index, inplace=True)
-        print(len(features_df))
+        if apply_thresholds:
+            cond1 = (features_df['tangential_primary_peak_sample'] > 2 * features_df['axial_primary_peak_amplitude'])
+            features_df.drop(features_df[cond1].index, inplace=True)
+            print(len(features_df))
+            # above eqivalent to
+            #features_df = features_df.drop(features_df[cond1].index)
+            cond2 = (features_df['radial_primary_peak_sample'] > 2 * features_df['axial_primary_peak_amplitude'])
+            features_df.drop(features_df[cond2].index, inplace=True)
+            print(len(features_df))
+            cond3 = (features_df['axial_primary_peak_amplitude'] < 0.125)
+            features_df.drop(features_df[cond3].index, inplace=True)
+            print(len(features_df))
         self.save_to_csv(data_key, features_df)
-        #pdb.set_trace()
-        #df.to_csv(output_filename, index_label='datetime')
+
         return
 
 
