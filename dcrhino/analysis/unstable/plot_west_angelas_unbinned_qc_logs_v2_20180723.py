@@ -42,7 +42,8 @@ merged_level_3_path_placeholder = level3_csv_out_measurand.data_level_path()
 merged_csv_basename = 'west_angelas_csv_dump_v01_20180815.csv'
 warts_and_all_csv_file = os.path.join(merged_level_3_path_placeholder, merged_csv_basename)
 output_csv_file = warts_and_all_csv_file
-create_csv_dump = False
+create_csv_dump = True
+make_png_plots = False
 problem_holes = [121, 170]
 
 def make_qc_log(row):
@@ -126,7 +127,8 @@ def make_qc_log(row):
         else:
             dff.to_csv(output_csv_file)
 
-    QCLogPlotter(qc_log_input)
+    if make_png_plots:
+        QCLogPlotter(qc_log_input)
 
     return
 
