@@ -14,8 +14,9 @@ import datetime
 import os
 import pandas as pd
 import pdb
+from string import zfill
 
-
+from dcrhino.analysis.data_manager.temp_paths import ensure_dir
 from dcrhino.analysis.measurands.data_cloud_measurands import DerivedDataCloudMeasurand
 
 class MasterIterator(DerivedDataCloudMeasurand):
@@ -55,6 +56,26 @@ class MasterIterator(DerivedDataCloudMeasurand):
         csv_filename = self.expected_filename()
         df = pd.read_csv(csv_filename, parse_dates=['time_start', 'time_end'])
         return df
+
+    def set_plotting_metadata(self, row):
+        """
+        """
+        plot_meta = {}
+        plot_meta['path'] = os.path.join(self.data_level_path(data_level=3), 'unbinned', row.area)
+        plot_meta['log_path'] = os.path.join(plot_meta['path'], 'logs')
+        plot_meta['time_log_path'] = os.path.join(plot_meta['path'], 'time_logs')
+        plot_meta['rop_path'] = os.path.join(plot_meta['path'], 'rop')
+        #pdb.set_trace()
+        ensure_dir(plot_meta['log_path'])
+        ensure_dir(plot_meta['time_log_path'])
+        ensure_dir(plot_meta['rop_path'])
+
+        plot_meta['time_log_filename'] = os.path.join(plot_meta['time_log_path'], '{}{}.png'.format(zfill(row.hole,3),row.hole_uid[-2:]))
+        plot_meta['log_filename'] = os.path.join(plot_meta['log_path'], '{}{}.png'.format(zfill(row.hole,3),row.hole_uid[-2:]))
+        plot_meta['rop_filename'] = os.path.join(plot_meta['rop_path'], '{}.png'.format(zfill(row.hole,3)))
+
+        plot_meta['row'] = row
+        return plot_meta
 
 def my_function():
     """

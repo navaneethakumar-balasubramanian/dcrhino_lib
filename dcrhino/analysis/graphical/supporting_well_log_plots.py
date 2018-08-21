@@ -28,8 +28,9 @@ def get_title_line_2(project_id, plot_input):
         hId = "Hole ID: {}".format(plot_input.observer_row.hole_id)
         title_line2 = ", ".join([bench, pattern, hole, hId, plot_input.mount_point])
     elif project_id == 'west_angelas':
-        hole = "Hole: {}".format(plot_input.observer_row.hole)
+        hole = "Hole: {}".format(plot_input.observer_row.hole_uid)
         area = "Area: {}".format(plot_input.observer_row.area)
+        sps = "sps: {}Hz".format(plot_input.observer_row.sampling_rate)
         #pdb.set_trace()
         try:
             drill = "Drill: {}".format(plot_input.observer_row.drill_id)
@@ -39,15 +40,23 @@ def get_title_line_2(project_id, plot_input):
             sensor_distance_to_source = "sensor-source distance: {:.2f}".format(plot_input.observer_row.sensor_distance_to_source)
         except AttributeError:
             sensor_distance_to_source = "sensor-source distance: {:.2f}".format(plot_input.observer_row.sensor_source_distance)
-        title_line2 = ", ".join([area, hole, drill, sensor_distance_to_source])
+        title_line2 = ", ".join([area, hole, drill, sensor_distance_to_source, sps])
        # pdb.set_trace()
     return title_line2
 
-#def get_title_line_3(project_id, plot_input):
-#    'start {}, end {}'.format(plot_input.time_stamps[0], plot_input.time_stamps[1])
-#
-#        pdb.set_trace()
-#    return title_line2
+def get_title_line_3(project_id, plot_input):
+    if project_id == 'mont_wright':
+        title_line3 = ""
+    elif project_id == 'west_angelas':
+        #pdb.set_trace()
+        digitizer = "DD_id: {}".format(plot_input.observer_row.dummy_digitizer_id)
+        rotation = "orient: {}".format(plot_input.observer_row.orientation)
+        time_interval = 'TimeInterval: {} -> {}'.format(plot_input.observer_row.time_start, plot_input.observer_row.time_end)
+        title_line3 = ", ".join([digitizer, rotation, time_interval])
+       # pdb.set_trace()
+    return title_line3
+
+
 def well_log_panel_plot(ax, log_data, depth, data_label, x_label, x_limits=[None, None],
                         label_fontsize=22, tick_fontsize=17, color=None):
     """

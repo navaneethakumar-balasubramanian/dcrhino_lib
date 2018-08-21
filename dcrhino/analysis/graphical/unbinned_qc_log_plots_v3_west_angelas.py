@@ -10,7 +10,7 @@ from matplotlib.ticker import MultipleLocator
 
 from dcrhino.analysis.data_manager.temp_paths import DATA_PATH
 from dcrhino.analysis.data_manager.temp_paths import ensure_dir
-from supporting_well_log_plots import get_title_line_1, get_title_line_2
+from supporting_well_log_plots import get_title_line_1, get_title_line_2, get_title_line_3
 from supporting_well_log_plots import well_log_panel_plot, well_log_panel_time_plot
 from supporting_well_log_plots import well_log_panel_plot_multi#(ax, log_data_list, depth, data_label_list, x_label, x_limits=[None, None],
                         #label_fontsize=22, tick_fontsize=17, color_list=None):
@@ -204,7 +204,8 @@ class QCLogPlotter():
 
         title_line1 = get_title_line_1(project_id, qc_plot_input)
         title_line2 = get_title_line_2(project_id, qc_plot_input)
-        title_text = [title_line1, title_line2]
+        title_line3 = get_title_line_3(project_id, qc_plot_input)
+        title_text = [title_line1, title_line2, title_line3]
         plt.suptitle("\n\n".join(title_text), y=0.95, fontsize=title_fontsize)
 
         ax = {}
@@ -234,5 +235,5 @@ class QCLogPlotter():
                             x_limits=[pseudodensity_xlim_min, pseudodensity_xlim_max])
 
         plt.savefig(full_out_file)
-        plt.show()
+        #plt.show()
         plt.clf()

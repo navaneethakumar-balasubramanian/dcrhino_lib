@@ -112,6 +112,9 @@ class DerivedDataCloudMeasurand(DataCloudMeasurand):
         """
         TODO: add flags for recursion and force; see DS notes on this
         """
+        if force:
+            result = self._make_from_parents(data_key)
+            return result
         if os.path.isfile(self.expected_filename(data_key)):
             print("already made")
             return 0
