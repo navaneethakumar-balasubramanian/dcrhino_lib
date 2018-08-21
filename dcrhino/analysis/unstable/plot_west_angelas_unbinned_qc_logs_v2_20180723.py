@@ -29,12 +29,12 @@ logger = init_logging(__name__)
 
 
 mwd_measurand = MEASURAND_REGISTRY.measurand('mwd_with_mse')
-hole_profile_df = mwd_measurand.load()
+mwd_many_holes_df = mwd_measurand.load()
 master_iterator_measurand = MEASURAND_REGISTRY.measurand('master_iterator')
 df_master = master_iterator_measurand.load()
 
 level3_csv_out_measurand_id_hash = 'trace_features_eda_a39021e29a61e'
-level3_csv_out_measurand_id_hash = 'trace_features_eda_37e21fa225dc7'
+#level3_csv_out_measurand_id_hash = 'trace_features_eda_37e21fa225dc7'
 level3_csv_out_measurand_id = MEASURAND_REGISTRY._hash_dict[level3_csv_out_measurand_id_hash]
 level3_csv_out_measurand = MEASURAND_REGISTRY.measurand(level3_csv_out_measurand_id)
 #pdb.set_trace()
@@ -43,7 +43,7 @@ merged_csv_basename = 'west_angelas_csv_dump_v01_20180815.csv'
 warts_and_all_csv_file = os.path.join(merged_level_3_path_placeholder, merged_csv_basename)
 output_csv_file = warts_and_all_csv_file
 create_csv_dump = True
-make_png_plots = False
+make_png_plots = True#False
 problem_holes = [121, 170]
 
 def make_qc_log(row):
@@ -67,7 +67,7 @@ def make_qc_log(row):
     endtime_str = '{}'.format(row['time_end'])
 
     dff = df_csv[(df_csv['datetime'] >= starttime_str) & (df_csv['datetime'] <= endtime_str)]
-    hole_df = hole_profile_df[hole_profile_df['hole']==hole]
+    hole_df = mwd_many_holes_df[mwd_many_holes_df['hole']==hole]
 
     plot_meta = master_iterator_measurand.set_plotting_metadata(row)
 
@@ -98,9 +98,11 @@ def make_qc_log(row):
 0,DBC2/710/197,70, 21R15, 2018-07-06 00:32:07, 2018-07-06 00:32:08,13184.536,12072.663,720.068,13184.535,12072.642,719.534,0.0,0.017,0.535,1.53081,3.21236, 0, 37990.5, 1.0071, 0, 0, Unknown, Rotary, Unknown, 288.000, 1.000, 0,1
 
     """
-    dff['x'] = hole_profile_df[' X']
-    dff['y'] = hole_profile_df[' Y']
-    dff['z'] = hole_profile_df[' Z']
+    #pdb.set_trace()
+    dff['x'] = hole_df[' X'].iloc[0]
+    dff['y'] = hole_df[' Y'].iloc[0]
+    dff['z'] = hole_df[' Z'].iloc[0]
+    #was hole_profile_df
     #unkerfungle the top of hole
     n_obs_top_of_hole = 10
     top_of_hole = dff[:n_obs_top_of_hole].sort_values('depth', axis=0, ascending=True, inplace=False, kind='quicksort', na_position='last')
