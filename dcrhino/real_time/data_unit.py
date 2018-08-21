@@ -27,9 +27,10 @@ from time import *
 import sys
 
 import calendar
+import ConfigParser
 
 
-#from gps import *
+PATH = os.path.dirname(os.path.abspath(__file__))
 
 #from dcrhino.analysis.signal_processing.firls_bandpass import FIRLSFilter
 
@@ -50,6 +51,8 @@ class DataInterval(object):
 
     @starttime.setter
     def starttime(self,value):
+        if value.microsecond > 0:
+                value = value - timedelta(microseconds=value.microsecond)
         self._starttime = value
 
     @property
@@ -75,22 +78,24 @@ class DataUnit(object):
        self.db_name = cfg.get('DB', 'db_name', "rhino")
        self.db_raw_data_table = cfg.get('DB', 'db_input_raw_data_table', "raw_data")
        self._temp_starttime_of_database = None
-       self._parameters = self._read_config_file()
-       self.metadata = Metadata()
+       #self._parameters = self._read_config_file()
+       self.metadata = Metadata(cfg)
        self.logger = logger_file
-       self.output_sampling_rate = int(self._parameters["OUTPUTSAMPLINGRATE"]["Value"])
-       self.trace_length = int(self._parameters["TRACELENGTH"]["Value"])
-       self.channels_per_sensor = int(self._parameters["CHANNELSPERSENSOR"]["Value"])
-       self.metadata.deconvolution_filter_duration = float(self._parameters["deconvolution_filter_duration"]["Value"])
-       self.metadata.trapezoidal_bpf_corner_1 = float(self._parameters["trapezoidal_bpf_corner_1"]["Value"])
-       self.metadata.trapezoidal_bpf_corner_2 = float(self._parameters["trapezoidal_bpf_corner_2"]["Value"])
-       self.metadata.trapezoidal_bpf_corner_3 = float(self._parameters["trapezoidal_bpf_corner_3"]["Value"])
-       self.metadata.trapezoidal_bpf_corner_4 = float(self._parameters["trapezoidal_bpf_corner_4"]["Value"])
-       self.metadata.trapezoidal_bpf_duration = float(self._parameters["trapezoidal_bpf_duration"]["Value"])
-       self.metadata.min_lag_trimmed_trace = float(self._parameters["min_lag_trimmed_trace"]["Value"])
-       self.metadata.max_lag_trimmed_trace = float(self._parameters["max_lag_trimmed_trace"]["Value"])
+       self.output_sampling_rate = self.config_file.getint("COLLECTION","output_sampling_rate")
+       self.trace_length = self.config_file.getint("COLLECTION","trace_length_in_seconds")
+       self.channels_per_sensor = self.config_file.getint("COLLECTION","channels_per_sensor")
+       self.real_time_acquisition = self.config_file.getboolean("COLLECTION","real_time_acquisition")
+       self.metadata.deconvolution_filter_duration = self.config_file.getfloat("PROCESSING","deconvolution_filter_duration")
+       self.metadata.trapezoidal_bpf_corner_1 = self.config_file.getfloat("PROCESSING","trapezoidal_bpf_corner_1")
+       self.metadata.trapezoidal_bpf_corner_2 = self.config_file.getfloat("PROCESSING","trapezoidal_bpf_corner_2")
+       self.metadata.trapezoidal_bpf_corner_3 = self.config_file.getfloat("PROCESSING","trapezoidal_bpf_corner_3")
+       self.metadata.trapezoidal_bpf_corner_4 = self.config_file.getfloat("PROCESSING","trapezoidal_bpf_corner_4")
+       self.metadata.trapezoidal_bpf_duration = self.config_file.getfloat("PROCESSING","trapezoidal_bpf_duration")
+       self.metadata.min_lag_trimmed_trace = self.config_file.getfloat("PROCESSING","min_lag_trimmed_trace")
+       self.metadata.max_lag_trimmed_trace = self.config_file.getfloat("PROCESSING","max_lag_trimmed_trace")
        self.axial_axis = self.metadata.sensor_axial_axis
        self.tangential_axis = self.metadata.sensor_tangential_axis
+       self.radial_axis = 6 - self.axial_axis - self.tangential_axis
        self.dbconn = dbc.conn(dbname=self.db_name)
        self.data_interval = DataInterval(starttime=self.effective_starttime_of_database,duration=self.trace_length)
        self.ideal_timestamps = np.arange(0,self.output_sampling_rate*self.trace_length)*(1.0/self.output_sampling_rate)
@@ -103,18 +108,23 @@ class DataUnit(object):
     def component_data(self,component_string):
         #pdb.set_trace()
         if component_string == 'axial':
-            return self.apply_calibration(self.axial_data,int(self.axial_axis)-1)
+            return self.apply_calibration(self.axial_data,self.axial_axis-1)
         if component_string == 'tangential':
-            return self.apply_calibration(self.tangential_data,int(self.tangential_axis)-1)
-        #TODO : RADIAL DATA
+            return self.apply_calibration(self.tangential_data,self.tangential_axis-1)
+        if component_string == 'radial':
+            return self.apply_calibration(self.radial_data,self.radial_axis-1)
+
+    def convert_from_adc(self,data):
+        return data * 5 / 65535
 
     def apply_calibration(self,data,measurement_axis):
-        sensitivities = ["XSENSITIVITY","YSENSITIVITY","ZSENSITIVITY"]
-        sensitivity = float(self._parameters[sensitivities[measurement_axis]]["Value"]) / 1000.
-        #data = data*(5/65535)*(sensitivity/1000)
-        adcfactor = float(self._parameters["ADCFACTOR"]["Value"])
-        multiplier = float(self._parameters["MULTIPLIER"]["Value"])
-        data = (data * adcfactor * sensitivity) / multiplier
+        if self.real_time_acquisition:
+            sensitivities = ["x_sensitivity","y_sensitivity","z_sensitivity"]
+            sensitivity = self.config_file.getfloat("COLLECTION",sensitivities[measurement_axis]) / 1000.
+            data = self.convert_from_adc(data)/sensitivity
+        else:
+            multiplier = self.config_file.getfloat("COLLECTION","multiplier")
+            data = data/multiplier
         return data
 
 
@@ -160,8 +170,9 @@ class DataUnit(object):
 
 
     def _read_config_file(self):
-        params = pd.read_table("process.config",sep="=",names=["Value"],index_col=0)
-        return params.to_dict(orient='index')
+        config = ConfigParser.SafeConfigParser()
+        config.read('process.cfg')
+        return config
 
 
     def _fetch_data(self):
@@ -173,22 +184,24 @@ class DataUnit(object):
 
                 startdate_utc_timestamp = calendar.timegm(self.data_interval.starttime.utctimetuple())
                 enddate_utc_timestamp = calendar.timegm(self.data_interval.endtime.utctimetuple())
-                query = "select ts_secs,ts_micro,x,y from {} where ts_secs >= {} and ts_secs < {} order by ts_secs,ts_micro".format(self.db_raw_data_table,startdate_utc_timestamp,enddate_utc_timestamp)
+                query = "select ts_secs,ts_micro,x,y,z from {} where ts_secs >= {} and ts_secs < {} order by ts_secs,ts_micro".format(self.db_raw_data_table,startdate_utc_timestamp,enddate_utc_timestamp)
                 self.write_to_log(query)
                 print(query)
                 #Fetch data from the database
                 raw_data = dbc.query(self.dbconn,query)
                 #since the data is coming back as a numpy array with the structure of the dbrhino class, we need to select only the columns we need
-                raw_data = raw_data[:,[2,3,6,7]]
+                raw_data = raw_data[:,[2,3,6,7,8]]
 
-                self.axial_data = np.asarray(raw_data[:,int(self.axial_axis)+1],dtype=np.float32)
-                self.tangential_data = np.asarray(raw_data[:,int(self.tangential_axis)+1],dtype=np.float32)
+                self.axial_data = np.asarray(raw_data[:,self.axial_axis+1],dtype=np.float32)
+                self.tangential_data = np.asarray(raw_data[:,self.tangential_axis+1],dtype=np.float32)
+                self.radial_data = np.asarray(raw_data[:,self.radial_axis   +1],dtype=np.float32)#
                 self.digitizer_timestamps = np.asarray((raw_data[:,0]+raw_data[:,1]-self.data_interval.starttime_timestamp())/1000000.0,dtype=np.float32)
-
+                #pdb.set_trace()
             else:
                 print("Data Interval not in databse")
                 self.axial_data = np.empty(self.output_sampling_rate*self.trace_length,dtype=np.float32)
                 self.tangential_data = np.empty(self.output_sampling_rate*self.trace_length,dtype=np.float32)
+                self.radial_data = np.empty(self.output_sampling_rate*self.trace_length,dtype=np.float32)
                 self.digitizer_timestamps = np.empty(self.output_sampling_rate*self.trace_length,dtype=np.float32)
                 return
 #                raise ValueError ("Data Interval not in databse")

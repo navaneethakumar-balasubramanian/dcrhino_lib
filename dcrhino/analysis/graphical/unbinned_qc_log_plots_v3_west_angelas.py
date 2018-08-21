@@ -182,7 +182,7 @@ def primary_times_panel(ax, qc_plot_input, x_limits=[None, None], sample_or_poly
 class QCLogPlotter():
     def __init__(self, qc_plot_input, **kwargs):
         self.plot_vs_depth(qc_plot_input)
-        
+
 
 
     def plot_vs_depth(self, qc_plot_input, multi_mode=False):
@@ -191,7 +191,7 @@ class QCLogPlotter():
         project_id = 'west_angelas'
         full_out_file = qc_plot_input.plot_meta['log_filename']
         ensure_dir(os.path.dirname(full_out_file))
-        pdb.set_trace()
+        #pdb.set_trace()
 #        if os.path.isfile(full_out_file):
 #            return
         plt.rcParams['figure.figsize'] = [30, 40]
@@ -236,7 +236,3 @@ class QCLogPlotter():
         plt.savefig(full_out_file)
         plt.show()
         plt.clf()
-
-
-
-

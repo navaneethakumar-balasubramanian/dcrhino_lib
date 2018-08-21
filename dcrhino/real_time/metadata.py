@@ -7,11 +7,10 @@ Metadata Header definition for Rhino Unit File structure
 from __future__ import absolute_import, division, print_function
 from datetime import datetime
 #from dcrhino.collection.IDEtoSEGY.rhino import StandardString
-import csv
+import csv, os, sys
 import pandas as pd
 from enum import Enum
 import pdb
-
 
 
 #==============================================================================
@@ -45,6 +44,8 @@ class DataType(Enum):
     INTEGER = 2
     FLOAT = 3
     DATETIME = 4
+    DATE=5
+    BOOLEAN = 6
 
 
 
@@ -119,17 +120,48 @@ class Metadata(object):
 
     __slots__ = [key for key,value in METADATA_HEADER_FORMAT_KEYS.items()]
 
-    def __init__(self):
-        params = pd.read_table("installation.config",sep="=",names=["Value"],index_col=0)
-        params=params.to_dict(orient='index')
-        for key,value in METADATA_HEADER_FORMAT_KEYS.items():
-            if key in params.keys():
-                value = params[key]['Value']
+    def __init__(self,cfg):
+        for key,key_type in METADATA_HEADER_FORMAT_KEYS.items():
+            setattr(self,key,None)
+        for item in cfg.items("INSTALLATION"):
+            key = item[0]
+            #pdb.set_trace()
+            if item[0] in METADATA_HEADER_FORMAT_KEYS.keys():
+                key_type = METADATA_HEADER_FORMAT_KEYS[key]
+                if key_type is DataType.FLOAT:
+                    value = cfg.getfloat("INSTALLATION",key)
+                elif key_type is DataType.INTEGER:
+                    value = cfg.getint("INSTALLATION",key)
+                elif key_type is DataType.DATE:
+                    value = datetime.strptime(cfg.get("INSTALLATION",key),"%Y-%m-%d")
+                elif key_type is DataType.DATE:
+                    value = datetime.strptime(cfg.get("INSTALLATION",key),"%Y-%m-%d %H:%M:%S.%f")
+                elif key_type is DataType.BOOLEAN:
+                    value = cfg.getboolean("INSTALLATION",key)
+                else:
+                    value = cfg.get("INSTALLATION",key)
                 setattr(self,key,value)
             else:
-                setattr(self,key,None)
+                raise LookupError("The metadata value in the configuration file is not declared in the metadata class")
+        self.sensor_distance_to_source = self.drill_string_total_length - self.sensor_position
 
-        self.sensor_distance_to_source = float(self.drill_string_total_length) - float(self.sensor_position)
+        #params = pd.read_table(os.path.join(PATH,"installation.cfg"),sep="=",names=["Value"],index_col=0)
+        #params=params.to_dict(orient='index')
+        #for key,key_type in METADATA_HEADER_FORMAT_KEYS.items():
+        #    if key in params.keys():
+        #        if key_type is DataType.FLOAT:
+        #            value = float(params[key]['Value'])
+        #        elif key_type is DataType.INTEGER:
+        #            value = int(params[key]['Value'])
+        #        elif key_type is DataType.DATETIME:
+        #            value = datetime.strptime(params[key]['Value'],"%Y-%m-%d")
+        #        else:
+        #            value = params[key]['Value']
+        #        setattr(self,key,value)
+        #    else:
+        #        setattr(self,key,None)
+
+
 
 
     def __str__(self):
@@ -174,6 +206,8 @@ class Metadata(object):
         else:
             if dtype is DataType.DATETIME:
                 value = datetime.strptime(value,"%Y-%m-%d %H:%M:%S.%f")
+            elif dtype is DataType.DATE:
+                value = datetime.strptime(value,"%Y-%m-%d")
             elif dtype is DataType.FLOAT:
                 value = float(value)
             elif dtype is DataType.INTEGER:
@@ -197,4 +231,3 @@ if __name__ == "__main__":
     pdb.set_trace()
 
     print(m)
-

@@ -46,8 +46,8 @@ def make_qc_log(row):
     hole_uid = row['hole_uid']
     print("identify the CSV file to load")
     print(hole, hole_uid)
-    db = Database('rhino_test')
-    dff = sql_to_panda(db,'select * from rhino_test.feature_extracted')# limit 2')
+    db = Database('rhino_test')#rhino_test
+    dff = sql_to_panda(db,'select * from rhino_test.feature_extracted')# limit 2')#rhino_test
     dff['datetime'] = dff['date']
 
     mwd_hole_df = hole_profile_df[hole_profile_df['hole']==hole]
@@ -112,6 +112,7 @@ def configure_plotting_run():
         row = df_master.iloc[i_row]
         if row.hole==24:
             make_qc_log(row)
+            return
 #            continue
 #        make_qc_log(row)
 
