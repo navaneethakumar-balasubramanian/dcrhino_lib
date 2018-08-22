@@ -16,7 +16,6 @@ import os
 import pdb
 from obspy.io.segy.core import _read_segy
 
-#from dcrhino.analysis.measurands.borehole_accelerometer_measurand import BoreholeAccelerometerMeasurand
 from dcrhino.analysis.measurands.data_cloud_measurands import DerivedDataCloudMeasurand
 
 class NatalsDrillTimesFromIDE(DerivedDataCloudMeasurand):

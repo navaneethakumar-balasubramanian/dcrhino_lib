@@ -17,7 +17,6 @@ import pandas as pd
 import pdb
 
 
-#from dcrhino.analysis.measurands.borehole_accelerometer_measurand import BoreholeAccelerometerMeasurand
 from dcrhino.analysis.measurands.data_cloud_measurands import DerivedDataCloudMeasurand
 
 class MWDWithMSE(DerivedDataCloudMeasurand):
