@@ -120,10 +120,10 @@ class DataUnit(object):
     def apply_calibration(self,data,measurement_axis):
         if self.real_time_acquisition:
             sensitivities = ["x_sensitivity","y_sensitivity","z_sensitivity"]
-            sensitivity = self.config_file.getfloat("COLLECTION",sensitivities[measurement_axis]) / 1000.
+            sensitivity = self.config_file.getfloat("PLAYBACK",sensitivities[measurement_axis]) / 1000.
             data = self.convert_from_adc(data)/sensitivity
         else:
-            multiplier = self.config_file.getfloat("COLLECTION","multiplier")
+            multiplier = self.config_file.getfloat("PLAYBACK","ide_multiplier")
             data = data/multiplier
         return data
 
