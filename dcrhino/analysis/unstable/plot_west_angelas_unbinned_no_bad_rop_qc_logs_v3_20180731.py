@@ -25,6 +25,7 @@ from plot_west_angelas_unbinned_qc_logs_v2_20180723 import problem_holes
 from bin_csv_for_west_angelas_meeting import positive_rop_csv_filename
 logger = init_logging(__name__)
 
+#from dcrhino.analysis.unstable.panic.search_for_density_in_rhino import blast_holes_with_density_logs# = [83, 111, 18, 36, 64, 91, 6, 127, 99, 44, 26, 224]
 MEASURAND_REGISTRY.print_measurand_registry()
 
 mwd_measurand = MEASURAND_REGISTRY.measurand('mwd_with_mse')
@@ -71,19 +72,10 @@ def make_the_plots():
         row = df_master.iloc[i_row]
         if row.hole in problem_holes:
             continue
+#        if row.hole in blast_holes_with_density_logs:
+#            make_qc_log(row)
 #        if row.hole==240:
         make_qc_log(row)
-#        if row.hole==121:
-#            continue
-#        if row.hole in bad_and_i_dont_know_why:
-#            continue
-#        try:
-#            pdb.set_trace()
-#            make_qc_log(row)
-#        except IndexError:
-#            print(i_row)
-#            bad_and_i_dont_know_why.append(i_row)
-#        print(bad_and_i_dont_know_why)
 
 
 

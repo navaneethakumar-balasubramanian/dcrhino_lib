@@ -99,9 +99,9 @@ def make_qc_log(row):
 
     """
     #pdb.set_trace()
-    dff['x'] = hole_df[' X'].iloc[0]
-    dff['y'] = hole_df[' Y'].iloc[0]
-    dff['z'] = hole_df[' Z'].iloc[0]
+    dff['x'] = pd.Series(hole_df[' X'].iloc[0], index = dff.index)
+    dff['y'] = pd.Series(hole_df[' Y'].iloc[0], index = dff.index)
+    dff['z'] = pd.Series(hole_df[' Z'].iloc[0], index = dff.index)
     #was hole_profile_df
     #unkerfungle the top of hole
     n_obs_top_of_hole = 10
@@ -112,6 +112,8 @@ def make_qc_log(row):
    #pdb.set_trace()
     dff['hole'] = pd.Series(hole, index = dff.index)
     dff['hole_uid'] = pd.Series(hole_uid, index = dff.index)
+    #pdb.set_trace()
+    dff['orientation'] = pd.Series(row.orientation, index = dff.index)
     qc_log_input = level3_csv_out_measurand.generate_qc_plot_input(df=dff,
                                                                    observer_row=row,
                                                                    plot_meta=plot_meta)

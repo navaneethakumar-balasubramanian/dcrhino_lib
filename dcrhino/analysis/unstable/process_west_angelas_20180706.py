@@ -42,7 +42,7 @@ def configure_processing_run():
     corr_measurand_id = 'correlated2_minlag-0.1-maxlag0.1_firls_80-100-300-350_20ms_deconvolved_sgy_100ms_level1_sgy_piezo'
     #correlated2_minlag-0.1-maxlag0.1_firls_80-100-300-350_N65_deconvolved_sgy_100ms_level1_sgy_piezo'
     #level3_csv_out_measurand_id_hash = 'trace_header_features_dc47b7e0c7893'#
-    level3_csv_out_measurand_id = 'trace_header_features_correlated2_minlag-0.1-maxlag0.1_firls_80-100-300-350_20ms_deconvolved_sgy_100ms_level1_sgy_piezo'
+    #level3_csv_out_measurand_id = 'trace_header_features_correlated2_minlag-0.1-maxlag0.1_firls_80-100-300-350_20ms_deconvolved_sgy_100ms_level1_sgy_piezo'
 
     level_1_measurand = MEASURAND_REGISTRY.measurand(level_1_measurand_id)
     decon_measurand = MEASURAND_REGISTRY.measurand(decon_measurand_id)
@@ -117,8 +117,9 @@ def process_from_ssx_csv_2_eda():
     #corr_measurand_id = 'correlated2_minlag-0.1-maxlag0.1_firls_80-100-300-350_20ms_deconvolved_sgy_100ms_level1_sgy_piezo'
     #corr_measurand = MEASURAND_REGISTRY.measurand(corr_measurand_id)
     df = ssx_measurand.load()
-
+    pdb.set_trace()
     for i_row in range(len(df)):
+        i_row=4
         row = df.iloc[i_row]
 
         data_date_hack = datetime.datetime.strptime(row.dummy_digitizer_id[0:8], '%Y%m%d').date()
@@ -131,9 +132,9 @@ def process_from_ssx_csv_2_eda():
 #        if data_key.digitizer_id in dummy_digitizer_ids_with_density_logs:
 #            print('okwws')
 #            #pdb.set_trace()
-        level3_csv_out_measurand._split_to_npy(data_key)
+        #level3_csv_out_measurand._split_to_npy(data_key)
         #try:
-        level3_csv_out_measurand.make(data_key)
+        level3_csv_out_measurand.make(data_key, force=True)
 
         #features_df = level3_csv_out_measurand.load(data_key)
 
