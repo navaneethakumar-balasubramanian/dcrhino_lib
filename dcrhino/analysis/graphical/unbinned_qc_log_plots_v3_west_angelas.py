@@ -223,6 +223,7 @@ class QCLogPlotter():
 
 
         primary_width_xlim_min = 250.; primary_width_xlim_max = 350.0; i_ax += 1
+        #primary_width_xlim_min = 100.; primary_width_xlim_max = 300.0; i_ax += 1
         #primary_width_xlim_min = None; primary_width_xlim_max = None; i_ax += 1
         primary_pseudovelocity_panel(ax[i_ax], qc_plot_input,
                                      x_limits=[primary_width_xlim_min, primary_width_xlim_max])
