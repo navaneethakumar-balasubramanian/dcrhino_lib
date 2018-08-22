@@ -32,8 +32,8 @@ from dcrhino.analysis.graphical.supporting_qc_plots import qc_plot
 from dcrhino.analysis.graphical.supporting_qc_plots import QCPlotInputs
 from dcrhino.analysis.instrumentation.rhino import get_rhino_channel_map_key#(drill_string_axis_ch, tangential_axis_ch)
 from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
-from dcrhino.analysis.measurands.borehole_accelerometer_measurand import BoreholeAccelerometerMeasurand
 from dcrhino.analysis.measurands.level_2.supporting_level_2_segy import TraceHeaderAttributes
+from dcrhino.analysis.measurands.segy_accelerometer_measurand import SEGYMeasurand
 from dcrhino.analysis.signal_processing.seismic_processing import process_from_decon_to_final
 from dcrhino.analysis.signal_processing.seismic_processing import max_reflection_amplitude2
 from dcrhino.analysis.signal_processing.seismic_processing import max_multiple_amplitude2
@@ -55,7 +55,7 @@ from dcrhino.analysis.util.general_helper_functions import init_logging
 
 logger = init_logging(__name__)
 
-class CorrelatedDeconvolvedSEGY2(BoreholeAccelerometerMeasurand):
+class CorrelatedDeconvolvedSEGY2(SEGYMeasurand):
 
     def __init__(self, **kwargs):
         super(CorrelatedDeconvolvedSEGY2, self).__init__(**kwargs)

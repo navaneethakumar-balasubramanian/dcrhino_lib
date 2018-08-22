@@ -16,15 +16,14 @@ import pdb
 
 
 from obspy.io.segy.core import _read_segy
-from dcrhino.analysis.measurands.borehole_accelerometer_measurand import BoreholeAccelerometerMeasurand
+from dcrhino.analysis.measurands.segy_accelerometer_measurand import SEGYMeasurand
 from dcrhino.analysis.signal_processing.seismic_processing import deconvolve_trace
 from dcrhino.analysis.supporting_processing import get_dummy_hole_ids_from_segy
 from dcrhino.analysis.supporting_processing import get_hole_trace_indices_dict#(dummy_hole_ids, unique_hole_ids)
 from dcrhino.analysis.data_manager.temp_paths import ensure_dir
 from dcrhino.analysis.signal_processing.supporting_segy_processing import sampling_rate_segy_trace
-#from dcrhino.analysis.supporting_processing import get_segy_trace_by_index
 
-class DeconvolvedSEGY(BoreholeAccelerometerMeasurand):
+class DeconvolvedSEGY(SEGYMeasurand):
     """
     Measurand Data Key appears to be digitizer_id and data_date, client_id
     """

@@ -16,10 +16,10 @@ import os
 import pdb
 from obspy.io.segy.core import _read_segy
 
-from dcrhino.analysis.measurands.borehole_accelerometer_measurand import BoreholeAccelerometerMeasurand
+from dcrhino.analysis.measurands.segy_accelerometer_measurand import SEGYMeasurand
 
 
-class RawSgyFromIDE(BoreholeAccelerometerMeasurand):
+class RawSgyFromIDE(SEGYMeasurand):
     """
     uses DigitzerDateSamplingRate DataKey
     """

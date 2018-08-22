@@ -23,11 +23,11 @@ from obspy.io.segy.segy import iread_segy
 
 from dcrhino.analysis.measurands.uniformly_sampled_measurand import UniformlySampledMeasurand
 
-class BoreholeAccelerometerMeasurand(UniformlySampledMeasurand):
+class SEGYMeasurand(UniformlySampledMeasurand):
     """
     """
     def __init__(self, **kwargs):
-        super(BoreholeAccelerometerMeasurand, self).__init__(**kwargs)
+        super(SEGYMeasurand, self).__init__(**kwargs)
         self._sensor_type = kwargs.get('sensor_type', None)
         #self.trace_header_version = kwargs.get('trace_header_version', None)
         #self.extension = kwargs.get('extension', 'sgy')
@@ -62,8 +62,7 @@ class BoreholeAccelerometerMeasurand(UniformlySampledMeasurand):
         2018-07-11: this is a kluge to placehold for when we have the desited info
         in the tfe = tr.stats.segy.textual_file_header_encoding
 
-        Also, it belongs to a class that is explcitly segy.  BoreholeAccelerometerMeasurand
-        is not explicitly segy
+        Also, it belongs to a class that is explcitly segy.
 
         i_trace=0 means first trace, i_trace=-1 means last_trace
         """
