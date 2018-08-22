@@ -61,7 +61,7 @@ def get_rhino_channel_map(drill_string_axis_ch, tangential_axis_ch):
             return RHINO_CHANNEL_MAP['normal']
     elif drill_string_axis_ch ==2:
         if tangential_axis_ch == 1:
-            logger.info("normal channel mapping detected")
+            logger.info("90 degree rotated channel mapping detected")
             return RHINO_CHANNEL_MAP['rotate_90']
 
 def orientation_channel_remap(self, tr=None):
