@@ -35,7 +35,6 @@ from dcrhino.analysis.data_manager.temp_paths import ensure_dir
 from dcrhino.analysis.graphical.unbinned_qc_log_plots_v3_west_angelas import QCLogPlotInput
 from dcrhino.analysis.measurands.uniformly_sampled_measurand import UniformlySampledMeasurand
 from dcrhino.analysis.signal_processing.seismic_processing import get_earliest_expected_mulitple_time
-#from dcrhino.analysis.signal_processing.seismic_processing import get_wavelet_window_indices#(time_vector, start_time, end_time):
 from dcrhino.analysis.signal_processing.supporting_segy_processing import DataCloudTraceHeader
 from dcrhino.analysis.supporting_processing import get_dummy_hole_ids_from_segy
 from dcrhino.analysis.util.general_helper_functions import init_logging
@@ -186,6 +185,7 @@ class TraceHeaderFeaturesMeasurandEDA(UniformlySampledMeasurand):
             from dcrhino.analysis.supporting_processing import get_segy_trace_by_index
             i_trace = 0
             tr = get_segy_trace_by_index( parent_filename, i_trace)
+            rhino_channel_component_map = self.parent_measurands[0].rhino_channel_map(data_key, tr)
             trace_header_operator = DataCloudTraceHeader()
             t0 = trace_header_operator.get_tracetime(tr)
             rng = pd.date_range(t0, periods=1000, freq='1s')
