@@ -238,7 +238,3 @@ class QCLogPlotter():
         plt.savefig(full_out_file)
         #plt.show()
         plt.clf()
-
-
-
-
