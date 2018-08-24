@@ -16,6 +16,9 @@ class RawDataModel(models.Model):
     seq2 = fields.Int64Field()
     txseq2 = fields.Int64Field()
     srl_nmbr = fields.StringField()
+    #These are for debugging initially
+    gps_ts_secs = fields.Int32Field()
+    gps_ts_micro = fields.Int32Field()
 
     engine = engines.MergeTree('dt', ('ts_secs', 'ts_micro'))
 
