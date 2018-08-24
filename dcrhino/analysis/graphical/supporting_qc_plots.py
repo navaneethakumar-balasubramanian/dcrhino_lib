@@ -29,7 +29,6 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
                                    AutoMinorLocator)
 
-#from dcrhino.analysis.supporting_processing import concatenate_traces
 from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
 #home = os.path.expanduser("~/")
 class QCPlotInputs(object):

@@ -42,7 +42,6 @@ from dcrhino.analysis.signal_processing.seismic_processing  import ACOUSTIC_VELO
 from dcrhino.analysis.signal_processing.supporting_segy_processing import DataCloudTraceHeader
 from dcrhino.analysis.signal_processing.supporting_segy_processing import sampling_rate_segy_trace
 
-from dcrhino.analysis.supporting_processing import concatenate_traces
 from dcrhino.analysis.supporting_processing import concatenate_traces2
 from dcrhino.analysis.supporting_processing import get_dummy_hole_ids_from_segy
 #from dcrhino.analysis.supporting_processing import dummy_hole_id_from_trace

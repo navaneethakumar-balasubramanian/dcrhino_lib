@@ -104,37 +104,37 @@ def get_hole_trace_indices_dict(dummy_hole_ids, unique_hole_ids):
 
 
 
-def concatenate_traces(st, component, output_shape='2d'):
-    """
-    @type st:  obspy.core.stream.Stream, i.e.the output from _read_segy()
-    TODO: add support for 1D, 2D outputs
-
-
-    """
-    num_traces = len(st.traces)
-    n_pts = len(st.traces[0].data)#640
-    if component == 'x':
-        trace_indices = range(0,num_traces,3)
-    elif component == 'y':
-        trace_indices = range(1,num_traces,3)
-    elif component == 'z':
-        trace_indices = range(2,num_traces,3)
-
-    trace_array = np.full((num_traces//3, n_pts), np.nan, dtype='float32')
-    #pdb.set_trace()
-    for i_trace, trace_index in enumerate(trace_indices):
-        print(i_trace)
-        trace = st.traces[trace_index]
-        try:
-            if trace.stats.segy.trace_header.hole_id>0:
-                trace_array[i_trace,:] = st.traces[trace_index].data
-        except AttributeError:
-            if trace.stats.segy.trace_header.dummy_hole_id>0:
-                trace_array[i_trace,:] = st.traces[trace_index].data
-    #pdb.set_trace()
-    if output_shape=='1d':
-        trace_array = trace_array.reshape(np.prod(trace_array.shape))
-    return trace_array
+#def concatenate_traces(st, component, output_shape='2d'):
+#    """
+#    @type st:  obspy.core.stream.Stream, i.e.the output from _read_segy()
+#    TODO: add support for 1D, 2D outputs
+#
+#
+#    """
+#    num_traces = len(st.traces)
+#    n_pts = len(st.traces[0].data)#640
+#    if component == 'x':
+#        trace_indices = range(0,num_traces,3)
+#    elif component == 'y':
+#        trace_indices = range(1,num_traces,3)
+#    elif component == 'z':
+#        trace_indices = range(2,num_traces,3)
+#
+#    trace_array = np.full((num_traces//3, n_pts), np.nan, dtype='float32')
+#    #pdb.set_trace()
+#    for i_trace, trace_index in enumerate(trace_indices):
+#        print(i_trace)
+#        trace = st.traces[trace_index]
+#        try:
+#            if trace.stats.segy.trace_header.hole_id>0:
+#                trace_array[i_trace,:] = st.traces[trace_index].data
+#        except AttributeError:
+#            if trace.stats.segy.trace_header.dummy_hole_id>0:
+#                trace_array[i_trace,:] = st.traces[trace_index].data
+#    #pdb.set_trace()
+#    if output_shape=='1d':
+#        trace_array = trace_array.reshape(np.prod(trace_array.shape))
+#    return trace_array
 
 
 def concatenate_traces2(st, component, output_shape='2d'):
