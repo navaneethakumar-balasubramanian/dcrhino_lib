@@ -84,7 +84,7 @@ class DataUnit(object):
        self.output_sampling_rate = self.config_file.getint("COLLECTION","output_sampling_rate")
        self.trace_length = self.config_file.getint("COLLECTION","trace_length_in_seconds")
        self.channels_per_sensor = self.config_file.getint("COLLECTION","channels_per_sensor")
-       self.real_time_acquisition = self.config_file.getboolean("COLLECTION","real_time_acquisition")
+       self.apply_sensitivities = self.config_file.getboolean("PLAYBACK","apply_sensitivities")
        self.metadata.deconvolution_filter_duration = self.config_file.getfloat("PROCESSING","deconvolution_filter_duration")
        self.metadata.trapezoidal_bpf_corner_1 = self.config_file.getfloat("PROCESSING","trapezoidal_bpf_corner_1")
        self.metadata.trapezoidal_bpf_corner_2 = self.config_file.getfloat("PROCESSING","trapezoidal_bpf_corner_2")
@@ -118,7 +118,7 @@ class DataUnit(object):
         return data * 5 / 65535
 
     def apply_calibration(self,data,measurement_axis):
-        if self.real_time_acquisition:
+        if self.apply_sensitivities:
             sensitivities = ["x_sensitivity","y_sensitivity","z_sensitivity"]
             sensitivity = self.config_file.getfloat("PLAYBACK",sensitivities[measurement_axis]) / 1000.
             data = self.convert_from_adc(data)/sensitivity

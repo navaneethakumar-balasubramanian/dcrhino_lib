@@ -236,5 +236,5 @@ class QCLogPlotter():
                             x_limits=[pseudodensity_xlim_min, pseudodensity_xlim_max])
 
         plt.savefig(full_out_file)
-        #plt.show()
+        plt.show()
         plt.clf()
