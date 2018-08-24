@@ -121,7 +121,8 @@ class DataUnit(object):
         if self.apply_sensitivities:
             sensitivities = ["x_sensitivity","y_sensitivity","z_sensitivity"]
             sensitivity = self.config_file.getfloat("PLAYBACK",sensitivities[measurement_axis]) / 1000.
-            data = self.convert_from_adc(data)/sensitivity
+            accelerometer_max_voltage = self.config_file.getfloat("PLAYBACK","accelerometer_max_voltage")
+            data = ((accelerometer_max_voltage/2.0)-self.convert_from_adc(data))/sensitivity
         else:
             multiplier = self.config_file.getfloat("PLAYBACK","ide_multiplier")
             data = data/multiplier
