@@ -71,6 +71,42 @@ class DigitizerSamplingRateDateDataKey(MeasurandDataKey):
 #    def is_valid(self):
 #        return True
 
+
+class DAQSerialNumberSamplingRateComponentTimeIntervalDataKey(MeasurandDataKey):
+    """
+    20180823: here is my file partioning proposition for Level_1 reampled:
+
+    level_1/piezo/serial/3200hz/axial/yyyymmddThhmmss_ssssss.npy
+    """
+    def __init__(self, digitizer_id, sampling_rate, component, time_interval, **kwargs):
+        super(DAQSerialNumberSamplingRateComponentTimeIntervalDataKey, self).__init__(**kwargs)
+        self.digitizer_id = digitizer_id
+        self.sampling_rate = sampling_rate
+        self.component = component
+        self.time_interval = time_interval
+
+    @property
+    def mini_path(self):
+        mini_path_1 = '{}'.format(self.digitizer_id)
+        mini_path_2 = '{}hz'.format(int(self.sampling_rate))
+        mini_path_3 = '{}'.format(self.component)
+
+        mini_path = os.path.join(mini_path_1, mini_path_2, mini_path_3)
+        return mini_path
+
+
+    def time_interval_string(self):
+        """
+        """
+        start_string = self.time_interval.lower_bound.strftime('%Y%m%dT%H%M%S')
+        end_string = self.time_interval.upper_bound.strftime('%Y%m%dT%H%M%S')
+        out_string = '-'.join([start_string, end_string])
+        return out_string
+#        pdb.set_trace()
+#        print('strf, strp yyyymmddThhmmss_ssssss.npy')
+#    def is_valid(self):
+#        return True
+
 class BinnedTraceHeaderDataKey(MeasurandDataKey):
     def __init__(self, digitizer_date_data_key, observer_row, mount_point, **kwargs):
         super(BinnedTraceHeaderDataKey, self).__init__(**kwargs)

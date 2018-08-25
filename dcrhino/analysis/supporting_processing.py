@@ -105,6 +105,7 @@ def get_hole_trace_indices_dict(dummy_hole_ids, unique_hole_ids):
 def concatenate_traces(st, component, output_shape='2d'):
     """
     @type st:  obspy.core.stream.Stream, i.e.the output from _read_segy()
+    @type component: string, one of 'axial', tangential', 'radial'
     TODO: add support for 1D, 2D outputs
 
     @var channel: [0, 1, 2] its one of these.  it used to be veritcal:0, tangential:1, radial:2
