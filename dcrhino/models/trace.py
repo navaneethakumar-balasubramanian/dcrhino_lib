@@ -7,8 +7,9 @@ class TraceModel(models.Model):
     config_key = fields.StringField()
     data = fields.ArrayField(fields.Float32Field())
     component = fields.Enum8Field(Enum('Components', 'null axial tangential radial'))
+    metadata_id = fields.Int32Field()
 
-    engine = engines.MergeTree('date', ('date',))
+    engine = engines.MergeTree('date', ('date','metadata_id'))
 
     @classmethod
     def table_name(cls):
