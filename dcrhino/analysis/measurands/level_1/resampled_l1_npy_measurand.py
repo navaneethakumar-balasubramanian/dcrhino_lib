@@ -66,8 +66,8 @@ class ResampledL1AccelerometerMeasurand(AccelerometerMeasurand):
                 st = self.parent_measurands[0].load(parent_data_key)
         #trace_array_dict[component] = concatenate_traces(st, component)
         #trace_array_dict[component] = trace_array_dict[component].T
-        pdb.set_trace()
-        data_array= concatenate_traces(st, data_key.component)
+        #pdb.set_trace()
+        data_array= concatenate_traces(st, data_key.component, output_shape='1d')
         self.save(data_key, data_array)
 #       pdb.set_trace()
 #        print('here you must decide if you want ot pass "1d" as output shape, \
