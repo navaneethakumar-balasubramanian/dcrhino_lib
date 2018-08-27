@@ -43,7 +43,6 @@ from dcrhino.analysis.signal_processing.supporting_segy_processing import DataCl
 from dcrhino.analysis.signal_processing.supporting_segy_processing import sampling_rate_segy_trace
 
 from dcrhino.analysis.supporting_processing import concatenate_traces
-from dcrhino.analysis.supporting_processing import concatenate_traces2
 from dcrhino.analysis.supporting_processing import get_dummy_hole_ids_from_segy
 #from dcrhino.analysis.supporting_processing import dummy_hole_id_from_trace
 from dcrhino.analysis.supporting_processing import get_hole_trace_indices_dict
@@ -284,7 +283,7 @@ class CorrelatedDeconvolvedSEGY2(SEGYMeasurand):
         #pdb.set_trace()
         trace_array_dict = {}
         for component in COMPONENT_LABELS:#['x', 'y', 'z']:
-            trace_array_dict[component] = concatenate_traces2(st, component)
+            trace_array_dict[component] = concatenate_traces(st, component)
             trace_array_dict[component] = trace_array_dict[component].T
 
         center_trace_dict = {}

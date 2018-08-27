@@ -25,7 +25,7 @@ from dcrhino.analysis.measurands.level_1.drilltimes_measurand import NatalsDrill
 from dcrhino.analysis.measurands.level_1.master_iterator_csv_measurand import MasterIterator
 from dcrhino.analysis.measurands.level_1.mwd_with_mse_measurand import MWDWithMSE
 from dcrhino.analysis.measurands.level_1.slamstix_metadata_table_measurand import SlamstixMetadataTable
-
+from dcrhino.analysis.measurands.level_1.resampled_l1_npy_measurand import ResampledL1AccelerometerMeasurand
 #from dcrhino.analysis.measurands.level_2.correlated_deconvolved_segy_measurand import CorrelatedDeconvolvedSEGY
 from dcrhino.analysis.measurands.level_2.correlated_deconvolved_segy_measurand2 import CorrelatedDeconvolvedSEGY2
 from dcrhino.analysis.measurands.level_2.deconvolved_segy_measurand import DeconvolvedSEGY
@@ -126,6 +126,29 @@ def _create_level1_segy_measurands():
         copy_of_prototype._sensor_type = sensor_type
         copy_of_prototype.parent_measurands = [IdeFileMeasurand(),]
         copy_of_prototype.operator = 'file format transformation and resampling'
+        copy_of_prototype.description = copy_of_prototype.label
+        register_measurand(copy_of_prototype)
+#    print_measurand_registry()
+
+def _create_level1_npy_measurands():
+    """
+    TODO: fix hack with sensor-type ch08, this is not really a sensor type, this
+    is a variation on file style... the ch08 files are the big long files ...
+    """
+    prototype_measurand = ResampledL1AccelerometerMeasurand(data_level=1, units='g',
+                                                            formality='development',
+                                                            label='level1_npy',
+                                                            extension='npy',
+                                                            project_id=PROJECT_ID)
+    #pdb.set_trace()
+    #sampling_rates = [3200.0,]#, 12800.0]
+    for sensor_type in sensor_types_of_interest:
+        #for sampling_rate in sampling_rates:
+        copy_of_prototype = prototype_measurand._clone()
+        #copy_of_prototype._sampling_rate = sampling_rate
+        copy_of_prototype._sensor_type = sensor_type
+        copy_of_prototype.parent_measurands = [RawSgyFromIDE(),]
+        copy_of_prototype.operator = 'file format transformation'
         copy_of_prototype.description = copy_of_prototype.label
         register_measurand(copy_of_prototype)
 #    print_measurand_registry()
@@ -361,6 +384,7 @@ def _create_level1_measurands():
     """
     """
     _create_level1_segy_measurands()
+    _create_level1_npy_measurands()
     _create_level1_drilltimes_measurands()
     _create_level1_slamstix_table_measurands()
     _create_mwd_with_mse_measurand()
