@@ -73,9 +73,9 @@ class DataInterval(object):
 
 class DataUnit(object):
 
-    def __init__(self,logger_file,cfg):
+    def __init__(self,logger_file,cfg,db_name):
        self.config_file = cfg
-       self.db_name = cfg.get('DB', 'db_name', "rhino")
+       self.db_name = db_name
        self.db_raw_data_table = cfg.get('DB', 'db_input_raw_data_table', "raw_data")
        self._temp_starttime_of_database = None
        #self._parameters = self._read_config_file()
@@ -343,6 +343,7 @@ class DataUnit(object):
 #        pdb.set_trace()
 
         query = "select count(ts_secs) as ts_secs from "+self.db_raw_data_table
+        print (query)
         count = dbc.query(self.dbconn,query)[0][2]
         if count > self.output_sampling_rate*self.trace_length:
             return True

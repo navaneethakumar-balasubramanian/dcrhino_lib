@@ -20,7 +20,7 @@ class RawDataModel(models.Model):
     gps_ts_secs = fields.Int32Field()
     gps_ts_micro = fields.Int32Field()
 
-    engine = engines.MergeTree('dt', ('ts_secs', 'ts_micro'))
+    engine = engines.MergeTree('dt', ('ts_secs', 'ts_micro','gps_ts_secs','gps_ts_micro'))
 
     def set_date_fields(self,date_time):
         my_date = date_time.date()
