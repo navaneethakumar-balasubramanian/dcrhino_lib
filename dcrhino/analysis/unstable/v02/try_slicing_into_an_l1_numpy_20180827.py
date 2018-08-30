@@ -33,7 +33,6 @@ from dcrhino.analysis.signal_processing.trace_header import define_obspy_trace_h
 from dcrhino.analysis.util.general_helper_functions import init_logging
 from dcrhino.analysis.util.interval import TimeInterval
 
-from supporting_v02_processing import get_old_data_key, get_new_data_key
 logger = init_logging(__name__)
 
 define_obspy_trace_header()
@@ -41,31 +40,51 @@ MEASURAND_REGISTRY.print_measurand_registry()
 ssx_measurand = MEASURAND_REGISTRY.measurand('slamstix_metadata')
 ssx_df = ssx_measurand.load()
 
+master_iterator_measurand = MEASURAND_REGISTRY.measurand('master_iterator')
+df_master = master_iterator_measurand.load()
 
-#def get_old_data_key(row):
-#    """
-#    """
-#    data_date_hack = datetime.datetime.strptime(row.dummy_digitizer_id[0:8], '%Y%m%d').date()
-#    sps = row.sampling_rate
-#    digitizer_id = row.dummy_digitizer_id
-#    data_key = DigitizerSamplingRateDateDataKey(digitizer_id, data_date_hack, sps)
-#    return data_key
-#
-#def get_new_data_key(row, component):
-#    """
-#    digitizer_id,sampling_rate,
-#                 component, time_interval, **kwargs):
-#    """
-#    digitizer_id = int(row.dummy_digitizer_id.split('_')[-2])
-#    sampling_rate = row.sampling_rate
-#
-#    #pdb.set_trace()
-#    time_interval = TimeInterval(lower_bound=row.time_start, upper_bound=row.time_end)
-#    data_key = DAQSerialNumberSamplingRateComponentTimeIntervalDataKey(digitizer_id,
-#                                                                       sampling_rate,
-#                                                                       component,
-#                                                                       time_interval)
-#    return data_key
+hole = 10
+sub_df = df_master[df_master.hole==hole]
+if len(sub_df)==1:
+    row = sub_df.iloc[0]
+
+    print('get start and endtime for hole')
+    time_interval = TimeInterval(lower_bound=row.time_start, upper_bound=row.time_end)
+    print('make measurand data key')
+
+    pdb.set_trace()
+    pass
+else:
+    print('non unique - further specify digitizer, sps, etc')
+    pdb.set_trace()
+pdb.set_trace()
+#READ IN MAster iterator and find a blsthole that you have downloaded
+
+
+def get_old_data_key(row):
+    """
+    """
+    data_date_hack = datetime.datetime.strptime(row.dummy_digitizer_id[0:8], '%Y%m%d').date()
+    sps = row.sampling_rate
+    digitizer_id = row.dummy_digitizer_id
+    data_key = DigitizerSamplingRateDateDataKey(digitizer_id, data_date_hack, sps)
+    return data_key
+
+def get_new_data_key(row, component):
+    """
+    digitizer_id,sampling_rate,
+                 component, time_interval, **kwargs):
+    """
+    digitizer_id = int(row.dummy_digitizer_id.split('_')[-2])
+    sampling_rate = row.sampling_rate
+
+    #pdb.set_trace()
+    time_interval = TimeInterval(lower_bound=row.time_start, upper_bound=row.time_end)
+    data_key = DAQSerialNumberSamplingRateComponentTimeIntervalDataKey(digitizer_id,
+                                                                       sampling_rate,
+                                                                       component,
+                                                                       time_interval)
+    return data_key
 
 
 def convert_l1segy_to_l1npy():

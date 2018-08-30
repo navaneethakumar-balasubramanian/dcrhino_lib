@@ -64,6 +64,7 @@ def generate_the_big_csv_of_all_blastholes():
     time_ends =[]
     drill_rig_ids = []
     dummy_digitizer_ids = []
+    digitizer_ids = []
     orientations = []
     sensor_distance_to_source_list = []
     sampling_rates = []
@@ -88,6 +89,8 @@ def generate_the_big_csv_of_all_blastholes():
             time_ends.append(end_datetime)
             drill_rig_ids.append(machine_id)
             dummy_digitizer_ids.append(ssx_rows.dummy_digitizer_id.iloc[i_ssx_row])
+            digitizer_ids.append(int(ssx_rows.dummy_digitizer_id.iloc[i_ssx_row][-9:-5]))
+            #pdb.set_trace()
             orientations.append(ssx_rows.orientation.iloc[i_ssx_row])
             sensor_distance_to_source_list.append(ssx_rows.sensor_distance_to_source.iloc[i_ssx_row].astype(np.float32))
             sampling_rates.append(ssx_rows.sampling_rate.iloc[i_ssx_row])
@@ -95,6 +98,7 @@ def generate_the_big_csv_of_all_blastholes():
 
     df_dict = {'hole':holes, 'hole_uid':holes_uid,'time_start':time_starts, 'time_end':time_ends,
                'drill_rig_id':drill_rig_ids, 'dummy_digitizer_id':dummy_digitizer_ids,
+               'digitizer_id':digitizer_ids,
                'orientation':orientations,'sensor_distance_to_source':sensor_distance_to_source_list,
                'sampling_rate':sampling_rates, 'area':areas}
     iterator_df = pd.DataFrame(data=df_dict)
