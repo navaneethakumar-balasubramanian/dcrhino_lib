@@ -24,7 +24,7 @@ HOME = os.path.expanduser('~/')
 
 ROOT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_PATH = os.path.join(HOME, 'data', 'datacloud')
-
+cache_path = os.path.join(HOME, '.cache', 'datacloud')
 
 def get_project_data_path(project_name):
     return os.path.join(DATA_PATH, project_name)
