@@ -76,13 +76,13 @@ def make_plot():
     qc_plot(qc_plot_input, output_filename , data_date, 'west_angelas', show=True)
 
 
-plt.subplot(3, 1, 1)
-plt.plot(np.random.rand(33))
-plt.subplot(3, 1, 2)
-plt.plot(np.random.rand(313))
-plt.subplot(3, 1, 3)
-plt.plot(np.random.rand(433))
-plt.show()
+#plt.subplot(3, 1, 1)
+#plt.plot(np.random.rand(33))
+#plt.subplot(3, 1, 2)
+#plt.plot(np.random.rand(313))
+#plt.subplot(3, 1, 3)
+#plt.plot(np.random.rand(433))
+#plt.show()
 def my_function():
     """
     """
@@ -91,7 +91,7 @@ def my_function():
 def main():
     """
     """
-    my_function()
+    make_plot()
     print("finito {}".format(datetime.datetime.now()))
 
 if __name__ == "__main__":
