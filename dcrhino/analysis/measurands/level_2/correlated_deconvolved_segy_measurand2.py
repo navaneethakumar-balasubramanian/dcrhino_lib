@@ -275,7 +275,7 @@ class CorrelatedDeconvolvedSEGY2(SEGYMeasurand):
         if st is None:
             st = self.load(data_key)
 
-        rhino_channel_map = rhino_channel_map_from_trace(st.traces[0])
+        #rhino_channel_map = rhino_channel_map_from_trace(st.traces[0])
         dt = 1./sampling_rate_segy_trace(st.traces[0])
         travel_distance = 2 * st.traces[0].stats.segy.trace_header.sensor_distance_to_source
         theoretical_two_way_travel_time = travel_distance / ACOUSTIC_VELOCITY
@@ -322,15 +322,33 @@ class CorrelatedDeconvolvedSEGY2(SEGYMeasurand):
         #pdb.set_trace()
         TRD = trace_array_dict.copy()
         #TRD[component] = TRD[component]
-        TRD['axial'] = TRD['axial'][half_way-samples_back:half_way+samples_fwd,:]
-        TRD['tangential'] = TRD['tangential'][half_way-samples_back:half_way+samples_fwd,:]
-        TRD['radial'] = TRD['radial'][half_way-samples_back:half_way+samples_fwd,:]
+        for component_label in COMPONENT_LABELS:
+            TRD[component_label] = TRD[component_label][half_way-samples_back:half_way+samples_fwd,:]
+#        TRD['axial'] = TRD['axial'][half_way-samples_back:half_way+samples_fwd,:]
+#        TRD['tangential'] = TRD['tangential'][half_way-samples_back:half_way+samples_fwd,:]
+#        TRD['radial'] = TRD['radial'][half_way-samples_back:half_way+samples_fwd,:]
         #</sort out spanning milliseconds>
 
 
 
         trace_array_dict = TRD
-        #pdb.set_trace()
+#        pdb.set_trace()
+#        from dcrhino.analysis.data_manager.temp_paths import cache_path
+#        output_directory = os.path.join(cache_path, 'qc_plot_input')
+#        ensure_dir(output_directory)
+#        for component_label in COMPONENT_LABELS:
+#            component_filename = os.path.join(output_directory, '{}.npy'.format(component_label))
+#            temp_data = trace_array_dict[component_label]
+#            np.save(component_filename, temp_data)
+#        full_outfile = os.path.join(output_directory, '{}.npy'.format('peak_ampl_axial'))
+#        np.save(full_outfile, trace_header_attributes.peak_ampl_axial)
+#        full_outfile = os.path.join(output_directory, '{}.npy'.format('peak_ampl_tangential'))
+#        np.save(full_outfile, trace_header_attributes.peak_ampl_tangential)
+#        full_outfile = os.path.join(output_directory, '{}.npy'.format('peak_ampl_radial'))
+#        np.save(full_outfile, trace_header_attributes.peak_ampl_radial)
+#        full_outfile = os.path.join(output_directory, '{}.npy'.format('peak_mult_axial'))
+#        np.save(full_outfile, trace_header_attributes.peak_mult_axial)
+
         qc_plot_input = QCPlotInputs(trace_array_dict=trace_array_dict,
                                      peak_ampl_x=trace_header_attributes.peak_ampl_axial,
                                      peak_ampl_y=trace_header_attributes.peak_ampl_tangential,
