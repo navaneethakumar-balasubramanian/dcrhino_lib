@@ -22,14 +22,12 @@ import numpy as np
 import os
 import pandas as pd
 import pdb
-
+import time
 
 from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS# = ['axial', 'tangential', 'radial']
 
 import dcrhino.analysis.measurands.measurand_registry_west_angelas as MEASURAND_REGISTRY
-from dcrhino.analysis.measurands.keys.data_key import DigitizerSamplingRateDateDataKey
 from dcrhino.analysis.measurands.keys.data_key import DAQSerialNumberSamplingRateComponentTimeIntervalDataKey
-from dcrhino.analysis.signal_processing.trace_header import define_obspy_trace_header
 from dcrhino.analysis.util.general_helper_functions import init_logging
 from dcrhino.analysis.util.interval import TimeInterval
 
@@ -37,56 +35,72 @@ from supporting_v02_processing import get_old_data_key, get_new_data_key
 
 logger = init_logging(__name__)
 
-define_obspy_trace_header()
+
 MEASURAND_REGISTRY.print_measurand_registry()
+l1_measurand = MEASURAND_REGISTRY.measurand('level1_npy_piezo')
 ssx_measurand = MEASURAND_REGISTRY.measurand('slamstix_metadata')
 ssx_df = ssx_measurand.load()
 
 master_iterator_measurand = MEASURAND_REGISTRY.measurand('master_iterator')
 df_master = master_iterator_measurand.load()
 
-hole = 10
-sub_df = df_master[df_master.hole==hole]
-if len(sub_df)==1:
-    row = sub_df.iloc[0]
 
+def get_hole_data(hole_row, component, plot=False):
+    """
+    """
+    #associate hole row with unique ssx file (or database table)
+#    ssx_sub_df = ssx_df[ssx_df['time_start']<=hole_row.time_start]
+#    ssx_sub_df = ssx_sub_df[ssx_sub_df['time_end']>=hole_row.time_end]
+    ssx_sub_df = ssx_df[ssx_df['dummy_digitizer_id']==hole_row.dummy_digitizer_id]
+    #pdb.set_trace()
+    if len(ssx_sub_df)!=1:
+        logger.error("non unique paretn file")
+        raise(Exception)
+    else:
+        ssx_row = ssx_sub_df.iloc[0]
     print('get start and endtime for hole')
-    time_interval = TimeInterval(lower_bound=row.time_start, upper_bound=row.time_end)
+    data_time_interval = TimeInterval(lower_bound=hole_row.time_start, upper_bound=hole_row.time_end)
+    parent_file_time_interval = TimeInterval(lower_bound=ssx_row.time_start, upper_bound=ssx_row.time_end)
     print('make measurand data key')
-    #data_key = get_new_data_key()
+    #nead the neighborhood time interval ... points at the parent file
+    #pdb.set_trace()
+    data_key = DAQSerialNumberSamplingRateComponentTimeIntervalDataKey(hole_row.digitizer_id,
+                                                                           hole_row.sampling_rate,
+                                                                           component,
+                                                                           parent_file_time_interval)
+
+    data = l1_measurand.load_segment(data_key, data_time_interval)
+    if plot:
+        plt.plot(data);plt.show()
+    return data
+
+hole = 11
+sub_df = df_master[df_master.hole==hole]
+if len(sub_df) == 0:
+    logger.warning("not a valid hole {}".format(hole))
     pdb.set_trace()
-    pass
+    raise(Exception)
+
+if len(sub_df)==1:
+    hole_row = sub_df.iloc[0]
+    for component in COMPONENT_LABELS:
+        data = get_hole_data(hole_row, component)
 else:
-    print('non unique - further specify digitizer, sps, etc')
+    logger.error('non unique - further specify digitizer, sps, etc')
+    print(sub_df)
+    t0 = time.time()
+    n_rows = len(sub_df)
+    for i_row in range(n_rows):
+        hole_row = sub_df.iloc[i_row]
+        for component in COMPONENT_LABELS:
+            data = get_hole_data(hole_row, component)#, plot=True)
+            pdb.set_trace()
+            print(time.time()-t0)
     pdb.set_trace()
 pdb.set_trace()
 #READ IN MAster iterator and find a blsthole that you have downloaded
 
 
-
-
-def convert_l1segy_to_l1npy():
-    """
-    """
-    level_1_measurand_id_a = 'level1_sgy_piezo'
-    level_1_measurand_id_b = 'level1_npy_piezo'
-    level_1_measurand_a = MEASURAND_REGISTRY.measurand(level_1_measurand_id_a)
-    level_1_measurand_b = MEASURAND_REGISTRY.measurand(level_1_measurand_id_b)
-
-    n_l1_sgy_files = len(ssx_df)
-    for i_row in range(n_l1_sgy_files):
-        #i_row=3
-        row = ssx_df.iloc[i_row]
-        old_l1_data_key = get_old_data_key(row)
-        #pdb.set_trace()
-        print('loading...')
-#        xx = /home/kkappler/data/datacloud/west_angelas/level_1
-        st = level_1_measurand_a.load(old_l1_data_key)
-        #st=1
-        for component_label in COMPONENT_LABELS:
-            new_l1_data_key = get_new_data_key(row, component_label)
-            #pdb.set_trace()
-            level_1_measurand_b._make_from_parents(new_l1_data_key, parent_data=st)
 
 
 
@@ -97,7 +111,6 @@ def main():
     """
 #    process_from_ssx_csv_2_eda()
 #    pdb.set_trace()
-    convert_l1segy_to_l1npy()
     print("finito {}".format(datetime.datetime.now()))
 
 if __name__ == "__main__":

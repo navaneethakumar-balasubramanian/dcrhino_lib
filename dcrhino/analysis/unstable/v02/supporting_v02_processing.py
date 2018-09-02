@@ -54,6 +54,8 @@ def get_new_data_key(row, component):
     """
     digitizer_id,sampling_rate,
                  component, time_interval, **kwargs):
+    row here is a row of the slamstix_metadata_table.
+    This is a hack to support old segy files
     """
     digitizer_id = int(row.dummy_digitizer_id.split('_')[-2])
     sampling_rate = row.sampling_rate
@@ -67,7 +69,6 @@ def get_new_data_key(row, component):
     return data_key
 
 
-def main():
     """
     """
     print("finito {}".format(datetime.datetime.now()))

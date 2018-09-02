@@ -88,6 +88,20 @@ class ResampledL1AccelerometerMeasurand(AccelerometerMeasurand):
         else:
             print("Unexpected extension")
 
+    def load_segment(self, data_key, segment_time_interval):
+        """
+        """
+        from dcrhino.analysis.util.chunkwise_array_reading import read_npy_chunk
+        parent_filename = self.expected_filename(data_key)
+
+        time_of_first_sample_in_file = data_key.time_interval.lower_bound
+        time_of_first_sample_in_segment = segment_time_interval.lower_bound
+        skip_gap = time_of_first_sample_in_segment - time_of_first_sample_in_file
+        n_skip = int(skip_gap.total_seconds() * data_key.sampling_rate)
+        n_take = int(segment_time_interval.duration() * data_key.sampling_rate)
+        #pdb.set_trace()
+        data = read_npy_chunk(parent_filename, n_skip, n_take)
+        return data
 
     def available_files_to_process(self, data_key):
         full_path = self.full_path(data_key)
