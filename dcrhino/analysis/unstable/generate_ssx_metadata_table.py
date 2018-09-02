@@ -80,13 +80,14 @@ def generate_ssx_sourced_observer_notes():
     orientation_list = n_ssx * [None]
     sensor_distance_to_source_list = n_ssx * [None]
     drill_rig_ids = n_ssx * [None]
+    digitizer_ids = n_ssx * [None]
 
     #make a dictionary ... define columns and rows.
     #file_list = file_list[0:2]
     for i_file, filename in enumerate(file_list):
         print(i_file)
         dummy_digitizer_id = filename[-31:-4]
-
+        digitizer_id = dummy_digitizer_id.split('_')[-2]
         sps = filename.split('hz/')[0][-4:]
         sps = np.float32(int(sps))
 
@@ -114,6 +115,7 @@ def generate_ssx_sourced_observer_notes():
         last_start_time = trace_start_datetime(last_trace)
 
         dummy_digitizer_ids[i_file] = dummy_digitizer_id
+        digitizer_ids[i_file] = digitizer_id
         sampling_rate_list[i_file] = sps
         start_time_list[i_file] = start_time
         end_time_list[i_file] = last_start_time #+ datetime.timedelta(seconds=60)
