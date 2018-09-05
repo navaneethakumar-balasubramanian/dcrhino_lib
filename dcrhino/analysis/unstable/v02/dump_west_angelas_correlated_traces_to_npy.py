@@ -30,7 +30,7 @@ from dcrhino.analysis.util.interval import TimeInterval
 
 from supporting_v02_processing import get_old_data_key, get_new_data_key
 logger = init_logging(__name__)
-
+home = os.path.expanduser("~/")
 mwd_measurand = MEASURAND_REGISTRY.measurand('mwd_with_mse')
 hole_profile_df = mwd_measurand.load()
 master_iterator_measurand = MEASURAND_REGISTRY.measurand('master_iterator')
@@ -100,7 +100,10 @@ def convert_l2segy_to_l2npy():
                 #new_l1_data_key = get_new_data_key(row, component_label)
                 #pdb.set_trace()
 #            level_1_measurand_b._make_from_parents(new_l1_data_key, parent_data=st)
-                out_filename = '{}_{}_{}.npy'.format(component_label, hole_row.hole, row.digitizer_id)
+                out_basename = '{}_{}_{}.npy'.format(component_label, hole_row.hole, row.digitizer_id)
+                #out_folder = os.path.join(home, 'data', 'datacloud', )
+                out_folder = '/data_sdd/west_angelas/corr_npy_dump/'
+                out_filename = os.path.join(out_folder, out_basename)
                 np.save(out_filename, traces_array)
 
 
