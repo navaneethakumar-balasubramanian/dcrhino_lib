@@ -59,10 +59,12 @@ def convert_l2segy_to_l2npy():
     """
 
     n_l1_sgy_files = len(ssx_df)
+    #pdb.set_trace()
     for i_row in range(n_l1_sgy_files):
         print('irow = {}'.format(i_row))
-        #i_row=3
+        i_row=4
         row = ssx_df.iloc[i_row]
+
         print('make a list of all the holes that are in this file')
         print('do this by identifying the drill ')
         drill_id = row.drill_rig_id
@@ -82,6 +84,7 @@ def convert_l2segy_to_l2npy():
         for component_label in COMPONENT_LABELS:
             data_array_dict[component_label] = concatenate_traces(st, component_label, output_shape='1d')
         number_of_blastholes = len(sub_iterator)
+        samples_per_trace = len(st.traces[0].data)
         for i_blasthole in range(number_of_blastholes):
             print('identify the start and end time of this blasthole \
                   and then the trace id.  ')
@@ -91,8 +94,8 @@ def convert_l2segy_to_l2npy():
             hole_time_interval = TimeInterval(lower_bound=hole_row.time_start, upper_bound=hole_row.time_end)
             num_seconds_to_read = int(hole_time_interval.duration())
             for component_label in COMPONENT_LABELS:
-                start_sample = int(row.sampling_rate * num_traces_to_seek)
-                final_sample = int(row.sampling_rate * (num_traces_to_seek+num_seconds_to_read))
+                start_sample = int(samples_per_trace * num_traces_to_seek)
+                final_sample = int(samples_per_trace * (num_traces_to_seek+num_seconds_to_read))
                 traces_array = data_array_dict[component_label][start_sample:final_sample]
 
                 #new_l1_data_key = get_new_data_key(row, component_label)
