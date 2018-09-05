@@ -6,7 +6,6 @@ Metadata Header definition for Rhino Unit File structure
 """
 from __future__ import absolute_import, division, print_function
 from datetime import datetime
-#from dcrhino.collection.IDEtoSEGY.rhino import StandardString
 import csv, os, sys
 import pandas as pd
 from enum import Enum
@@ -68,7 +67,6 @@ class Drill_String_Component():
         self._od_units = int(od_units)
 
     def __str__(self):
-        #pdb.set_trace()
         value = "{},{},{},{},{},{}".format(self._type,self._status,self._length,self._length_units,self._od,self._od_units)
         return value
 
@@ -230,24 +228,6 @@ class Metadata(object):
                 raise LookupError("The metadata value in the configuration file is not declared in the metadata class")
         self.sensor_distance_to_source = self.drill_string_total_length - self.sensor_position
 
-        #params = pd.read_table(os.path.join(PATH,"installation.cfg"),sep="=",names=["Value"],index_col=0)
-        #params=params.to_dict(orient='index')
-        #for key,key_type in METADATA_HEADER_FORMAT_KEYS.items():
-        #    if key in params.keys():
-        #        if key_type is DataType.FLOAT:
-        #            value = float(params[key]['Value'])
-        #        elif key_type is DataType.INTEGER:
-        #            value = int(params[key]['Value'])
-        #        elif key_type is DataType.DATETIME:
-        #            value = datetime.strptime(params[key]['Value'],"%Y-%m-%d")
-        #        else:
-        #            value = params[key]['Value']
-        #        setattr(self,key,value)
-        #    else:
-        #        setattr(self,key,None)
-
-
-
 
     def __str__(self):
         _str=''
@@ -257,17 +237,10 @@ class Metadata(object):
 
 
     def filename(self):
-
         return "{}_{}".format(StandardString(str(self.datetime_data_recorded)),StandardString(self.sensor_serial_number))
 
 
     def save(self,filename):
-
-#        outFileObj = pm.FileObject(self.)
-#        outFileObj.Name = StandardString(str(self.datetime_data_recorded))
-#        outFileObj.addSuffix = StandardString(self.sensor_serial_number)
-#        outFileObj.changeExtension(new_extension=pm.ExtensionType.METADATA)
-
         _str=''
         metafile = open(filename, 'w')
         for key,value in METADATA_HEADER_FORMAT_KEYS.items():
