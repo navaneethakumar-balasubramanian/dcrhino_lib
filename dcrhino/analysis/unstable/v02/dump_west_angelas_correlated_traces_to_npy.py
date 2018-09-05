@@ -62,7 +62,6 @@ def convert_l2segy_to_l2npy():
     #pdb.set_trace()
     for i_row in range(n_l1_sgy_files):
         print('irow = {}'.format(i_row))
-        i_row=4
         row = ssx_df.iloc[i_row]
 
         print('make a list of all the holes that are in this file')
