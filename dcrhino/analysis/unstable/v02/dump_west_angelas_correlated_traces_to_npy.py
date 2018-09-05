@@ -63,7 +63,6 @@ def convert_l2segy_to_l2npy():
         print('irow = {}'.format(i_row))
         #i_row=3
         row = ssx_df.iloc[i_row]
-        sps = row.sampling_rate
         print('make a list of all the holes that are in this file')
         print('do this by identifying the drill ')
         drill_id = row.drill_rig_id
@@ -92,7 +91,9 @@ def convert_l2segy_to_l2npy():
             hole_time_interval = TimeInterval(lower_bound=hole_row.time_start, upper_bound=hole_row.time_end)
             num_seconds_to_read = int(hole_time_interval.duration())
             for component_label in COMPONENT_LABELS:
-                traces_array = data_array_dict[component_label][sps*num_traces_to_seek:sps*(num_traces_to_seek+num_seconds_to_read)]
+                start_sample = int(row.sampling_rate * num_traces_to_seek)
+                final_sample = int(row.sampling_rate * (num_traces_to_seek+num_seconds_to_read))
+                traces_array = data_array_dict[component_label][start_sample:final_sample]
 
                 #new_l1_data_key = get_new_data_key(row, component_label)
                 #pdb.set_trace()
