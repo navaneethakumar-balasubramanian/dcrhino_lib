@@ -35,7 +35,84 @@ def StandardString(s):
         raise TypeError("Argument needs to be a string")
 
 
+class Measurement():
+    def __init__(self,tuple):
+        (value,units) = tuple
+        self._value = float(value)
+        self._units = int(units)
 
+    def __str__(self):
+        return "{},{}".format(self._value,self._units)
+
+    def value_in_meters(self):
+        for m in range(3,6):
+            if self._units == m:
+                return self._value / (10**(m-3))
+        if self._units == 1:
+            return self._value * 0.3048
+        elif self._units == 2:
+            return self._value * 0.0254
+        return None
+
+
+
+
+class Drill_String_Component():
+    def __init__(self,tuple):
+        (type,status,length,length_units,od,od_units) = tuple
+        self._type = int(type)
+        self._status =int(status)
+        self._length = float(length)
+        self._length_units = int(length_units)
+        self._od = float(od)
+        self._od_units = int(od_units)
+
+    def __str__(self):
+        #pdb.set_trace()
+        value = "{},{},{},{},{},{}".format(self._type,self._status,self._length,self._length_units,self._od,self._od_units)
+        return value
+
+    @property
+    def type(self):
+        return drill_string_component_types[self._type-1]
+
+    @property
+    def status(self):
+        return drill_string_component_status_options[self._status-1]
+
+    @property
+    def length_in_meters(self):
+        value = None
+        for m in range(2,5):
+            if self._length_units == self.measurement_units_options[m]:
+                value =  self._length / (10**(m-2))
+        if self._length_units == self.measurement_units_options[0]:
+                value = self._length * 0.3048
+        elif self._length_units == self.measurement_units_options[1]:
+            value =  self._length * 0.0254
+
+        if value is not None:
+            value = round(value,2)
+        return value
+
+    #@property
+    #def drill_string_compnent_length_untis(self):
+    #    return measurement_units_options[self._length_units-1]
+
+    @property
+    def od_in_mm(self):
+        for m in range(2,5):
+            if self._length_units == self.measurement_units_options[m]:
+                return self._length * (10**(m-2))
+        if self._length_units == self.measurement_units_options[0]:
+            return self._length * 304.8
+        elif self._length_units == self.measurement_units_options[1]:
+            return self._length * 25.4
+        return None
+
+    #@property
+    #def drill_string_compnent_od_untis(self):
+    #    return measurement_units_options[self._od_units-1]
 
 
 
@@ -46,7 +123,8 @@ class DataType(Enum):
     DATETIME = 4
     DATE=5
     BOOLEAN = 6
-
+    MEASUREMENT = 7
+    DS_COMPONENT = 8
 
 
 
@@ -62,8 +140,8 @@ METADATA_HEADER_FORMAT_KEYS = {
         'mwd_type':DataType.INTEGER,
         'bit_type':DataType.INTEGER,
         'bit_model':DataType.STRING,
-        'bit_size':DataType.FLOAT,
-        'bit_date':DataType.DATETIME,
+        'bit_size':DataType.MEASUREMENT,
+        'bit_date':DataType.DATE,
         'sensor_type':DataType.INTEGER,
         'sensor_serial_number':DataType.STRING,
         'sensor_accelerometer_type':DataType.INTEGER,
@@ -82,25 +160,25 @@ METADATA_HEADER_FORMAT_KEYS = {
         'blasthole_easting':DataType.FLOAT,
         'blasthole_northing':DataType.FLOAT,
         'blasthole_collar_elevation':DataType.FLOAT,
-        'sensor_position':DataType.FLOAT,
+        'sensor_position':DataType.MEASUREMENT,
         'sensor_axial_axis':DataType.INTEGER,
         'sensor_tangential_axis':DataType.INTEGER,
         'sensor_mount_size':DataType.INTEGER,
         'sensor_installation_location':DataType.INTEGER,
         'sensor_installation_date':DataType.DATE,
         'drill_string_total_length':DataType.FLOAT,
-        'drill_string_component1':DataType.INTEGER,
-        'drill_string_component2':DataType.INTEGER,
-        'drill_string_component3':DataType.INTEGER,
-        'drill_string_component4':DataType.INTEGER,
-        'drill_string_component5':DataType.INTEGER,
-        'drill_string_component6':DataType.INTEGER,
-        'drill_string_component7':DataType.INTEGER,
-        'drill_string_component8':DataType.INTEGER,
-        'drill_string_component9':DataType.INTEGER,
-        'drill_string_component10':DataType.INTEGER,
-        'sensor_installation_diameter':DataType.FLOAT,
-        'drill_string_steel_od':DataType.FLOAT,
+        'drill_string_component1':DataType.DS_COMPONENT,
+        'drill_string_component2':DataType.DS_COMPONENT,
+        'drill_string_component3':DataType.DS_COMPONENT,
+        'drill_string_component4':DataType.DS_COMPONENT,
+        'drill_string_component5':DataType.DS_COMPONENT,
+        'drill_string_component6':DataType.DS_COMPONENT,
+        'drill_string_component7':DataType.DS_COMPONENT,
+        'drill_string_component8':DataType.DS_COMPONENT,
+        'drill_string_component9':DataType.DS_COMPONENT,
+        'drill_string_component10':DataType.DS_COMPONENT,
+        #'sensor_installation_diameter':DataType.FLOAT,
+        #'drill_string_steel_od':DataType.FLOAT,
         'mwd_hole_id':DataType.INTEGER,
         'sample_interval_duration':DataType.FLOAT,
         'gps_latitude':DataType.FLOAT,
@@ -137,10 +215,14 @@ class Metadata(object):
                     value = cfg.getint("INSTALLATION",key)
                 elif key_type is DataType.DATE:
                     value = datetime.strptime(cfg.get("INSTALLATION",key),"%Y-%m-%d")
-                elif key_type is DataType.DATE:
+                elif key_type is DataType.DATETIME:
                     value = datetime.strptime(cfg.get("INSTALLATION",key),"%Y-%m-%d %H:%M:%S.%f")
                 elif key_type is DataType.BOOLEAN:
                     value = cfg.getboolean("INSTALLATION",key)
+                elif key_type is DataType.MEASUREMENT:
+                    data = cfg.get("INSTALLATION",key).split(",")
+                    m = Measurement(data)
+                    value = m.value_in_meters()
                 else:
                     value = cfg.get("INSTALLATION",key)
                 setattr(self,key,value)
