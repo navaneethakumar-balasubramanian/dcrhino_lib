@@ -31,7 +31,7 @@ from dcrhino.analysis.measurands.keys.data_key import DAQSerialNumberSamplingRat
 from dcrhino.analysis.util.general_helper_functions import init_logging
 from dcrhino.analysis.util.interval import TimeInterval
 
-from supporting_v02_processing import get_old_data_key, get_new_data_key
+#from supporting_v02_processing import get_new_data_key
 
 logger = init_logging(__name__)
 
@@ -76,6 +76,7 @@ def get_hole_data(hole_row, component, plot=False):
 
 hole = 11
 sub_df = df_master[df_master.hole==hole]
+pdb.set_trace()
 if len(sub_df) == 0:
     logger.warning("not a valid hole {}".format(hole))
     pdb.set_trace()
@@ -84,7 +85,7 @@ if len(sub_df) == 0:
 if len(sub_df)==1:
     hole_row = sub_df.iloc[0]
     for component in COMPONENT_LABELS:
-        data = get_hole_data(hole_row, component)
+        data = get_hole_data(hole_row, component, plot=True)
 else:
     logger.error('non unique - further specify digitizer, sps, etc')
     print(sub_df)
@@ -93,7 +94,7 @@ else:
     for i_row in range(n_rows):
         hole_row = sub_df.iloc[i_row]
         for component in COMPONENT_LABELS:
-            data = get_hole_data(hole_row, component)#, plot=True)
+            data = get_hole_data(hole_row, component, plot=True)
             pdb.set_trace()
             print(time.time()-t0)
     pdb.set_trace()

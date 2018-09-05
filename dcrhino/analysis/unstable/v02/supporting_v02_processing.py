@@ -69,9 +69,36 @@ def get_new_data_key(row, component):
     return data_key
 
 
+
+def get_hole_data(hole, digitizer_id, component, plot=False):
     """
     """
-    print("finito {}".format(datetime.datetime.now()))
+    #associate hole row with unique ssx file (or database table)
+#    ssx_sub_df = ssx_df[ssx_df['time_start']<=hole_row.time_start]
+#    ssx_sub_df = ssx_sub_df[ssx_sub_df['time_end']>=hole_row.time_end]
+    ssx_sub_df = ssx_df[ssx_df['dummy_digitizer_id']==hole_row.dummy_digitizer_id]
+    #pdb.set_trace()
+    if len(ssx_sub_df)!=1:
+        logger.error("non unique paretn file")
+        raise(Exception)
+    else:
+        ssx_row = ssx_sub_df.iloc[0]
+    print('get start and endtime for hole')
+    data_time_interval = TimeInterval(lower_bound=hole_row.time_start, upper_bound=hole_row.time_end)
+    parent_file_time_interval = TimeInterval(lower_bound=ssx_row.time_start, upper_bound=ssx_row.time_end)
+    print('make measurand data key')
+    #nead the neighborhood time interval ... points at the parent file
+    #pdb.set_trace()
+    data_key = DAQSerialNumberSamplingRateComponentTimeIntervalDataKey(hole_row.digitizer_id,
+                                                                           hole_row.sampling_rate,
+                                                                           component,
+                                                                           parent_file_time_interval)
+
+    data = l1_measurand.load_segment(data_key, data_time_interval)
+    if plot:
+        plt.plot(data);plt.show()
+    return data
+
 
 if __name__ == "__main__":
     main()
