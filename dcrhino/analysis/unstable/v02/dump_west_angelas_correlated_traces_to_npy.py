@@ -76,7 +76,7 @@ def convert_l2segy_to_l2npy():
             continue
         #qq=df_master[df_master.drill_rig_id=='21R15']
 
-        pdb.set_trace()
+        #pdb.set_trace()
         print('loading...')
         st = corr_measurand.load(old_l1_data_key)
         data_array_dict = {}
@@ -95,7 +95,7 @@ def convert_l2segy_to_l2npy():
                 traces_array = data_array_dict[component_label][sps*num_traces_to_seek:sps*(num_traces_to_seek+num_seconds_to_read)]
 
                 #new_l1_data_key = get_new_data_key(row, component_label)
-                pdb.set_trace()
+                #pdb.set_trace()
 #            level_1_measurand_b._make_from_parents(new_l1_data_key, parent_data=st)
                 out_filename = '{}_{}_{}.npy'.format(component_label, hole_row.hole, row.digitizer_id)
                 np.save(out_filename, traces_array)
