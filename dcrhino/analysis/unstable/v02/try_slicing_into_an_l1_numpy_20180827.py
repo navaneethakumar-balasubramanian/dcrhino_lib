@@ -31,7 +31,7 @@ from dcrhino.analysis.measurands.keys.data_key import DAQSerialNumberSamplingRat
 from dcrhino.analysis.util.general_helper_functions import init_logging
 from dcrhino.analysis.util.interval import TimeInterval
 
-#from supporting_v02_processing import get_new_data_key
+from supporting_v02_processing import get_hole_data
 
 logger = init_logging(__name__)
 
@@ -45,34 +45,6 @@ master_iterator_measurand = MEASURAND_REGISTRY.measurand('master_iterator')
 df_master = master_iterator_measurand.load()
 
 
-def get_hole_data(hole_row, component, plot=False):
-    """
-    """
-    #associate hole row with unique ssx file (or database table)
-#    ssx_sub_df = ssx_df[ssx_df['time_start']<=hole_row.time_start]
-#    ssx_sub_df = ssx_sub_df[ssx_sub_df['time_end']>=hole_row.time_end]
-    ssx_sub_df = ssx_df[ssx_df['dummy_digitizer_id']==hole_row.dummy_digitizer_id]
-    #pdb.set_trace()
-    if len(ssx_sub_df)!=1:
-        logger.error("non unique paretn file")
-        raise(Exception)
-    else:
-        ssx_row = ssx_sub_df.iloc[0]
-    print('get start and endtime for hole')
-    data_time_interval = TimeInterval(lower_bound=hole_row.time_start, upper_bound=hole_row.time_end)
-    parent_file_time_interval = TimeInterval(lower_bound=ssx_row.time_start, upper_bound=ssx_row.time_end)
-    print('make measurand data key')
-    #nead the neighborhood time interval ... points at the parent file
-    #pdb.set_trace()
-    data_key = DAQSerialNumberSamplingRateComponentTimeIntervalDataKey(hole_row.digitizer_id,
-                                                                           hole_row.sampling_rate,
-                                                                           component,
-                                                                           parent_file_time_interval)
-
-    data = l1_measurand.load_segment(data_key, data_time_interval)
-    if plot:
-        plt.plot(data);plt.show()
-    return data
 
 hole = 11
 sub_df = df_master[df_master.hole==hole]
