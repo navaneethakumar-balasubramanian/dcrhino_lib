@@ -82,7 +82,7 @@ def convert_l2segy_to_l2npy():
         #pdb.set_trace()
         print('loading...')
         st = corr_measurand.load(old_l1_data_key)
-        pdb.set_trace()
+        #pdb.set_trace()
 
 
         trace_array_dict = {}
