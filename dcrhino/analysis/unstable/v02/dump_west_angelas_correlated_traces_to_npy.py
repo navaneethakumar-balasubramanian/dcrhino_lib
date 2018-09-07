@@ -2,6 +2,9 @@
 """
 20180904: this is a one-off script intended to arm Sumant with the data needed to
 crank out "hole-by-hole" qc-plots
+
+20180906: got the traces.  need to add the "trace header data"
+
 @author: kkappler
 
 
@@ -19,18 +22,18 @@ import pdb
 
 
 from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS# = ['axial', 'tangential', 'radial']
-
+from dcrhino.analysis.measurands.level_2.supporting_level_2_segy import TraceHeaderAttributes
 import dcrhino.analysis.measurands.measurand_registry_west_angelas as MEASURAND_REGISTRY
-#from dcrhino.analysis.measurands.keys.data_key import DigitizerSamplingRateDateDataKey
-#from dcrhino.analysis.measurands.keys.data_key import DAQSerialNumberSamplingRateComponentTimeIntervalDataKey
 from dcrhino.analysis.signal_processing.trace_header import define_obspy_trace_header
 from dcrhino.analysis.supporting_processing import concatenate_traces
 from dcrhino.analysis.util.general_helper_functions import init_logging
 from dcrhino.analysis.util.interval import TimeInterval
 
-from supporting_v02_processing import get_old_data_key, get_new_data_key
-logger = init_logging(__name__)
+from supporting_v02_processing import get_old_data_key
 
+
+logger = init_logging(__name__)
+home = os.path.expanduser("~/")
 mwd_measurand = MEASURAND_REGISTRY.measurand('mwd_with_mse')
 hole_profile_df = mwd_measurand.load()
 master_iterator_measurand = MEASURAND_REGISTRY.measurand('master_iterator')
@@ -62,7 +65,6 @@ def convert_l2segy_to_l2npy():
     #pdb.set_trace()
     for i_row in range(n_l1_sgy_files):
         print('irow = {}'.format(i_row))
-        i_row=4
         row = ssx_df.iloc[i_row]
 
         print('make a list of all the holes that are in this file')
@@ -80,9 +82,17 @@ def convert_l2segy_to_l2npy():
         #pdb.set_trace()
         print('loading...')
         st = corr_measurand.load(old_l1_data_key)
-        data_array_dict = {}
+        #pdb.set_trace()
+
+
+        trace_array_dict = {}
         for component_label in COMPONENT_LABELS:
-            data_array_dict[component_label] = concatenate_traces(st, component_label, output_shape='1d')
+            trace_array_dict[component_label] = concatenate_traces(st, component_label, output_shape='1d')
+        num_samples_per_trace = len(st.traces[0].data)
+        num_traces_per_component = len(trace_array_dict['axial']) // num_samples_per_trace
+        trace_header_attributes = TraceHeaderAttributes(num_traces_per_component)
+        trace_header_attributes.populate_from_stream(st)
+
         number_of_blastholes = len(sub_iterator)
         samples_per_trace = len(st.traces[0].data)
         for i_blasthole in range(number_of_blastholes):
@@ -93,16 +103,33 @@ def convert_l2segy_to_l2npy():
             num_traces_to_seek = int(np.round(time_to_seek_into_file.total_seconds()))
             hole_time_interval = TimeInterval(lower_bound=hole_row.time_start, upper_bound=hole_row.time_end)
             num_seconds_to_read = int(hole_time_interval.duration())
-            for component_label in COMPONENT_LABELS:
-                start_sample = int(samples_per_trace * num_traces_to_seek)
-                final_sample = int(samples_per_trace * (num_traces_to_seek+num_seconds_to_read))
-                traces_array = data_array_dict[component_label][start_sample:final_sample]
 
-                #new_l1_data_key = get_new_data_key(row, component_label)
-                #pdb.set_trace()
-#            level_1_measurand_b._make_from_parents(new_l1_data_key, parent_data=st)
-                out_filename = '{}_{}_{}.npy'.format(component_label, hole_row.hole, row.digitizer_id)
+            start_sample = int(samples_per_trace * num_traces_to_seek)
+            final_sample = int(samples_per_trace * (num_traces_to_seek+num_seconds_to_read))
+            for component_label in COMPONENT_LABELS:
+                traces_array = trace_array_dict[component_label][start_sample:final_sample]
+                out_basename = '{}_{}_{}.npy'.format(component_label, hole_row.hole, row.digitizer_id)
+                #
+                #out_folder = os.path.join(home, 'data', 'datacloud', 'west_angelas', 'corr_npy_dump' )
+                out_folder = '/data_sdd/west_angelas/corr_npy_dump/'
+                out_filename = os.path.join(out_folder, out_basename)
                 np.save(out_filename, traces_array)
+            #pdb.set_trace()
+            first_trace_index = num_traces_to_seek
+            final_trace_index = num_traces_to_seek+num_seconds_to_read
+            out_basename = 'peak_ampl_axial_{}_{}.npy'.format(hole_row.hole, row.digitizer_id)
+            out_filename = os.path.join(out_folder, out_basename)
+            np.save(out_filename, trace_header_attributes.peak_ampl_axial[first_trace_index:final_trace_index])
+
+            out_basename = 'peak_ampl_tangential_{}_{}.npy'.format(hole_row.hole, row.digitizer_id)
+            out_filename = os.path.join(out_folder, out_basename)
+            np.save(out_filename, trace_header_attributes.peak_ampl_tangential[first_trace_index:final_trace_index])
+            out_basename = 'peak_ampl_radial_{}_{}.npy'.format(hole_row.hole, row.digitizer_id)
+            out_filename = os.path.join(out_folder, out_basename)
+            np.save(out_filename, trace_header_attributes.peak_ampl_radial[first_trace_index:final_trace_index])
+            out_basename = 'peak_mult_axial_{}_{}.npy'.format(hole_row.hole, row.digitizer_id)
+            out_filename = os.path.join(out_folder, out_basename)
+            np.save(out_filename, trace_header_attributes.peak_mult_axial[first_trace_index:final_trace_index])
 
 
 

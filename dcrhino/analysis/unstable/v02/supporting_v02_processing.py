@@ -39,7 +39,7 @@ define_obspy_trace_header()
 MEASURAND_REGISTRY.print_measurand_registry()
 ssx_measurand = MEASURAND_REGISTRY.measurand('slamstix_metadata')
 ssx_df = ssx_measurand.load()
-
+l1_measurand = MEASURAND_REGISTRY.measurand('level1_npy_piezo')
 
 def get_old_data_key(row):
     """
@@ -70,19 +70,20 @@ def get_new_data_key(row, component):
 
 
 
-def get_hole_data(hole, digitizer_id, component, plot=False):
+def get_hole_data(hole_row, component, plot=False):
     """
     """
-    #associate hole row with unique ssx file (or database table)
-#    ssx_sub_df = ssx_df[ssx_df['time_start']<=hole_row.time_start]
-#    ssx_sub_df = ssx_sub_df[ssx_sub_df['time_end']>=hole_row.time_end]
-    ssx_sub_df = ssx_df[ssx_df['dummy_digitizer_id']==hole_row.dummy_digitizer_id]
-    #pdb.set_trace()
+    #<associate hole row with unique ssx file (or database table)>
+    tmp_df = ssx_df[ssx_df['time_start']<=hole_row.time_start]
+    tmp_df = tmp_df[tmp_df['time_end']>=hole_row.time_end]
+    ssx_sub_df = tmp_df[tmp_df['digitizer_id']==hole_row.digitizer_id]
     if len(ssx_sub_df)!=1:
         logger.error("non unique paretn file")
         raise(Exception)
     else:
         ssx_row = ssx_sub_df.iloc[0]
+    #</associate hole row with unique ssx file (or database table)>
+
     print('get start and endtime for hole')
     data_time_interval = TimeInterval(lower_bound=hole_row.time_start, upper_bound=hole_row.time_end)
     parent_file_time_interval = TimeInterval(lower_bound=ssx_row.time_start, upper_bound=ssx_row.time_end)
