@@ -176,7 +176,7 @@ METADATA_HEADER_FORMAT_KEYS = {
         'drill_string_component9':DataType.DS_COMPONENT,
         'drill_string_component10':DataType.DS_COMPONENT,
         #'sensor_installation_diameter':DataType.FLOAT,
-        #'drill_string_steel_od':DataType.FLOAT,
+        'drill_string_steel_od':DataType.MEASUREMENT,
         'mwd_hole_id':DataType.INTEGER,
         'sample_interval_duration':DataType.FLOAT,
         'gps_latitude':DataType.FLOAT,
