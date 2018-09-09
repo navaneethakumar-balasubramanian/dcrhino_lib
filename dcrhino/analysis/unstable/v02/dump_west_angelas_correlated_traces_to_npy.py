@@ -75,6 +75,11 @@ def convert_l2segy_to_l2npy():
 
         old_l1_data_key = get_old_data_key(row)
         sub_iterator = get_holes_by_drill_and_time_interval(drill_id, parent_file_time_interval)
+        number_of_blastholes = len(sub_iterator)
+        #pdb.set_trace()
+        #hole_ids = set()
+        if 83 not in set(sub_iterator.hole):
+            continue
         if len(sub_iterator) == 0:
             continue
         #qq=df_master[df_master.drill_rig_id=='21R15']
@@ -82,7 +87,7 @@ def convert_l2segy_to_l2npy():
         #pdb.set_trace()
         print('loading...')
         st = corr_measurand.load(old_l1_data_key)
-        #pdb.set_trace()
+        pdb.set_trace()
 
 
         trace_array_dict = {}
@@ -94,7 +99,6 @@ def convert_l2segy_to_l2npy():
         trace_header_attributes.populate_from_stream(st)
 
         number_of_blastholes = len(sub_iterator)
-        samples_per_trace = len(st.traces[0].data)
         for i_blasthole in range(number_of_blastholes):
             print('identify the start and end time of this blasthole \
                   and then the trace id.  ')
@@ -104,9 +108,10 @@ def convert_l2segy_to_l2npy():
             hole_time_interval = TimeInterval(lower_bound=hole_row.time_start, upper_bound=hole_row.time_end)
             num_seconds_to_read = int(hole_time_interval.duration())
 
-            start_sample = int(samples_per_trace * num_traces_to_seek)
-            final_sample = int(samples_per_trace * (num_traces_to_seek+num_seconds_to_read))
+            start_sample = int(num_samples_per_trace * num_traces_to_seek)
+            final_sample = int(num_samples_per_trace * (num_traces_to_seek+num_seconds_to_read))
             for component_label in COMPONENT_LABELS:
+
                 traces_array = trace_array_dict[component_label][start_sample:final_sample]
                 out_basename = '{}_{}_{}.npy'.format(component_label, hole_row.hole, row.digitizer_id)
                 #

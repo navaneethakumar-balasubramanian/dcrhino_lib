@@ -27,9 +27,7 @@ import time
 from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS# = ['axial', 'tangential', 'radial']
 
 import dcrhino.analysis.measurands.measurand_registry_west_angelas as MEASURAND_REGISTRY
-from dcrhino.analysis.measurands.keys.data_key import DAQSerialNumberSamplingRateComponentTimeIntervalDataKey
 from dcrhino.analysis.util.general_helper_functions import init_logging
-from dcrhino.analysis.util.interval import TimeInterval
 
 from supporting_v02_processing import get_hole_data
 

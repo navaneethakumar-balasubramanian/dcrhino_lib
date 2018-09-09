@@ -80,6 +80,23 @@ def deconvolve_trace(trace, filter_length, **kwargs):#plot=False):
     trace.data = deconv_trace
     return trace, R_xx[0]
 
+def deconvolve_trace_data(trace_data, filter_length, **kwargs):#plot=False):
+    """
+    20180909: variation on deconvolve trace,but input is numpy array, not
+    obspy structure.
+    """
+    R_xx = autocorrelate_trace(trace_data, filter_length)
+    nominal_scale_factor = 1.0;#1./R_xx[0]#1.0
+    ATA = scipy.linalg.toeplitz(R_xx)
+    try:
+        ATAinv = scipy.linalg.inv(ATA)
+    except np.linalg.linalg.LinAlgError:
+        logger.warning('matrix inversion failed')
+        return trace_data, R_xx[0]
+    x_filter = nominal_scale_factor*ATAinv[0,:]
+    deconv_trace = np.convolve(x_filter, trace_data, 'same')
+    trace_data = deconv_trace
+    return trace_data, R_xx[0]
 
 
 def process_from_decon_to_final(trace, decon_trace, fir_taps, decon_filter_length,
