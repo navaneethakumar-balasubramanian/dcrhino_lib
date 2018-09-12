@@ -26,15 +26,12 @@ import dcrhino.analysis.measurands.measurand_registry_west_angelas as MEASURAND_
 from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
 from dcrhino.analysis.signal_processing.trace_header import define_obspy_trace_header
 
-azure_path = '/home/sjha/data/datacloud/west_angelas/test_get_data_azure/corr_npy_dump'
-mwd_path = '/home/sjha/data/datacloud/west_angelas/level_1'
-mwd_file = 'mwd.csv'
-mwd_fullfile = os.path.join(mwd_path,mwd_file)
-
-
-
+home = os.path.expanduser("~/")
+azure_path = os.path.join(home, 'data/datacloud/west_angelas/corr_npy_dump')
 mwd_measurand = MEASURAND_REGISTRY.measurand('mwd_with_mse')
 hole_profile_df = mwd_measurand.load()
+
+
 #hole_profile_df = pd.read_csv(mwd_fullfile, parse_dates=['time_start', 'time_end'])
 #pdb.set_trace()
 
@@ -73,25 +70,25 @@ for i_row in range(total_number_of_rows):
     print("load the 'trace header'")
     print("skipping'trace header' until karl hands off the data")
     print("load correlated traces")
-    
-    
+
+
     filebase = 'peak_ampl_axial_{}_{}.npy'.format(hole, digitizer_id)
     full_filename = os.path.join(azure_path, filebase)
     peak_ampl_axial = np.load(full_filename)
 #    pdb.set_trace()
-    
+
     filebase = 'peak_ampl_tangential_{}_{}.npy'.format(hole, digitizer_id)
     full_filename = os.path.join(azure_path, filebase)
     peak_ampl_tangential = np.load(full_filename)
-    
+
     filebase = 'peak_ampl_radial_{}_{}.npy'.format(hole, digitizer_id)
     full_filename = os.path.join(azure_path, filebase)
     peak_ampl_radial = np.load(full_filename)
-    
+
     filebase = 'peak_mult_axial_{}_{}.npy'.format(hole, digitizer_id)
     full_filename = os.path.join(azure_path, filebase)
     peak_mult_axial = np.load(full_filename)
-    
+
     #pdb.set_trace()
     num_traces_in_blasthole = len(peak_ampl_axial)
 #    pdb.set_trace()
@@ -130,9 +127,9 @@ for i_row in range(total_number_of_rows):
             max_amplitudes = np.max(trace_array_dict[component_label], axis=0)
             trace_array_dict[component_label] = trace_array_dict[component_label]/max_amplitudes
             trace_array_dict[component_label][nans_locations] = np.nan
-            
+
     pdb.set_trace()
-    
+
     qc_plot_input = QCBlastholePlotInputs(trace_array_dict=trace_array_dict,
                                           sub_mwd_time = sub_mwd_df.time_start,
                                           sub_mwd_depth = sub_mwd_df.start_depth,
@@ -152,16 +149,16 @@ for i_row in range(total_number_of_rows):
     ##                                 peak_ampl_z=peak_ampl_radial,
     ##                                 peak_mult_x=peak_mult_axial,
     ##                                 lower_number_ms=lower_num_ms, upper_number_ms=upper_num_ms,)
-    
+
     data_date = datetime.datetime(2018,8,30)
     #output_filename = 'tmp'
     data_date = datetime.datetime(2018,3,3,3,3,3)
     qc_plot(qc_plot_input, output_filename , data_date, 'west_angelas', show=False)
-    
+
     print("take the code from ")
     print("ok, now make the qc plot")
     print("ok, now make the qc plot")
-    
+
     #pdb.set_trace()
     print('ok')
     #home = os.path.expanduser("~/")
