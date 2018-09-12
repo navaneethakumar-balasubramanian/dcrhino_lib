@@ -202,30 +202,33 @@ class Metadata(object):
     def __init__(self,cfg):
         for key,key_type in METADATA_HEADER_FORMAT_KEYS.items():
             setattr(self,key,None)
-        for item in cfg.items("INSTALLATION"):
-            key = item[0]
-            #pdb.set_trace()
-            if item[0] in METADATA_HEADER_FORMAT_KEYS.keys():
-                key_type = METADATA_HEADER_FORMAT_KEYS[key]
-                if key_type is DataType.FLOAT:
-                    value = cfg.getfloat("INSTALLATION",key)
-                elif key_type is DataType.INTEGER:
-                    value = cfg.getint("INSTALLATION",key)
-                elif key_type is DataType.DATE:
-                    value = datetime.strptime(cfg.get("INSTALLATION",key),"%Y-%m-%d")
-                elif key_type is DataType.DATETIME:
-                    value = datetime.strptime(cfg.get("INSTALLATION",key),"%Y-%m-%d %H:%M:%S.%f")
-                elif key_type is DataType.BOOLEAN:
-                    value = cfg.getboolean("INSTALLATION",key)
-                elif key_type is DataType.MEASUREMENT:
-                    data = cfg.get("INSTALLATION",key).split(",")
-                    m = Measurement(data)
-                    value = m.value_in_meters()
+        for section in ["INSTALLATION","PROCESSING"]:
+            for item in cfg.items(section):
+                key = item[0]
+                #pdb.set_trace()
+                if key in METADATA_HEADER_FORMAT_KEYS.keys():
+                    key_type = METADATA_HEADER_FORMAT_KEYS[key]
+                    if key_type is DataType.FLOAT:
+                        value = cfg.getfloat(section,key)
+                    elif key_type is DataType.INTEGER:
+                        value = cfg.getint(section,key)
+                    elif key_type is DataType.DATE:
+                        value = datetime.strptime(cfg.get(section,key),"%Y-%m-%d")
+                    elif key_type is DataType.DATETIME:
+                        value = datetime.strptime(cfg.get(section,key),"%Y-%m-%d %H:%M:%S.%f")
+                    elif key_type is DataType.BOOLEAN:
+                        value = cfg.getboolean(section,key)
+                    elif key_type is DataType.MEASUREMENT:
+                        data = cfg.get(section,key).split(",")
+                        m = Measurement(data)
+                        value = m.value_in_meters()
+                    else:
+                        value = cfg.get(section,key)
+                    print(key,value)
+                    setattr(self,key,value)
                 else:
-                    value = cfg.get("INSTALLATION",key)
-                setattr(self,key,value)
-            else:
-                raise LookupError("The metadata value in the configuration file is not declared in the metadata class")
+                    pass
+                    raise LookupError("The metadata value in the configuration file is not declared in the metadata class")
         self.sensor_distance_to_source = self.drill_string_total_length - self.sensor_position
 
 
