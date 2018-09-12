@@ -224,7 +224,7 @@ class Metadata(object):
                         value = m.value_in_meters()
                     else:
                         value = cfg.get(section,key)
-                    print(key,value)
+                    #print(key,value)
                     setattr(self,key,value)
                 else:
                     pass
