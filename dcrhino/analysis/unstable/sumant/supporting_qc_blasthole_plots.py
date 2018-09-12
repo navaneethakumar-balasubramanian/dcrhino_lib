@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pdb
+import pandas
 
 
 
@@ -44,6 +45,13 @@ class QCBlastholePlotInputs(object):
         self.peak_mult_x  = kwargs.get('peak_mult_x', None)
         self.peak_ampl_x_ndx = kwargs.get('peak_ampl_x_ndx', None)
         self.peak_mult_x_ndx = kwargs.get('peak_mult_x_ndx', None)
+        self.sub_mwd_depth = kwargs.get('sub_mwd_depth',None)
+        self.sub_mwd_time = kwargs.get('sub_mwd_time',None)
+        self.mwd_tstart = kwargs.get('mwd_tstart',None)
+        self.mwd_tend = kwargs.get('mwd_tend',None)
+        self.mwd_start_depth = kwargs.get('mwd_start_depth',None)
+        self.mwd_end_depth = kwargs.get('mwd_end_depth',None)
+
         #</THese are the curves plotted in the first panel>
 
         #<these numbers dictate the y axis bounds>
@@ -142,6 +150,20 @@ def header_plot(ax, X, qc_plot_input, out_filename, peak_amplitude_linewidth = 0
     return
 
 
+def depth_vs_time_plot(ax,qc_plot_input,out_filename):
+    """
+    TODO: read PEP8
+    code is read much more often than it it written
+    """
+    pdb.set_trace()
+    ax.plot(qc_plot_input.sub_mwd_time,qc_plot_input.sub_mwd_depth, '*',label = 'Datapoints')
+    ax.plot(qc_plot_input.sub_mwd_time,qc_plot_input.sub_mwd_depth, label = 'Interpolated')
+    ax.legend() 
+    ax.set_ylim(qc_plot_input.mwd_start_depth,qc_plot_input.mwd_end_depth)
+    ax.set_xlim(qc_plot_input.mwd_tstart,qc_plot_input.mwd_tend)
+#    ax.legend()qc_plot_input.sub_mwd_depth
+    return
+
 
 def qc_plot(qc_plot_input, out_filename, data_date, client_project_id,
                two_way_travel_time_ms=None, peak_search_interval_ms=None, dpi=300, show=False):
@@ -166,8 +188,10 @@ def qc_plot(qc_plot_input, out_filename, data_date, client_project_id,
     Y = np.linspace(lower_num_ms, upper_num_ms, trace_array_dict[label].shape[0])
     Y = np.flipud(Y)
 
-    fig, ax = plt.subplots(nrows=4, sharex=True, figsize=(24,8.5))
+    fig, ax = plt.subplots(nrows=5, sharex=True, figsize=(24,8.5))
     header_plot(ax[0], X, qc_plot_input, out_filename)
+    pdb.set_trace()
+    depth_vs_time_plot(ax[4],qc_plot_input,out_filename)
     plt.subplots_adjust(right=10.5)
 
 
@@ -197,6 +221,8 @@ def qc_plot(qc_plot_input, out_filename, data_date, client_project_id,
 
     ax[3], heatmap3 = plot_hole_as_heatmap(ax[3], cbal.v_min_3, cbal.v_max_3, X, Y,
       trace_array_dict['radial'], cmap_string, y_tick_locations)#,
+    
+
 
     plt.tight_layout()
     if colourbar_type=='all_one':
@@ -221,12 +247,12 @@ def qc_plot(qc_plot_input, out_filename, data_date, client_project_id,
     #plt.subplots_adjust(right=1.5)
     plt.subplots_adjust(left=0.1)
     plt.subplots_adjust(right=0.9)
-    #plt.show()
-    print("saving {}".format(out_filename))
-    plt.savefig(out_filename, dpi=dpi)
-    if show:
-        plt.show()
-    plt.clf()
+    plt.show()
+#    print("saving {}".format(out_filename))
+#    plt.savefig(out_filename, dpi=dpi)
+#    if show:
+#        plt.show()
+#    plt.clf()
 
 
 
