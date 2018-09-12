@@ -87,13 +87,13 @@ for i_row in range(total_number_of_rows):
         traces_filename = '{}_{}_{}.npy'.format(component_label, row.hole, row.digitizer_id)
         input_filename = os.path.join(azure_path,traces_filename)
         output_filename = '{}_{}_{}.png'.format(project_id,row.hole,row.digitizer_id)
-        
+
         data = np.load(input_filename)
 #        pdb.set_trace()
         total_number_of_samples = len(data)
         samples_per_trace = total_number_of_samples // num_traces_in_blasthole
         data = data.reshape(num_traces_in_blasthole, samples_per_trace)
-        
+
         trace_array_dict[component_label] = data.T
         #total hack
 
@@ -105,7 +105,7 @@ for i_row in range(total_number_of_rows):
             trace_array_dict[component_label] = trace_array_dict[component_label][320-16:320+96,:]
 #        pdb.set_trace()
     print("Step 2: call the plotter")
-    
+
     lower_num_ms=-5.0
     upper_num_ms=30.0
     normalize_by_max_amplitude =  True
@@ -142,7 +142,7 @@ for i_row in range(total_number_of_rows):
     print("ok, now make the qc plot")
     print("ok, now make the qc plot")
 
-    
+
     print('ok')
     #home = os.path.expanduser("~/")
 
