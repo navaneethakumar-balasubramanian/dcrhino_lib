@@ -155,12 +155,14 @@ def depth_vs_time_plot(ax,qc_plot_input,out_filename):
     TODO: read PEP8
     code is read much more often than it it written
     """
-    pdb.set_trace()
+#    pdb.set_trace()
     ax.plot(qc_plot_input.sub_mwd_time,qc_plot_input.sub_mwd_depth, '*',label = 'Datapoints')
     ax.plot(qc_plot_input.sub_mwd_time,qc_plot_input.sub_mwd_depth, label = 'Interpolated')
     ax.legend() 
-    ax.set_ylim(qc_plot_input.mwd_start_depth,qc_plot_input.mwd_end_depth)
-    ax.set_xlim(qc_plot_input.mwd_tstart,qc_plot_input.mwd_tend)
+    ax.set_ylabel('Depth (m)')
+    ax.set_xlabel('Timestamps')
+#    ax.set_ylim(qc_plot_input.mwd_start_depth,qc_plot_input.mwd_end_depth)
+#    ax.set_xlim(qc_plot_input.mwd_tstart,qc_plot_input.mwd_tend)
 #    ax.legend()qc_plot_input.sub_mwd_depth
     return
 
@@ -184,13 +186,14 @@ def qc_plot(qc_plot_input, out_filename, data_date, client_project_id,
     #</Get inputs and reshape where appropriate>
 
     num_traces_per_component, num_samples = trace_array_dict[label].T.shape
+#    pdb.set_trace()
     X = np.arange(num_traces_per_component)
     Y = np.linspace(lower_num_ms, upper_num_ms, trace_array_dict[label].shape[0])
     Y = np.flipud(Y)
 
-    fig, ax = plt.subplots(nrows=5, sharex=True, figsize=(24,8.5))
+    fig, ax = plt.subplots(nrows=5, sharex=False, figsize=(24,8.5))
     header_plot(ax[0], X, qc_plot_input, out_filename)
-    pdb.set_trace()
+#    pdb.set_trace()
     depth_vs_time_plot(ax[4],qc_plot_input,out_filename)
     plt.subplots_adjust(right=10.5)
 
