@@ -78,7 +78,7 @@ for i_row in range(total_number_of_rows):
     full_filename = os.path.join(azure_path, filebase)
     peak_mult_axial = np.load(full_filename)
 
-    
+
     num_traces_in_blasthole = len(peak_ampl_axial)
 
     project_id = 'demo'
@@ -121,6 +121,8 @@ for i_row in range(total_number_of_rows):
 
     qc_plot_input = QCBlastholePlotInputs(trace_array_dict=trace_array_dict,
                                           sub_mwd_time = sub_mwd_df.time_start,
+#                                          sub_mwd_time = sub_mwd_df.starttime,
+#                                          sub_mwd_comp_el = sub_mwd_df.computed_elevation
                                           sub_mwd_depth = sub_mwd_df.start_depth,
                                           peak_ampl_x=peak_ampl_axial,
                                           peak_ampl_y=peak_ampl_tangential,
@@ -133,9 +135,9 @@ for i_row in range(total_number_of_rows):
                                           mwd_end_depth = sub_mwd_df.end_depth.iloc[-1])
 #    pdb.set_trace()
 
-    data_date = datetime.datetime(2018,8,30)
+    data_date = sub_mwd_df.time_start.dt.date
     #output_filename = 'tmp'
-    data_date = datetime.datetime(2018,3,3,3,3,3)
+#    data_date = datetime.datetime(2018,3,3,3,3,3)
     qc_plot(qc_plot_input, output_filename , data_date, 'west_angelas', show=False)
 
     print("take the code from ")

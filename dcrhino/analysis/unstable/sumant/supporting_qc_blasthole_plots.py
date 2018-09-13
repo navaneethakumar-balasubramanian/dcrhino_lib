@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pdb
-import pandas
+import pandas as pd
 
 
 
@@ -193,9 +193,9 @@ def qc_plot(qc_plot_input, out_filename, data_date, client_project_id,
     #<choose X>
     #if use depth plot:
     time_vector = pd.date_range(start=qc_plot_input.sub_mwd_time.iloc[0], periods=num_traces_per_component, freq='1S')
-    X = qc_plot_input.time_vector
+    X = time_vector
     #else:
-    X = np.arange(num_traces_per_component)
+#    X = np.arange(num_traces_per_component)
     #</choose X>
 
     Y = np.linspace(lower_num_ms, upper_num_ms, trace_array_dict[label].shape[0])
@@ -259,9 +259,9 @@ def qc_plot(qc_plot_input, out_filename, data_date, client_project_id,
     #plt.subplots_adjust(right=1.5)
     plt.subplots_adjust(left=0.1)
     plt.subplots_adjust(right=0.9)
-    plt.show()
-#    print("saving {}".format(out_filename))
-#    plt.savefig(out_filename, dpi=dpi)
+#    plt.show()
+    print("saving {}".format(out_filename))
+    plt.savefig(out_filename)
 #    if show:
 #        plt.show()
 #    plt.clf()
