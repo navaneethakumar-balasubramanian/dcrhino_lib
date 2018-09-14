@@ -277,7 +277,7 @@ class Metadata(object):
                 value = int(value)
         return attribute_name,value
 
-    def metadata_to_dictionary_for_karl(self):
+    def metadata_to_dictionary(self):
         dict = {}
         dict["drill_id"] = self.rig_id
         dict["digitizer_id"] = self.sensor_serial_number
@@ -294,9 +294,9 @@ class Metadata(object):
         else:
             dict["accelerometer_type"] = "mems"
         if self.sensor_type == 1:
-            dict["accelerometer_type"] = "ssx"
+            dict["sensor_type"] = "ssx"
         else:
-            dict["accelerometer_type"] = "rhino"
+            dict["sensor_type"] = "rhino"
         return dict
 
 
