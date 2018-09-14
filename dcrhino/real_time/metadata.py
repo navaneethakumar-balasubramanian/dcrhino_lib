@@ -146,7 +146,7 @@ METADATA_HEADER_FORMAT_KEYS = {
         'sensor_ideal_sampling_rate':DataType.INTEGER,
         'sensor_saturation_g':DataType.INTEGER,
         'sensor_true_sampling_rate':DataType.FLOAT,
-        'data_processing_sampling_rate':DataType.INTEGER,
+        'output_sampling_rate':DataType.INTEGER,
         'comments':DataType.STRING,
         'trace_length':DataType.INTEGER,
         'number_of_samples_in_this_trace':DataType.INTEGER,
@@ -202,6 +202,8 @@ class Metadata(object):
     def __init__(self,cfg):
         for key,key_type in METADATA_HEADER_FORMAT_KEYS.items():
             setattr(self,key,None)
+        value = cfg.getint("COLLECTION","output_sampling_rate")
+        setattr(self,"output_sampling_rate",value)
         for section in ["INSTALLATION","PROCESSING"]:
             for item in cfg.items(section):
                 key = item[0]
@@ -274,6 +276,32 @@ class Metadata(object):
             elif dtype is DataType.INTEGER:
                 value = int(value)
         return attribute_name,value
+
+    def metadata_to_dictionary_for_karl(self):
+        dict = {}
+        dict["drill_id"] = self.rig_id
+        dict["digitizer_id"] = self.sensor_serial_number
+        if self.sensor_axial_axis == 1:
+            dict["orientation"] = "normal"
+        elif self.sensor_axial_axis == 2:
+            dict["orientation"] = "rotate_90"
+        else:
+            dict["orientation"] = "z_axis"
+        dict["sampling_rate"] = self.output_sampling_rate
+        dict["sensor_distance_to_source_in_meters"] = self.sensor_distance_to_source
+        if self.sensor_accelerometer_type == 8:
+            dict["accelerometer_type"] = "piezo"
+        else:
+            dict["accelerometer_type"] = "mems"
+        if self.sensor_type == 1:
+            dict["accelerometer_type"] = "ssx"
+        else:
+            dict["accelerometer_type"] = "rhino"
+        return dict
+
+
+
+
 
 
 if __name__ == "__main__":
