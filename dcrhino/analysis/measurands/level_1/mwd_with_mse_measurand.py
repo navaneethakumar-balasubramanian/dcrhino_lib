@@ -54,7 +54,12 @@ class MWDWithMSE(DerivedDataCloudMeasurand):
         """
         """
         mwd_filename = self.expected_filename()
-        df = pd.read_csv(mwd_filename, parse_dates=['time_start', 'time_end'])
+        try:
+            df = pd.read_csv(mwd_filename, parse_dates=['starttime', 'endtime'])
+        except ValueError:
+            print("Warning: You do not appear to be using the official MWD format")
+            df = pd.read_csv(mwd_filename, parse_dates=['time_start', 'time_end'])
+
         return df
 
 def my_function():

@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pdb
+import pandas as pd
 
 
 
@@ -44,6 +45,13 @@ class QCBlastholePlotInputs(object):
         self.peak_mult_x  = kwargs.get('peak_mult_x', None)
         self.peak_ampl_x_ndx = kwargs.get('peak_ampl_x_ndx', None)
         self.peak_mult_x_ndx = kwargs.get('peak_mult_x_ndx', None)
+        self.sub_mwd_depth = kwargs.get('sub_mwd_depth',None)
+        self.sub_mwd_time = kwargs.get('sub_mwd_time',None)
+        self.mwd_tstart = kwargs.get('mwd_tstart',None)
+        self.mwd_tend = kwargs.get('mwd_tend',None)
+        self.mwd_start_depth = kwargs.get('mwd_start_depth',None)
+        self.mwd_end_depth = kwargs.get('mwd_end_depth',None)
+
         #</THese are the curves plotted in the first panel>
 
         #<these numbers dictate the y axis bounds>
@@ -102,22 +110,16 @@ def plot_hole_as_heatmap(ax, v_min, v_max, X, Y, Z, cmap_string, y_tick_location
         heatmap = ax.pcolormesh(X, Y, Z, cmap=cmap_string)
     else:
         heatmap = ax.pcolormesh(X, Y, Z, cmap=cmap_string, vmin=v_min, vmax=v_max)
-#    if colorbar_type == 'each_axis':
-#         #[left, bottom, width, height],
-#        cbaxes = fig.add_axes([0.99, 0.54, 0.02, 0.18])
-#        cb = plt.colorbar(heatmap1, cax = cbaxes)
-#        divider = make_axes_locatable(ax[1])
-#        cax = divider.append_axes("left", size="1%", pad=0.5)
-#        plt.colorbar(heatmap1, ax=cax);
+
     ax.set_ylabel('time (ms)')
     ax.invert_yaxis()
-    #ax[1].set_yticks(y_tick_locations, y_tick_labels)
     ax.set_yticks(y_tick_locations, minor=False)
 
     ax.yaxis.set_minor_locator(minor_locator)
     ax.tick_params(which='major', width=1)
     ax.tick_params(which='major', length=8)
     ax.tick_params(which='minor', length=4, color='r', width=0.5)
+
     if two_way_travel_time_ms is not None:
         ax.plot(np.asarray([X[0], X[-1]]), two_way_travel_time_ms*np.ones(2), 'r', linewidth=1.)
         #this indent not a bug/error
@@ -126,6 +128,7 @@ def plot_hole_as_heatmap(ax, v_min, v_max, X, Y, Z, cmap_string, y_tick_location
         if multiple_search_forward_ms is not None:
             ax.plot(np.asarray([X[0], X[-1]]), (two_way_travel_time_ms + multiple_search_forward_ms) * np.ones(2), 'k', linewidth=1.)
 
+    ax.set_xlim(X[0], X[-1])
     return ax, heatmap
 
 
@@ -139,8 +142,29 @@ def header_plot(ax, X, qc_plot_input, out_filename, peak_amplitude_linewidth = 0
     ax.legend()
     ax.set_title("{}".format(os.path.basename(out_filename[:-3])))
     ax.set_ylim(0.0, 2.0)
+    ax.set_xlim(X[0], X[-1])
     return
 
+
+def depth_vs_time_plot(ax,qc_plot_input,out_filename):
+    """
+    TODO: read PEP8
+    code is read much more often than it it written
+    """
+    time_axis = qc_plot_input.sub_mwd_time
+#    pdb.set_trace()
+    ax.plot(time_axis, qc_plot_input.sub_mwd_depth, '*',label = 'Datapoints')
+    ax.plot(time_axis, qc_plot_input.sub_mwd_depth, label = 'Interpolated')
+    ax.legend()
+    ax.set_ylabel('Depth (m)')
+    ax.set_xlabel('Timestamps')
+    #pdb.set_trace()
+
+    ax.set_xlim(time_axis.iloc[0], time_axis.iloc[-1])
+#    ax.set_ylim(qc_plot_input.mwd_start_depth,qc_plot_input.mwd_end_depth)
+#    ax.set_xlim(qc_plot_input.mwd_tstart,qc_plot_input.mwd_tend)
+#    ax.legend()qc_plot_input.sub_mwd_depth
+    return
 
 
 def qc_plot(qc_plot_input, out_filename, data_date, client_project_id,
@@ -162,12 +186,25 @@ def qc_plot(qc_plot_input, out_filename, data_date, client_project_id,
     #</Get inputs and reshape where appropriate>
 
     num_traces_per_component, num_samples = trace_array_dict[label].T.shape
-    X = np.arange(num_traces_per_component)
+    #I would add an option for showing panel #5 or not.
+    #if you show panel 5 it means you have got the start and end time of the hole
+    #in the qc_plot_input.sub_mwd_time.iloc[0] and qc_plot_input.sub_mwd_time.iloc[-1]
+
+    #<choose X>
+    #if use depth plot:
+    time_vector = pd.date_range(start=qc_plot_input.sub_mwd_time.iloc[0], periods=num_traces_per_component, freq='1S')
+    X = time_vector
+    #else:
+#    X = np.arange(num_traces_per_component)
+    #</choose X>
+
     Y = np.linspace(lower_num_ms, upper_num_ms, trace_array_dict[label].shape[0])
     Y = np.flipud(Y)
 
-    fig, ax = plt.subplots(nrows=4, sharex=True, figsize=(24,8.5))
+    fig, ax = plt.subplots(nrows=5, sharex=False, figsize=(24,8.5))
     header_plot(ax[0], X, qc_plot_input, out_filename)
+#    pdb.set_trace()
+    depth_vs_time_plot(ax[4],qc_plot_input,out_filename)
     plt.subplots_adjust(right=10.5)
 
 
@@ -181,7 +218,6 @@ def qc_plot(qc_plot_input, out_filename, data_date, client_project_id,
     #<sort out yticks every 5 ms>
     #pdb.set_trace()
 #    y_tick_locations = 10*np.arange(7)
-
     ax[1], heatmap1 = plot_hole_as_heatmap(ax[1], cbal.v_min_1, cbal.v_max_1, X, Y,
       trace_array_dict['axial'], cmap_string, y_tick_locations,
       two_way_travel_time_ms=qc_plot_input.two_way_travel_time_ms,
@@ -197,6 +233,8 @@ def qc_plot(qc_plot_input, out_filename, data_date, client_project_id,
 
     ax[3], heatmap3 = plot_hole_as_heatmap(ax[3], cbal.v_min_3, cbal.v_max_3, X, Y,
       trace_array_dict['radial'], cmap_string, y_tick_locations)#,
+
+
 
     plt.tight_layout()
     if colourbar_type=='all_one':
@@ -221,12 +259,12 @@ def qc_plot(qc_plot_input, out_filename, data_date, client_project_id,
     #plt.subplots_adjust(right=1.5)
     plt.subplots_adjust(left=0.1)
     plt.subplots_adjust(right=0.9)
-    #plt.show()
+#    plt.show()
     print("saving {}".format(out_filename))
-    plt.savefig(out_filename, dpi=dpi)
-    if show:
-        plt.show()
-    plt.clf()
+    plt.savefig(out_filename)
+#    if show:
+#        plt.show()
+#    plt.clf()
 
 
 
