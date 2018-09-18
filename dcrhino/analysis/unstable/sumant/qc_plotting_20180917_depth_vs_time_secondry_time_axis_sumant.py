@@ -95,8 +95,8 @@ for i_row in range(total_number_of_rows):
     lower_num_ms=-5.0
     upper_num_ms=30.0
 
-    lower_num_ms_new=11.0
-    upper_num_ms_new=46.0
+#    lower_num_ms_new=11.0
+#    upper_num_ms_new=46.0
 
 
     project_id = 'west_angelas'
@@ -104,7 +104,9 @@ for i_row in range(total_number_of_rows):
         print(component_label)
         traces_filename = '{}_{}_{}.npy'.format(component_label, row.hole, row.digitizer_id)
         input_filename = os.path.join(azure_path,traces_filename)
-        output_filename = '{}_{}_{}_{}_{}.png'.format(project_id,row.hole,row.digitizer_id,lower_num_ms_new,upper_num_ms_new)
+#        output_filename = '{}_{}_{}_{}_{}.png'.format(project_id,row.hole,row.digitizer_id,lower_num_ms_new,upper_num_ms_new)
+        output_filename = '{}_{}_{}.png'.format(project_id,row.hole,row.digitizer_id)
+
 #        (/Titles
         title_line1 = "Correlated Trace QC Time Plots, {}, {}".format(project_id, row.time_start.strftime("%B %d, %Y"))
         title_line2 = "Hole: {}, Area: {},Digitizer_ID: {},Sampling rate: {}".format(row.hole,row.area,row.digitizer_id,row.sampling_rate)
@@ -117,6 +119,7 @@ for i_row in range(total_number_of_rows):
         data = data.reshape(num_traces_in_blasthole, samples_per_trace)
 
         trace_array_dict[component_label] = data.T
+        pdb.set_trace()
 #        pdb.set_trace()
         #total hack
 
@@ -151,8 +154,8 @@ for i_row in range(total_number_of_rows):
                                           peak_ampl_y=peak_ampl_tangential,
                                           peak_ampl_z=peak_ampl_radial,
                                           peak_mult_x=peak_mult_axial,
-                                          lower_number_ms=lower_num_ms, upper_number_ms=upper_num_ms,
-                                          lower_number_ms_new=lower_num_ms_new, upper_number_ms_new=upper_num_ms_new,
+#                                          lower_number_ms=lower_num_ms, upper_number_ms=upper_num_ms,
+#                                          lower_number_ms_new=lower_num_ms_new, upper_number_ms_new=upper_num_ms_new,
                                           mwd_tstart = sub_mwd_df.starttime.iloc[0].second,
                                           mwd_tend = sub_mwd_df.endtime.iloc[-1].second,
                                           mwd_start_depth = sub_mwd_df.computed_elevation.iloc[0],

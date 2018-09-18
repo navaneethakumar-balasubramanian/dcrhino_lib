@@ -57,8 +57,8 @@ class QCBlastholePlotInputs(object):
         #<these numbers dictate the y axis bounds>
         self.lower_number_ms = kwargs.get('lower_number_ms', None)
         self.upper_number_ms = kwargs.get('upper_number_ms', None)
-        self.lower_number_ms_new = kwargs.get('lower_number_ms_new', None)
-        self.upper_number_ms_new = kwargs.get('upper_number_ms_new', None)
+#        self.lower_number_ms_new = kwargs.get('lower_number_ms_new', None)
+#        self.upper_number_ms_new = kwargs.get('upper_number_ms_new', None)
         #</these numbers dictate the y axis bounds>
 
         #<We dont currently use this, but it is referred to by the plotter>
@@ -184,8 +184,8 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     lower_num_ms = qc_plot_input.lower_number_ms
     upper_num_ms = qc_plot_input.upper_number_ms
 
-    lower_num_ms_new = qc_plot_input.lower_number_ms_new
-    upper_num_ms_new = qc_plot_input.upper_number_ms_new
+#    lower_num_ms_new = qc_plot_input.lower_number_ms_new
+#    upper_num_ms_new = qc_plot_input.upper_number_ms_new
 
     for label in COMPONENT_LABELS:
         trace_array_dict[label] = np.flipud(trace_array_dict[label])
@@ -207,14 +207,16 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     Y = np.linspace(lower_num_ms, upper_num_ms, trace_array_dict[label].shape[0])
     Y = np.flipud(Y)
 
-    #Quick and dirty way to create another window for plotting tangential at the
-    # interval Jamie asked me.
-    Y2 = np.linspace(lower_num_ms_new, upper_num_ms_new, trace_array_dict[label].shape[0])
-    Y2 = np.flipud(Y2)
-    #<quick n dirty>
+#    #Quick and dirty way to create another window for plotting tangential at the
+#    # interval Jamie asked me.
+#    Y2 = np.linspace(lower_num_ms_new, upper_num_ms_new, trace_array_dict[label].shape[0])
+#    Y2 = np.flipud(Y2)
+#    #<quick n dirty>
 
 
-    fig, ax = plt.subplots(nrows=6, sharex=False, figsize=(24,11))
+#    fig, ax = plt.subplots(nrows=6, sharex=False, figsize=(24,11))
+    fig, ax = plt.subplots(nrows=5, sharex=False, figsize=(24,8.5))
+
 #    plt.suptitle(plot_title)
     header_plot(ax[0], X, qc_plot_input, plot_title)
 #    pdb.set_trace()
@@ -230,9 +232,9 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     greatest_y_tick = int(upper_num_ms/dt_ms)
 
     #</further from quick n dirty>
-    lowest_y_tick2 =  int(lower_num_ms_new/dt_ms)
-    greatest_y_tick2 = int(upper_num_ms_new/dt_ms)
-    #</further from quick n dirty>
+#    lowest_y_tick2 =  int(lower_num_ms_new/dt_ms)
+#    greatest_y_tick2 = int(upper_num_ms_new/dt_ms)
+#    #</further from quick n dirty>
 
 #    pdb.set_trace()
 
@@ -261,8 +263,8 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     ax[3], heatmap3 = plot_hole_as_heatmap(ax[3], cbal.v_min_3, cbal.v_max_3, X, Y,
       trace_array_dict['radial'], cmap_string, y_tick_locations)#,
 
-    ax[5], heatmap2 = plot_hole_as_heatmap(ax[5], cbal.v_min_2, cbal.v_max_2, X, Y,
-      trace_array_dict['tangential'], cmap_string, y_tick_locations2)#,
+#    ax[5], heatmap2 = plot_hole_as_heatmap(ax[5], cbal.v_min_2, cbal.v_max_2, X, Y,
+#      trace_array_dict['tangential'], cmap_string, y_tick_locations2)#,
 
 
 
@@ -279,8 +281,8 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     ax[2].text(1.01, 0.6, 'tangential', fontsize=11.5, rotation='vertical', transform=ax[2].transAxes)
     ax[3].text(1.01, 0.5, 'radial', fontsize=11.5, rotation='vertical', transform=ax[3].transAxes)
     ax[5].text(1.01, 0.6, 'tangential', fontsize=11.5, rotation='vertical', transform=ax[2].transAxes)
-    ax_5_title = '{}_{}_time_limits(ms)'.format(lowest_y_tick2,greatest_y_tick2)
-    ax[5].set_title(ax_5_title)
+#    ax_5_title = '{}_{}_time_limits(ms)'.format(lowest_y_tick2,greatest_y_tick2)
+#    ax[5].set_title(ax_5_title)
     #ax[0].text(1.01, 0.6, '{}'.format(client_project_id), fontsize=13, transform=ax[0].transAxes)
 
     if qc_plot_input.center_trace_dict is not None:

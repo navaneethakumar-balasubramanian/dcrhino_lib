@@ -22,7 +22,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pdb
-import pandas as pd
 
 
 
@@ -42,23 +41,16 @@ class QCBlastholePlotInputs(object):
         self.peak_ampl_x  = kwargs.get('peak_ampl_x', None)
         self.peak_ampl_y  = kwargs.get('peak_ampl_y', None)
         self.peak_ampl_z  = kwargs.get('peak_ampl_z', None)
+        self.peak_ampl_RC = kwargs.get('peak_ampl_RC',None)
         self.peak_mult_x  = kwargs.get('peak_mult_x', None)
+        
         self.peak_ampl_x_ndx = kwargs.get('peak_ampl_x_ndx', None)
         self.peak_mult_x_ndx = kwargs.get('peak_mult_x_ndx', None)
-        self.sub_mwd_depth = kwargs.get('sub_mwd_depth',None)
-        self.sub_mwd_time = kwargs.get('sub_mwd_time',None)
-        self.mwd_tstart = kwargs.get('mwd_tstart',None)
-        self.mwd_tend = kwargs.get('mwd_tend',None)
-        self.mwd_start_depth = kwargs.get('mwd_start_depth',None)
-        self.mwd_end_depth = kwargs.get('mwd_end_depth',None)
-
         #</THese are the curves plotted in the first panel>
 
         #<these numbers dictate the y axis bounds>
         self.lower_number_ms = kwargs.get('lower_number_ms', None)
         self.upper_number_ms = kwargs.get('upper_number_ms', None)
-        self.lower_number_ms_new = kwargs.get('lower_number_ms_new', None)
-        self.upper_number_ms_new = kwargs.get('upper_number_ms_new', None)
         #</these numbers dictate the y axis bounds>
 
         #<We dont currently use this, but it is referred to by the plotter>
@@ -90,6 +82,8 @@ class ColourBarAxisLimtis(object):
         self.v_max_2 = kwargs.get('v_max_2',  0.5)
         self.v_min_3 = kwargs.get('v_min_3', -0.5)
         self.v_max_3 = kwargs.get('v_max_3',  0.5)
+        self.v_min_4 = kwargs.get('v_min_4', -0.5)
+        self.v_max_4 = kwargs.get('v_max_4', 0.5)
         if self.colourbar_type == 'all_one':
             self.assign_to_all()
 
@@ -100,6 +94,8 @@ class ColourBarAxisLimtis(object):
         self.v_max_2 = self.v_max_all
         self.v_min_3 = self.v_min_all
         self.v_max_3 = self.v_max_all
+        self.v_min_4 = self.v_max_all
+        self.v_max_4 = self.v_max_all
 
 
 def plot_hole_as_heatmap(ax, v_min, v_max, X, Y, Z, cmap_string, y_tick_locations,
@@ -112,16 +108,22 @@ def plot_hole_as_heatmap(ax, v_min, v_max, X, Y, Z, cmap_string, y_tick_location
         heatmap = ax.pcolormesh(X, Y, Z, cmap=cmap_string)
     else:
         heatmap = ax.pcolormesh(X, Y, Z, cmap=cmap_string, vmin=v_min, vmax=v_max)
-
+#    if colorbar_type == 'each_axis':
+#         #[left, bottom, width, height],
+#        cbaxes = fig.add_axes([0.99, 0.54, 0.02, 0.18])
+#        cb = plt.colorbar(heatmap1, cax = cbaxes)
+#        divider = make_axes_locatable(ax[1])
+#        cax = divider.append_axes("left", size="1%", pad=0.5)
+#        plt.colorbar(heatmap1, ax=cax);
     ax.set_ylabel('time (ms)')
     ax.invert_yaxis()
+    #ax[1].set_yticks(y_tick_locations, y_tick_labels)
     ax.set_yticks(y_tick_locations, minor=False)
 
     ax.yaxis.set_minor_locator(minor_locator)
     ax.tick_params(which='major', width=1)
     ax.tick_params(which='major', length=8)
     ax.tick_params(which='minor', length=4, color='r', width=0.5)
-
     if two_way_travel_time_ms is not None:
         ax.plot(np.asarray([X[0], X[-1]]), two_way_travel_time_ms*np.ones(2), 'r', linewidth=1.)
         #this indent not a bug/error
@@ -130,11 +132,10 @@ def plot_hole_as_heatmap(ax, v_min, v_max, X, Y, Z, cmap_string, y_tick_location
         if multiple_search_forward_ms is not None:
             ax.plot(np.asarray([X[0], X[-1]]), (two_way_travel_time_ms + multiple_search_forward_ms) * np.ones(2), 'k', linewidth=1.)
 
-    ax.set_xlim(X[0], X[-1])
     return ax, heatmap
 
 
-def header_plot(ax, X, qc_plot_input, plot_title, peak_amplitude_linewidth = 0.2):
+def header_plot(ax, X, qc_plot_input, out_filename, peak_amplitude_linewidth = 0.2):
     """
     """
     ax.plot(X, qc_plot_input.peak_ampl_y, label='peak_y', linewidth=peak_amplitude_linewidth)
@@ -142,34 +143,13 @@ def header_plot(ax, X, qc_plot_input, plot_title, peak_amplitude_linewidth = 0.2
     ax.plot(X, qc_plot_input.peak_mult_x, label='mult_x', linewidth=peak_amplitude_linewidth)
     ax.plot(X, qc_plot_input.peak_ampl_x, label='peak_x', linewidth=peak_amplitude_linewidth)
     ax.legend()
-    ax.set_title(plot_title)
+    ax.set_title("{}".format(os.path.basename(out_filename[:-3])))
     ax.set_ylim(0.0, 2.0)
-    ax.set_xlim(X[0], X[-1])
     return
 
 
-def depth_vs_time_plot(ax,qc_plot_input):
-    """
-    TODO: read PEP8
-    code is read much more often than it it written
-    """
-    time_axis = qc_plot_input.sub_mwd_time
-#    pdb.set_trace()
-    ax.plot(time_axis, qc_plot_input.sub_mwd_depth, '*',label = 'Datapoints')
-    ax.plot(time_axis, qc_plot_input.sub_mwd_depth, label = 'Interpolated')
-    ax.legend()
-    ax.set_ylabel('Computed \n Elevation (m)')
-    ax.set_xlabel('Timestamps')
-    #pdb.set_trace()
 
-    ax.set_xlim(time_axis.iloc[0], time_axis.iloc[-1])
-#    ax.set_ylim(qc_plot_input.mwd_start_depth,qc_plot_input.mwd_end_depth)
-#    ax.set_xlim(qc_plot_input.mwd_tstart,qc_plot_input.mwd_tend)
-#    ax.legend()qc_plot_input.sub_mwd_depth
-    return
-
-
-def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id,
+def qc_plot(qc_plot_input, out_filename, data_date, client_project_id,
                two_way_travel_time_ms=None, peak_search_interval_ms=None, dpi=300, show=False):
     """
     """
@@ -181,44 +161,20 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
 
     #<Get inputs and reshape where appropriate>
     trace_array_dict = qc_plot_input.trace_array_dict
+    #pdb.set_trace()
     lower_num_ms = qc_plot_input.lower_number_ms
     upper_num_ms = qc_plot_input.upper_number_ms
-
-    lower_num_ms_new = qc_plot_input.lower_number_ms_new
-    upper_num_ms_new = qc_plot_input.upper_number_ms_new
-
     for label in COMPONENT_LABELS:
         trace_array_dict[label] = np.flipud(trace_array_dict[label])
     #</Get inputs and reshape where appropriate>
 
     num_traces_per_component, num_samples = trace_array_dict[label].T.shape
-    #I would add an option for showing panel #5 or not.
-    #if you show panel 5 it means you have got the start and end time of the hole
-    #in the qc_plot_input.sub_mwd_time.iloc[0] and qc_plot_input.sub_mwd_time.iloc[-1]
-
-    #<choose X>
-    #if use depth plot:
-    time_vector = pd.date_range(start=qc_plot_input.sub_mwd_time.iloc[0], periods=num_traces_per_component, freq='1S')
-    X = time_vector
-    #else:
-#    X = np.arange(num_traces_per_component)
-    #</choose X>
-
+    X = np.arange(num_traces_per_component)
     Y = np.linspace(lower_num_ms, upper_num_ms, trace_array_dict[label].shape[0])
     Y = np.flipud(Y)
 
-    #Quick and dirty way to create another window for plotting tangential at the
-    # interval Jamie asked me.
-    Y2 = np.linspace(lower_num_ms_new, upper_num_ms_new, trace_array_dict[label].shape[0])
-    Y2 = np.flipud(Y2)
-    #<quick n dirty>
-
-
-    fig, ax = plt.subplots(nrows=6, sharex=False, figsize=(24,11))
-#    plt.suptitle(plot_title)
-    header_plot(ax[0], X, qc_plot_input, plot_title)
-#    pdb.set_trace()
-    depth_vs_time_plot(ax[4],qc_plot_input)
+    fig, ax = plt.subplots(nrows=5, sharex=True, figsize=(24,8.5))
+    header_plot(ax[0], X, qc_plot_input, out_filename)
     plt.subplots_adjust(right=10.5)
 
 
@@ -228,23 +184,11 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     dt_ms = 5
     lowest_y_tick =  int(lower_num_ms/dt_ms)
     greatest_y_tick = int(upper_num_ms/dt_ms)
-
-    #</further from quick n dirty>
-    lowest_y_tick2 =  int(lower_num_ms_new/dt_ms)
-    greatest_y_tick2 = int(upper_num_ms_new/dt_ms)
-    #</further from quick n dirty>
-
-#    pdb.set_trace()
-
     y_tick_locations = dt_ms * np.arange(lowest_y_tick, greatest_y_tick + 1)
-    #</further from quick n dirty>
-    y_tick_locations2 = dt_ms * np.arange(lowest_y_tick2, greatest_y_tick2 + 1)
-    #</further from quick n dirty>
-
-
     #<sort out yticks every 5 ms>
-#    pdb.set_trace()
+    #pdb.set_trace()
 #    y_tick_locations = 10*np.arange(7)
+
     ax[1], heatmap1 = plot_hole_as_heatmap(ax[1], cbal.v_min_1, cbal.v_max_1, X, Y,
       trace_array_dict['axial'], cmap_string, y_tick_locations,
       two_way_travel_time_ms=qc_plot_input.two_way_travel_time_ms,
@@ -261,11 +205,9 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     ax[3], heatmap3 = plot_hole_as_heatmap(ax[3], cbal.v_min_3, cbal.v_max_3, X, Y,
       trace_array_dict['radial'], cmap_string, y_tick_locations)#,
 
-    ax[5], heatmap2 = plot_hole_as_heatmap(ax[5], cbal.v_min_2, cbal.v_max_2, X, Y,
-      trace_array_dict['tangential'], cmap_string, y_tick_locations2)#,
-
-
-
+    ax[4], heatmap4 = plot_hole_as_heatmap(ax[4],cbal.v_min_4,cbal.vmax_4,X,Y,
+      trace_array_dict['RC'], cmap_string,y_tick_locations)#,
+    
     plt.tight_layout()
     if colourbar_type=='all_one':
         cbaxes = fig.add_axes([0.01, 0.1, 0.007, 0.8])
@@ -278,9 +220,7 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     ax[1].text(1.01, 0.5, 'axial', fontsize=11.5, rotation='vertical', transform=ax[1].transAxes)
     ax[2].text(1.01, 0.6, 'tangential', fontsize=11.5, rotation='vertical', transform=ax[2].transAxes)
     ax[3].text(1.01, 0.5, 'radial', fontsize=11.5, rotation='vertical', transform=ax[3].transAxes)
-    ax[5].text(1.01, 0.6, 'tangential', fontsize=11.5, rotation='vertical', transform=ax[2].transAxes)
-    ax_5_title = '{}_{}_time_limits(ms)'.format(lowest_y_tick2,greatest_y_tick2)
-    ax[5].set_title(ax_5_title)
+    ax[4].text(1.01, 0.6, 'RC',fontsize = 11.5, rotation = 'vertical',transform = ax[4].transAxes)
     #ax[0].text(1.01, 0.6, '{}'.format(client_project_id), fontsize=13, transform=ax[0].transAxes)
 
     if qc_plot_input.center_trace_dict is not None:
@@ -292,13 +232,12 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     #plt.subplots_adjust(right=1.5)
     plt.subplots_adjust(left=0.1)
     plt.subplots_adjust(right=0.9)
-    plt.savefig(out_filename)
-    plt.show()
+    #plt.show()
     print("saving {}".format(out_filename))
-
-#    if show:
-#        plt.show()
-#    plt.clf()
+    plt.savefig(out_filename, dpi=dpi)
+    if show:
+        plt.show()
+    plt.clf()
 
 
 

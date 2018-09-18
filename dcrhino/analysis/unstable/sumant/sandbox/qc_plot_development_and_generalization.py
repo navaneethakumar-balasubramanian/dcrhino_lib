@@ -16,9 +16,9 @@ import os
 import pdb
 
 import dcrhino.analysis.measurands.measurand_registry_west_angelas as MEASURAND_REGISTRY
-
-from dcrhino.analysis.graphical.supporting_qc_plots import qc_plot
-from dcrhino.analysis.graphical.supporting_qc_plots import QCPlotInputs
+#pdb.set_trace()
+from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots import qc_plot
+#from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots import QCPlotInputs
 from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots import QCBlastholePlotInputs
 from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
 from dcrhino.analysis.measurands.keys.data_key import DigitizerSamplingRateDateDataKey
@@ -40,6 +40,7 @@ def generate_example_data():
     data_key = DigitizerSamplingRateDateDataKey(dummy_digitizer_id, dummy_data_date, sampling_rate )
     qq = corr_measurand.expected_filename(data_key)
     print(qq)
+    pdb.set_trace()
     corr_measurand.to_qc_plot(data_key, show=True)#st=corr_stream)
     return
 
@@ -54,13 +55,18 @@ def make_plot():
     for component_label in COMPONENT_LABELS:
         component_filename = os.path.join(output_directory, '{}.npy'.format(component_label))
         trace_array_dict[component_label] = np.load(component_filename)
-    pdb.set_trace()
+#        pdb.set_trace()
+        
+#    pdb.set_trace()
 
     #trace_array_dict['axial'] = np.random.rand(trace_array_dict['axial'].shape[0], trace_array_dict['axial'].shape[1] )
+   # trace_array_dict['RC']=np.random.rand(trace_array_dict['RC'].shape[0],trace_array_dict['RC'].shape[1])
     #num_traces_per_component = trace_array_dict['axial'].shape[1]
     #trace_header_attributesTraceHeaderAttributes(num_traces_per_component)
     full_file = os.path.join(output_directory, '{}.npy'.format('peak_ampl_axial'))
     peak_ampl_axial = np.load(full_file)
+    full_file= os.path.join(output_directory,'{}.npy'.format('peak_ampl_RC'))
+    peak_ampl_RC =np.load(full_file)
     full_file = os.path.join(output_directory, '{}.npy'.format('peak_ampl_tangential'))
     peak_ampl_tangential = np.load(full_file)
     full_file = os.path.join(output_directory, '{}.npy'.format('peak_ampl_radial'))
@@ -70,13 +76,13 @@ def make_plot():
     pdb.set_trace()
     #peak_mult_axial  = np.random.rand(peak_ampl_axial.shape)
     #</load_example_data>
-    pdb.set_trace()
+#    pdb.set_trace()
 
     lower_num_ms=-5.0
-    upper_num_ms=60.0
-    pdb.set_trace()
+    upper_num_ms=30.0
     qc_plot_input = QCBlastholePlotInputs(trace_array_dict=trace_array_dict,
                                  peak_ampl_x=peak_ampl_axial,
+                                 peak_ampl_RC=peak_ampl_RC,
                                  peak_ampl_y=peak_ampl_tangential,
                                  peak_ampl_z=peak_ampl_radial,
                                  peak_mult_x=peak_mult_axial,
