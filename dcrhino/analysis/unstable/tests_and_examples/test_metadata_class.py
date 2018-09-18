@@ -13,6 +13,7 @@ import datetime
 #import numpy as np
 import os
 import pdb
+import ConfigParser
 
 from dcrhino.real_time.metadata import Metadata
 
@@ -34,8 +35,10 @@ from dcrhino.real_time.metadata import Metadata
 def test_can_read_cfg_file():
     """
     """
-    cfg_file = os.path.join('20180910_SSX57868.cfg')
-    meta_instance = Metadata(cfg_file)
+    cfg_path = os.path.join('20180910_SSX57868.cfg')
+    cfg_instance = ConfigParser.SafeConfigParser()
+    cfg_instance.read(cfg_path)
+    meta_instance = Metadata(cfg_instance)
     pdb.set_trace()
     print('ok')
 
