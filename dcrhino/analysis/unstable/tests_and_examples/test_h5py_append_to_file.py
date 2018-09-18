@@ -20,13 +20,13 @@ pdb.set_trace()
 
 N = 10000
 x=np.random.rand(N)
-my_key = 'my_key'
+my_key = 'my_key2'
 if my_key in h5f.keys():
     ds = h5f[my_key]
     ds.resize((h5f[my_key].shape[0] + x.shape[0]), axis = 0)
     ds[-N:] = x
 else:
-    ds = h5f.create_dataset('my_key', data=x, chunks=True,
+    ds = h5f.create_dataset(my_key, data=x, chunks=True,
                             dtype=np.float32, maxshape=(None,))
 
     ds[:] = x
