@@ -51,7 +51,9 @@ class QCBlastholePlotInputs(object):
         self.mwd_tend = kwargs.get('mwd_tend',None)
         self.mwd_start_depth = kwargs.get('mwd_start_depth',None)
         self.mwd_end_depth = kwargs.get('mwd_end_depth',None)
-
+        self.sub_mwd_wob = kwargs.get('sub_mwd_wob',None)
+        self.sub_mwd_tob = kwargs.get('sub_mwd_tob',None)
+        self.sub_mwd_rop = kwargs.get('sub_mwd_rop',None)
         #</THese are the curves plotted in the first panel>
 
         #<these numbers dictate the y axis bounds>
@@ -154,20 +156,39 @@ def depth_vs_time_plot(ax,qc_plot_input):
     code is read much more often than it it written
     """
     time_axis = qc_plot_input.sub_mwd_time
-#    pdb.set_trace()
+    ax2 = ax.twinx()
+
     ax.plot(time_axis, qc_plot_input.sub_mwd_depth, '*',label = 'Datapoints')
     ax.plot(time_axis, qc_plot_input.sub_mwd_depth, label = 'Interpolated')
-    ax.legend()
+
+    ax2.plot(time_axis,qc_plot_input.sub_mwd_rop,label = 'RoP (m/hr)',color = 'r')
+
+    ax.legend(loc=2)
     ax.set_ylabel('Computed \n Elevation (m)')
     ax.set_xlabel('Timestamps')
-    #pdb.set_trace()
+
+
+    ax2.legend(loc=1)
+    ax2.set_ylabel('RoP (m/hr)')
+
 
     ax.set_xlim(time_axis.iloc[0], time_axis.iloc[-1])
-#    ax.set_ylim(qc_plot_input.mwd_start_depth,qc_plot_input.mwd_end_depth)
-#    ax.set_xlim(qc_plot_input.mwd_tstart,qc_plot_input.mwd_tend)
-#    ax.legend()qc_plot_input.sub_mwd_depth
+
     return
 
+def wob_tob_plot(ax,qc_plot_input):
+    time_axis = qc_plot_input.sub_mwd_time
+#    pdb.set_trace()
+    ax2 = ax.twinx()
+    ax.plot(time_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
+#    pdb.set_trace()
+    ax2.plot(time_axis, qc_plot_input.sub_mwd_tob, label = 'Torque on Bit',color = 'r')
+    ax.legend(loc=2)
+    ax2.legend(loc=1)
+    ax.set_ylabel('force on \n bit (kN)')
+    ax2.set_ylabel('Torque on \n bit (Nm)')
+    ax.set_xlabel('Timestamps')
+    return
 
 def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id,
                two_way_travel_time_ms=None, peak_search_interval_ms=None, dpi=300, show=False):
@@ -184,8 +205,8 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     lower_num_ms = qc_plot_input.lower_number_ms
     upper_num_ms = qc_plot_input.upper_number_ms
 
-    lower_num_ms_new = qc_plot_input.lower_number_ms_new
-    upper_num_ms_new = qc_plot_input.upper_number_ms_new
+#    lower_num_ms_new = qc_plot_input.lower_number_ms_new
+#    upper_num_ms_new = qc_plot_input.upper_number_ms_new
 
     for label in COMPONENT_LABELS:
         trace_array_dict[label] = np.flipud(trace_array_dict[label])
@@ -207,11 +228,13 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     Y = np.linspace(lower_num_ms, upper_num_ms, trace_array_dict[label].shape[0])
     Y = np.flipud(Y)
 
-    #Quick and dirty way to create another window for plotting tangential at the
-    # interval Jamie asked me.
-    Y2 = np.linspace(lower_num_ms_new, upper_num_ms_new, trace_array_dict[label].shape[0])
-    Y2 = np.flipud(Y2)
-    #<quick n dirty>
+#    #Quick and dirty way to create another window for plotting tangential at the
+#    # interval Jamie asked me.
+#    Y2 = np.linspace(lower_num_ms_new, upper_num_ms_new, trace_array_dict[label].shape[0])
+#    Y2 = np.flipud(Y2)
+#    #<quick n dirty>
+
+#    fig, ax = plt.subplots(nrows=5, sharex=False, figsize=(24,8.5))
 
 
     fig, ax = plt.subplots(nrows=6, sharex=False, figsize=(24,11))
@@ -219,6 +242,9 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     header_plot(ax[0], X, qc_plot_input, plot_title)
 #    pdb.set_trace()
     depth_vs_time_plot(ax[4],qc_plot_input)
+#    pdb.set_trace()
+    wob_tob_plot(ax[5],qc_plot_input)
+
     plt.subplots_adjust(right=10.5)
 
 
@@ -229,17 +255,17 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     lowest_y_tick =  int(lower_num_ms/dt_ms)
     greatest_y_tick = int(upper_num_ms/dt_ms)
 
-    #</further from quick n dirty>
-    lowest_y_tick2 =  int(lower_num_ms_new/dt_ms)
-    greatest_y_tick2 = int(upper_num_ms_new/dt_ms)
-    #</further from quick n dirty>
+#    #</further from quick n dirty>
+#    lowest_y_tick2 =  int(lower_num_ms_new/dt_ms)
+#    greatest_y_tick2 = int(upper_num_ms_new/dt_ms)
+#    #</further from quick n dirty>
 
 #    pdb.set_trace()
 
     y_tick_locations = dt_ms * np.arange(lowest_y_tick, greatest_y_tick + 1)
-    #</further from quick n dirty>
-    y_tick_locations2 = dt_ms * np.arange(lowest_y_tick2, greatest_y_tick2 + 1)
-    #</further from quick n dirty>
+#    #</further from quick n dirty>
+#    y_tick_locations2 = dt_ms * np.arange(lowest_y_tick2, greatest_y_tick2 + 1)
+#    #</further from quick n dirty>
 
 
     #<sort out yticks every 5 ms>
@@ -261,8 +287,8 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     ax[3], heatmap3 = plot_hole_as_heatmap(ax[3], cbal.v_min_3, cbal.v_max_3, X, Y,
       trace_array_dict['radial'], cmap_string, y_tick_locations)#,
 
-    ax[5], heatmap2 = plot_hole_as_heatmap(ax[5], cbal.v_min_2, cbal.v_max_2, X, Y,
-      trace_array_dict['tangential'], cmap_string, y_tick_locations2)#,
+#    ax[5], heatmap2 = plot_hole_as_heatmap(ax[5], cbal.v_min_2, cbal.v_max_2, X, Y,
+#      trace_array_dict['tangential'], cmap_string, y_tick_locations2)#,
 
 
 
@@ -278,9 +304,9 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     ax[1].text(1.01, 0.5, 'axial', fontsize=11.5, rotation='vertical', transform=ax[1].transAxes)
     ax[2].text(1.01, 0.6, 'tangential', fontsize=11.5, rotation='vertical', transform=ax[2].transAxes)
     ax[3].text(1.01, 0.5, 'radial', fontsize=11.5, rotation='vertical', transform=ax[3].transAxes)
-    ax[5].text(1.01, 0.6, 'tangential', fontsize=11.5, rotation='vertical', transform=ax[2].transAxes)
-    ax_5_title = '{}_{}_time_limits(ms)'.format(lowest_y_tick2,greatest_y_tick2)
-    ax[5].set_title(ax_5_title)
+#    ax[5].text(1.01, 0.6, 'tangential', fontsize=11.5, rotation='vertical', transform=ax[2].transAxes)
+#    ax_5_title = '{}_{}_time_limits(ms)'.format(lowest_y_tick2,greatest_y_tick2)
+#    ax[5].set_title(ax_5_title)
     #ax[0].text(1.01, 0.6, '{}'.format(client_project_id), fontsize=13, transform=ax[0].transAxes)
 
     if qc_plot_input.center_trace_dict is not None:
