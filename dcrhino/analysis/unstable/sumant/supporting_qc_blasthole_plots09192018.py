@@ -24,7 +24,7 @@ import os
 import pdb
 import pandas as pd
 from scipy import interpolate
-
+from scipy.interpolate import interp1d
 
 
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -201,6 +201,20 @@ def get_interpolated_computed_elevation(date_times,mwd_hole_df):
     elevation_means= np.array(elevation_means)
 
     return fill_nan(elevation_means)
+
+def get_interpolated_computed_elevation2(date_times, mwd_hole_df):
+    t_mwd = pd.DatetimeIndex(mwd_hole_df.endtime)
+    t_mwd = t_mwd.astype(np.int64)
+
+    zz = mwd_hole_df.computed_elevation
+
+    interp_function = interp1d(t_mwd, zz, kind='linear', bounds_error=False, fill_value='extrapolate')
+
+    #time_vector = pd.date_range(start=row.time_start, periods=num_traces_in_blasthole, freq='1S')
+    time_vector = pd.DatetimeIndex(date_times).astype(np.int64)
+    #time_vector = time_vector_index.astype(np.int64)
+    depths = interp_function(time_vector)
+    return depths
 
 def fill_nan(A):
     '''

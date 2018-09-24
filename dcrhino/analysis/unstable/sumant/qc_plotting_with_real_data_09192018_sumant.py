@@ -21,7 +21,7 @@ from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots09192018 impo
 #from dcrhino.analysis.graphical.supporting_qc_blasthole_plots import QCPlotInputs
 from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots09192018 import QCBlastholePlotInputs
 from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots09192018 import get_interpolated_computed_elevation
-
+from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots09192018 import get_interpolated_computed_elevation2
 import dcrhino.analysis.measurands.measurand_registry_west_angelas as MEASURAND_REGISTRY
 from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
 #from dcrhino.analysis.signal_processing.trace_header import define_obspy_trace_header
@@ -60,7 +60,7 @@ for i_row in range(total_number_of_rows):
     sub_mwd_df = sub_mwd_df[sub_mwd_df['area']==row.area]
     #note this may need to be generalized for other mines
     #</Get unique blasthole from mwd>
-    pdb.set_trace()
+    #pdb.set_trace()
     data_date = sub_mwd_df.starttime.dt.date
     data_date = data_date.iloc[0]
 
@@ -100,12 +100,17 @@ for i_row in range(total_number_of_rows):
     num_traces_in_blasthole = len(peak_ampl_axial)
     lower_num_ms=-5.0
     upper_num_ms=30.0
-#    time_vector = pd.date_range(start=qc_plot_input.sub_mwd_time.iloc[0], periods=num_traces_per_component, freq='1S')
+
     project_id = 'west_angelas'
+
     #<get depth info>
     datetime_delta = 1 #second
     time_arr = np.arange(row.time_start,row.time_end,datetime.timedelta(seconds = datetime_delta)).astype(datetime.datetime)
-    depth =get_interpolated_computed_elevation(time_arr,sub_mwd_df)
+    depth = get_interpolated_computed_elevation(time_arr,sub_mwd_df)
+
+    time_vector = pd.date_range(start=row.time_start, periods=num_traces_in_blasthole, freq='1S')
+    depth2 = get_interpolated_computed_elevation2(time_vector, sub_mwd_df)
+
     #</get depth info>
     for component_label in COMPONENT_LABELS:
         print(component_label)
