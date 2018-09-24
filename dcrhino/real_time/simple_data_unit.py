@@ -37,7 +37,7 @@ PATH = os.path.dirname(os.path.abspath(__file__))
 import os
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
-os.environ["OMP_NUM_THREADS"] = "1" 
+os.environ["OMP_NUM_THREADS"] = "1"
 import scipy
 import scipy.signal as ssig
 
@@ -118,7 +118,7 @@ class DataUnit(object):
        number_of_samples_in_trace = len(x)
        ideal_number_of_samples_in_trace = self.output_sampling_rate*self.trace_length
        self.metadata.sensor_true_sampling_rate = number_of_samples_in_trace/self.trace_length
-       self.metadata.data_processing_sampling_rate = self.output_sampling_rate
+       self.metadata.output_sampling_rate = self.output_sampling_rate
        self.metadata.trace_length = self.trace_length
        self.metadata.sample_interval_duration = 1.0/self.output_sampling_rate
        self.metadata.number_of_samples_in_this_trace = ideal_number_of_samples_in_trace
@@ -236,7 +236,7 @@ class DataUnit(object):
             self.metadata.digitizer_time_of_last_sample_in_trace = self.data_interval.starttime + timedelta(microseconds=self.digitizer_timestamps[-1]*1000000)
             self.metadata.ideal_time_of_last_sample_in_trace = self.data_interval.starttime + timedelta(microseconds=self.ideal_timestamps[-1]*1000000)
             self.metadata.sensor_true_sampling_rate = number_of_samples_in_trace/self.trace_length
-            self.metadata.data_processing_sampling_rate = self.output_sampling_rate
+            self.metadata.output_sampling_rate = self.output_sampling_rate
             self.metadata.trace_length = self.trace_length
             self.metadata.sample_interval_duration = 1.0/self.output_sampling_rate
             self.metadata.number_of_samples_in_this_trace = ideal_number_of_samples_in_trace
@@ -277,7 +277,7 @@ class DataUnit(object):
         """
         TODO: confirm type is int returned by get_num_decon_taps()
         """
-        sampling_rate = float(self.metadata.data_processing_sampling_rate)
+        sampling_rate = float(self.metadata.output_sampling_rate)
         deconvolution_filter_duration = float(self.metadata.deconvolution_filter_duration)
         number_of_taps_in_decon_filter = get_num_decon_taps(deconvolution_filter_duration, sampling_rate)
         return number_of_taps_in_decon_filter
@@ -292,7 +292,7 @@ class DataUnit(object):
         as three arguments.
         """
         #pdb.set_trace()
-        sampling_rate = float(self.metadata.data_processing_sampling_rate)
+        sampling_rate = float(self.metadata.output_sampling_rate)
         deconvolution_filter_duration = float(self.metadata.deconvolution_filter_duration)
         R_xx = autocorrelate_trace(data, self.num_taps_in_decon_filter)
         ATA = scipy.linalg.toeplitz(R_xx)
@@ -316,7 +316,7 @@ class DataUnit(object):
         """
         TODO: calculate fir_taps once per header and leave fixed ...
         """
-        sampling_rate = float(self.metadata.data_processing_sampling_rate)
+        sampling_rate = float(self.metadata.output_sampling_rate)
         corners = [self.metadata.trapezoidal_bpf_corner_1,
                    self.metadata.trapezoidal_bpf_corner_2,
                    self.metadata.trapezoidal_bpf_corner_3,
@@ -345,7 +345,7 @@ class DataUnit(object):
         zero_time_index = len(data) // 2
         decon_filter_offset = self.num_taps_in_decon_filter // 2
         t0_index = zero_time_index + decon_filter_offset #2750
-        sampling_rate = float(self.metadata.data_processing_sampling_rate)
+        sampling_rate = float(self.metadata.output_sampling_rate)
         n_samples_back = int(sampling_rate * np.abs(min_lag))
         n_samples_fwd = int(sampling_rate * max_lag)
 
