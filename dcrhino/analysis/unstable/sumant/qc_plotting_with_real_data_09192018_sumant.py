@@ -24,8 +24,8 @@ from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots09192018 impo
 
 import dcrhino.analysis.measurands.measurand_registry_west_angelas as MEASURAND_REGISTRY
 from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
-from dcrhino.analysis.signal_processing.trace_header import define_obspy_trace_header
-from dcrhino.analysis.signal_processing.mwd_tools_09202018 import interpolate_to_assign_depths_to_log_csv
+#from dcrhino.analysis.signal_processing.trace_header import define_obspy_trace_header
+#from dcrhino.analysis.signal_processing.mwd_tools_09202018 import interpolate_to_assign_depths_to_log_csv
 
 home = os.path.expanduser("~/")
 azure_path = os.path.join(home, 'data/datacloud/west_angelas/corr_npy_dump')
