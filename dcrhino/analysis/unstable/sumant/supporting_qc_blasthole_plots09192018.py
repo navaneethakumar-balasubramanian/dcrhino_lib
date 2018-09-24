@@ -224,7 +224,7 @@ def wob_tob_plot(ax,qc_plot_input):
     ax.plot(depth_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
 #    pdb.set_trace()
 #    ax2.plot(time_axis, qc_plot_input.sub_mwd_tob, label = 'Torque on Bit',color = 'r')
-    ax.plot(depth_axis, qc_plot_input.sub_mwd_tob,label = 'Torque on Bit',color = 'r')
+    ax2.plot(depth_axis, qc_plot_input.sub_mwd_tob,label = 'Torque on Bit',color = 'r')
     ax.legend(loc=2)
     ax2.legend(loc=1)
     ax.set_ylabel('force on \n bit (kN)')

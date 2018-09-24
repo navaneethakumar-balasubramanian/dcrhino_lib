@@ -60,7 +60,7 @@ for i_row in range(total_number_of_rows):
     sub_mwd_df = sub_mwd_df[sub_mwd_df['area']==row.area]
     #note this may need to be generalized for other mines
     #</Get unique blasthole from mwd>
-
+    pdb.set_trace()
     data_date = sub_mwd_df.starttime.dt.date
     data_date = data_date.iloc[0]
 
@@ -100,8 +100,13 @@ for i_row in range(total_number_of_rows):
     num_traces_in_blasthole = len(peak_ampl_axial)
     lower_num_ms=-5.0
     upper_num_ms=30.0
-
+#    time_vector = pd.date_range(start=qc_plot_input.sub_mwd_time.iloc[0], periods=num_traces_per_component, freq='1S')
     project_id = 'west_angelas'
+    #<get depth info>
+    datetime_delta = 1 #second
+    time_arr = np.arange(row.time_start,row.time_end,datetime.timedelta(seconds = datetime_delta)).astype(datetime.datetime)
+    depth =get_interpolated_computed_elevation(time_arr,sub_mwd_df)
+    #</get depth info>
     for component_label in COMPONENT_LABELS:
         print(component_label)
         traces_filename = '{}_{}_{}.npy'.format(component_label, row.hole, row.digitizer_id)
@@ -132,12 +137,9 @@ for i_row in range(total_number_of_rows):
 
         #Thiago's method
 #        datetime_delta = (row.time_end - row.time_start).seconds/total_mwd_count
-        datetime_delta = 1 #second
         base_time = row.time_start
 #        time_arr = np.array([base_time +datetime.timedelta(seconds=datetime_delta) for i in xrange(total_mwd_count)])
-        time_arr = np.arange(row.time_start,row.time_end,datetime.timedelta(seconds = datetime_delta)).astype(datetime.datetime)
 
-        depth =get_interpolated_computed_elevation(time_arr,sub_mwd_df)
         pdb.set_trace()
         #/Thiago's method
 #        depth = np.linspace(min(depth),max(depth),total_number_of_samples)
