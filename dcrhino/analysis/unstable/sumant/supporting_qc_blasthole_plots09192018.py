@@ -202,17 +202,19 @@ def get_interpolated_computed_elevation(date_times,mwd_hole_df):
 
     return fill_nan(elevation_means)
 
-def get_interpolated_computed_elevation2(date_times, mwd_hole_df):
+def get_interpolated_column(time_vector, mwd_hole_df, column_label):
+    """
+    time_vector is actually a pandas date_range, for example:
+    time_vector = pd.date_range(start=row.time_start, periods=num_traces_in_blasthole, freq='1S')
+
+    column_label: what to interp ... for example 'computed_elevation'
+    """
     t_mwd = pd.DatetimeIndex(mwd_hole_df.endtime)
     t_mwd = t_mwd.astype(np.int64)
 
-    zz = mwd_hole_df.computed_elevation
+    interp_function = interp1d(t_mwd, mwd_hole_df[column_label], kind='linear', bounds_error=False, fill_value='extrapolate')
 
-    interp_function = interp1d(t_mwd, zz, kind='linear', bounds_error=False, fill_value='extrapolate')
-
-    #time_vector = pd.date_range(start=row.time_start, periods=num_traces_in_blasthole, freq='1S')
-    time_vector = pd.DatetimeIndex(date_times).astype(np.int64)
-    #time_vector = time_vector_index.astype(np.int64)
+    time_vector = pd.DatetimeIndex(time_vector).astype(np.int64)
     depths = interp_function(time_vector)
     return depths
 

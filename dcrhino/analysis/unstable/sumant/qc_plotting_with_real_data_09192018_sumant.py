@@ -21,7 +21,7 @@ from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots09192018 impo
 #from dcrhino.analysis.graphical.supporting_qc_blasthole_plots import QCPlotInputs
 from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots09192018 import QCBlastholePlotInputs
 from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots09192018 import get_interpolated_computed_elevation
-from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots09192018 import get_interpolated_computed_elevation2
+from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots09192018 import get_interpolated_column
 import dcrhino.analysis.measurands.measurand_registry_west_angelas as MEASURAND_REGISTRY
 from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
 #from dcrhino.analysis.signal_processing.trace_header import define_obspy_trace_header
@@ -109,7 +109,7 @@ for i_row in range(total_number_of_rows):
     depth = get_interpolated_computed_elevation(time_arr,sub_mwd_df)
 
     time_vector = pd.date_range(start=row.time_start, periods=num_traces_in_blasthole, freq='1S')
-    depth2 = get_interpolated_computed_elevation2(time_vector, sub_mwd_df)
+    depth2 = get_interpolated_column(time_vector, sub_mwd_df, 'computed_elevation')
 
     #</get depth info>
     for component_label in COMPONENT_LABELS:
