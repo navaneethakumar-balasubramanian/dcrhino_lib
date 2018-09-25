@@ -355,10 +355,10 @@ class DataUnit(object):
         little_data = data[back_ndx:fin_ndx]
         return little_data
 
-    def go_to_specific_interval(self,date_time):
-        self.data_interval.starttime = date_time
-        #self._fetch_data()
-        return
+    # def go_to_specific_interval(self,date_time):
+    #     self.data_interval.starttime = date_time
+    #     #self._fetch_data()
+    #     return
 
 #     def data_exists_in_database(self):
 # #        pdb.set_trace()
