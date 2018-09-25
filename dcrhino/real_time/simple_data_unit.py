@@ -151,24 +151,24 @@ class DataUnit(object):
 
 
     #Returns a datetime object with the initial second
-    @property
-    def effective_starttime_of_database(self):
-
-        if self._temp_starttime_of_database == None:
-            #get the timestamp of the first full second of the database
-    #        pdb.set_trace()
-
-            query = "select ts_secs from {} where ts in (select min(ts) from {} where ts_micro<={})".format(self.db_raw_data_table,self.db_raw_data_table,int(math.ceil(1000000/self.output_sampling_rate)))
-    #        print(query)
-            ts_secs = dbc.query(self.dbconn,query)
-            if len(ts_secs)>0:
-                #print("UTC HERE : " + str( datetime.utcfromtimestamp(ts_secs[0][2])))
-                self._temp_starttime_of_database = datetime.utcfromtimestamp(ts_secs[0][2])
-
-            else:
-                return datetime.utcnow()
-
-        return self._temp_starttime_of_database
+    # @property
+    # def effective_starttime_of_database(self):
+    #
+    #     if self._temp_starttime_of_database == None:
+    #         #get the timestamp of the first full second of the database
+    # #        pdb.set_trace()
+    #
+    #         query = "select ts_secs from {} where ts in (select min(ts) from {} where ts_micro<={})".format(self.db_raw_data_table,self.db_raw_data_table,int(math.ceil(1000000/self.output_sampling_rate)))
+    # #        print(query)
+    #         ts_secs = dbc.query(self.dbconn,query)
+    #         if len(ts_secs)>0:
+    #             #print("UTC HERE : " + str( datetime.utcfromtimestamp(ts_secs[0][2])))
+    #             self._temp_starttime_of_database = datetime.utcfromtimestamp(ts_secs[0][2])
+    #
+    #         else:
+    #             return datetime.utcnow()
+    #
+    #     return self._temp_starttime_of_database
 #        query = "select ts_secs,ts_micro from rhino where ts in (select min(ts) from rhino)"
 #        time_components = dbc.query(self.dbconn,query)
 #        seconds = int(time_components[0][2])
@@ -180,15 +180,15 @@ class DataUnit(object):
 #        else:
 #            return datetime.fromtimestamp(seconds)
 
-    @property
-    def endtime_of_database(self):
-#        pdb.set_trace()
-        query = "select max(ts_secs) as ts_secs from " + self.db_raw_data_table
-        ts_secs = dbc.query(self.dbconn,query)
-        if len(ts_secs)>0:
-            return datetime.utcfromtimestamp(ts_secs[0][2])
-        else:
-            return None
+#     @property
+#     def endtime_of_database(self):
+# #        pdb.set_trace()
+#         query = "select max(ts_secs) as ts_secs from " + self.db_raw_data_table
+#         ts_secs = dbc.query(self.dbconn,query)
+#         if len(ts_secs)>0:
+#             return datetime.utcfromtimestamp(ts_secs[0][2])
+#         else:
+#             return None
 
 
     def _read_config_file(self):
@@ -197,76 +197,76 @@ class DataUnit(object):
         return config
 
 
-    def _fetch_data(self):
-        try:
-            if self.data_exists_in_database():
-                #db_raw_data_tableselfpdb.set_trace()
-                print("fetching {} to {}".format(self.data_interval.starttime,self.data_interval.endtime))
-                self.write_to_log("fetching {} to {}".format(self.data_interval.starttime,self.data_interval.endtime))
+#     def _fetch_data(self):
+#         try:
+#             if self.data_exists_in_database():
+#                 #db_raw_data_tableselfpdb.set_trace()
+#                 print("fetching {} to {}".format(self.data_interval.starttime,self.data_interval.endtime))
+#                 self.write_to_log("fetching {} to {}".format(self.data_interval.starttime,self.data_interval.endtime))
+#
+#                 startdate_utc_timestamp = calendar.timegm(self.data_interval.starttime.utctimetuple())
+#                 enddate_utc_timestamp = calendar.timegm(self.data_interval.endtime.utctimetuple())
+#                 query = "select ts_secs,ts_micro,x,y,z from {} where ts_secs >= {} and ts_secs < {} order by ts_secs,ts_micro".format(self.db_raw_data_table,startdate_utc_timestamp,enddate_utc_timestamp)
+#                 self.write_to_log(query)
+#                 print(query)
+#                 #Fetch data from the database
+#                 raw_data = dbc.query(self.dbconn,query)
+#                 #since the data is coming back as a numpy array with the structure of the dbrhino class, we need to select only the columns we need
+#                 raw_data = raw_data[:,[2,3,6,7,8]]
+#
+#                 self.axial_data = np.asarray(raw_data[:,self.axial_axis+1],dtype=np.float32)
+#                 self.tangential_data = np.asarray(raw_data[:,self.tangential_axis+1],dtype=np.float32)
+#                 self.radial_data = np.asarray(raw_data[:,self.radial_axis   +1],dtype=np.float32)#
+#                 self.digitizer_timestamps = np.asarray((raw_data[:,0]+raw_data[:,1]-self.data_interval.starttime_timestamp())/1000000.0,dtype=np.float32)
+#                 #pdb.set_trace()
+#             else:
+#                 print("Data Interval not in databse")
+#                 self.axial_data = np.empty(self.output_sampling_rate*self.trace_length,dtype=np.float32)
+#                 self.tangential_data = np.empty(self.output_sampling_rate*self.trace_length,dtype=np.float32)
+#                 self.radial_data = np.empty(self.output_sampling_rate*self.trace_length,dtype=np.float32)
+#                 self.digitizer_timestamps = np.empty(self.output_sampling_rate*self.trace_length,dtype=np.float32)
+#                 return
+# #                raise ValueError ("Data Interval not in databse")
+#
+#
+#             number_of_samples_in_trace = len(raw_data)
+#             ideal_number_of_samples_in_trace = self.output_sampling_rate*self.trace_length
+#
+#             #Fill out processing related headers
+#             self.metadata.digitizer_time_of_last_sample_in_trace = self.data_interval.starttime + timedelta(microseconds=self.digitizer_timestamps[-1]*1000000)
+#             self.metadata.ideal_time_of_last_sample_in_trace = self.data_interval.starttime + timedelta(microseconds=self.ideal_timestamps[-1]*1000000)
+#             self.metadata.sensor_true_sampling_rate = number_of_samples_in_trace/self.trace_length
+#             self.metadata.output_sampling_rate = self.output_sampling_rate
+#             self.metadata.trace_length = self.trace_length
+#             self.metadata.sample_interval_duration = 1.0/self.output_sampling_rate
+#             self.metadata.number_of_samples_in_this_trace = ideal_number_of_samples_in_trace
+#             self.metadata.datetime_data_recorded = self.data_interval.starttime
+# #            pdb.set_trace()
+# #            self.metadata.gps_latitude = self.gpsd.fix.latitude
+# #            self.metadata.gps_longitude = self.gpsd.fix.longitude
+# #            self.metadata.gps_elevation = self.gpsd.fix.altitude
+# #            self.metadata.gps_timestamp = self.gpsd.fix.time
+#
+#             return
+#         except:
+#             print("Error Fetching Data")
+#             print(sys.exc_info())
 
-                startdate_utc_timestamp = calendar.timegm(self.data_interval.starttime.utctimetuple())
-                enddate_utc_timestamp = calendar.timegm(self.data_interval.endtime.utctimetuple())
-                query = "select ts_secs,ts_micro,x,y,z from {} where ts_secs >= {} and ts_secs < {} order by ts_secs,ts_micro".format(self.db_raw_data_table,startdate_utc_timestamp,enddate_utc_timestamp)
-                self.write_to_log(query)
-                print(query)
-                #Fetch data from the database
-                raw_data = dbc.query(self.dbconn,query)
-                #since the data is coming back as a numpy array with the structure of the dbrhino class, we need to select only the columns we need
-                raw_data = raw_data[:,[2,3,6,7,8]]
-
-                self.axial_data = np.asarray(raw_data[:,self.axial_axis+1],dtype=np.float32)
-                self.tangential_data = np.asarray(raw_data[:,self.tangential_axis+1],dtype=np.float32)
-                self.radial_data = np.asarray(raw_data[:,self.radial_axis   +1],dtype=np.float32)#
-                self.digitizer_timestamps = np.asarray((raw_data[:,0]+raw_data[:,1]-self.data_interval.starttime_timestamp())/1000000.0,dtype=np.float32)
-                #pdb.set_trace()
-            else:
-                print("Data Interval not in databse")
-                self.axial_data = np.empty(self.output_sampling_rate*self.trace_length,dtype=np.float32)
-                self.tangential_data = np.empty(self.output_sampling_rate*self.trace_length,dtype=np.float32)
-                self.radial_data = np.empty(self.output_sampling_rate*self.trace_length,dtype=np.float32)
-                self.digitizer_timestamps = np.empty(self.output_sampling_rate*self.trace_length,dtype=np.float32)
-                return
-#                raise ValueError ("Data Interval not in databse")
-
-
-            number_of_samples_in_trace = len(raw_data)
-            ideal_number_of_samples_in_trace = self.output_sampling_rate*self.trace_length
-
-            #Fill out processing related headers
-            self.metadata.digitizer_time_of_last_sample_in_trace = self.data_interval.starttime + timedelta(microseconds=self.digitizer_timestamps[-1]*1000000)
-            self.metadata.ideal_time_of_last_sample_in_trace = self.data_interval.starttime + timedelta(microseconds=self.ideal_timestamps[-1]*1000000)
-            self.metadata.sensor_true_sampling_rate = number_of_samples_in_trace/self.trace_length
-            self.metadata.output_sampling_rate = self.output_sampling_rate
-            self.metadata.trace_length = self.trace_length
-            self.metadata.sample_interval_duration = 1.0/self.output_sampling_rate
-            self.metadata.number_of_samples_in_this_trace = ideal_number_of_samples_in_trace
-            self.metadata.datetime_data_recorded = self.data_interval.starttime
-#            pdb.set_trace()
-#            self.metadata.gps_latitude = self.gpsd.fix.latitude
-#            self.metadata.gps_longitude = self.gpsd.fix.longitude
-#            self.metadata.gps_elevation = self.gpsd.fix.altitude
-#            self.metadata.gps_timestamp = self.gpsd.fix.time
-
-            return
-        except:
-            print("Error Fetching Data")
-            print(sys.exc_info())
-
-    def move_to_next_data_interval(self):
-#        pdb.set_trace()
-        #Will look in the database if data for the next consecutive interval exists in the database
-        query = "select count(ts_micro) as ts_micro from {} where ts_secs ={}".format(self.db_raw_data_table,self.data_interval.endtime_timestamp())
-        count = dbc.query(self.dbconn,query)[0][3]
-
-        #if there is is data for that interval, go to the next consecutive interval.  Otherwise will query to find which is the next available full second
-        if count > 0:
-            self.go_to_specific_interval(self.data_interval.endtime)
-        else:
-            query = "select ts_secs from {} where ts in (select min(ts) from {} where ts_secs>{} and ts_micro<={})".format(self.db_raw_data_table,self.db_raw_data_table,self.data_interval.endtime_timestamp(),int(math.ceil(1000000/self.output_sampling_rate)))
-#            print(query)
-            ts_secs = dbc.query(self.dbconn,query)[0][2]
-            self.go_to_specific_interval(datetime.utcfromtimestamp(ts_secs))
-        return
+#     def move_to_next_data_interval(self):
+# #        pdb.set_trace()
+#         #Will look in the database if data for the next consecutive interval exists in the database
+#         query = "select count(ts_micro) as ts_micro from {} where ts_secs ={}".format(self.db_raw_data_table,self.data_interval.endtime_timestamp())
+#         count = dbc.query(self.dbconn,query)[0][3]
+#
+#         #if there is is data for that interval, go to the next consecutive interval.  Otherwise will query to find which is the next available full second
+#         if count > 0:
+#             self.go_to_specific_interval(self.data_interval.endtime)
+#         else:
+#             query = "select ts_secs from {} where ts in (select min(ts) from {} where ts_secs>{} and ts_micro<={})".format(self.db_raw_data_table,self.db_raw_data_table,self.data_interval.endtime_timestamp(),int(math.ceil(1000000/self.output_sampling_rate)))
+# #            print(query)
+#             ts_secs = dbc.query(self.dbconn,query)[0][2]
+#             self.go_to_specific_interval(datetime.utcfromtimestamp(ts_secs))
+#         return
 
     def interpolate_data(self, data):
         interp_data = np.interp(self.ideal_timestamps,self.digitizer_timestamps,data)
@@ -360,27 +360,27 @@ class DataUnit(object):
         #self._fetch_data()
         return
 
-    def data_exists_in_database(self):
-#        pdb.set_trace()
+#     def data_exists_in_database(self):
+# #        pdb.set_trace()
+#
+#         query = "select count(ts_secs) as ts_secs from "+self.db_raw_data_table
+#         print (query)
+#         count = dbc.query(self.dbconn,query)[0][2]
+#         if count > self.output_sampling_rate*self.trace_length:
+#             return True
+#         else:
+#             self.data_interval.starttime = self.effective_starttime_of_database
+#             return False
 
-        query = "select count(ts_secs) as ts_secs from "+self.db_raw_data_table
-        print (query)
-        count = dbc.query(self.dbconn,query)[0][2]
-        if count > self.output_sampling_rate*self.trace_length:
-            return True
-        else:
-            self.data_interval.starttime = self.effective_starttime_of_database
-            return False
+    # def data_interval_in_database(self):
+    #     if self.data_interval.starttime >= self.effective_starttime_of_database and self.data_interval.endtime < self.endtime_of_database:
+    #         return True
+    #     else:
+    #         return False
 
-    def data_interval_in_database(self):
-        if self.data_interval.starttime >= self.effective_starttime_of_database and self.data_interval.endtime < self.endtime_of_database:
-            return True
-        else:
-            return False
-
-    def write_to_log(self,message):
-        if self.config_file.getboolean('DATAUNIT','log_to_file') == True:
-            self.logger.write(message+"\n")
+    # def write_to_log(self,message):
+    #     if self.config_file.getboolean('DATAUNIT','log_to_file') == True:
+    #         self.logger.write(message+"\n")
 
     @property
     def status(self):
