@@ -27,11 +27,8 @@ from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
 #from dcrhino.analysis.signal_processing.trace_header import define_obspy_trace_header
 #from dcrhino.analysis.signal_processing.mwd_tools_09202018 import interpolate_to_assign_depths_to_log_csv
 
-
-
 home = os.path.expanduser("~/")
 azure_path = os.path.join(home, 'data/datacloud/west_angelas/corr_npy_dump')
-
 
 mwd_measurand = MEASURAND_REGISTRY.measurand('mwd_with_mse')
 mwd_df = mwd_measurand.load()
@@ -107,13 +104,16 @@ for i_row in range(total_number_of_rows):
     project_id = 'west_angelas'
 
     #<get depth info>
+        #<Thiago's method>
     datetime_delta = 1 #second
     time_arr = np.arange(row.time_start,row.time_end,datetime.timedelta(seconds = datetime_delta)).astype(datetime.datetime)
     depth = get_interpolated_computed_elevation(time_arr,sub_mwd_df)
+        #<\Thiago's method>
 
+        #<Karl's method>
     time_vector = pd.date_range(start=row.time_start, periods=num_traces_in_blasthole, freq='1S')
     depth2 = get_interpolated_column(time_vector, sub_mwd_df, 'computed_elevation')
-
+        #</Karl's method>
     #</get depth info>
     for component_label in COMPONENT_LABELS:
         print(component_label)
@@ -142,30 +142,7 @@ for i_row in range(total_number_of_rows):
         #converting to depth
         starttime_str = '{}'.format(row['time_start'])
         endtime_str = '{}'.format(row['time_end'])
-
-        #Thiago's method
-#        datetime_delta = (row.time_end - row.time_start).seconds/total_mwd_count
-        base_time = row.time_start
-#        time_arr = np.array([base_time +datetime.timedelta(seconds=datetime_delta) for i in xrange(total_mwd_count)])
-
-#        pdb.set_trace()
-        #/Thiago's method
-#        depth = np.linspace(min(depth),max(depth),total_number_of_samples)
-#        pdb.set_trace()
-#        #Karls method
-#        #no time_start in hole_df
-#        dff = sub_mwd_df[(sub_mwd_df['starttime'] >= starttime_str) & (sub_mwd_df['starttime'] <= endtime_str)]
-#        plot_meta = master_iterator_measurand.set_plotting_metadata(row)
-#        print('CHECK IF DFF IS BEING GENERATED')
-#        pdb.set_trace()
-#        depth = interpolate_to_assign_depths_to_log_csv(dff, sub_mwd_df, plot_meta=plot_meta)
-#        dff['depth'] = pd.Series(depth, index = dff.index)
-#        #Karl's method
-
-
-
-        #total hack
-
+        pdb.set_trace()
         if row.sampling_rate == 2400:
             trace_array_dict[component_label] = trace_array_dict[component_label][240-12:240+72,:]
         elif row.sampling_rate == 2800:
