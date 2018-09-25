@@ -46,7 +46,9 @@ def interpolate_to_assign_depths_to_log_csv(df_peak_info, df_hole_profile, plot_
     TODO: Time stan
     TODO: address possible wraparound effects of get_seconds_into_day by referencing to
     an absolute time
+    @note: TO BE DEPRECATED
     """
+
     #dummy_hole_id = df_peak_info.dummy_hole_id.min()
     try:
         t0_mwd = df_hole_profile['time_start'][0]
@@ -104,6 +106,23 @@ def interpolate_to_assign_depths_to_log_csv(df_peak_info, df_hole_profile, plot_
         plt.clf()
     return depths
 
+def get_interpolated_column(time_vector, mwd_hole_df, column_label):
+    """
+    time_vector is actually a pandas date_range, for example:
+    time_vector = pd.date_range(start=row.time_start, periods=num_traces_in_blasthole, freq='1S')
+
+    column_label: what to interp ... for example 'computed_elevation'
+
+    @returns interped data, for example the depths of the traces
+    """
+    t_mwd = pd.DatetimeIndex(mwd_hole_df.endtime)
+    t_mwd = t_mwd.astype(np.int64)
+
+    interp_function = interp1d(t_mwd, mwd_hole_df[column_label], kind='linear', bounds_error=False, fill_value='extrapolate')
+
+    time_vector = pd.DatetimeIndex(time_vector).astype(np.int64)
+    interped_data = interp_function(time_vector)
+    return interped_data
 
 def interpolate_arbitrary_mwd_column(df_peak_info, df_hole_profile, column_label, plot_meta=None):
     """
@@ -115,6 +134,7 @@ def interpolate_arbitrary_mwd_column(df_peak_info, df_hole_profile, column_label
     TODO: Time stan
     TODO: address possible wraparound effects of get_seconds_into_day by referencing to
     an absolute time
+    @note: TO BE DEPRECATED
     """
 #    column_label = 'force_on_bit_newtons'
     t0_rhino = df_peak_info['datetime'].iloc[0]
