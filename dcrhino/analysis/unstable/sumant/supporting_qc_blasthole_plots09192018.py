@@ -56,6 +56,7 @@ class QCBlastholePlotInputs(object):
         self.sub_mwd_wob = kwargs.get('sub_mwd_wob',None)
         self.sub_mwd_tob = kwargs.get('sub_mwd_tob',None)
         self.sub_mwd_rop = kwargs.get('sub_mwd_rop',None)
+        self.collar_elevation = kwargs.get('collar_elevation',None)
         #</THese are the curves plotted in the first panel>
 
         #<these numbers dictate the y axis bounds>
@@ -159,11 +160,11 @@ def depth_vs_time_plot(ax,qc_plot_input):
     """
 #    time_axis = qc_plot_input.sub_mwd_time
 
-    depth_axis = qc_plot_input.sub_mwd_depth
+    depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)
 #    depth_axis = np.linspace(min(qc_plot_input.sub_mwd_depth_interp),max(qc_plot_input.sub_mwd_depth_interp),len(qc_plot_input.sub_mwd_depth))
 
     ax2 = ax.twinx()
-    pdb.set_trace()
+#    pdb.set_trace()
 #    ax.plot(time_axis, qc_plot_input.sub_mwd_depth, '*',label = 'Datapoints')
 #    ax.plot(time_axis, qc_plot_input.sub_mwd_depth, label = 'Interpolated')
 #
@@ -176,13 +177,13 @@ def depth_vs_time_plot(ax,qc_plot_input):
 
     ax.legend(loc=2)
     ax.set_ylabel('Computed \n Elevation (m)')
-    ax.set_xlabel('Timestamps')
+#    ax.set_xlabel('Timestamps')
 
 
     ax2.legend(loc=1)
     ax2.set_ylabel('RoP (m/hr)')
 
-    pdb.set_trace()
+#    pdb.set_trace()
 #    ax.set_xlim(time_axis.iloc[0], time_axis.iloc[-1])
     ax.set_xlim(depth_axis.iloc[0], depth_axis.iloc[-1])
 
@@ -216,10 +217,10 @@ def fill_nan(A):
 
 def wob_tob_plot(ax,qc_plot_input):
 #    time_axis = qc_plot_input.sub_mwd_time
-    depth_axis = qc_plot_input.sub_mwd_depth
+    depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)
 #    depth_axis = np.linspace(min(qc_plot_input.sub_mwd_depth_interp),max(qc_plot_input.sub_mwd_depth_interp),len(qc_plot_input.sub_mwd_wob))
 
-    pdb.set_trace()
+#    pdb.set_trace()
     ax2 = ax.twinx()
 #    ax.plot(time_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
     ax.plot(depth_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
@@ -265,7 +266,7 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     #<choose X>
     #if use depth plot:
 #    time_vector = pd.date_range(start=qc_plot_input.sub_mwd_time.iloc[0], periods=num_traces_per_component, freq='1S')
-    depth_mwd =qc_plot_input.sub_mwd_depth_interp
+    depth_mwd =-1*(qc_plot_input.sub_mwd_depth_interp-qc_plot_input.collar_elevation)
     #(/Interpolating depth to same intervals as time
 #    depth_interp = interp1d(time_vector,depth_mwd, kind='linear', bounds_error=False, fill_value='extrapolate')
     #/Interpolating depth to same intervals as time)
@@ -279,7 +280,7 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
 
     Y = np.flipud(Y)
 
-    pdb.set_trace()
+#    pdb.set_trace()
 
 
     fig, ax = plt.subplots(nrows=6, sharex=False, figsize=(24,11))

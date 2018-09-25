@@ -27,8 +27,11 @@ from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
 #from dcrhino.analysis.signal_processing.trace_header import define_obspy_trace_header
 #from dcrhino.analysis.signal_processing.mwd_tools_09202018 import interpolate_to_assign_depths_to_log_csv
 
+
+
 home = os.path.expanduser("~/")
 azure_path = os.path.join(home, 'data/datacloud/west_angelas/corr_npy_dump')
+
 
 mwd_measurand = MEASURAND_REGISTRY.measurand('mwd_with_mse')
 mwd_df = mwd_measurand.load()
@@ -145,7 +148,7 @@ for i_row in range(total_number_of_rows):
         base_time = row.time_start
 #        time_arr = np.array([base_time +datetime.timedelta(seconds=datetime_delta) for i in xrange(total_mwd_count)])
 
-        pdb.set_trace()
+#        pdb.set_trace()
         #/Thiago's method
 #        depth = np.linspace(min(depth),max(depth),total_number_of_samples)
 #        pdb.set_trace()
@@ -202,7 +205,8 @@ for i_row in range(total_number_of_rows):
                                           mwd_tstart = sub_mwd_df.starttime.iloc[0].second,
                                           mwd_tend = sub_mwd_df.endtime.iloc[-1].second,
                                           mwd_start_depth = sub_mwd_df.computed_elevation.iloc[0],
-                                          mwd_end_depth = sub_mwd_df.computed_elevation.iloc[-1])
+                                          mwd_end_depth = sub_mwd_df.computed_elevation.iloc[-1],
+                                          collar_elevation = np.mean(sub_mwd_df.collar_elevation))
 
     qc_plot(qc_plot_input, output_filename ,plot_title, data_date, 'west_angelas', show=False)
 
