@@ -76,7 +76,7 @@ class DataInterval(object):
 
 class DataUnit(object):
 
-    def __init__(self,logger_file,cfg,x,y,z,timestamps):
+    def __init__(self,cfg,x,y,z,timestamps):
        self.config_file = cfg
       # self.db_name = db_name
        #self.db_raw_data_table = cfg.get('DB', 'db_input_raw_data_table', "raw_data")
@@ -85,7 +85,7 @@ class DataUnit(object):
        self.metadata = Metadata(cfg)
 
 
-       self.logger = logger_file
+       #self.logger = logger_file
        self.output_sampling_rate = self.config_file.getint("COLLECTION","output_sampling_rate")
        self.trace_length = self.config_file.getint("COLLECTION","trace_length_in_seconds")
        self.channels_per_sensor = self.config_file.getint("COLLECTION","channels_per_sensor")
