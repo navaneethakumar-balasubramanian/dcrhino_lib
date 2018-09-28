@@ -20,14 +20,14 @@ import datetime
 
 import matplotlib.pyplot as plt
 import numpy as np
-import os
+#import os
 import pdb
 import pandas as pd
 from scipy import interpolate
-from scipy.interpolate import interp1d
+#from scipy.interpolate import interp1d
 
 
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+#from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
                                    AutoMinorLocator)
 
@@ -39,7 +39,7 @@ class QCBlastholePlotInputs(object):
     def __init__(self, **kwargs):
         self.trace_array_dict = kwargs.get('trace_array_dict', None)
 
-        #<THese are the curves plotted in the first panel>
+        #<These are variables needed to generate plots>
         self.peak_ampl_x  = kwargs.get('peak_ampl_x', None)
         self.peak_ampl_y  = kwargs.get('peak_ampl_y', None)
         self.peak_ampl_z  = kwargs.get('peak_ampl_z', None)
@@ -57,7 +57,7 @@ class QCBlastholePlotInputs(object):
         self.sub_mwd_tob = kwargs.get('sub_mwd_tob',None)
         self.sub_mwd_rop = kwargs.get('sub_mwd_rop',None)
         self.collar_elevation = kwargs.get('collar_elevation',None)
-        #</THese are the curves plotted in the first panel>
+		#</These are variables needed to generate plots>
 
         #<these numbers dictate the y axis bounds>
         self.lower_number_ms = kwargs.get('lower_number_ms', None)
@@ -111,6 +111,7 @@ def plot_hole_as_heatmap(ax, v_min, v_max, X, Y, Z, cmap_string, y_tick_location
                          two_way_travel_time_ms=None, multiple_search_back_ms=None,
                          multiple_search_forward_ms=None):
     """
+	#Heatmap plots for axial, radial and tangential data
     """
     minor_locator = AutoMinorLocator()
     if any([x is None for x in [v_min, v_max]]):# autoselcet color axes
@@ -141,6 +142,7 @@ def plot_hole_as_heatmap(ax, v_min, v_max, X, Y, Z, cmap_string, y_tick_location
 
 def header_plot(ax, X, qc_plot_input, plot_title, peak_amplitude_linewidth = 0.2):
     """
+	#Peak axial, radial, tangential and multiple plots
     """
     ax.plot(X, qc_plot_input.peak_ampl_y, label='peak_y', linewidth=peak_amplitude_linewidth)
     ax.plot(X, qc_plot_input.peak_ampl_z, label='peak_z', linewidth=peak_amplitude_linewidth)
@@ -157,39 +159,50 @@ def depth_vs_time_plot(ax,qc_plot_input):
     """
     TODO: read PEP8
     code is read much more often than it it written
-    """
-#    time_axis = qc_plot_input.sub_mwd_time
 
-    depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)
+	The tricky part of code begins here. BE VERY CAREFUL WHEN MAKING QC PLOTS
+	IN TIME AND DEPTH. TO MAKE QC PLOTS IN TIME, UNCOMMENT ALL TIME PART OF THE
+	CODE AND COMMENT OUT DEPTH PART OF CODE IN THIS CLASS. FOR DEPTH, VICE VERSA
+    """
+    time_axis = qc_plot_input.sub_mwd_time
+
+#    depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)
 #    depth_axis = np.linspace(min(qc_plot_input.sub_mwd_depth_interp),max(qc_plot_input.sub_mwd_depth_interp),len(qc_plot_input.sub_mwd_depth))
 
     ax2 = ax.twinx()
-#    pdb.set_trace()
-#    ax.plot(time_axis, qc_plot_input.sub_mwd_depth, '*',label = 'Datapoints')
-#    ax.plot(time_axis, qc_plot_input.sub_mwd_depth, label = 'Interpolated')
+
+	##<time part>
+    ax.plot(time_axis, qc_plot_input.sub_mwd_depth, '*',label = 'Datapoints')
+    ax.plot(time_axis, qc_plot_input.sub_mwd_depth, label = 'Interpolated')
+
+    ax2.plot(time_axis,qc_plot_input.sub_mwd_rop,label = 'RoP (m/hr)',color = 'r')
+    ax.set_xlim(time_axis.iloc[0], time_axis.iloc[-1])
+    ax.set_xlabel('Timestamps')
+	##</time part>
+
+
+	##<depth part>
+#    ax.plot(depth_axis, qc_plot_input.sub_mwd_depth, '*',label = 'Datapoints')
+#    ax.plot(depth_axis, qc_plot_input.sub_mwd_depth, label = 'Interpolated')
 #
-#    ax2.plot(time_axis,qc_plot_input.sub_mwd_rop,label = 'RoP (m/hr)',color = 'r')
+#    ax2.plot(depth_axis,qc_plot_input.sub_mwd_rop,label = 'RoP (m/hr)',color = 'r')
+#    ax.set_xlim(depth_axis.iloc[0], depth_axis.iloc[-1])
 
-    ax.plot(depth_axis, qc_plot_input.sub_mwd_depth, '*',label = 'Datapoints')
-    ax.plot(depth_axis, qc_plot_input.sub_mwd_depth, label = 'Interpolated')
+	##</depth part>
 
-    ax2.plot(depth_axis,qc_plot_input.sub_mwd_rop,label = 'RoP (m/hr)',color = 'r')
-
+	#Labeling
     ax.legend(loc=2)
     ax.set_ylabel('Computed \n Elevation (m)')
-#    ax.set_xlabel('Timestamps')
-
 
     ax2.legend(loc=1)
     ax2.set_ylabel('RoP (m/hr)')
-
-#    pdb.set_trace()
-#    ax.set_xlim(time_axis.iloc[0], time_axis.iloc[-1])
-    ax.set_xlim(depth_axis.iloc[0], depth_axis.iloc[-1])
-
+#
 
     return
 
+
+#Depth Interpolation using Thiago's method. Redundant for this code. But leave
+	#in for now.
 def get_interpolated_computed_elevation(date_times,mwd_hole_df):
 
     elevation_means = [None] * len(date_times)
@@ -213,28 +226,59 @@ def fill_nan(A):
     f = interpolate.interp1d(inds[good], A[good], bounds_error=False)
     B = np.where(np.isfinite(A),A,f(inds))
     return B
-
+#/End depth interpolation
 
 def wob_tob_plot(ax,qc_plot_input):
-#    time_axis = qc_plot_input.sub_mwd_time
-    depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)
-#    depth_axis = np.linspace(min(qc_plot_input.sub_mwd_depth_interp),max(qc_plot_input.sub_mwd_depth_interp),len(qc_plot_input.sub_mwd_wob))
-
-#    pdb.set_trace()
     ax2 = ax.twinx()
-#    ax.plot(time_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
-    ax.plot(depth_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
-#    pdb.set_trace()
-#    ax2.plot(time_axis, qc_plot_input.sub_mwd_tob, label = 'Torque on Bit',color = 'r')
-    ax2.plot(depth_axis, qc_plot_input.sub_mwd_tob,label = 'Torque on Bit',color = 'r')
+
+	#<Time part>
+    time_axis = qc_plot_input.sub_mwd_time
+    ax.plot(time_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
+    ax2.plot(time_axis, qc_plot_input.sub_mwd_tob, label = 'Torque on Bit',color = 'r')
+    ax.set_xlabel('Timestamps')
+    ax.set_xlim(time_axis.iloc[0], time_axis.iloc[-1])
+	#</Time part>
+
+	#<Depth Part>
+#    depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)
+#    ax.plot(depth_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
+#    ax2.plot(depth_axis, qc_plot_input.sub_mwd_tob,label = 'Torque on Bit',color = 'r')
+#    ax.set_xlabel('Depth (m)')
+#    ax.set_xlim(depth_axis.iloc[0], depth_axis.iloc[-1])
+	#</Depth Part>
+
+
+#Beautifying the plots (making informative)
     ax.legend(loc=2)
     ax2.legend(loc=1)
     ax.set_ylabel('force on \n bit (kN)')
     ax2.set_ylabel('Torque on \n bit (Nm)')
-#    ax.set_xlabel('Timestamps')
-    ax.set_xlabel('Depth (m)')
-    ax.set_xlim(depth_axis.iloc[0], depth_axis.iloc[-1])
+
     return
+
+
+#Work In Progress
+#def lithology_plot(ax,qc_plot_input):
+#	lith_arr = np.asarray(qc_plot_input.rock_type)
+#	lith_uniq = set(lith_arr)
+#	num_lith = len(lith_arr)
+#
+#	for num_lith in num_lith:
+#		for lith_arr in lith_arr:
+#				if lith_arr == lith_uniq[num_lith]:
+#						lith_arr[num_lith]==num_lith
+#	return
+#
+#
+#
+#
+#
+#
+#
+
+
+
+
 
 def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id,
                two_way_travel_time_ms=None, peak_search_interval_ms=None, dpi=300, show=False):
@@ -251,71 +295,53 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     lower_num_ms = qc_plot_input.lower_number_ms
     upper_num_ms = qc_plot_input.upper_number_ms
 
-#    lower_num_ms_new = qc_plot_input.lower_number_ms_new
-#    upper_num_ms_new = qc_plot_input.upper_number_ms_new
-
     for label in COMPONENT_LABELS:
         trace_array_dict[label] = np.flipud(trace_array_dict[label])
     #</Get inputs and reshape where appropriate>
 
     num_traces_per_component, num_samples = trace_array_dict[label].T.shape
-    #I would add an option for showing panel #5 or not.
-    #if you show panel 5 it means you have got the start and end time of the hole
-    #in the qc_plot_input.sub_mwd_time.iloc[0] and qc_plot_input.sub_mwd_time.iloc[-1]
 
-    #<choose X>
-    #if use depth plot:
-#    time_vector = pd.date_range(start=qc_plot_input.sub_mwd_time.iloc[0], periods=num_traces_per_component, freq='1S')
-    depth_mwd =-1*(qc_plot_input.sub_mwd_depth_interp-qc_plot_input.collar_elevation)
-    #(/Interpolating depth to same intervals as time
-#    depth_interp = interp1d(time_vector,depth_mwd, kind='linear', bounds_error=False, fill_value='extrapolate')
-    #/Interpolating depth to same intervals as time)
-#    X = time_vector
-    X = depth_mwd
-    #else:
-#    X = np.arange(num_traces_per_component)
-    #</choose X>
 
+    #if using time plot:
+    time_vector = pd.date_range(start=qc_plot_input.sub_mwd_time.iloc[0], periods=num_traces_per_component, freq='1S')
+	    #<choose X - time>
+    X = time_vector
+
+	#if using depth plot
+#    depth_mwd =-1*(qc_plot_input.sub_mwd_depth_interp-qc_plot_input.collar_elevation)
+		#<choose X - depth>
+#    X = depth_vector
+
+	# Spread out Y
     Y = np.linspace(lower_num_ms, upper_num_ms, trace_array_dict[label].shape[0])
-
     Y = np.flipud(Y)
 
-#    pdb.set_trace()
-
-
+#    Generate figure and axis objects to plot. 6 rows, not sharing X axis
     fig, ax = plt.subplots(nrows=6, sharex=False, figsize=(24,11))
+
+# 	Old code to just generate peak and amplitude plots
+#    fig, ax = plt.subplots(nrows=4, sharex=False, figsize=(24,11))
+
+	# Generate Peak plots
+	#Panel 1
     header_plot(ax[0], X, qc_plot_input, plot_title)
-#    pdb.set_trace()
+	#Panel 5
     depth_vs_time_plot(ax[4],qc_plot_input)
-#    pdb.set_trace()
+	#Panel 6
     wob_tob_plot(ax[5],qc_plot_input)
 
     plt.subplots_adjust(right=10.5)
 
-
-
-    minorLocator = AutoMinorLocator()
     #<sort out yticks every 5 ms>
     dt_ms = 5
     lowest_y_tick =  int(lower_num_ms/dt_ms)
     greatest_y_tick = int(upper_num_ms/dt_ms)
 
-#    #</further from quick n dirty>two_way_travel_time_ms
-#    lowest_y_tick2 =  int(lower_num_ms_new/dt_ms)
-#    greatest_y_tick2 = int(upper_num_ms_new/dt_ms)
-#    #</further from quick n dirty>
-
-#    pdb.set_trace()
-
     y_tick_locations = dt_ms * np.arange(lowest_y_tick, greatest_y_tick + 1)
-#    #</further from quick n dirty>
-#    y_tick_locations2 = dt_ms * np.arange(lowest_y_tick2, greatest_y_tick2 + 1)
-#    #</further from quick n dirty>
-
-
     #<sort out yticks every 5 ms>
-#    pdb.set_trace()
-#    y_tick_locations = 10*np.arange(7)
+
+	#Generate Axial, Radial, Tangential heatmap plots
+
     ax[1], heatmap1 = plot_hole_as_heatmap(ax[1], cbal.v_min_1, cbal.v_max_1, X, Y,
       trace_array_dict['axial'], cmap_string, y_tick_locations,
       two_way_travel_time_ms=qc_plot_input.two_way_travel_time_ms,
@@ -332,11 +358,6 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     ax[3], heatmap3 = plot_hole_as_heatmap(ax[3], cbal.v_min_3, cbal.v_max_3, X, Y,
       trace_array_dict['radial'], cmap_string, y_tick_locations)#,
 
-#    ax[5], heatmap2 = plot_hole_as_heatmap(ax[5], cbal.v_min_2, cbal.v_max_2, X, Y,
-#      trace_array_dict['tangential'], cmap_string, y_tick_locations2)#,
-
-
-
     plt.tight_layout()
     if colourbar_type=='all_one':
         cbaxes = fig.add_axes([0.01, 0.1, 0.007, 0.8])
@@ -344,36 +365,27 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
         plt.setp(cbaxes.get_xticklabels(), rotation='vertical', fontsize=10)
         cbaxes.yaxis.set_ticks_position('right')
 
+		#<Labeling>
+
     ax[0].text(1.01, 0.8, '{}'.format(data_date), fontsize=13, transform=ax[0].transAxes)
     ax[0].text(1.01, 0.6, '{}'.format(client_project_id), fontsize=13, transform=ax[0].transAxes)
     ax[1].text(1.01, 0.5, 'axial', fontsize=11.5, rotation='vertical', transform=ax[1].transAxes)
     ax[2].text(1.01, 0.6, 'tangential', fontsize=11.5, rotation='vertical', transform=ax[2].transAxes)
     ax[3].text(1.01, 0.5, 'radial', fontsize=11.5, rotation='vertical', transform=ax[3].transAxes)
-#    ax[5].text(1.01, 0.6, 'tangential', fontsize=11.5, rotation='vertical', transform=ax[2].transAxes)
-#    ax_5_title = '{}_{}_time_limits(ms)'.format(lowest_y_tick2,greatest_y_tick2)
-#    ax[5].set_title(ax_5_title)
-    #ax[0].text(1.01, 0.6, '{}'.format(client_project_id), fontsize=13, transform=ax[0].transAxes)
+		# </Labelling>
 
+#		<Need to figure out what the code below is for>
     if qc_plot_input.center_trace_dict is not None:
         for hole_id, center_trace in qc_plot_input.center_trace_dict.iteritems():
             blasthole_string = 'blasthole_id {}'.format(hole_id)
             ax[0].text(1.0*center_trace/ax[0].get_xbound()[1], -0.1,
               blasthole_string, transform=ax[0].transAxes, fontsize=10)
 
-    #plt.subplots_adjust(right=1.5)
     plt.subplots_adjust(left=0.1)
     plt.subplots_adjust(right=0.9)
     plt.savefig(out_filename)
     plt.show()
     print("saving {}".format(out_filename))
-
-#    if show:
-#        plt.show()
-#    plt.clf()
-
-
-
-
 
 def my_function():
     """
