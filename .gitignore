@@ -1,3 +1,4 @@
 *.pyc
 *.png
 dcrhino.egg-info/*
+bin/*.cfg

@@ -106,7 +106,7 @@ def interpolate_to_assign_depths_to_log_csv(df_peak_info, df_hole_profile, plot_
         plt.clf()
     return depths
 
-def get_interpolated_column(time_vector, mwd_hole_df, column_label):
+def get_interpolated_column(time_vector, mwd_hole_df, column_label,end_time_column_label='endtime'):
     """
     time_vector is actually a pandas date_range, for example:
     time_vector = pd.date_range(start=row.time_start, periods=num_traces_in_blasthole, freq='1S')
@@ -115,7 +115,7 @@ def get_interpolated_column(time_vector, mwd_hole_df, column_label):
 
     @returns interped data, for example the depths of the traces
     """
-    t_mwd = pd.DatetimeIndex(mwd_hole_df.endtime)
+    t_mwd = pd.DatetimeIndex(mwd_hole_df[end_time_column_label])
     t_mwd = t_mwd.astype(np.int64)
 
     interp_function = interp1d(t_mwd, mwd_hole_df[column_label], kind='linear', bounds_error=False, fill_value='extrapolate')

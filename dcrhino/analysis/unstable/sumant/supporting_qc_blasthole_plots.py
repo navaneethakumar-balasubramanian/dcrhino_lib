@@ -228,6 +228,7 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
     Y = np.linspace(lower_num_ms, upper_num_ms, trace_array_dict[label].shape[0])
     Y = np.flipud(Y)
 
+
 #    #Quick and dirty way to create another window for plotting tangential at the
 #    # interval Jamie asked me.
 #    Y2 = np.linspace(lower_num_ms_new, upper_num_ms_new, trace_array_dict[label].shape[0])

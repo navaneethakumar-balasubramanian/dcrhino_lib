@@ -187,7 +187,7 @@ class DataUnit(object):
                 enddate_utc_timestamp = calendar.timegm(self.data_interval.endtime.utctimetuple())
                 query = "select ts_secs,ts_micro,x,y,z from {} where ts_secs >= {} and ts_secs < {} order by ts_secs,ts_micro".format(self.db_raw_data_table,startdate_utc_timestamp,enddate_utc_timestamp)
                 self.write_to_log(query)
-                print(query)
+                #print(query)
                 #Fetch data from the database
                 raw_data = dbc.query(self.dbconn,query)
                 #since the data is coming back as a numpy array with the structure of the dbrhino class, we need to select only the columns we need
@@ -343,7 +343,7 @@ class DataUnit(object):
 #        pdb.set_trace()
 
         query = "select count(ts_secs) as ts_secs from "+self.db_raw_data_table
-        print (query)
+        #print (query)
         count = dbc.query(self.dbconn,query)[0][2]
         if count > self.output_sampling_rate*self.trace_length:
             return True

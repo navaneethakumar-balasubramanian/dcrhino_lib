@@ -116,6 +116,7 @@ def get_trough_times(reference_index, data_series, time_vector):
     """
     reference_index is the primary peak.
     """
+
     square_series = np.sign(data_series)
     ref_sign = np.sign(data_series[reference_index]) #this is +1 if ref is a peak
     left_side = np.flipud(square_series[:reference_index+1])
@@ -144,7 +145,9 @@ def get_trough_times(reference_index, data_series, time_vector):
 #    if left_trough_time > 0:
 #        logger.error("WTF!")
 #        pdb.set_trace()
+
     if len(neg_peak_times) != 1:
+        #pdb.set_trace()
         logger.error("WTF!")
         left_trough_time = np.nan
         #pdb.set_trace()
@@ -255,7 +258,7 @@ def extract_features_from_multiple_wavelet(tr, time_vector, earliest_multiple_ti
         #print("{} i_trace {}".format(parent_filename, i_trace))
         raise Exception
     #</Confirm odd # indices>
-
+    #pdb.set_trace()
     multiple_wavelet = tr.data[multiple_wavelet_indices_2]
     multiple_time_vector = time_vector[multiple_wavelet_indices_2]
     #seven-er or five-er above, so want index 3 or 2 respective
@@ -263,7 +266,7 @@ def extract_features_from_multiple_wavelet(tr, time_vector, earliest_multiple_ti
     center_index = (n_points_in_window - 1) //2
 
     if multiple_wavelet[center_index+2] > multiple_wavelet[center_index]:
-        print("Probably not a legitimate multiple... do we know what that means")
+        #print("Probably not a legitimate multiple... do we know what that means")
         wffe = WaveletForFeatureExtraction(None, None, component=component, wavelet_type=wavelet_type)
         wffe.pk_error = 11
         #This condition agreed over phone discussion w JWR 20180724, ~5/6pm

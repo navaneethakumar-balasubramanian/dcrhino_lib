@@ -191,6 +191,9 @@ METADATA_HEADER_FORMAT_KEYS = {
         'trapezoidal_bpf_corner_3':DataType.FLOAT,
         'trapezoidal_bpf_corner_4':DataType.FLOAT,
         'trapezoidal_bpf_duration':DataType.FLOAT,
+        'trace_length_in_seconds':DataType.FLOAT,
+        'components_to_collect':DataType.STRING,
+        'channels_per_sensor':DataType.INTEGER
         }
 
 
@@ -204,7 +207,7 @@ class Metadata(object):
             setattr(self,key,None)
         value = cfg.getint("COLLECTION","output_sampling_rate")
         setattr(self,"output_sampling_rate",value)
-        for section in ["INSTALLATION","PROCESSING"]:
+        for section in ["INSTALLATION","PROCESSING","COLLECTION"]:
             for item in cfg.items(section):
                 key = item[0]
                 #pdb.set_trace()
@@ -230,7 +233,7 @@ class Metadata(object):
                     setattr(self,key,value)
                 else:
                     pass
-                    raise LookupError("The metadata value in the configuration file is not declared in the metadata class")
+                    raise LookupError("The metadata value in the configuration file is not declared in the metadata class" , item )
         self.sensor_distance_to_source = self.drill_string_total_length - self.sensor_position
 
 
