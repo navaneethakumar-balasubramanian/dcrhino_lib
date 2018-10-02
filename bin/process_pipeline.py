@@ -295,17 +295,17 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
         radial_filtered_correlated_traces = np.asarray(radial_filtered_correlated_traces)
 
         #print (axial_deconvolved_traces.shape)
-        np.save(debug_file_name+'_axial_deconvolved_traces.npy',axial_deconvolved_traces)
-        np.save(debug_file_name+'_tangential_deconvolved_traces.npy',tangential_deconvolved_traces)
-        np.save(debug_file_name+'_radial_deconvolved_traces.npy',radial_deconvolved_traces)
-        
-        np.save(debug_file_name+'_axial_filtered_correlated_traces.npy',axial_filtered_correlated_traces)
-        np.save(debug_file_name+'_tangential_filtered_correlated_traces.npy',tangential_filtered_correlated_traces)
-        np.save(debug_file_name+'_radial_filtered_correlated_traces.npy',radial_filtered_correlated_traces)
+        np.save(debug_file_name+'axial_deconvolved_traces.npy',axial_deconvolved_traces)
+        np.save(debug_file_name+'tangential_deconvolved_traces.npy',tangential_deconvolved_traces)
+        np.save(debug_file_name+'radial_deconvolved_traces.npy',radial_deconvolved_traces)
+         
+        np.save(debug_file_name+'axial_filtered_correlated_traces.npy',axial_filtered_correlated_traces)
+        np.save(debug_file_name+'tangential_filtered_correlated_traces.npy',tangential_filtered_correlated_traces)
+        np.save(debug_file_name+'radial_filtered_correlated_traces.npy',radial_filtered_correlated_traces)
 
-        np.save(debug_file_name+'_axial_interpolated_traces.npy',axial_interpolated_traces)
-        np.save(debug_file_name+'_tangential_interpolated_traces.npy',tangential_interpolated_traces)
-        np.save(debug_file_name+'_radial_interpolated_traces.npy',radial_interpolated_traces)
+        np.save(debug_file_name+'axial_interpolated_traces.npy',axial_interpolated_traces)
+        np.save(debug_file_name+'tangential_interpolated_traces.npy',tangential_interpolated_traces)
+        np.save(debug_file_name+'radial_interpolated_traces.npy',radial_interpolated_traces) 
 
     return [axial_traces,tangential_traces,radial_traces,ts]
 
