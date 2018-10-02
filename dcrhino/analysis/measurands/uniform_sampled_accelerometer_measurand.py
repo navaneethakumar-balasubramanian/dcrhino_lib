@@ -21,11 +21,11 @@ import pdb
 
 from dcrhino.analysis.measurands.uniformly_sampled_measurand import UniformlySampledMeasurand
 
-class AccelerometerMeasurand(UniformlySampledMeasurand):
+class UniformlySampledAccelerometerMeasurand(UniformlySampledMeasurand):
     """
     """
     def __init__(self, **kwargs):
-        super(AccelerometerMeasurand, self).__init__(**kwargs)
+        super(UniformlySampledAccelerometerMeasurand, self).__init__(**kwargs)
         self._sensor_type = kwargs.get('sensor_type', None)
         self.extension = kwargs.get('extension', 'npy')
 

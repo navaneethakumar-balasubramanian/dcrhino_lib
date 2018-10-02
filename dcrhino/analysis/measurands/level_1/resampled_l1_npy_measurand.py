@@ -18,13 +18,13 @@ import pdb
 from obspy.io.segy.core import _read_segy
 
 from dcrhino.analysis.data_manager.temp_paths import ensure_dir
-from dcrhino.analysis.measurands.accelerometer_measurand import AccelerometerMeasurand
+from dcrhino.analysis.measurands.uniform_sampled_accelerometer_measurand import UniformlySampledAccelerometerMeasurand
 from dcrhino.analysis.supporting_processing import concatenate_traces
 from dcrhino.analysis.util.general_helper_functions import init_logging
 
 logger = init_logging(__name__)
 
-class ResampledL1AccelerometerMeasurand(AccelerometerMeasurand):
+class ResampledL1AccelerometerMeasurand(UniformlySampledAccelerometerMeasurand):
     """
     It maybe a mistake to bake npy format into this ..
     uses DigitzerDateSamplingRate DataKey
