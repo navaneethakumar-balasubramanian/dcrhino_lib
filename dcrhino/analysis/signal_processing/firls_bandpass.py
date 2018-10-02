@@ -81,6 +81,21 @@ class FIRLSFilter(object):
         #plt.plot(taps); plt.title('Default_BandPassFilter');plt.show()
         return self.taps
 
+    def make_simple(self, sampling_rate):
+        self.nyquist = sampling_rate / 2.0
+
+        if self.duration is None:
+            self.taps = np.asarray([1.0], dtype='float32')
+            return self.taps
+
+        corner_tuple = (0, self.corners[0], self.corners[1], self.corners[2],
+                        self.corners[3], self.nyquist)
+        taps = ssig.firls(self.n_taps, corner_tuple,
+                          self.desired_response_amplitude, nyq=self.nyquist)
+        taps = taps.astype('float32')
+        self.taps = taps.astype('float32')
+        #plt.plot(taps); plt.title('Default_BandPassFilter');plt.show()
+        return self.taps
     @property
     def corner_string(self):
         if self.corners is None:
