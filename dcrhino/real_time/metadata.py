@@ -193,7 +193,9 @@ METADATA_HEADER_FORMAT_KEYS = {
         'trapezoidal_bpf_duration':DataType.FLOAT,
         'trace_length_in_seconds':DataType.FLOAT,
         'components_to_collect':DataType.STRING,
-        'channels_per_sensor':DataType.INTEGER
+        'channels_per_sensor':DataType.INTEGER,
+        'packet_length':DataType.INTEGER,
+        'baud_rate':DataType.INTEGER,
         }
 
 
