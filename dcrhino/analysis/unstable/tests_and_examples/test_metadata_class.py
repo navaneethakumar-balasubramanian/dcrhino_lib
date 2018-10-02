@@ -32,10 +32,10 @@ from dcrhino.real_time.metadata import Metadata
 #meta_instance = Metadata(cfg_file)
 #mmm = Metadata(cfg_file)
 
-def test_can_read_cfg_file():
+def test_can_read_cfg_file(cfg_filename):
     """
     """
-    cfg_path = os.path.join('20180910_SSX57868.cfg')
+    cfg_path = os.path.join(cfg_filename)
     cfg_instance = ConfigParser.SafeConfigParser()
     cfg_instance.read(cfg_path)
     meta_instance = Metadata(cfg_instance)
@@ -45,7 +45,8 @@ def test_can_read_cfg_file():
 def main():
     """
     """
-    test_can_read_cfg_file()
+    cfg_filename = '20180910_SSX57868.cfg'
+    test_can_read_cfg_file(cfg_filename)
     print("finito {}".format(datetime.datetime.now()))
 
 if __name__ == "__main__":
