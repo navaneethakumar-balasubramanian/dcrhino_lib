@@ -411,6 +411,7 @@ argparser.add_argument('-bc', '--bench-column', help="BENCH COLUMN", default='be
 argparser.add_argument('-pc', '--pattern-column', help="PATTERN COLUMN", default='pattern')
 argparser.add_argument('-cec', '--collar-elevation-column', help="COLLAR ELEVATION COLUMN", default='collar_elevation')
 argparser.add_argument('-compec', '--computed-elevation-column', help="COMPUTED ELEVATION COLUMN", default='computed_elevation')
+argparser.add_argument('-icl', '--interpolated-column-names', help="INTERPOLATED COLUMN NAMES", default='')
 
 args = argparser.parse_args()
 
@@ -423,6 +424,7 @@ hole_column = args.hole_column
 collar_elevation_column = args.collar_elevation_column
 computed_elevation_column = args.computed_elevation_column
 rig_id_column = args.rig_id_column
+interpolated_column_names = str(args.interpolated_column_names).split(",")   
 
 
 print ("H5 file path:" , args.h5_path)
@@ -561,12 +563,15 @@ for i,hole in enumerate(holes_array):
 
     extracted_features_df['computed_elevation'], time_vector = mwd_helper.get_interpolated_column(hole,'computed_elevation',time_vector)
     extracted_features_df['mse'], time_vector = mwd_helper.get_interpolated_column(hole,'mse',time_vector)
-    extracted_features_df['weight_on_bit'], time_vector = mwd_helper.get_interpolated_column(hole,'weight_on_bit',time_vector)
-    extracted_features_df['rop'], time_vector = mwd_helper.get_interpolated_column(hole,'rop',time_vector)
-    extracted_features_df['torque'], time_vector = mwd_helper.get_interpolated_column(hole,'torque',time_vector)
-    extracted_features_df['rpm'], time_vector = mwd_helper.get_interpolated_column(hole,'rpm',time_vector)
-    extracted_features_df['air_pressure'], time_vector = mwd_helper.get_interpolated_column(hole,'air_pressure',time_vector)
-    extracted_features_df['bi'], time_vector = mwd_helper.get_interpolated_column(hole,'bi',time_vector)
+    for column_name in interpolated_column_names:
+        extracted_features_df[column_name], time_vector = mwd_helper.get_interpolated_column(hole,column_name,time_vector)
+    
+    #extracted_features_df['weight_on_bit'], time_vector = mwd_helper.get_interpolated_column(hole,'weight_on_bit',time_vector)
+    #extracted_features_df['rop'], time_vector = mwd_helper.get_interpolated_column(hole,'rop',time_vector)
+    #extracted_features_df['torque'], time_vector = mwd_helper.get_interpolated_column(hole,'torque',time_vector)
+    #extracted_features_df['rpm'], time_vector = mwd_helper.get_interpolated_column(hole,'rpm',time_vector)
+    #extracted_features_df['air_pressure'], time_vector = mwd_helper.get_interpolated_column(hole,'air_pressure',time_vector)
+    #extracted_features_df['bi'], time_vector = mwd_helper.get_interpolated_column(hole,'bi',time_vector)
     
     #extracted_features_df['computed_elevation'] = get_interpolated_computed_elevation(extracted_features_df['datetime'],hole,start_time_column_name=start_time_column)
     extracted_features_df['depth'] = (np.asarray(extracted_features_df['computed_elevation'].values) - hole[collar_elevation_column].values[0]) * -1
