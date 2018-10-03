@@ -37,9 +37,9 @@ class Config:
          self.ACOUSTIC_VELOCITY = 4755.0
          self.primary_window_halfwidth_ms = 2.0
          self.multiple_window_search_width_ms = 3.126
-         self.sensor_distance_to_source = 16.75
-         self.n_samples = 640.0
-         self.trace_length_in_seconds = 10.0
+         self.sensor_distance_to_source = np.nan
+         #self.n_samples = 640.0
+         self.trace_length_in_seconds = 1.0
          
          if metadata is not None:
              self.set_metadata(metadata)
@@ -50,7 +50,9 @@ class Config:
          if config_parser is not None:
              self.set_config_parser(config_parser)
         
-         
+    
+    
+    
     @property
     def num_taps_in_decon_filter(self):
         """
@@ -89,6 +91,14 @@ class Config:
         self.min_lag_trimmed_trace = float(metadata.min_lag_trimmed_trace)
         self.max_lag_trimmed_trace = float(metadata.max_lag_trimmed_trace)
         self.trace_length_in_seconds = float(metadata.trace_length_in_seconds)   
+        
+    @property
+    def n_samples_trimmed_trace(self):
+        sampling_rate = float(self.output_sampling_rate)
+        n_samples_back = int(sampling_rate * np.abs(self.min_lag_trimmed_trace))
+        n_samples_fwd = int(sampling_rate * self.max_lag_trimmed_trace)
+
+        return int(n_samples_fwd + n_samples_back)
         
     def set_config_parser( self, config_parser ):
         for section in config_parser.sections():

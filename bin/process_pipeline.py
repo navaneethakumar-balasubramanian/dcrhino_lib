@@ -211,9 +211,10 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
             deconvolved_data_actual_second, r_xx0 = deconvolve_trace(global_config.deconvolution_filter_duration,global_config.num_taps_in_decon_filter,interpolated_actual_second)
             correlated_trace_actual_second = correlate_trace(interpolated_actual_second,deconvolved_data_actual_second)
             filtered_correlated_trace_actual_second = bandpass_filter_trace(global_config.output_sampling_rate,global_config.trapezoidal_bpf_corner_1,global_config.trapezoidal_bpf_corner_2,global_config.trapezoidal_bpf_corner_3,global_config.trapezoidal_bpf_corner_4,global_config.trapezoidal_bpf_duration,correlated_trace_actual_second)
+            #pdb.set_trace()
             trimmed_filtered_correlated_trace_actual_second = trim_trace(global_config.min_lag_trimmed_trace,global_config.max_lag_trimmed_trace,global_config.num_taps_in_decon_filter,global_config.output_sampling_rate,filtered_correlated_trace_actual_second)
             results[i] = trimmed_filtered_correlated_trace_actual_second
-            #pdb.set_trace()
+            
             if debug:
                 results_deconvolved[i] = deconvolved_data_actual_second
                 results_interpolated[i] = interpolated_actual_second
@@ -320,8 +321,8 @@ def get_features_extracted(extractor,axial_traces,tangential_traces,radial_trace
 
         if axial_trace is None:
             continue
-
-        extracted_features = extractor.extract_features(actual_ts,axial_trace,tangential_trace,radial_trace,global_config.n_samples,-global_config.min_lag_trimmed_trace)
+       
+        extracted_features = extractor.extract_features(actual_ts,axial_trace,tangential_trace,radial_trace,global_config.n_samples_trimmed_trace,-global_config.min_lag_trimmed_trace)
         extracted_features_list[i] = extracted_features
 
     print ("Features extracted")
@@ -358,8 +359,11 @@ def qc_plot(output_path,plot_title,axial,tangential,radial,ts_array,lower_num_ms
 
     idx = 0
     for component in components:
+        
         #alterations to plot / transpose / max_amplitude / slice by samples back and forward
+        #pdb.set_trace()
         component = np.transpose(component)
+        n_samples = global_config.n_samples_trimmed_trace
         max_amplitudes = np.max(component, axis=0)
         component = component/max_amplitudes
         dt = 1./global_config.output_sampling_rate
@@ -367,7 +371,7 @@ def qc_plot(output_path,plot_title,axial,tangential,radial,ts_array,lower_num_ms
         samples_back = int(np.ceil(samples_back))
         samples_fwd = upper_num_ms/1000./dt
         samples_fwd = int(np.ceil(samples_fwd))
-        half_way = int(global_config.n_samples/2)
+        half_way = int(n_samples/2)
         component = component[half_way-samples_back:half_way+samples_fwd,:]
         component = np.flipud(component)
 
