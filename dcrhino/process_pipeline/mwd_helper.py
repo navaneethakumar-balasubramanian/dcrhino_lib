@@ -21,7 +21,8 @@ class MwdDFHelper:
                  hole_column,
                  collar_elevation_column,
                  computed_elevation_column,
-                 rig_id_column):
+                 rig_id_column,
+                 mse_column):
 
         self.df = df
         self.start_time_column_name = start_time_column
@@ -33,6 +34,7 @@ class MwdDFHelper:
         self.collar_elevation_column_name = collar_elevation_column
         self.computed_elevation_column = computed_elevation_column
         self.rig_id_column_name = rig_id_column
+        self.mse_column_name = mse_column
 
         self.expected_columns = [self.start_time_column_name,
                                  self.end_time_column_name,
@@ -42,7 +44,8 @@ class MwdDFHelper:
                                  self.hole_column_name,
                                  self.collar_elevation_column_name,
                                  self.computed_elevation_column,
-                                 self.rig_id_column_name
+                                 self.rig_id_column_name,
+                                 self.mse_column_name
                                  ]
 
         # DO VALIDATIONS ON THE COLUMNS

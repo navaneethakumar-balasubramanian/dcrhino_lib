@@ -407,6 +407,7 @@ argparser.add_argument('-ric', '--rig-id-column', help="RIG ID COLUMN", default=
 argparser.add_argument('-sc', '--start-time-column', help="START TIME COLUMN", default='starttime')
 argparser.add_argument('-ec', '--end-time-column', help="END TIME COLUMN", default='endtime')
 argparser.add_argument('-hc', '--hole-column', help="HOLE COLUMN", default='hole')
+argparser.add_argument('-mc', '--mse-column', help="MSE COLUMN", default='mse')
 argparser.add_argument('-bc', '--bench-column', help="BENCH COLUMN", default='bench')
 argparser.add_argument('-pc', '--pattern-column', help="PATTERN COLUMN", default='pattern')
 argparser.add_argument('-cec', '--collar-elevation-column', help="COLLAR ELEVATION COLUMN", default='collar_elevation')
@@ -425,7 +426,7 @@ collar_elevation_column = args.collar_elevation_column
 computed_elevation_column = args.computed_elevation_column
 rig_id_column = args.rig_id_column
 interpolated_column_names = str(args.interpolated_column_names).split(",")   
-
+mse_column = args.mse_column
 
 print ("H5 file path:" , args.h5_path)
 print ("MWD file path:" , args.mwd_path)
@@ -454,7 +455,8 @@ mwd_helper = MwdDFHelper(mwd_df,
                        hole_column=hole_column,
                        collar_elevation_column=collar_elevation_column,
                        computed_elevation_column=computed_elevation_column,
-                       rig_id_column=rig_id_column)
+                       rig_id_column=rig_id_column,
+                       mse_column=mse_column)
 
 if mwd_helper is False:
     sys.exit("Error in mwd dataframe.")
@@ -562,7 +564,7 @@ for i,hole in enumerate(holes_array):
     time_vector = pd.date_range(start=startdt, periods=periods, freq='1S')
 
     extracted_features_df['computed_elevation'], time_vector = mwd_helper.get_interpolated_column(hole,'computed_elevation',time_vector)
-    extracted_features_df['mse'], time_vector = mwd_helper.get_interpolated_column(hole,'mse',time_vector)
+    extracted_features_df[mse_column], time_vector = mwd_helper.get_interpolated_column(hole,mse_column,time_vector)
     for column_name in interpolated_column_names:
         extracted_features_df[column_name], time_vector = mwd_helper.get_interpolated_column(hole,column_name,time_vector)
     
