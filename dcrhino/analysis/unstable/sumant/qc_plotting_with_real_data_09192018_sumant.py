@@ -24,8 +24,7 @@ from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots09192018 impo
 from dcrhino.analysis.signal_processing.mwd_tools import get_interpolated_column
 import dcrhino.analysis.measurands.measurand_registry_west_angelas as MEASURAND_REGISTRY
 from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
-#from dcrhino.analysis.signal_processing.trace_header import define_obspy_trace_header
-#from dcrhino.analysis.signal_processing.mwd_tools_09202018 import interpolate_to_assign_depths_to_log_csv
+
 
 home = os.path.expanduser("~/")
 azure_path = os.path.join(home, 'data/datacloud/west_angelas/corr_npy_dump')
@@ -83,6 +82,7 @@ for i_row in range(total_number_of_rows):
     full_filename = os.path.join(azure_path, filebase)
     peak_ampl_axial = np.load(full_filename)
 
+    pdb.set_trace()
 
     filebase = 'peak_ampl_tangential_{}_{}.npy'.format(hole, digitizer_id)
     full_filename = os.path.join(azure_path, filebase)
@@ -106,13 +106,14 @@ for i_row in range(total_number_of_rows):
     #<get depth info>
         #<Thiago's method>
     datetime_delta = 1 #second
+    pdb.set_trace()
     time_arr = np.arange(row.time_start,row.time_end,datetime.timedelta(seconds = datetime_delta)).astype(datetime.datetime)
     depth = get_interpolated_computed_elevation(time_arr,sub_mwd_df)
         #<\Thiago's method>
 
         #<Karl's method>
-    time_vector = pd.date_range(start=row.time_start, periods=num_traces_in_blasthole, freq='1S')
-    depth2 = get_interpolated_column(time_vector, sub_mwd_df, 'computed_elevation')
+#    time_vector = pd.date_range(start=row.time_start, periods=num_traces_in_blasthole, freq='1S')
+#    depth2 = get_interpolated_column(time_vector, sub_mwd_df, 'computed_elevation')
         #</Karl's method>
     #</get depth info>
     for component_label in COMPONENT_LABELS:
@@ -130,11 +131,13 @@ for i_row in range(total_number_of_rows):
 #       /Titles)
 
         data = np.load(input_filename)
-#
+#        pdb.set_trace()
 
         total_number_of_samples = len(data)
         samples_per_trace = total_number_of_samples // num_traces_in_blasthole
         data = data.reshape(num_traces_in_blasthole, samples_per_trace)
+        pdb.set_trace()
+
 
         trace_array_dict[component_label] = data.T
 
@@ -142,7 +145,7 @@ for i_row in range(total_number_of_rows):
         #converting to depth
         starttime_str = '{}'.format(row['time_start'])
         endtime_str = '{}'.format(row['time_end'])
-        pdb.set_trace()
+#        pdb.set_trace()
         if row.sampling_rate == 2400:
             trace_array_dict[component_label] = trace_array_dict[component_label][240-12:240+72,:]
         elif row.sampling_rate == 2800:
@@ -184,6 +187,7 @@ for i_row in range(total_number_of_rows):
                                           mwd_start_depth = sub_mwd_df.computed_elevation.iloc[0],
                                           mwd_end_depth = sub_mwd_df.computed_elevation.iloc[-1],
                                           collar_elevation = np.mean(sub_mwd_df.collar_elevation))
+    pdb.set_trace()
 
     qc_plot(qc_plot_input, output_filename ,plot_title, data_date, 'west_angelas', show=False)
 
