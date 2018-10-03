@@ -10,6 +10,7 @@ import numpy as np
 import ConfigParser
 from datetime import datetime
 from dcrhino.real_time.metadata import Metadata
+import pdb
 
 class H5Helper:
 
@@ -27,15 +28,17 @@ class H5Helper:
 
         self.max_dtime = datetime.utcfromtimestamp(int(self.max_ts))
         self.min_dtime = datetime.utcfromtimestamp(int(self.min_ts))
-        
+
         self.sensitivity_xyz = self._get_sensitivity_xyz()
         self.is_ide_file = self._is_ide_file()
 
     def _is_ide_file(self):
         if len(self._sensitivity) == 3:
-            self.is_ide_file = True
+            # self.is_ide_file = False
+            return False
         else:
-            self.is_ide_file = False
+            # self.is_ide_file = True
+            return True
 
     def _get_sensitivity_xyz(self):
         self._sensitivity = self.h5f.get('sensitivity')
