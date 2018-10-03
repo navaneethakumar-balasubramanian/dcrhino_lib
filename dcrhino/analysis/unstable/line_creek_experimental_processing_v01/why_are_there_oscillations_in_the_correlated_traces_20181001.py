@@ -28,7 +28,25 @@ home = os.path.expanduser("~/")
 data_dir = os.path.join(home, 'data/datacloud/azure_dump/data_sdd/data_from_rhino/Teck_LCO/Drill_31/ssx/level_1/piezo/2800hz/')
 full_h5_file = os.path.join(data_dir, '20180910_SSX57868_5208_2800.h5')
 #full_h5_file = os.path.join(data_dir, '20180910_SSX57890_5451_2800.h5')
-h5file = h5py.File(full_h5_file, 'r')
+#h5file = h5py.File(full_h5_file, 'r')
+
+ssx_serial_number = 5451
+sampling_rate = 2800.0
+hole_id = 23531
+data_flavour = 'axial_filtered_correlated_traces.npy'
+data_flavour = 'axial_interpolated_traces.npy'
+data_dir = os.path.join(home, 'data/datacloud/rhino_process_pipeline_output/line_creek')
+data_dir = os.path.join(data_dir, '{}'.format(ssx_serial_number))
+data_dir = os.path.join(data_dir, '{}'.format(int(sampling_rate)))
+data_dir = os.path.join(data_dir, '793-MR_77-{}'.format(hole_id))
+full_file = os.path.join(data_dir, data_flavour)
+
+filt_corr_data = np.load(full_file)
+data = filt_corr_data
+pdb.set_trace()
+features_df = pd.read_csv(os.path.join(data_dir, 'extracted_features.csv'))
+#plt.plot(features_df.axial_primary_peak_sample, label='features_df');
+#plt.plot(np.max(filt_corr_data, axis=1), label='corr_traces');plt.legend();plt.show()
 
 pdb.set_trace()
 

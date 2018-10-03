@@ -211,9 +211,10 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
             deconvolved_data_actual_second, r_xx0 = deconvolve_trace(global_config.deconvolution_filter_duration,global_config.num_taps_in_decon_filter,interpolated_actual_second)
             correlated_trace_actual_second = correlate_trace(interpolated_actual_second,deconvolved_data_actual_second)
             filtered_correlated_trace_actual_second = bandpass_filter_trace(global_config.output_sampling_rate,global_config.trapezoidal_bpf_corner_1,global_config.trapezoidal_bpf_corner_2,global_config.trapezoidal_bpf_corner_3,global_config.trapezoidal_bpf_corner_4,global_config.trapezoidal_bpf_duration,correlated_trace_actual_second)
+            #pdb.set_trace()
             trimmed_filtered_correlated_trace_actual_second = trim_trace(global_config.min_lag_trimmed_trace,global_config.max_lag_trimmed_trace,global_config.num_taps_in_decon_filter,global_config.output_sampling_rate,filtered_correlated_trace_actual_second)
             results[i] = trimmed_filtered_correlated_trace_actual_second
-            #pdb.set_trace()
+            
             if debug:
                 results_deconvolved[i] = deconvolved_data_actual_second
                 results_interpolated[i] = interpolated_actual_second
@@ -320,8 +321,8 @@ def get_features_extracted(extractor,axial_traces,tangential_traces,radial_trace
 
         if axial_trace is None:
             continue
-
-        extracted_features = extractor.extract_features(actual_ts,axial_trace,tangential_trace,radial_trace,global_config.n_samples,-global_config.min_lag_trimmed_trace)
+       
+        extracted_features = extractor.extract_features(actual_ts,axial_trace,tangential_trace,radial_trace,global_config.n_samples_trimmed_trace,-global_config.min_lag_trimmed_trace)
         extracted_features_list[i] = extracted_features
 
     print ("Features extracted")
@@ -358,8 +359,11 @@ def qc_plot(output_path,plot_title,axial,tangential,radial,ts_array,lower_num_ms
 
     idx = 0
     for component in components:
+        
         #alterations to plot / transpose / max_amplitude / slice by samples back and forward
+        #pdb.set_trace()
         component = np.transpose(component)
+        n_samples = global_config.n_samples_trimmed_trace
         max_amplitudes = np.max(component, axis=0)
         component = component/max_amplitudes
         dt = 1./global_config.output_sampling_rate
@@ -367,7 +371,7 @@ def qc_plot(output_path,plot_title,axial,tangential,radial,ts_array,lower_num_ms
         samples_back = int(np.ceil(samples_back))
         samples_fwd = upper_num_ms/1000./dt
         samples_fwd = int(np.ceil(samples_fwd))
-        half_way = int(global_config.n_samples/2)
+        half_way = int(n_samples/2)
         component = component[half_way-samples_back:half_way+samples_fwd,:]
         component = np.flipud(component)
 
@@ -407,6 +411,7 @@ argparser.add_argument('-ric', '--rig-id-column', help="RIG ID COLUMN", default=
 argparser.add_argument('-sc', '--start-time-column', help="START TIME COLUMN", default='starttime')
 argparser.add_argument('-ec', '--end-time-column', help="END TIME COLUMN", default='endtime')
 argparser.add_argument('-hc', '--hole-column', help="HOLE COLUMN", default='hole')
+argparser.add_argument('-mc', '--mse-column', help="MSE COLUMN", default='mse')
 argparser.add_argument('-bc', '--bench-column', help="BENCH COLUMN", default='bench')
 argparser.add_argument('-pc', '--pattern-column', help="PATTERN COLUMN", default='pattern')
 argparser.add_argument('-cec', '--collar-elevation-column', help="COLLAR ELEVATION COLUMN", default='collar_elevation')
@@ -425,7 +430,7 @@ collar_elevation_column = args.collar_elevation_column
 computed_elevation_column = args.computed_elevation_column
 rig_id_column = args.rig_id_column
 interpolated_column_names = str(args.interpolated_column_names).split(",")   
-
+mse_column = args.mse_column
 
 print ("H5 file path:" , args.h5_path)
 print ("MWD file path:" , args.mwd_path)
@@ -454,7 +459,8 @@ mwd_helper = MwdDFHelper(mwd_df,
                        hole_column=hole_column,
                        collar_elevation_column=collar_elevation_column,
                        computed_elevation_column=computed_elevation_column,
-                       rig_id_column=rig_id_column)
+                       rig_id_column=rig_id_column,
+                       mse_column=mse_column)
 
 if mwd_helper is False:
     sys.exit("Error in mwd dataframe.")
@@ -562,7 +568,7 @@ for i,hole in enumerate(holes_array):
     time_vector = pd.date_range(start=startdt, periods=periods, freq='1S')
 
     extracted_features_df['computed_elevation'], time_vector = mwd_helper.get_interpolated_column(hole,'computed_elevation',time_vector)
-    extracted_features_df['mse'], time_vector = mwd_helper.get_interpolated_column(hole,'mse',time_vector)
+    extracted_features_df[mse_column], time_vector = mwd_helper.get_interpolated_column(hole,mse_column,time_vector)
     for column_name in interpolated_column_names:
         extracted_features_df[column_name], time_vector = mwd_helper.get_interpolated_column(hole,column_name,time_vector)
     
