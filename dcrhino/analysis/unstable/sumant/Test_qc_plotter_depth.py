@@ -67,7 +67,7 @@ print('5208 to 5451')
 sensor = 5451
 
 #home = os.path.expanduser("~/")
-cur_work_dir= ('/home/sjha/data/datacloud/mount_milligan/Mount Milligan Mine/5306/4000/965-106-3014')
+cur_work_dir= ('/home/sjha/data/datacloud/line_creek/pipeline/Data_from_Thiago/old/ssx_5451')
 #pdb.set_trace()
 #data_dir_old = os.path.join(home, 'data/datacloud/line_creek/pipeline/old/ssx_5451')
 
@@ -105,7 +105,7 @@ time_vector = pd.date_range(start=mwd_df.time_start_utc.iloc[0], periods=num_tra
 depth = get_interpolated_column(time_vector, mwd_df, 'computed_elevation')
 #</Karl's method>
 #/Depth Conversion
-correlated_traces_sampling_rate = 2800;#normally set this = sampling_rate
+correlated_traces_sampling_rate = 3200;#normally set this = sampling_rate
 trace_array_dict = {}
 traces_filename = '{}_filtered_correlated_traces.npy'.format('axial')
 input_filename = os.path.join(cur_work_dir,traces_filename)
@@ -150,9 +150,6 @@ trace_array_dict['axial'] = np.flipud(trace_array_dict['axial'])
 
 num_traces_per_component, num_samples = trace_array_dict['axial'].T.shape
 
-#	if using depth plot
-X =-1*(depth)
-
 
 
 	# Spread out Y
@@ -172,7 +169,7 @@ y_tick_locations = dt_ms * np.arange(lowest_y_tick, greatest_y_tick + 1)
 
 
 minor_locator = AutoMinorLocator()
-ax.pcolormesh(X, Y, trace_array_dict['axial'], cmap=cmap_string)
+ax.pcolormesh(depth, Y, trace_array_dict['axial'], cmap=cmap_string)
 ax.set_ylabel('time (ms)')
 ax.invert_yaxis()
 ax.set_yticks(y_tick_locations, minor=False)

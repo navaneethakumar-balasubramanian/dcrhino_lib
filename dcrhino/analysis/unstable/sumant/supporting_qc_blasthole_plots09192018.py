@@ -233,21 +233,22 @@ def fill_nan(A):
 def wob_tob_plot(ax,qc_plot_input):
     ax2 = ax.twinx()
 
-#	#<Time part>
-    time_axis = qc_plot_input.sub_mwd_time
-    ax.plot(time_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
-    ax2.plot(time_axis, qc_plot_input.sub_mwd_tob, label = 'Torque on Bit',color = 'r')
-    ax.set_xlabel('Timestamps')
-    ax.set_xlim(time_axis.iloc[0], time_axis.iloc[-1])
+##	#<Time part>
+#    time_axis = qc_plot_input.sub_mwd_time
+#    ax.plot(time_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
+#    ax2.plot(time_axis, qc_plot_input.sub_mwd_tob, label = 'Torque on Bit',color = 'r')
+#    ax.set_xlabel('Timestamps')
+#    ax.set_xlim(time_axis.iloc[0], time_axis.iloc[-1])
 #	#</Time part>
 
-	#<Depth Part>
-#    depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)
-#    ax.plot(depth_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
-#    ax2.plot(depth_axis, qc_plot_input.sub_mwd_tob,label = 'Torque on Bit',color = 'r')
-#    ax.set_xlabel('Depth (m)')
-#    ax.set_xlim(depth_axis.iloc[0], depth_axis.iloc[-1])
-	#</Depth Part>
+#	<Depth Part>
+    depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)
+    ax.plot(depth_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
+    ax2.plot(depth_axis, qc_plot_input.sub_mwd_tob,label = 'Torque on Bit',color = 'r')
+    ax.set_xlabel('Depth (m)')
+    ax.set_xlim(depth_axis.iloc[0], depth_axis.iloc[-1])
+    pdb.set_trace()
+#	</Depth Part>
 
 
 #Beautifying the plots (making informative)
@@ -344,6 +345,7 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
 
 	#Generate Axial, Radial, Tangential heatmap plots
 
+    pdb.set_trace()
     ax[1], heatmap1 = plot_hole_as_heatmap(ax[1], cbal.v_min_1, cbal.v_max_1, X, Y,
       trace_array_dict['axial'], cmap_string, y_tick_locations,
       two_way_travel_time_ms=qc_plot_input.two_way_travel_time_ms,

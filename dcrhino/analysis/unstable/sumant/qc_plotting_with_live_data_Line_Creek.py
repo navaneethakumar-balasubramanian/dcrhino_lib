@@ -94,6 +94,7 @@ for hole_id in hole_ids:
 #<Karl's method>
     time_vector = pd.date_range(start=mwd_df.time_start_hole.iloc[0], periods=num_traces_in_blasthole, freq='1S')
     depth = get_interpolated_column(time_vector, mwd_df, 'computed_elevation')
+    pdb.set_trace()
 #</Karl's method>
 #/Depth Conversion
     project_id='Line_Creek'
