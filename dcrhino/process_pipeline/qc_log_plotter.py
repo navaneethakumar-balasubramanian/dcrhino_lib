@@ -172,8 +172,16 @@ class QCLogPlotterv2():
     
         plt.subplots_adjust(right=10.5)
     
+    
+        #dt = 1./self.global_config.output_sampling_rate
+        #samples_back = (np.abs(lower_num_ms))/1000./dt
+        #samples_back = int(np.ceil(samples_back))
+        #samples_fwd = upper_num_ms/1000./dt
+        #samples_fwd = int(np.ceil(samples_fwd))
+      
         #<sort out yticks every 5 ms>
         dt_ms = 5
+        #dt_ms = 1./self.global_config.output_sampling_rate
         lowest_y_tick =  int(lower_num_ms/dt_ms)
         greatest_y_tick = int(upper_num_ms/dt_ms)
     
@@ -232,6 +240,11 @@ class QCLogPlotterv2():
         depth = self.extracted_features_df['depth']
         components = [self.axial,self.tangential,self.radial]
         trace_array_dict = {}
+        
+        print("Step 2: call the plotter");
+        lower_num_ms=-5.0
+        upper_num_ms=30.0
+        
         for i,component_label in enumerate(COMPONENT_LABELS):
     
             if self.plot_by_depth:
@@ -243,18 +256,24 @@ class QCLogPlotterv2():
             
             num_traces_in_blasthole, samples_per_trace = data.shape
             trace_array_dict[component_label] = data.T
+            n_samples = self.global_config.n_samples_trimmed_trace
+            dt = 1./self.global_config.output_sampling_rate
+            samples_back = (np.abs(lower_num_ms))/1000./dt
+            samples_back = int(np.ceil(samples_back))
+            samples_fwd = upper_num_ms/1000./dt
+            samples_fwd = int(np.ceil(samples_fwd))
+            half_way = int(n_samples/2)
+            trace_array_dict[component_label] = trace_array_dict[component_label][half_way-samples_back:half_way+samples_fwd,:]
     
             #total hack
-            if self.global_config.output_sampling_rate == 2400:
-                trace_array_dict[component_label] = trace_array_dict[component_label][240-12:240+72,:]
-            elif self.global_config.output_sampling_rate == 2800:
-                trace_array_dict[component_label] = trace_array_dict[component_label][280-14:280+84,:]
-            elif self.global_config.output_sampling_rate == 3200:
-                trace_array_dict[component_label] = trace_array_dict[component_label][320-16:320+96,:]
+            #if self.global_config.output_sampling_rate == 2400:
+            #    trace_array_dict[component_label] = trace_array_dict[component_label][240-12:240+72,:]
+            #elif self.global_config.output_sampling_rate == 2800:
+            ##    trace_array_dict[component_label] = trace_array_dict[component_label][280-14:280+84,:]
+            #elif self.global_config.output_sampling_rate == 3200:
+            #    trace_array_dict[component_label] = trace_array_dict[component_label][320-16:320+96,:]
     
-        print("Step 2: call the plotter");
-        lower_num_ms=-5.0
-        upper_num_ms=30.0
+        
     
         print('Normalizing amplitudes. If you want it not normalized, comment out the portion below')
         normalize_by_max_amplitude =  True
@@ -281,14 +300,20 @@ class QCLogPlotterv2():
                                                   peak_ampl_y=self.extracted_features_df['tangential_primary_peak_sample'],
                                                   peak_ampl_z=self.extracted_features_df['radial_primary_peak_sample'],
                                                   peak_mult_x=self.extracted_features_df['axial_multiple_peak_amplitude'],
-                                                  lower_number_ms=lower_num_ms, upper_number_ms=upper_num_ms,
+                                                  lower_number_ms=lower_num_ms, 
+                                                  upper_number_ms=upper_num_ms,
                                                   mwd_tstart = self.mwd_df[self.mwd_helper.start_time_column_name].iloc[0],
                                                   mwd_tend = self.mwd_df[self.mwd_helper.end_time_column_name].iloc[-1],
                                                   mwd_start_depth = depth[0],
                                                   mwd_end_depth = depth[-1],
                                                   collar_elevation = self.mwd_df[self.mwd_helper.collar_elevation_column_name].iloc[0],
     											  rock_type = '')
-    
+
+
+
+
+        
+        
         print('Passing values to plot code- supporting qc blasthole plots')
         self.qc_plot(self.mwd_df,qc_plot_input, self.output_file_path,plot_title, data_date, '', show=True,depth=self.plot_by_depth)
 
