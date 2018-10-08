@@ -61,6 +61,16 @@ def autocorrelate_trace(trace_data, n_pts):
     acorr = np.correlate(trace_data, trace_data,'same')
     return acorr[zero_time_index:zero_time_index+n_pts]
 
+def autocorrelate_trace_hankel_style(trace_data, n_pts):
+    """
+    TODO: make 2500 = len(trace)/2
+    confirm 5000 points is standard, or make depend on trace length
+    WARNING  wants even # points
+    """
+    zero_time_index = len(trace_data)//2
+    acorr = np.correlate(trace_data, trace_data,'same')
+    return acorr[zero_time_index:zero_time_index+n_pts]
+
 def deconvolve_trace(trace, filter_length, **kwargs):#plot=False):
     """
     20180526: variation on old process trace which was optimized to take advantage
