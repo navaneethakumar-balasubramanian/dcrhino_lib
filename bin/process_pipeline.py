@@ -622,4 +622,12 @@ for i,hole in enumerate(holes_array):
     extracted_features_df.to_csv(os.path.join(plot_meta['log_path'],"extracted_features.csv"))
 
     QCLogPlotter(qc_input)
+    
+    file = open(os.path.join(temppath,'log.txt'),'w') 
+     
+    file.write("H5 file path: " + str(args.h5_path))
+    file.write("\nMWD file path: " + str(args.mwd_path))
+    file.write("\nConfig file path: " + str(args.cfg_path))
+     
+    file.close() 
 
