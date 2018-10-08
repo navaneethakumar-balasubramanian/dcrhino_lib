@@ -164,31 +164,33 @@ def depth_vs_time_plot(ax,qc_plot_input):
 	IN TIME AND DEPTH. TO MAKE QC PLOTS IN TIME, UNCOMMENT ALL TIME PART OF THE
 	CODE AND COMMENT OUT DEPTH PART OF CODE IN THIS CLASS. FOR DEPTH, VICE VERSA
     """
-    time_axis = qc_plot_input.sub_mwd_time
+#
 
-#    depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)
+
 #    depth_axis = np.linspace(min(qc_plot_input.sub_mwd_depth_interp),max(qc_plot_input.sub_mwd_depth_interp),len(qc_plot_input.sub_mwd_depth))
 
     ax2 = ax.twinx()
 
-	##<time part>
-    ax.plot(time_axis, qc_plot_input.sub_mwd_depth, '*',label = 'Datapoints')
-    ax.plot(time_axis, qc_plot_input.sub_mwd_depth, label = 'Interpolated')
+#	##<time part>
+    time_axis = qc_plot_input.sub_mwd_time
+    ax.plot(time_axis, qc_plot_input.sub_mwd_depth, '*',label = 'Computed Elevation')
+    ax.plot(time_axis, qc_plot_input.sub_mwd_depth)
 
     ax2.plot(time_axis,qc_plot_input.sub_mwd_rop,label = 'RoP (m/hr)',color = 'r')
     ax.set_xlim(time_axis.iloc[0], time_axis.iloc[-1])
     ax.set_xlabel('Timestamps')
-	##</time part>
+#	##</time part>
 
 
-	##<depth part>
+	#<depth part>
+#    depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)
 #    ax.plot(depth_axis, qc_plot_input.sub_mwd_depth, '*',label = 'Datapoints')
 #    ax.plot(depth_axis, qc_plot_input.sub_mwd_depth, label = 'Interpolated')
 #
 #    ax2.plot(depth_axis,qc_plot_input.sub_mwd_rop,label = 'RoP (m/hr)',color = 'r')
 #    ax.set_xlim(depth_axis.iloc[0], depth_axis.iloc[-1])
 
-	##</depth part>
+	#</depth part>
 
 	#Labeling
     ax.legend(loc=2)
@@ -231,21 +233,22 @@ def fill_nan(A):
 def wob_tob_plot(ax,qc_plot_input):
     ax2 = ax.twinx()
 
-	#<Time part>
-    time_axis = qc_plot_input.sub_mwd_time
-    ax.plot(time_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
-    ax2.plot(time_axis, qc_plot_input.sub_mwd_tob, label = 'Torque on Bit',color = 'r')
-    ax.set_xlabel('Timestamps')
-    ax.set_xlim(time_axis.iloc[0], time_axis.iloc[-1])
-	#</Time part>
+##	#<Time part>
+#    time_axis = qc_plot_input.sub_mwd_time
+#    ax.plot(time_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
+#    ax2.plot(time_axis, qc_plot_input.sub_mwd_tob, label = 'Torque on Bit',color = 'r')
+#    ax.set_xlabel('Timestamps')
+#    ax.set_xlim(time_axis.iloc[0], time_axis.iloc[-1])
+#	#</Time part>
 
-	#<Depth Part>
-#    depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)
-#    ax.plot(depth_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
-#    ax2.plot(depth_axis, qc_plot_input.sub_mwd_tob,label = 'Torque on Bit',color = 'r')
-#    ax.set_xlabel('Depth (m)')
-#    ax.set_xlim(depth_axis.iloc[0], depth_axis.iloc[-1])
-	#</Depth Part>
+#	<Depth Part>
+    depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)
+    ax.plot(depth_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
+    ax2.plot(depth_axis, qc_plot_input.sub_mwd_tob,label = 'Torque on Bit',color = 'r')
+    ax.set_xlabel('Depth (m)')
+    ax.set_xlim(depth_axis.iloc[0], depth_axis.iloc[-1])
+    pdb.set_trace()
+#	</Depth Part>
 
 
 #Beautifying the plots (making informative)
@@ -310,7 +313,7 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
 	#if using depth plot
 #    depth_mwd =-1*(qc_plot_input.sub_mwd_depth_interp-qc_plot_input.collar_elevation)
 		#<choose X - depth>
-#    X = depth_vector
+#    X = depth_mwd
 
 	# Spread out Y
     Y = np.linspace(lower_num_ms, upper_num_ms, trace_array_dict[label].shape[0])
@@ -342,6 +345,7 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
 
 	#Generate Axial, Radial, Tangential heatmap plots
 
+    pdb.set_trace()
     ax[1], heatmap1 = plot_hole_as_heatmap(ax[1], cbal.v_min_1, cbal.v_max_1, X, Y,
       trace_array_dict['axial'], cmap_string, y_tick_locations,
       two_way_travel_time_ms=qc_plot_input.two_way_travel_time_ms,
@@ -367,8 +371,9 @@ def qc_plot(qc_plot_input, out_filename, plot_title,data_date, client_project_id
 
 		#<Labeling>
 
-    ax[0].text(1.01, 0.8, '{}'.format(data_date), fontsize=13, transform=ax[0].transAxes)
-    ax[0].text(1.01, 0.6, '{}'.format(client_project_id), fontsize=13, transform=ax[0].transAxes)
+    ax[0].text(1.01, 0.8, '{}'.format('Datacloud Int. Inc.'), fontsize=13, transform=ax[0].transAxes)
+    ax[0].text(1.01, 0.4, '{}'.format('Confidential, \nFor internal circulation'), fontsize=13, transform=ax[0].transAxes)
+
     ax[1].text(1.01, 0.5, 'axial', fontsize=11.5, rotation='vertical', transform=ax[1].transAxes)
     ax[2].text(1.01, 0.6, 'tangential', fontsize=11.5, rotation='vertical', transform=ax[2].transAxes)
     ax[3].text(1.01, 0.5, 'radial', fontsize=11.5, rotation='vertical', transform=ax[3].transAxes)

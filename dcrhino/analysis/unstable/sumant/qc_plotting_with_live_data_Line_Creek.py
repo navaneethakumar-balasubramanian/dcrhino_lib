@@ -37,11 +37,14 @@ print('To change the sensor, change the file path in data dir variable from')
 print('5208 to 5451')
 
 
+sensor = 5451
+
 home = os.path.expanduser("~/")
-data_dir = os.path.join(home, 'data/datacloud/line_creek/pipeline/ssx_5208')
+data_dir_new = os.path.join(home, 'data/datacloud/line_creek/pipeline/line_creek/5451/2800')
+#data_dir_old = os.path.join(home, 'data/datacloud/line_creek/pipeline/old/ssx_5451')
 
 print('Using just the holes for which we have data. In future, this will be modified')
-hole_ids = [23531, 23631, 23731, 23831, 23930, 24030]
+hole_ids = [23531, 23631, 23731, 23831, 23930]
 
 print('Extracted Features are Peak axial, radial and tangential and Multi axial')
 print('MWD data are ROP/WOB/TOB, Time, depth, collar elevation, computed elevation')
@@ -53,10 +56,14 @@ print('Reading all holes and plotting them')
 
 for hole_id in hole_ids:
 #    hole_id = 23831
-    feature_csv_filebase = '793 - MR_77 - {}_{}.csv'.format(hole_id, feature_flavour)
-    mwd_csv_filebase = '793 - MR_77 - {}_{}.csv'.format(hole_id, mwd_flavour)
-    feature_fullfile = os.path.join(data_dir, feature_csv_filebase)
-    mwd_fullfile = os.path.join(data_dir,mwd_csv_filebase)
+    file_path = '793-MR_77-{}'.format(hole_id)
+    cur_work_dir = os.path.join(data_dir_new,file_path)
+#    feature_csv_filebase = '793 - MR_77 - {}_{}.csv'.format(hole_id, feature_flavour)
+#    mwd_csv_filebase = '793 - MR_77 - {}_{}.csv'.format(hole_id, mwd_flavour)
+    feature_csv_filebase = 'extracted_features.csv'
+    mwd_csv_filebase = 'hole_mwd.csv'
+    feature_fullfile = os.path.join(cur_work_dir, feature_csv_filebase)
+    mwd_fullfile = os.path.join(cur_work_dir,mwd_csv_filebase)
     feature_df = pd.read_csv(feature_fullfile)
     mwd_df = pd.read_csv(mwd_fullfile, parse_dates=['time_start_hole','time_end_hole','time_start','time_end'])
     print(feature_df)
@@ -87,36 +94,39 @@ for hole_id in hole_ids:
 #<Karl's method>
     time_vector = pd.date_range(start=mwd_df.time_start_hole.iloc[0], periods=num_traces_in_blasthole, freq='1S')
     depth = get_interpolated_column(time_vector, mwd_df, 'computed_elevation')
+    pdb.set_trace()
 #</Karl's method>
 #/Depth Conversion
     project_id='Line_Creek'
-    sampling_rate = 2800.0#3200
+#    sampling_rate = 3200.0#3200
+    correlated_traces_sampling_rate = 2800;#normally set this = sampling_rate
     trace_array_dict = {}
     for component_label in COMPONENT_LABELS:
         print(hole_id)
         print(component_label)
-        traces_filename = '793 - MR_77 - {}_{}_deconvolved_traces.npy'.format(hole_id,component_label)#, row.hole, row.digitizer_id)
-
-        input_filename = os.path.join(data_dir,traces_filename)
+#        traces_filename = '793 - MR_77 - {}_{}_deconvolved_traces.npy'.format(hole_id,component_label)#, row.hole, row.digitizer_id)
+        traces_filename = '{}_filtered_correlated_traces.npy'.format(component_label)
+        input_filename = os.path.join(cur_work_dir,traces_filename)
 
         print(input_filename)
         print('Just doing some bookkeeping here- making output file name, plot titles etc.')
 
-        output_filename = '793 - MR_77 - {}_{}_QC_Plots.png'.format(hole_id,'Time')
+        output_filename = '793 - MR_77 - {}_{}_{}_QC_Plots.png'.format(hole_id,'Time',sensor)
 
-        plot_title = "Correlated Trace QC {} Plots_{}_{}".format('Time',project_id, hole_id)
+        plot_title = "Correlated Trace QC {} Plots,Project:{}, Hole:{}, Sensor:{},Drill_ID:{}".format('Time',project_id, hole_id,sensor,mwd_df.machine_id[0])
 
         print('Reading axial, tangential and radial numpy files')
         data = np.load(input_filename)
+        pdb.set_trace()
         num_traces_in_blasthole, samples_per_trace = data.shape
         trace_array_dict[component_label] = data.T
-
+#        pdb.set_trace()
         #total hack
-        if sampling_rate == 2400:
+        if correlated_traces_sampling_rate == 2400:
             trace_array_dict[component_label] = trace_array_dict[component_label][240-12:240+72,:]
-        elif sampling_rate == 2800:
+        elif correlated_traces_sampling_rate == 2800:
             trace_array_dict[component_label] = trace_array_dict[component_label][280-14:280+84,:]
-        elif sampling_rate == 3200:
+        elif correlated_traces_sampling_rate == 3200:
             trace_array_dict[component_label] = trace_array_dict[component_label][320-16:320+96,:]
 
         print("Step 2: call the plotter");
