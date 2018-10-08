@@ -11,60 +11,75 @@ import numpy as np
 from dcrhino.analysis.signal_processing.mwd_tools import get_interpolated_column
 
 class MwdDFHelper:
-
+    
     def __init__(self, df,
                  start_time_column,
                  end_time_column,
-                 end_depth_column,
+                 #end_depth_column,
                  bench_column,
                  pattern_column,
                  hole_column,
                  collar_elevation_column,
                  computed_elevation_column,
                  rig_id_column,
-                 mse_column):
+                 mse_column,
+                 rop_column,
+                 wob_column,
+                 tob_column):
 
         self.df = df
         self.start_time_column_name = start_time_column
         self.end_time_column_name = end_time_column
-        self.end_depth_column_name = end_depth_column
         self.bench_column_name = bench_column
         self.pattern_column_name = pattern_column
         self.hole_column_name = hole_column
         self.collar_elevation_column_name = collar_elevation_column
-        self.computed_elevation_column = computed_elevation_column
+        self.computed_elevation_column_name = computed_elevation_column
         self.rig_id_column_name = rig_id_column
         self.mse_column_name = mse_column
+        self.rop_column_name = rop_column
+        self.wob_column_name = wob_column
+        self.tob_column_name = tob_column
+        
 
-        self.expected_columns = [self.start_time_column_name,
-                                 self.end_time_column_name,
-                                 self.end_depth_column_name,
-                                 self.bench_column_name,
-                                 self.pattern_column_name,
-                                 self.hole_column_name,
-                                 self.collar_elevation_column_name,
-                                 self.computed_elevation_column,
-                                 self.rig_id_column_name,
-                                 self.mse_column_name
-                                 ]
+        self.expected_columns = {'start_time' : self.start_time_column_name ,
+                                 'end_time' : self.end_time_column_name,
+                                 'bench_name' : self.bench_column_name,
+                                 'pattern_name' : self.pattern_column_name,
+                                 'hole_name' : self.hole_column_name,
+                                 'collar_elevation' : self.collar_elevation_column_name,
+                                 'computed_elevation' : self.computed_elevation_column_name,
+                                 'rig_id' : self.rig_id_column_name,
+                                 'mse' : self.mse_column_name,
+                                 'rop' : self.rop_column_name,
+                                 'wob' : self.wob_column_name,
+                                 'tob' : self.tob_column_name
+                                 }
 
         # DO VALIDATIONS ON THE COLUMNS
-        if self._check_existing_columns() is False:
+        if self.check_existing_expected_columns(self.df) is False:
             return False
 
         # change from str to datetime columns
         self.df[start_time_column] = pd.to_datetime(self.df[start_time_column])
         self.df[end_time_column] = pd.to_datetime(self.df[end_time_column])
         
-        
-
-    def _check_existing_columns(self):
-        for column in self.expected_columns:
+            
+    def check_existing_expected_columns(self,mwd_df):
+        for key,column in self.expected_columns.iteritems():
             if column not in self.df.columns:
                 print ("Couldnt find " + str(column) + " in the mwd")
                 return False
         return True
 
+    def get_depth_column(self,mwd):
+        if self.computed_elevation_column_name in mwd.columns and self.collar_elevation_column_name in mwd.columns:
+            collar_elevation = mwd[self.collar_elevation_column_name].values[0]
+            return (mwd[self.computed_elevation_column_name] - collar_elevation) *-1
+        print ("No computed_elevation or collar_elevation in this mwd")
+        return False
+        
+        
     def get_holes_df_from_rig_timeinterval(self, mwd_df, rig_id, start_dtime, end_dtime):
         mwd_rig = mwd_df[mwd_df[self.rig_id_column_name].astype(str) == rig_id]
         if len(mwd_rig) == 0:
@@ -91,7 +106,8 @@ class MwdDFHelper:
         
         interpolated_column = get_interpolated_column(time_vector, mwd, column_name,end_time_column_label=self.end_time_column_name)
         return np.asarray(interpolated_column),time_vector
-        
+    
+    
 
     # split df by bench/pattern/hole
     def _split_df_to_bph_df(self, df):

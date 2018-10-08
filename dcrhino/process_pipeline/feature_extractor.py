@@ -7,7 +7,6 @@ from dcrhino.feature_extraction.supporting_minimal_feature_extraction import get
 from dcrhino.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_multiple_wavelet
 #from dcrhino.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_primary_wavelet
 
-
 ACOUSTIC_VELOCITY = 4755.0
 
 class WaveletForFeatureExtraction(object):
