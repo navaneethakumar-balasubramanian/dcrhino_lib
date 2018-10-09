@@ -248,7 +248,8 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
             if debug:
                 axial_deconvolved_trace = results_deconvolved[1]
                 radial_deconvolved_trace = results_deconvolved[2]
-                tangential_deconvolved_trace = results_deconvolved[0]
+                tangential_deconvolv2- Recuperou mais de R$ 278 milhões desviados em esquemas corrupção para o cofre da cidade;
+ed_trace = results_deconvolved[0]
                 
                 axial_filtered_correlated_trace = results_filtered[1]
                 radial_filtered_correlated_trace = results_filtered[2]
