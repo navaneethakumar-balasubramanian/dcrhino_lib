@@ -178,13 +178,13 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
         axial_interpolated_traces = [None] * interval_seconds
         radial_interpolated_traces = [None] * interval_seconds
         tangential_interpolated_traces = [None] * interval_seconds
-        
+
         axial_filtered_correlated_traces = [None] * interval_seconds
         radial_filtered_correlated_traces = [None] * interval_seconds
         tangential_filtered_correlated_traces = [None] * interval_seconds
 
     while actual_ts < end:
-        
+
         indexes_array_of_actual_second = get_ts_array_indexes(actual_ts,entire_ts_int)
 
         # PREVENT CRASH IF THERES NO DATA ON THE LASTS SECONDS OF THE HOLE
@@ -202,11 +202,11 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
             results_filtered = [None] * len(entire_xyz)
 
         for i, data in enumerate(entire_xyz):
-            
+
             #pdb.set_trace()
             actual_second = get_values_from_index(indexes_array_of_actual_second,data,np.float32)
             sensitivity = sensitivity_xyz[i]
-            
+
             calibrated_actual_second = apply_calibration(h5_helper.is_ide_file,actual_second,sensitivity,accelerometer_max_voltage)
             # Save to npy file calibrated_actual_second
             interpolated_actual_second = interpolate_data(global_config.ideal_timestamps, ts_actual_second, calibrated_actual_second)
@@ -216,7 +216,7 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
             #pdb.set_trace()
             trimmed_filtered_correlated_trace_actual_second = trim_trace(global_config.min_lag_trimmed_trace,global_config.max_lag_trimmed_trace,global_config.num_taps_in_decon_filter,global_config.output_sampling_rate,filtered_correlated_trace_actual_second)
             results[i] = trimmed_filtered_correlated_trace_actual_second
-            
+
             if debug:
                 results_deconvolved[i] = deconvolved_data_actual_second
                 results_interpolated[i] = interpolated_actual_second
@@ -227,12 +227,12 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
             axial_trace = results[0]
             tangential_trace = results[1]
             radial_trace = results[2]
-            
+
             if debug:
                 axial_deconvolved_trace = results_deconvolved[0]
                 radial_deconvolved_trace = results_deconvolved[2]
                 tangential_deconvolved_trace = results_deconvolved[1]
-               
+
                 axial_filtered_correlated_trace = results_filtered[0]
                 radial_filtered_correlated_trace = results_filtered[2]
                 tangential_filtered_correlated_trace = results_filtered[1]
@@ -249,7 +249,7 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
                 axial_deconvolved_trace = results_deconvolved[1]
                 radial_deconvolved_trace = results_deconvolved[2]
                 tangential_deconvolved_trace = results_deconvolved[0]
-                
+
                 axial_filtered_correlated_trace = results_filtered[1]
                 radial_filtered_correlated_trace = results_filtered[2]
                 tangential_filtered_correlated_trace = results_filtered[0]
@@ -292,7 +292,7 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
         axial_interpolated_traces = np.asarray(axial_interpolated_traces)
         tangential_interpolated_traces = np.asarray(tangential_interpolated_traces)
         radial_interpolated_traces = np.asarray(radial_interpolated_traces)
-        
+
         axial_filtered_correlated_traces = np.asarray(axial_filtered_correlated_traces)
         tangential_filtered_correlated_traces = np.asarray(tangential_filtered_correlated_traces)
         radial_filtered_correlated_traces = np.asarray(radial_filtered_correlated_traces)
@@ -301,14 +301,14 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
         np.save(debug_file_name+'axial_deconvolved_traces.npy',axial_deconvolved_traces)
         np.save(debug_file_name+'tangential_deconvolved_traces.npy',tangential_deconvolved_traces)
         np.save(debug_file_name+'radial_deconvolved_traces.npy',radial_deconvolved_traces)
-         
+
         np.save(debug_file_name+'axial_filtered_correlated_traces.npy',axial_filtered_correlated_traces)
         np.save(debug_file_name+'tangential_filtered_correlated_traces.npy',tangential_filtered_correlated_traces)
         np.save(debug_file_name+'radial_filtered_correlated_traces.npy',radial_filtered_correlated_traces)
 
         np.save(debug_file_name+'axial_interpolated_traces.npy',axial_interpolated_traces)
         np.save(debug_file_name+'tangential_interpolated_traces.npy',tangential_interpolated_traces)
-        np.save(debug_file_name+'radial_interpolated_traces.npy',radial_interpolated_traces) 
+        np.save(debug_file_name+'radial_interpolated_traces.npy',radial_interpolated_traces)
 
     return [axial_traces,tangential_traces,radial_traces,ts]
 
@@ -323,7 +323,7 @@ def get_features_extracted(extractor,axial_traces,tangential_traces,radial_trace
 
         if axial_trace is None:
             continue
-       
+
         extracted_features = extractor.extract_features(actual_ts,axial_trace,tangential_trace,radial_trace,global_config.n_samples_trimmed_trace,-global_config.min_lag_trimmed_trace)
         extracted_features_list[i] = extracted_features
 
@@ -367,7 +367,7 @@ def qc_plot2(output_path,plot_title,axial,tangential,radial,ts_array,lower_num_m
 
     idx = 0
     for component in components:
-        
+
         #alterations to plot / transpose / max_amplitude / slice by samples back and forward
         #pdb.set_trace()
         component = np.transpose(component)
@@ -413,7 +413,7 @@ def qc_plot2(output_path,plot_title,axial,tangential,radial,ts_array,lower_num_m
 
 
 
-    
+
 
 argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
 argparser.add_argument('-h5', '--h5-path', help="H5 File Path", default=None)
@@ -428,6 +428,8 @@ argparser.add_argument('-bc', '--bench-column', help="BENCH COLUMN", default='be
 argparser.add_argument('-ropc', '--rop-column', help="ROP COLUMN", default='rop')
 argparser.add_argument('-wobc', '--wob-column', help="WOB COLUMN", default='wob')
 argparser.add_argument('-tobc', '--tob-column', help="TOB COLUMN", default='tob')
+argparser.add_argument('-eastc', '--easting-column', help="EASTING COLUMN", default='easting')
+argparser.add_argument('-nortc', '--northing-column', help="NORTHING COLUMN", default='northing')
 argparser.add_argument('-pc', '--pattern-column', help="PATTERN COLUMN", default='pattern')
 argparser.add_argument('-cec', '--collar-elevation-column', help="COLLAR ELEVATION COLUMN", default='collar_elevation')
 argparser.add_argument('-compec', '--computed-elevation-column', help="COMPUTED ELEVATION COLUMN", default='computed_elevation')
@@ -443,11 +445,13 @@ hole_column = args.hole_column
 collar_elevation_column = args.collar_elevation_column
 computed_elevation_column = args.computed_elevation_column
 rig_id_column = args.rig_id_column
-interpolated_column_names = str(args.interpolated_column_names).split(",")   
+interpolated_column_names = str(args.interpolated_column_names).split(",")
 mse_column = args.mse_column
 rop_column = args.rop_column
 wob_column = args.wob_column
 tob_column = args.tob_column
+easting_column = args.easting_column
+northing_column = args.northing_column
 
 print ("H5 file path:" , args.h5_path)
 print ("MWD file path:" , args.mwd_path)
@@ -458,7 +462,7 @@ print ("Config file path:" , args.cfg_path)
 config_parser = ConfigParser()
 if args.cfg_path is not None:
     config_parser.read(args.cfg_path)
-    
+
 
 
 
@@ -483,7 +487,9 @@ mwd_helper = MwdDFHelper(mwd_df,
                        mse_column=mse_column,
                        rop_column=rop_column,
                        tob_column=tob_column,
-                       wob_column=wob_column)
+                       wob_column=wob_column,
+                       easting_column=easting_column,
+                       northing_column=northing_column)
 
 if mwd_helper is False:
     sys.exit("Error in mwd dataframe.")
@@ -527,14 +533,14 @@ for i,hole in enumerate(holes_array):
     end_ts = calendar.timegm(hole[end_time_column].max().timetuple())
     if start_ts < h5_helper.min_ts:
         start_ts = h5_helper.min_ts
-    
+
     if end_ts > h5_helper.max_ts:
         print("MWD HAS MORE TIME THAN THE H5" ,end_ts,int(h5_helper.max_ts))
         end_ts = int(h5_helper.max_ts)
 
-    
+
     temppath = io_helper.get_output_base_path(hole_uid)
-    
+
     startdt = datetime.utcfromtimestamp(start_ts)
     enddt = datetime.utcfromtimestamp(end_ts)
     periods = (enddt-startdt).total_seconds()
@@ -558,44 +564,44 @@ for i,hole in enumerate(holes_array):
         np.save(os.path.join(temppath,'tangential.npy'),tangential)
         np.save(os.path.join(temppath,'radial.npy'),radial)
         np.save(os.path.join(temppath,'ts.npy'),ts_array)
-    
+
     extracted_features_list = get_features_extracted(extractor,axial,tangential,radial,ts_array)
     extracted_features_df = pd.DataFrame(extracted_features_list)
     extracted_features_df['computed_elevation'], time_vector = mwd_helper.get_interpolated_column(hole,'computed_elevation',time_vector)
     extracted_features_df[mse_column], time_vector = mwd_helper.get_interpolated_column(hole,mse_column,time_vector)
-    
+
     if interpolated_column_names[0] != '':
         for column_name in interpolated_column_names:
             extracted_features_df[column_name], time_vector = mwd_helper.get_interpolated_column(hole,column_name,time_vector)
-    
+
     extracted_features_df['depth'] = (np.asarray(extracted_features_df['computed_elevation'].values) - hole[collar_elevation_column].values[0]) * -1
-    
+
     qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'depth_plot.png'),global_config)
     qclogplotter_depth.plot()
     qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'time_plot.png'),global_config,plot_by_depth=False)
     qclogplotter_time.plot()
 
     hole.to_csv( os.path.join( temppath, "hole_mwd.csv" ) )
-    
+
 
     qc_input = QCLogPlotInput()
     plot_meta = {}
-    
-   
+
+
     plot_meta['path'] = temppath#os.path.join(level3_csv_out_measurand.data_level_path(), 'unbinned', row.area)
     plot_meta['log_path'] = temppath
 
-    
 
-  
+
+
 
     plot_meta['rop_path'] = os.path.join(plot_meta['path'], 'rop')
- 
+
 
     plot_meta['log_filename'] = os.path.join(temppath,'qc_log.png')
     plot_meta['rop_filename'] = os.path.join(plot_meta['rop_path'],'.png')
 
-    
+
 
     # GENERATE QC PLOT
     title_line1 = "Correlated Trace QC Time Plots, {}, {}".format(global_config.mine_name, hole[start_time_column].min().strftime("%B %d, %Y"))
@@ -619,15 +625,17 @@ for i,hole in enumerate(holes_array):
     extracted_features_df['reflection_coefficient'] = pd.Series(qc_input.reflection_coefficient_sample, index = extracted_features_df.index)
     extracted_features_df['axial_delay'] = extracted_features_df['axial_multiple_peak_time_sample'] - extracted_features_df['axial_primary_peak_time_sample']
     extracted_features_df['axial_velocity_delay'] = 1.0/(extracted_features_df['axial_delay'])**3
+    extracted_features_df['easting'] = [hole[mwd_helper.easting_column_name].values[0]] * len(extracted_features_df['axial_delay'])
+    extracted_features_df['northing'] = [hole[mwd_helper.northing_column_name].values[0]] * len(extracted_features_df['axial_delay'])
+
     extracted_features_df.to_csv(os.path.join(plot_meta['log_path'],"extracted_features.csv"))
 
     QCLogPlotter(qc_input)
-    
-    file = open(os.path.join(temppath,'log.txt'),'w') 
-     
+
+    file = open(os.path.join(temppath,'log.txt'),'w')
+
     file.write("H5 file path: " + str(args.h5_path))
     file.write("\nMWD file path: " + str(args.mwd_path))
     file.write("\nConfig file path: " + str(args.cfg_path))
-     
-    file.close() 
 
+    file.close()
