@@ -115,7 +115,7 @@ class MwdDFHelper:
         df[self.pattern_column_name] = df[self.pattern_column_name].astype(str)
         df[self.hole_column_name] = df[self.hole_column_name].astype(str)
 
-        
+
         benchs = df[self.bench_column_name].unique()
         holes_dfs = []
         for bench in benchs:
@@ -125,6 +125,7 @@ class MwdDFHelper:
                 df_pattern = df_bench[df_bench[self.pattern_column_name] == pattern]
                 holes = df_pattern[self.hole_column_name].unique()
                 for hole in holes:
-                    holes_dfs.append(
-                        df_pattern[df_pattern[self.hole_column_name] == hole])
+                    hole_df = df_pattern[df_pattern[self.hole_column_name] == hole]
+                    hole_df = hole_df.sort_values(by=[self.start_time_column_name])
+                    holes_dfs.append(hole_df)
         return holes_dfs
