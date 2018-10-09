@@ -428,6 +428,8 @@ argparser.add_argument('-bc', '--bench-column', help="BENCH COLUMN", default='be
 argparser.add_argument('-ropc', '--rop-column', help="ROP COLUMN", default='rop')
 argparser.add_argument('-wobc', '--wob-column', help="WOB COLUMN", default='wob')
 argparser.add_argument('-tobc', '--tob-column', help="TOB COLUMN", default='tob')
+argparser.add_argument('-eastc', '--easting-column', help="EASTING COLUMN", default='easting')
+argparser.add_argument('-nortc', '--northing-column', help="NORTHING COLUMN", default='northing')
 argparser.add_argument('-pc', '--pattern-column', help="PATTERN COLUMN", default='pattern')
 argparser.add_argument('-cec', '--collar-elevation-column', help="COLLAR ELEVATION COLUMN", default='collar_elevation')
 argparser.add_argument('-compec', '--computed-elevation-column', help="COMPUTED ELEVATION COLUMN", default='computed_elevation')
@@ -448,6 +450,8 @@ mse_column = args.mse_column
 rop_column = args.rop_column
 wob_column = args.wob_column
 tob_column = args.tob_column
+easting_column = args.easting_column
+northing_column = args.northing_column
 
 print ("H5 file path:" , args.h5_path)
 print ("MWD file path:" , args.mwd_path)
@@ -483,7 +487,9 @@ mwd_helper = MwdDFHelper(mwd_df,
                        mse_column=mse_column,
                        rop_column=rop_column,
                        tob_column=tob_column,
-                       wob_column=wob_column)
+                       wob_column=wob_column,
+                       easting_column=easting_column,
+                       northing_column=northing_column)
 
 if mwd_helper is False:
     sys.exit("Error in mwd dataframe.")
@@ -619,6 +625,9 @@ for i,hole in enumerate(holes_array):
     extracted_features_df['reflection_coefficient'] = pd.Series(qc_input.reflection_coefficient_sample, index = extracted_features_df.index)
     extracted_features_df['axial_delay'] = extracted_features_df['axial_multiple_peak_time_sample'] - extracted_features_df['axial_primary_peak_time_sample']
     extracted_features_df['axial_velocity_delay'] = 1.0/(extracted_features_df['axial_delay'])**3
+    extracted_features_df['easting'] = [hole[mwd_helper.easting_column_name].values[0]] * len(extracted_features_df['axial_delay'])
+    extracted_features_df['northing'] = [hole[mwd_helper.northing_column_name].values[0]] * len(extracted_features_df['axial_delay'])
+
     extracted_features_df.to_csv(os.path.join(plot_meta['log_path'],"extracted_features.csv"))
 
     QCLogPlotter(qc_input)

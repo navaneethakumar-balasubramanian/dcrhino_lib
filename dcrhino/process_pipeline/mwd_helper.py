@@ -25,7 +25,9 @@ class MwdDFHelper:
                  mse_column,
                  rop_column,
                  wob_column,
-                 tob_column):
+                 tob_column,
+                 easting_column,
+                 northing_column):
 
         self.df = df
         self.start_time_column_name = start_time_column
@@ -40,6 +42,8 @@ class MwdDFHelper:
         self.rop_column_name = rop_column
         self.wob_column_name = wob_column
         self.tob_column_name = tob_column
+        self.easting_column_name = easting_column
+        self.northing_column_name = northing_column
 
 
         self.expected_columns = {'start_time' : self.start_time_column_name ,
@@ -53,7 +57,9 @@ class MwdDFHelper:
                                  'mse' : self.mse_column_name,
                                  'rop' : self.rop_column_name,
                                  'wob' : self.wob_column_name,
-                                 'tob' : self.tob_column_name
+                                 'tob' : self.tob_column_name,
+                                 'easting' : self.easting_column_name,
+                                 'northing' : self.northing_column_name,
                                  }
 
         # DO VALIDATIONS ON THE COLUMNS
@@ -114,7 +120,6 @@ class MwdDFHelper:
         df[self.bench_column_name] = df[self.bench_column_name].astype(str)
         df[self.pattern_column_name] = df[self.pattern_column_name].astype(str)
         df[self.hole_column_name] = df[self.hole_column_name].astype(str)
-
 
         benchs = df[self.bench_column_name].unique()
         holes_dfs = []
