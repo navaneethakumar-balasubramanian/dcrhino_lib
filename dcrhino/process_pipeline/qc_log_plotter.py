@@ -10,14 +10,14 @@ from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
 from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots09192018 import QCBlastholePlotInputs
 
 class QCLogPlotterv2():
-    
+
     def __init__(self,axial,tangential,radial,mwd_helper,mwd_df,extracted_features_df,plot_title_id,output_file_path,global_config,plot_by_depth=True):
-    
+
         self.axial = axial
         self.tangential = tangential
         self.radial = radial
         self.plot_title_id = plot_title_id
-        
+
         self.extracted_features_df = extracted_features_df
         self.mwd_df = mwd_df
         self.mwd_helper = mwd_helper
@@ -25,25 +25,25 @@ class QCLogPlotterv2():
         self.output_file_path = output_file_path
         self.global_config = global_config
         self.plot_by_depth = plot_by_depth
-    
+
     def depth_vs_time_plot(self,ax,qc_plot_input):
         """
         TODO: read PEP8
         code is read much more often than it it written
-    
+
     	The tricky part of code begins here. BE VERY CAREFUL WHEN MAKING QC PLOTS
     	IN TIME AND DEPTH. TO MAKE QC PLOTS IN TIME, UNCOMMENT ALL TIME PART OF THE
     	CODE AND COMMENT OUT DEPTH PART OF CODE IN THIS CLASS. FOR DEPTH, VICE VERSA
         """
         ax2 = ax.twinx()
         if self.plot_by_depth:
-            depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)        
+            depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)
             depth_axis = np.linspace(min(qc_plot_input.sub_mwd_depth_interp),max(qc_plot_input.sub_mwd_depth_interp),len(qc_plot_input.sub_mwd_depth))
             ax.plot(depth_axis, qc_plot_input.sub_mwd_depth, '*',label = 'Datapoints')
-            ax.plot(depth_axis, qc_plot_input.sub_mwd_depth, label = 'Interpolated')    
+            ax.plot(depth_axis, qc_plot_input.sub_mwd_depth, label = 'Interpolated')
             ax2.plot(depth_axis,qc_plot_input.sub_mwd_rop,label = 'RoP (m/hr)',color = 'r')
             ax.set_xlim(depth_axis[0], depth_axis[-1])
-        
+
         else:
         	##<time part>
             time_axis = qc_plot_input.sub_mwd_time
@@ -53,19 +53,19 @@ class QCLogPlotterv2():
             ax.set_xlim(time_axis.iloc[0], time_axis.iloc[-1])
             ax.set_xlabel('Timestamps')
         	##</time part>
-    
+
         ax.legend(loc=2)
         ax.set_ylabel('Computed \n Elevation (m)')
         ax2.legend(loc=1)
         ax2.set_ylabel('RoP (m/hr)')
-    
+
         return
 
-        
+
     def wob_tob_plot(self,ax,qc_plot_input):
         ax2 = ax.twinx()
-  
-        if self.plot_by_depth:    
+
+        if self.plot_by_depth:
             #<Depth Part>
             depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)
             ax.plot(depth_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
@@ -81,15 +81,15 @@ class QCLogPlotterv2():
             ax.set_xlabel('Timestamps')
             ax.set_xlim(time_axis.iloc[0], time_axis.iloc[-1])
             	#</Time part>
-       
+
     #Beautifying the plots (making informative)
         ax.legend(loc=2)
         ax2.legend(loc=1)
         ax.set_ylabel('force on \n bit (kN)')
         ax2.set_ylabel('Torque on \n bit (Nm)')
-    
+
         return
-    
+
     def header_plot(self,ax, X, qc_plot_input, plot_title, peak_amplitude_linewidth = 0.2):
         """
         	#Peak axial, radial, tangential and multiple plots
@@ -103,39 +103,39 @@ class QCLogPlotterv2():
         ax.set_ylim(0.0, 2.0)
         ax.set_xlim(X[0], X[-1])
         return
-        
+
     def qc_plot(self,hole_mwd,qc_plot_input, out_filename, plot_title,data_date, client_project_id,
                    two_way_travel_time_ms=None, peak_search_interval_ms=None, dpi=300, show=False,depth=False):
         """
         """
-        
+
         params = {'legend.fontsize': 'medium',
              'axes.labelsize': 'medium',
              'axes.titlesize':'medium',
              'xtick.labelsize':'medium',
              'ytick.labelsize':'medium'}
         plt.rcParams.update(params)
-    
+
         #<sort our colorbar business>
         colourbar_type = 'all_one'#'all_one' vs
         cbal = ColourBarAxisLimtis(colourbar_type=colourbar_type)#, v_min_1=-22)
         cmap_string = 'spring'; cmap_string = 'jet'
         #</sort our colorbar business>
-    
+
         #<Get inputs and reshape where appropriate>
         trace_array_dict = qc_plot_input.trace_array_dict
         lower_num_ms = qc_plot_input.lower_number_ms
         upper_num_ms = qc_plot_input.upper_number_ms
-    
+
         for label in COMPONENT_LABELS:
             trace_array_dict[label] = np.flipud(trace_array_dict[label])
         #</Get inputs and reshape where appropriate>
-    
+
         num_traces_per_component, num_samples = trace_array_dict[label].T.shape
-    
+
         time_vector = pd.date_range(start=qc_plot_input.sub_mwd_time.iloc[0], periods=num_traces_per_component, freq='1S')
             	    #<choose X - time>
-    
+
         if depth is not False:
             X ,time_vector= np.array( self.mwd_helper.get_interpolated_column(hole_mwd,self.mwd_helper.computed_elevation_column_name,time_vector))
             X = X.astype(float) - float(qc_plot_input.collar_elevation)
@@ -144,116 +144,116 @@ class QCLogPlotterv2():
         else:
             X = time_vector
         #   X = get_interpolated_column(time_vector, sub_mwd_df, 'computed_elevation')
-    
+
     	#if using depth plot
     #    depth_mwd =-1*(qc_plot_input.sub_mwd_depth_interp-qc_plot_input.collar_elevation)
     		#<choose X - depth>
     #    X = depth_vector
-    
+
     	# Spread out Y
         Y = np.linspace(lower_num_ms, upper_num_ms, trace_array_dict[label].shape[0])
         Y = np.flipud(Y)
-    
+
     #    Generate figure and axis objects to plot. 6 rows, not sharing X axis
         fig, ax = plt.subplots(nrows=6, sharex=False, figsize=(24,11))
-        
+
     # 	Old code to just generate peak and amplitude plots
     #    fig, ax = plt.subplots(nrows=4, sharex=False, figsize=(24,11))
-    
+
     	# Generate Peak plots
     	#Panel 1
-        
-        
+
+
         self.header_plot(ax[0], X, qc_plot_input, plot_title)
     	#Panel 5
         self.depth_vs_time_plot(ax[4],qc_plot_input)
     	#Panel 6
         self.wob_tob_plot(ax[5],qc_plot_input)
-    
+
         plt.subplots_adjust(right=10.5)
-    
-    
+
+
         #dt = 1./self.global_config.output_sampling_rate
         #samples_back = (np.abs(lower_num_ms))/1000./dt
         #samples_back = int(np.ceil(samples_back))
         #samples_fwd = upper_num_ms/1000./dt
         #samples_fwd = int(np.ceil(samples_fwd))
-      
+
         #<sort out yticks every 5 ms>
         dt_ms = 5
         #dt_ms = 1./self.global_config.output_sampling_rate
         lowest_y_tick =  int(lower_num_ms/dt_ms)
         greatest_y_tick = int(upper_num_ms/dt_ms)
-    
+
         y_tick_locations = dt_ms * np.arange(lowest_y_tick, greatest_y_tick + 1)
         #<sort out yticks every 5 ms>
-    
+
     	#Generate Axial, Radial, Tangential heatmap plots
-    
+
         ax[1], heatmap1 = plot_hole_as_heatmap(ax[1], cbal.v_min_1, cbal.v_max_1, X, Y,
           trace_array_dict['axial'], cmap_string, y_tick_locations,
           two_way_travel_time_ms=qc_plot_input.two_way_travel_time_ms,
           multiple_search_back_ms=qc_plot_input.multiple_search_back_ms,
           multiple_search_forward_ms=qc_plot_input.multiple_search_forward_ms)
-    
+
         if colourbar_type == 'each_axis':
             #[left, bottom, width, height],
             cbaxes = fig.add_axes([0.99, 0.54, 0.02, 0.18])
             cb = plt.colorbar(heatmap1, cax = cbaxes)
         ax[2], heatmap2 = plot_hole_as_heatmap(ax[2], cbal.v_min_2, cbal.v_max_2, X, Y,
           trace_array_dict['tangential'], cmap_string, y_tick_locations)#,
-    
+
         ax[3], heatmap3 = plot_hole_as_heatmap(ax[3], cbal.v_min_3, cbal.v_max_3, X, Y,
           trace_array_dict['radial'], cmap_string, y_tick_locations)#,
-    
+
         plt.tight_layout()
         if colourbar_type=='all_one':
             cbaxes = fig.add_axes([0.01, 0.1, 0.007, 0.8])
             cb = plt.colorbar(heatmap1, cax = cbaxes)
             plt.setp(cbaxes.get_xticklabels(), rotation='vertical', fontsize=10)
             cbaxes.yaxis.set_ticks_position('right')
-    
+
     		#<Labeling>
-    
+
         ax[0].text(1.01, 0.8, '{}'.format(data_date), fontsize=13, transform=ax[0].transAxes)
         ax[0].text(1.01, 0.6, '{}'.format(client_project_id), fontsize=13, transform=ax[0].transAxes)
         ax[1].text(1.01, 0.5, 'axial', fontsize=11.5, rotation='vertical', transform=ax[1].transAxes)
         ax[2].text(1.01, 0.6, 'tangential', fontsize=11.5, rotation='vertical', transform=ax[2].transAxes)
         ax[3].text(1.01, 0.5, 'radial', fontsize=11.5, rotation='vertical', transform=ax[3].transAxes)
     		# </Labelling>
-    
+
     #		<Need to figure out what the code below is for>
         if qc_plot_input.center_trace_dict is not None:
             for hole_id, center_trace in qc_plot_input.center_trace_dict.iteritems():
                 blasthole_string = 'blasthole_id {}'.format(hole_id)
                 ax[0].text(1.0*center_trace/ax[0].get_xbound()[1], -0.1,
                   blasthole_string, transform=ax[0].transAxes, fontsize=10)
-    
+
         plt.subplots_adjust(left=0.1)
         plt.subplots_adjust(right=0.9)
         plt.savefig(out_filename)
         plt.show()
         print("saving {}".format(out_filename))
-        
+
     def plot(self):
         data_date =  self.mwd_df[self.mwd_helper.start_time_column_name].dt.date.iloc[0]
         depth = self.extracted_features_df['depth']
         components = [self.axial,self.tangential,self.radial]
         trace_array_dict = {}
-        
+
         print("Step 2: call the plotter");
         lower_num_ms=-5.0
         upper_num_ms=30.0
-        
+
         for i,component_label in enumerate(COMPONENT_LABELS):
-    
+
             if self.plot_by_depth:
                 plot_title = "Correlated Trace QC {} Plots_{}".format('Depth',self.plot_title_id)
             else:
                 plot_title = "Correlated Trace QC {} Plots_{}".format('Time',self.plot_title_id)
 
             data = components[i]
-            
+
             num_traces_in_blasthole, samples_per_trace = data.shape
             trace_array_dict[component_label] = data.T
             n_samples = self.global_config.n_samples_trimmed_trace
@@ -264,7 +264,7 @@ class QCLogPlotterv2():
             samples_fwd = int(np.ceil(samples_fwd))
             half_way = int(n_samples/2)
             trace_array_dict[component_label] = trace_array_dict[component_label][half_way-samples_back:half_way+samples_fwd,:]
-    
+
             #total hack
             #if self.global_config.output_sampling_rate == 2400:
             #    trace_array_dict[component_label] = trace_array_dict[component_label][240-12:240+72,:]
@@ -272,9 +272,9 @@ class QCLogPlotterv2():
             ##    trace_array_dict[component_label] = trace_array_dict[component_label][280-14:280+84,:]
             #elif self.global_config.output_sampling_rate == 3200:
             #    trace_array_dict[component_label] = trace_array_dict[component_label][320-16:320+96,:]
-    
-        
-    
+
+
+
         print('Normalizing amplitudes. If you want it not normalized, comment out the portion below')
         normalize_by_max_amplitude =  True
         if normalize_by_max_amplitude:
@@ -285,7 +285,7 @@ class QCLogPlotterv2():
                 max_amplitudes = np.max(trace_array_dict[component_label], axis=0)
                 trace_array_dict[component_label] = trace_array_dict[component_label]/max_amplitudes
                 trace_array_dict[component_label][nans_locations] = np.nan
-    
+
         print('Normalization done. Creating inputs for plotting')
         depth = np.nan_to_num(depth)
         mwd_depth = self.mwd_helper.get_depth_column(self.mwd_df)
@@ -300,7 +300,7 @@ class QCLogPlotterv2():
                                                   peak_ampl_y=self.extracted_features_df['tangential_primary_peak_sample'],
                                                   peak_ampl_z=self.extracted_features_df['radial_primary_peak_sample'],
                                                   peak_mult_x=self.extracted_features_df['axial_multiple_peak_amplitude'],
-                                                  lower_number_ms=lower_num_ms, 
+                                                  lower_number_ms=lower_num_ms,
                                                   upper_number_ms=upper_num_ms,
                                                   mwd_tstart = self.mwd_df[self.mwd_helper.start_time_column_name].iloc[0],
                                                   mwd_tend = self.mwd_df[self.mwd_helper.end_time_column_name].iloc[-1],
@@ -312,8 +312,8 @@ class QCLogPlotterv2():
 
 
 
-        
-        
+
+
         print('Passing values to plot code- supporting qc blasthole plots')
         self.qc_plot(self.mwd_df,qc_plot_input, self.output_file_path,plot_title, data_date, '', show=True,depth=self.plot_by_depth)
 
@@ -394,6 +394,19 @@ class QCLogPlotter():
     def __init__(self, qc_plot_input, **kwargs):
         self.plot_vs_depth(qc_plot_input)
 
+
+    def ucs_panel(self,ax, qc_plot_input, x_limits=[None, None], sample_or_poly='sample'):
+        """
+        units are sqrt(amplitude)
+        """
+        if sample_or_poly == 'sample':
+            data = qc_plot_input.pseudo_ucs_sample
+        elif sample_or_poly == 'poly':
+            data = np.sqrt(qc_plot_input.axial_primary_peak_amplitude)
+        #pdb.set_trace()
+        well_log_panel_plot(ax, data, qc_plot_input.depth, 'pseudo UCS', '(uncalibrated)', x_limits=x_limits, color='grey')
+
+
     def reflection_coefficient_panel(self,ax, qc_plot_input, x_limits=[None, None], sample_or_poly='sample'):
         if sample_or_poly == 'sample':
             data = qc_plot_input.reflection_coefficient_sample
@@ -468,10 +481,12 @@ class QCLogPlotter():
         self.primary_pseudovelocity_panel(ax[i_ax], qc_plot_input,
                                      x_limits=[primary_width_xlim_min, primary_width_xlim_max])
 
+        ucs_xlim_min = 0.1; ucs_xlim_max = 0.9; i_ax += 1
+        self.ucs_panel(ax[i_ax], qc_plot_input, x_limits=[ucs_xlim_min, ucs_xlim_max])
 #        pseudodensity_xlim_min = None; pseudodensity_xlim_max = None; i_ax += 1
-        pseudodensity_xlim_min = 0.0; pseudodensity_xlim_max = 15.0; i_ax += 1
-        self.pseudodensity_panel(ax[i_ax], qc_plot_input,
-                            x_limits=[pseudodensity_xlim_min, pseudodensity_xlim_max])
+        #pseudodensity_xlim_min = 0.0; pseudodensity_xlim_max = 15.0; i_ax += 1
+        #self.pseudodensity_panel(ax[i_ax], qc_plot_input,
+        #                    x_limits=[pseudodensity_xlim_min, pseudodensity_xlim_max])
         #pdb.set_trace()
         plt.savefig(full_out_file)
         plt.clf()
