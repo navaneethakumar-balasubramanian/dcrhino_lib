@@ -394,6 +394,19 @@ class QCLogPlotter():
     def __init__(self, qc_plot_input, **kwargs):
         self.plot_vs_depth(qc_plot_input)
 
+
+    def ucs_panel(self,ax, qc_plot_input, x_limits=[None, None], sample_or_poly='sample'):
+        """
+        units are sqrt(amplitude)
+        """
+        if sample_or_poly == 'sample':
+            data = qc_plot_input.pseudo_ucs_sample
+        elif sample_or_poly == 'poly':
+            data = np.sqrt(qc_plot_input.axial_primary_peak_amplitude)
+        #pdb.set_trace()
+        well_log_panel_plot(ax, data, qc_plot_input.depth, 'pseudo UCS', '(uncalibrated)', x_limits=x_limits, color='grey')
+
+
     def reflection_coefficient_panel(self,ax, qc_plot_input, x_limits=[None, None], sample_or_poly='sample'):
         if sample_or_poly == 'sample':
             data = qc_plot_input.reflection_coefficient_sample
@@ -468,10 +481,12 @@ class QCLogPlotter():
         self.primary_pseudovelocity_panel(ax[i_ax], qc_plot_input,
                                      x_limits=[primary_width_xlim_min, primary_width_xlim_max])
 
+        ucs_xlim_min = 0.1; ucs_xlim_max = 0.9; i_ax += 1
+        self.ucs_panel(ax[i_ax], qc_plot_input, x_limits=[ucs_xlim_min, ucs_xlim_max])
 #        pseudodensity_xlim_min = None; pseudodensity_xlim_max = None; i_ax += 1
-        pseudodensity_xlim_min = 0.0; pseudodensity_xlim_max = 15.0; i_ax += 1
-        self.pseudodensity_panel(ax[i_ax], qc_plot_input,
-                            x_limits=[pseudodensity_xlim_min, pseudodensity_xlim_max])
+        #pseudodensity_xlim_min = 0.0; pseudodensity_xlim_max = 15.0; i_ax += 1
+        #self.pseudodensity_panel(ax[i_ax], qc_plot_input,
+        #                    x_limits=[pseudodensity_xlim_min, pseudodensity_xlim_max])
         #pdb.set_trace()
         plt.savefig(full_out_file)
         plt.clf()

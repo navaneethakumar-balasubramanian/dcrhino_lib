@@ -207,7 +207,7 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
             #pdb.set_trace()
             actual_second = get_values_from_index(indexes_array_of_actual_second,data,np.float32)
             sensitivity = sensitivity_xyz[i]
-
+            
             calibrated_actual_second = apply_calibration(h5_helper.is_ide_file,actual_second,sensitivity,accelerometer_max_voltage)
             # Save to npy file calibrated_actual_second
             interpolated_actual_second = interpolate_data(global_config.ideal_timestamps, ts_actual_second, calibrated_actual_second)
@@ -534,6 +534,7 @@ print ("Identified ", len(holes_array) , " holes in this combination of mwd and 
 extractor = FeatureExtractor(global_config.output_sampling_rate,global_config.primary_window_halfwidth_ms,global_config.multiple_window_search_width_ms,sensor_distance_to_source=global_config.sensor_distance_to_source)
 
 for i,hole in enumerate(holes_array):
+
     #if i <= 5:
     #    print ("Jumping hole")
     #    continue
