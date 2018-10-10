@@ -189,6 +189,7 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
 
         # PREVENT CRASH IF THERES NO DATA ON THE LASTS SECONDS OF THE HOLE
         if len(indexes_array_of_actual_second[0]) == 0:
+            print ("Missing " , actual_ts)
             actual_ts += 1
             continue
 
@@ -258,9 +259,10 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
                 radial_interpolated_trace = results_interpolated[2]
                 tangential_interpolated_trace = results_interpolated[0]
 
-        axial_traces[actual_ts-start_ts] = axial_trace
-        tangential_traces[actual_ts-start_ts] = tangential_trace
-        radial_traces[actual_ts-start_ts] = radial_trace
+
+        axial_traces[actual_ts-start_ts] = np.array(axial_trace)
+        tangential_traces[actual_ts-start_ts] = np.array(tangential_trace)
+        radial_traces[actual_ts-start_ts] = np.array(radial_trace)
         ts[actual_ts-start_ts] = actual_ts
 
         if debug:
@@ -279,10 +281,22 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
         actual_ts += 1
 
 
+    axial_traces = [x for x in axial_traces if x is not None]
+    tangential_traces = [x for x in tangential_traces if x is not None]
+    radial_traces = [x for x in radial_traces if x is not None]
+    ts = [x for x in ts if x is not None]
+
     axial_traces = np.asarray(axial_traces)
     tangential_traces = np.asarray(tangential_traces)
     radial_traces = np.asarray(radial_traces)
     ts = np.asarray(ts)
+
+    # Remove missing
+    #axial_traces = axial_traces[axial_traces != np.array(None)]
+    #tangential_traces = tangential_traces[axial_traces != np.array(None)]
+    #radial_traces = radial_traces[axial_traces != np.array(None)]
+    #ts = ts[axial_traces != np.array(None)]
+
 
     if debug:
         axial_deconvolved_traces = np.asarray(axial_deconvolved_traces)
@@ -314,7 +328,7 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
 
 def get_features_extracted(extractor,axial_traces,tangential_traces,radial_traces,ts_array):
     print ("Extracting features")
-
+    initial_ts = ts_array[0]
     extracted_features_list = [None] * len(ts_array)
     for i, actual_ts in enumerate(ts_array):
         axial_trace = axial_traces[i]
@@ -322,11 +336,13 @@ def get_features_extracted(extractor,axial_traces,tangential_traces,radial_trace
         radial_trace = radial_traces[i]
 
         if axial_trace is None:
+            print ("Missing " + str((initial_ts+i)) + " in this h5 file sequence")
             continue
 
         extracted_features = extractor.extract_features(actual_ts,axial_trace,tangential_trace,radial_trace,global_config.n_samples_trimmed_trace,-global_config.min_lag_trimmed_trace)
         extracted_features_list[i] = extracted_features
 
+    extracted_features_list = [x for x in extracted_features_list if x is not None]
     print ("Features extracted")
     return extracted_features_list
 
@@ -543,8 +559,9 @@ for i,hole in enumerate(holes_array):
 
     startdt = datetime.utcfromtimestamp(start_ts)
     enddt = datetime.utcfromtimestamp(end_ts)
-    periods = (enddt-startdt).total_seconds()
-    time_vector = pd.date_range(start=startdt, periods=periods, freq='1S')
+    #periods = (enddt-startdt).total_seconds()
+    #time_vector = pd.date_range(start=startdt, periods=periods, freq='1S')
+
 
     axial_file_path = os.path.join(temppath,'axial.npy')
     tangential_file_path = os.path.join(temppath,'tangential.npy')
@@ -566,6 +583,15 @@ for i,hole in enumerate(holes_array):
         np.save(os.path.join(temppath,'ts.npy'),ts_array)
 
     extracted_features_list = get_features_extracted(extractor,axial,tangential,radial,ts_array)
+
+    # CREATE TIMEVECTOR WITHOUT MISSING SECONDS
+    time_vector = [None]*len(extracted_features_list)
+    count = 0
+    for ts in ts_array:
+        if ts is not None:
+            time_vector[count] = datetime.utcfromtimestamp(int(ts))
+            count += 1
+
     extracted_features_df = pd.DataFrame(extracted_features_list)
     extracted_features_df['computed_elevation'], time_vector = mwd_helper.get_interpolated_column(hole,'computed_elevation',time_vector)
     extracted_features_df[mse_column], time_vector = mwd_helper.get_interpolated_column(hole,mse_column,time_vector)
@@ -575,7 +601,7 @@ for i,hole in enumerate(holes_array):
             extracted_features_df[column_name], time_vector = mwd_helper.get_interpolated_column(hole,column_name,time_vector)
 
     extracted_features_df['depth'] = (np.asarray(extracted_features_df['computed_elevation'].values) - hole[collar_elevation_column].values[0]) * -1
-
+    #pdb.set_trace()
     qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'depth_plot.png'),global_config)
     qclogplotter_depth.plot()
     qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'time_plot.png'),global_config,plot_by_depth=False)

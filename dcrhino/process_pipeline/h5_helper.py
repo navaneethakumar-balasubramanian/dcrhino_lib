@@ -31,9 +31,10 @@ class H5Helper:
 
         self.sensitivity_xyz = self._get_sensitivity_xyz()
         self.is_ide_file = self._is_ide_file()
+        #pdb.set_trace()
 
     def _is_ide_file(self):
-        if len(self._sensitivity) == 3:
+        if len(self._sensitivity) > 1:
             # self.is_ide_file = False
             return False
         else:
@@ -42,7 +43,7 @@ class H5Helper:
 
     def _get_sensitivity_xyz(self):
         self._sensitivity = self.h5f.get('sensitivity')
-        if len(self._sensitivity) == 3:
+        if len(self._sensitivity) > 1:
             self.x_sensitivity = self._sensitivity[0]
             self.y_sensitivity = self._sensitivity[1]
             self.z_sensitivity = self._sensitivity[2]
