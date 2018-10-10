@@ -17,7 +17,7 @@ class QCLogPlotterv2():
         self.tangential = tangential
         self.radial = radial
         self.plot_title_id = plot_title_id
-
+        pdb.set_trace()
         self.extracted_features_df = extracted_features_df
         self.mwd_df = mwd_df
         self.mwd_helper = mwd_helper
@@ -238,6 +238,7 @@ class QCLogPlotterv2():
     def plot(self):
         data_date =  self.mwd_df[self.mwd_helper.start_time_column_name].dt.date.iloc[0]
         depth = self.extracted_features_df['depth']
+        pdb.set_trace()
         components = [self.axial,self.tangential,self.radial]
         trace_array_dict = {}
 
@@ -296,10 +297,10 @@ class QCLogPlotterv2():
                                                   sub_mwd_depth = mwd_depth,
                                                   sub_mwd_wob = self.mwd_df[self.mwd_helper.wob_column_name]/1000.0,
                                                   sub_mwd_tob = self.mwd_df[self.mwd_helper.tob_column_name],
-                                                  peak_ampl_x=self.extracted_features_df['axial_primary_peak_amplitude'],
+                                                  peak_ampl_x=self.extracted_features_df['axial_primary_peak_sample'],
                                                   peak_ampl_y=self.extracted_features_df['tangential_primary_peak_sample'],
                                                   peak_ampl_z=self.extracted_features_df['radial_primary_peak_sample'],
-                                                  peak_mult_x=self.extracted_features_df['axial_multiple_peak_amplitude'],
+                                                  peak_mult_x=self.extracted_features_df['axial_multiple_peak_sample'],
                                                   lower_number_ms=lower_num_ms,
                                                   upper_number_ms=upper_num_ms,
                                                   mwd_tstart = self.mwd_df[self.mwd_helper.start_time_column_name].iloc[0],
