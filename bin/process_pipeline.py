@@ -54,14 +54,16 @@ def get_values_from_index(index_ar, values_ar, dtype):
 
 def apply_calibration(is_ide_file,values_arr,sensitivity,accelerometer_max_voltage):
     output = values_arr
+
+    #pdb.set_trace()
     if is_ide_file:
         # TODO CHECK THAT
         # NATAL SAID ITS CORRECT!
         return output / sensitivity
     else:
-        output = (output * 5) / 65535
-        output = (accelerometer_max_voltage/2) - output
-        output = output / (sensitivity/1000)
+        output = (output * 5.0) / 65535
+        output = (accelerometer_max_voltage/2.0) - output
+        output = output / (sensitivity/1000.0)
         return output
 
 def interpolate_data(ideal_timestamps, digitizer_timestamps, data):
@@ -204,10 +206,10 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
 
         for i, data in enumerate(entire_xyz):
 
-            #pdb.set_trace()
+
             actual_second = get_values_from_index(indexes_array_of_actual_second,data,np.float32)
             sensitivity = sensitivity_xyz[i]
-            
+
             calibrated_actual_second = apply_calibration(h5_helper.is_ide_file,actual_second,sensitivity,accelerometer_max_voltage)
             # Save to npy file calibrated_actual_second
             interpolated_actual_second = interpolate_data(global_config.ideal_timestamps, ts_actual_second, calibrated_actual_second)
