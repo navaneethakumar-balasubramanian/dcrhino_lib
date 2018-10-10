@@ -437,21 +437,6 @@ def main():
     wobc_string = 'wob'
     wobc_string = 'weight_on_bit'
 
-    options_string = '-h5 {} -mwd {} '.format(h5_full_filename, mwd_filename)
-    if icl_string is not None:
-        options_string = '{} -icl {}'.format(options_string, icl_string)
-    if ric_string is not None:
-        options_string = '{} -ric {}'.format(options_string, ric_string)
-    if sc_string is not None:
-        options_string = '{} -sc {}'.format(options_string, sc_string)
-    if ec_string is not None:
-        options_string = '{} -ec {}'.format(options_string, ec_string)
-    if mc_string is not None:
-        options_string = '{} -mc {}'.format(options_string, mc_string)
-    if tobc_string is not None:
-        options_string = '{} -tobc {}'.format(options_string, tobc_string)
-    if wobc_string is not None:
-        options_string = '{} -wobc {}'.format(options_string, wobc_string)
 
 
     argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
