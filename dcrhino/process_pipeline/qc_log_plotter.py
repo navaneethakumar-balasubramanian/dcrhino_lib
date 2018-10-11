@@ -17,7 +17,6 @@ class QCLogPlotterv2():
         self.tangential = tangential
         self.radial = radial
         self.plot_title_id = plot_title_id
-        pdb.set_trace()
         self.extracted_features_df = extracted_features_df
         self.mwd_df = mwd_df
         self.mwd_helper = mwd_helper
@@ -238,7 +237,6 @@ class QCLogPlotterv2():
     def plot(self):
         data_date =  self.mwd_df[self.mwd_helper.start_time_column_name].dt.date.iloc[0]
         depth = self.extracted_features_df['depth']
-        pdb.set_trace()
         components = [self.axial,self.tangential,self.radial]
         trace_array_dict = {}
 
@@ -388,6 +386,10 @@ class QCLogPlotInput(object):
         return 1. / self.primary_wavelet_width_sample
 
     @property
+    def axial_velocity_delay(self):
+        return self.df['axial_velocity_delay']
+
+    @property
     def primary_pseudo_density_sample(self):
         return 1e6 * self.reflection_coefficient_sample / self.primary_pseudo_velocity_sample**2
 
@@ -419,14 +421,39 @@ class QCLogPlotter():
         """
         units are 1/s or Hz
         """
+
         if sample_or_poly == 'sample':
-            data = qc_plot_input.primary_pseudo_velocity_sample
-            #x_limits = [4., 8., ]
-        elif sample_or_poly == 'poly':
-            data = 1000*qc_plot_input.primary_wavelet_width
-        well_log_panel_plot(ax, data,
+            ax2 = ax.twinx()
+
+            data_vel = qc_plot_input.primary_pseudo_velocity_sample
+
+            well_log_panel_plot(ax, data_vel,
                             qc_plot_input.depth, 'pseudo \n velocity (P)' , '(uncalibrated)',
                             x_limits=x_limits, color='blue')
+
+
+
+            #<SCALING AXIAL VELOCITY DELAY TO PLOT ON THE SAME PANEL. NEED TO KNOW THE UNITS
+            # OF PSEUDOVELOCITY AND VELOCITY DELAY, TO CORRECTLY SCALE IT TO SAME UNITS, MAY BE.
+            # ALSO VERY CRUDE WAY OF SCALING HERE. NEED TO DO IT BETTER. BUT FOR NOW, JUST TO MAKE IT PLOT
+
+            data_del= (qc_plot_input.axial_velocity_delay/10000.0)+180
+
+            well_log_panel_plot(ax2, data_del,
+                            qc_plot_input.depth, 'velocity delay \n scaled by 1e4' , '(uncalibrated)',
+                            x_limits=x_limits, color='red')
+
+
+            #x_limits = [4., 8., ]
+        elif sample_or_poly == 'poly':
+            data_vel = 1000*qc_plot_input.primary_wavelet_width
+
+            well_log_panel_plot(ax, data_vel,
+                            qc_plot_input.depth, 'pseudo \n velocity (P)' , '(uncalibrated)',
+                            x_limits=x_limits, color='blue')
+
+
+
 
     def pseudodensity_panel(self,ax, qc_plot_input, x_limits=[None, None], sample_or_poly='sample'):
         if sample_or_poly == 'sample':
