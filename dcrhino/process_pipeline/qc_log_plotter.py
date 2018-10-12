@@ -288,7 +288,7 @@ class QCLogPlotterv2():
         print('Normalization done. Creating inputs for plotting')
         depth = np.nan_to_num(depth)
         mwd_depth = self.mwd_helper.get_depth_column(self.mwd_df)
-        pdb.set_trace()
+        #pdb.set_trace()
         qc_plot_input = QCBlastholePlotInputs(trace_array_dict=trace_array_dict,
                                                   sub_mwd_time = self.mwd_df[self.mwd_helper.start_time_column_name],
                                                   sub_mwd_depth_interp = depth,
