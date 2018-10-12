@@ -530,7 +530,10 @@ def main():
 
     print ("Identified ", len(holes_array) , " holes in this combination of mwd and h5")
 
-    extractor = FeatureExtractor(global_config.output_sampling_rate,global_config.primary_window_halfwidth_ms,global_config.multiple_window_search_width_ms,sensor_distance_to_source=global_config.sensor_distance_to_source)
+    extractor = FeatureExtractor(global_config.output_sampling_rate,
+                                 global_config.primary_window_halfwidth_ms,
+                                 global_config.multiple_window_search_width_ms,
+                                 sensor_distance_to_source=global_config.sensor_distance_to_source)
 
     for i,hole in enumerate(holes_array):
         #if i <= 5:
