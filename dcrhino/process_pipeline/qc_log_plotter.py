@@ -231,7 +231,8 @@ class QCLogPlotterv2():
         plt.subplots_adjust(left=0.1)
         plt.subplots_adjust(right=0.9)
         plt.savefig(out_filename)
-        plt.show()
+        if show:
+            plt.show()
         print("saving {}".format(out_filename))
 
     def plot(self):
@@ -316,7 +317,7 @@ class QCLogPlotterv2():
 
 
         print('Passing values to plot code- supporting qc blasthole plots')
-        self.qc_plot(self.mwd_df,qc_plot_input, self.output_file_path,plot_title, data_date, '', show=True,depth=self.plot_by_depth)
+        self.qc_plot(self.mwd_df,qc_plot_input, self.output_file_path,plot_title, data_date, '', show=False,depth=self.plot_by_depth)
 
 
 

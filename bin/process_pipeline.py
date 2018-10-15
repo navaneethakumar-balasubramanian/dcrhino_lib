@@ -84,6 +84,9 @@ def autocorrelate_trace(trace_data, n_pts):
 def deconvolve_trace( deconvolution_filter_duration,num_taps_in_decon_filter, data):
         deconvolution_filter_duration = float(deconvolution_filter_duration)
         R_xx = autocorrelate_trace(data, num_taps_in_decon_filter)
+        # EMPTY DATA
+        if data.min() == 0.0 and data.max() == 0.0:
+            return data, R_xx[0]
         ATA = scipy.linalg.toeplitz(R_xx)
         nominal_scale_factor = 1.0;#1./R_xx[0]#1.0
         ATA = scipy.linalg.toeplitz(R_xx)
@@ -205,8 +208,6 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
             results_filtered = [None] * len(entire_xyz)
 
         for i, data in enumerate(entire_xyz):
-
-
             actual_second = get_values_from_index(indexes_array_of_actual_second,data,np.float32)
             sensitivity = sensitivity_xyz[i]
 
@@ -372,8 +373,9 @@ argparser.add_argument('-nortc', '--northing-column', help="NORTHING COLUMN", de
 argparser.add_argument('-pc', '--pattern-column', help="PATTERN COLUMN", default='pattern')
 argparser.add_argument('-cec', '--collar-elevation-column', help="COLLAR ELEVATION COLUMN", default='collar_elevation')
 argparser.add_argument('-compec', '--computed-elevation-column', help="COMPUTED ELEVATION COLUMN", default='computed_elevation')
+argparser.add_argument('-holeindex', '--hole-index', help="HOLE INDEX", default=False)
 argparser.add_argument('-icl', '--interpolated-column-names', help="INTERPOLATED COLUMN NAMES", default='')
-
+argparser.add_argument('-i', '--interactive-mode', help="INTERACTIVE MODE", default=False)
 args = argparser.parse_args()
 
 start_time_column = args.start_time_column
@@ -391,6 +393,8 @@ wob_column = args.wob_column
 tob_column = args.tob_column
 easting_column = args.easting_column
 northing_column = args.northing_column
+hole_index = args.hole_index
+interactive_mode = args.interactive_mode
 
 print ("H5 file path:" , args.h5_path)
 print ("MWD file path:" , args.mwd_path)
@@ -456,12 +460,24 @@ print ("Identified ", len(holes_array) , " holes in this combination of mwd and 
 
 extractor = FeatureExtractor(global_config.output_sampling_rate,global_config.primary_window_halfwidth_ms,global_config.multiple_window_search_width_ms,sensor_distance_to_source=global_config.sensor_distance_to_source)
 
-for i,hole in enumerate(holes_array):
+if interactive_mode:
+    for i,hole in enumerate(holes_array):
+        bph_string = str(hole[bench_column].values[0]) + "-" + str(hole[pattern_column].values[0])  + "-" + str(hole[hole_column].values[0])
+        print str(i) + " - " + bph_string
+    try:
+        hole_index=int(raw_input('Chose one hole number to be processed:'))
+    except ValueError:
+        print "Not a number"
+        exit()
 
-    #if i <= 5:
-    #    print ("Jumping hole")
-    #    continue
+
+
+for i,hole in enumerate(holes_array):
     bph_string = str(hole[bench_column].values[0]) + "-" + str(hole[pattern_column].values[0])  + "-" + str(hole[hole_column].values[0])
+    if hole_index and i != hole_index:
+        print ("Ignoring hole " + bph_string)
+        continue
+
     hole_uid = bph_string
     print ("Processing : " + bph_string + " from: " + str(hole[start_time_column].min()) + " to " + str(hole[end_time_column].max()))
 
