@@ -57,6 +57,7 @@ class QCBlastholePlotInputs(object):
         self.sub_mwd_tob = kwargs.get('sub_mwd_tob',None)
         self.sub_mwd_rop = kwargs.get('sub_mwd_rop',None)
         self.collar_elevation = kwargs.get('collar_elevation',None)
+        self.sub_mwd_mse = kwargs.get('sub_mwd_mse', None)
 		#</These are variables needed to generate plots>
 
         #<these numbers dictate the y axis bounds>

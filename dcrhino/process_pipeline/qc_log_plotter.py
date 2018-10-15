@@ -25,6 +25,7 @@ class QCLogPlotterv2():
         self.global_config = global_config
         self.plot_by_depth = plot_by_depth
 
+
     def depth_vs_time_plot(self,ax,qc_plot_input):
         """
         TODO: read PEP8
@@ -62,12 +63,15 @@ class QCLogPlotterv2():
 
 
     def wob_tob_plot(self,ax,qc_plot_input):
+        ax1 = ax.twinx()
         ax2 = ax.twinx()
+#        pdb.set_trace()
 
         if self.plot_by_depth:
             #<Depth Part>
             depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)
             ax.plot(depth_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
+            ax1.plot(depth_axis, qc_plot_input.sub_mwd_mse*1000,label = 'MSE (scaled by 1000)',color = 'g')
             ax2.plot(depth_axis, qc_plot_input.sub_mwd_tob,label = 'Torque on Bit',color = 'r')
             ax.set_xlabel('Depth (m)')
             ax.set_xlim(depth_axis.iloc[0], depth_axis.iloc[-1])
@@ -76,6 +80,7 @@ class QCLogPlotterv2():
             	#<Time part>
             time_axis = qc_plot_input.sub_mwd_time
             ax.plot(time_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
+            ax1.plot(time_axis, qc_plot_input.sub_mwd_mse*1000,label = 'MSE (scaled by 1000)',color = 'g')
             ax2.plot(time_axis, qc_plot_input.sub_mwd_tob, label = 'Torque on Bit',color = 'r')
             ax.set_xlabel('Timestamps')
             ax.set_xlim(time_axis.iloc[0], time_axis.iloc[-1])
@@ -83,9 +88,14 @@ class QCLogPlotterv2():
 
     #Beautifying the plots (making informative)
         ax.legend(loc=2)
-        ax2.legend(loc=1)
+        ax1.legend(loc=9)
+        ax2.legend(loc=3)
         ax.set_ylabel('force on \n bit (kN)')
-        ax2.set_ylabel('Torque on \n bit (Nm)')
+        ax1.set_ylabel('Torque on \n bit (Nm)')
+        ax2.set_ylabel('MSE (MPa)')
+
+#        ax2.set_ylim(min(qc_plot_input.sub_mwd_mse*1000),max(qc_plot_input.sub_mwd_mse*1000))
+        ax2.spines['right'].set_position(('outward',60))
 
         return
 
@@ -205,7 +215,7 @@ class QCLogPlotterv2():
         ax[3], heatmap3 = plot_hole_as_heatmap(ax[3], cbal.v_min_3, cbal.v_max_3, X, Y,
           trace_array_dict['radial'], cmap_string, y_tick_locations)#,
 
-        plt.tight_layout()
+#        plt.tight_layout()
         if colourbar_type=='all_one':
             cbaxes = fig.add_axes([0.01, 0.1, 0.007, 0.8])
             cb = plt.colorbar(heatmap1, cax = cbaxes)
@@ -289,7 +299,7 @@ class QCLogPlotterv2():
         print('Normalization done. Creating inputs for plotting')
         depth = np.nan_to_num(depth)
         mwd_depth = self.mwd_helper.get_depth_column(self.mwd_df)
-        #pdb.set_trace()
+
         qc_plot_input = QCBlastholePlotInputs(trace_array_dict=trace_array_dict,
                                                   sub_mwd_time = self.mwd_df[self.mwd_helper.start_time_column_name],
                                                   sub_mwd_depth_interp = depth,

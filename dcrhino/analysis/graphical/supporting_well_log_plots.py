@@ -26,11 +26,13 @@ def get_title_line_2(project_id, plot_input):
         pattern = "Pattern: {}".format(plot_input.observer_row.pattern)
         hole = "Hole: {}".format(plot_input.observer_row.hole)
         hId = "Hole ID: {}".format(plot_input.observer_row.hole_id)
-        title_line2 = ", ".join([bench, pattern, hole, hId, plot_input.mount_point])
+        Orientation = "Orientation:{}".format(plot_input.observer_row.orientation)
+        title_line2 = ", ".join([bench, pattern, hole, hId, Orientation, plot_input.mount_point])
     elif project_id == 'west_angelas':
         hole = "Hole: {}".format(plot_input.observer_row.hole_uid)
         area = "Area: {}".format(plot_input.observer_row.area)
         sps = "sps: {}Hz".format(plot_input.observer_row.sampling_rate)
+        Orientation = "Orientation:{}".format(plot_input.observer_row.orientation)
         #pdb.set_trace()
         try:
             drill = "Drill: {}".format(plot_input.observer_row.drill_id)
@@ -40,7 +42,7 @@ def get_title_line_2(project_id, plot_input):
             sensor_distance_to_source = "sensor-source distance: {:.2f}".format(plot_input.observer_row.sensor_distance_to_source)
         except AttributeError:
             sensor_distance_to_source = "sensor-source distance: {:.2f}".format(plot_input.observer_row.sensor_source_distance)
-        title_line2 = ", ".join([area, hole, drill, sensor_distance_to_source, sps])
+        title_line2 = ", ".join([area, hole, drill, sensor_distance_to_source, Orientation,sps])
        # pdb.set_trace()
     return title_line2
 
@@ -64,9 +66,14 @@ def well_log_panel_plot(ax, log_data, depth, data_label, x_label, x_limits=[None
     """
     if color is not None:
         ax.plot(log_data, depth, label=data_label, color=color)
+        if color == 'red':
+                ax.legend(loc = 1)
+        else:
+                ax.legend(loc = 2)
+
     else:
         ax.plot(log_data, depth, label=data_label)
-    ax.legend()
+#    ax.legend()
     ax.set_xlabel(x_label, fontsize=label_fontsize)
     ax.set_ylabel('Depth (m)', fontsize=label_fontsize)
 
@@ -88,6 +95,7 @@ def well_log_panel_plot(ax, log_data, depth, data_label, x_label, x_limits=[None
     ax.yaxis.grid(True,'minor')
     ax.yaxis.grid(True,'major',linewidth=2)
     return
+
 
 
 def well_log_panel_plot_multi(ax, log_data_list, depth, data_label_list, x_label, x_limits=[None, None],
