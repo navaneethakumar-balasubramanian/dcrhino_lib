@@ -84,6 +84,9 @@ def autocorrelate_trace(trace_data, n_pts):
 def deconvolve_trace( deconvolution_filter_duration,num_taps_in_decon_filter, data):
         deconvolution_filter_duration = float(deconvolution_filter_duration)
         R_xx = autocorrelate_trace(data, num_taps_in_decon_filter)
+        # EMPTY DATA
+        if data.min() == 0.0 and data.max() == 0.0:
+            return data, R_xx[0]
         ATA = scipy.linalg.toeplitz(R_xx)
         nominal_scale_factor = 1.0;#1./R_xx[0]#1.0
         ATA = scipy.linalg.toeplitz(R_xx)
@@ -205,8 +208,6 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
             results_filtered = [None] * len(entire_xyz)
 
         for i, data in enumerate(entire_xyz):
-
-
             actual_second = get_values_from_index(indexes_array_of_actual_second,data,np.float32)
             sensitivity = sensitivity_xyz[i]
 
@@ -351,85 +352,6 @@ def get_features_extracted(extractor,axial_traces,tangential_traces,radial_trace
 
 
 
-def _header_plot(ax, X, peak_ampl_y,peak_ampl_z,peak_mult_x,peak_ampl_x, plot_title, peak_amplitude_linewidth = 0.2):
-    """
-    """
-    #ax.plot(X, peak_ampl_y, label='peak_y', linewidth=peak_amplitude_linewidth)
-    #ax.plot(X, peak_ampl_z, label='peak_z', linewidth=peak_amplitude_linewidth)
-    #ax.plot(X, peak_mult_x, label='mult_x', linewidth=peak_amplitude_linewidth)
-    #ax.plot(X, peak_ampl_x, label='peak_x', linewidth=peak_amplitude_linewidth)
-    ax.legend()
-    ax.set_title(plot_title)
-    ax.set_ylim(0.0, 2.0)
-    ax.set_xlim(X[0], X[-1])
-    return
-
-
-
-
-
-
-
-def qc_plot2(output_path,plot_title,axial,tangential,radial,ts_array,lower_num_ms=-5,upper_num_ms=30,cmap_string='jet',colourbar_type='all_one'):
-
-    #cbal = ColourBarAxisLimtis(colourbar_type=colourbar_type)#, v_min_1=-22)
-
-    components = [axial, tangential, radial]
-    dt_ms = 5
-    lowest_y_tick =  int(lower_num_ms/dt_ms)
-    greatest_y_tick = int(upper_num_ms/dt_ms)
-    y_tick_locations = dt_ms * np.arange(lowest_y_tick, greatest_y_tick + 1)
-
-    plt.tight_layout()
-    fig, ax = plt.subplots(nrows=4, sharex=False, figsize=(24,11))
-
-    idx = 0
-    for component in components:
-
-        #alterations to plot / transpose / max_amplitude / slice by samples back and forward
-        #pdb.set_trace()
-        component = np.transpose(component)
-        n_samples = global_config.n_samples_trimmed_trace
-        max_amplitudes = np.max(component, axis=0)
-        component = component/max_amplitudes
-        dt = 1./global_config.output_sampling_rate
-        samples_back = (np.abs(lower_num_ms))/1000./dt
-        samples_back = int(np.ceil(samples_back))
-        samples_fwd = upper_num_ms/1000./dt
-        samples_fwd = int(np.ceil(samples_fwd))
-        half_way = int(n_samples/2)
-        component = component[half_way-samples_back:half_way+samples_fwd,:]
-        component = np.flipud(component)
-
-        Y = np.linspace(lower_num_ms, upper_num_ms, len(component))
-        Y = np.flipud(Y)
-        X = pd.date_range(start=datetime.utcfromtimestamp(int(ts_array[0])), periods=len(component[0]), freq='1S')
-        ax[idx+1], heatmap = plot_hole_as_heatmap(ax[idx+1], -0.5, 0.5, X, Y, component, cmap_string, y_tick_locations)
-        idx +=1
-
-
-    header_plot(ax[0], X, None,None,None,None, plot_title)
-
-    plt.savefig(output_path)
-    plt.clf()
-
-# def extract_metadata_from_h5_file(h5f):
-#     config = ConfigParser.ConfigParser()
-#     for key,value in h5f.attrs.iteritems():
-#         #print(key,value)
-#         section = key.split("/")[0]
-#         param_name = key.split("/")[1]
-#         #pdb.set_trace()
-#         if config.has_section(section):
-#             config.set(section,param_name,value)
-#         else:
-#             config.add_section(section)
-#             config.set(section,param_name,value)
-#     m =Metadata(config)
-#     return m
-
-
-
 
 
 
@@ -451,8 +373,9 @@ argparser.add_argument('-nortc', '--northing-column', help="NORTHING COLUMN", de
 argparser.add_argument('-pc', '--pattern-column', help="PATTERN COLUMN", default='pattern')
 argparser.add_argument('-cec', '--collar-elevation-column', help="COLLAR ELEVATION COLUMN", default='collar_elevation')
 argparser.add_argument('-compec', '--computed-elevation-column', help="COMPUTED ELEVATION COLUMN", default='computed_elevation')
+argparser.add_argument('-holeindex', '--hole-index', help="HOLE INDEX", default=False)
 argparser.add_argument('-icl', '--interpolated-column-names', help="INTERPOLATED COLUMN NAMES", default='')
-
+argparser.add_argument('-i', '--interactive-mode', help="INTERACTIVE MODE", default=False)
 args = argparser.parse_args()
 
 start_time_column = args.start_time_column
@@ -470,6 +393,8 @@ wob_column = args.wob_column
 tob_column = args.tob_column
 easting_column = args.easting_column
 northing_column = args.northing_column
+hole_index = args.hole_index
+interactive_mode = args.interactive_mode
 
 print ("H5 file path:" , args.h5_path)
 print ("MWD file path:" , args.mwd_path)
@@ -535,12 +460,24 @@ print ("Identified ", len(holes_array) , " holes in this combination of mwd and 
 
 extractor = FeatureExtractor(global_config.output_sampling_rate,global_config.primary_window_halfwidth_ms,global_config.multiple_window_search_width_ms,sensor_distance_to_source=global_config.sensor_distance_to_source)
 
-for i,hole in enumerate(holes_array):
+if interactive_mode:
+    for i,hole in enumerate(holes_array):
+        bph_string = str(hole[bench_column].values[0]) + "-" + str(hole[pattern_column].values[0])  + "-" + str(hole[hole_column].values[0])
+        print str(i) + " - " + bph_string
+    try:
+        hole_index=int(raw_input('Chose one hole number to be processed:'))
+    except ValueError:
+        print "Not a number"
+        exit()
 
-    #if i <= 5:
-    #    print ("Jumping hole")
-    #    continue
+
+
+for i,hole in enumerate(holes_array):
     bph_string = str(hole[bench_column].values[0]) + "-" + str(hole[pattern_column].values[0])  + "-" + str(hole[hole_column].values[0])
+    if hole_index and i != hole_index:
+        print ("Ignoring hole " + bph_string)
+        continue
+
     hole_uid = bph_string
     print ("Processing : " + bph_string + " from: " + str(hole[start_time_column].min()) + " to " + str(hole[end_time_column].max()))
 

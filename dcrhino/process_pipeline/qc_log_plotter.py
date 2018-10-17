@@ -17,7 +17,6 @@ class QCLogPlotterv2():
         self.tangential = tangential
         self.radial = radial
         self.plot_title_id = plot_title_id
-
         self.extracted_features_df = extracted_features_df
         self.mwd_df = mwd_df
         self.mwd_helper = mwd_helper
@@ -25,6 +24,7 @@ class QCLogPlotterv2():
         self.output_file_path = output_file_path
         self.global_config = global_config
         self.plot_by_depth = plot_by_depth
+
 
     def depth_vs_time_plot(self,ax,qc_plot_input):
         """
@@ -63,12 +63,15 @@ class QCLogPlotterv2():
 
 
     def wob_tob_plot(self,ax,qc_plot_input):
+        ax1 = ax.twinx()
         ax2 = ax.twinx()
+#        pdb.set_trace()
 
         if self.plot_by_depth:
             #<Depth Part>
             depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)
             ax.plot(depth_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
+            ax1.plot(depth_axis, qc_plot_input.sub_mwd_mse*1000,label = 'MSE (scaled by 1000)',color = 'g')
             ax2.plot(depth_axis, qc_plot_input.sub_mwd_tob,label = 'Torque on Bit',color = 'r')
             ax.set_xlabel('Depth (m)')
             ax.set_xlim(depth_axis.iloc[0], depth_axis.iloc[-1])
@@ -77,6 +80,7 @@ class QCLogPlotterv2():
             	#<Time part>
             time_axis = qc_plot_input.sub_mwd_time
             ax.plot(time_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
+            ax1.plot(time_axis, qc_plot_input.sub_mwd_mse*1000,label = 'MSE (scaled by 1000)',color = 'g')
             ax2.plot(time_axis, qc_plot_input.sub_mwd_tob, label = 'Torque on Bit',color = 'r')
             ax.set_xlabel('Timestamps')
             ax.set_xlim(time_axis.iloc[0], time_axis.iloc[-1])
@@ -84,9 +88,14 @@ class QCLogPlotterv2():
 
     #Beautifying the plots (making informative)
         ax.legend(loc=2)
-        ax2.legend(loc=1)
+        ax1.legend(loc=9)
+        ax2.legend(loc=3)
         ax.set_ylabel('force on \n bit (kN)')
-        ax2.set_ylabel('Torque on \n bit (Nm)')
+        ax1.set_ylabel('Torque on \n bit (Nm)')
+        ax2.set_ylabel('MSE (MPa)')
+
+#        ax2.set_ylim(min(qc_plot_input.sub_mwd_mse*1000),max(qc_plot_input.sub_mwd_mse*1000))
+        ax2.spines['right'].set_position(('outward',60))
 
         return
 
@@ -206,7 +215,7 @@ class QCLogPlotterv2():
         ax[3], heatmap3 = plot_hole_as_heatmap(ax[3], cbal.v_min_3, cbal.v_max_3, X, Y,
           trace_array_dict['radial'], cmap_string, y_tick_locations)#,
 
-        plt.tight_layout()
+#        plt.tight_layout()
         if colourbar_type=='all_one':
             cbaxes = fig.add_axes([0.01, 0.1, 0.007, 0.8])
             cb = plt.colorbar(heatmap1, cax = cbaxes)
@@ -232,7 +241,8 @@ class QCLogPlotterv2():
         plt.subplots_adjust(left=0.1)
         plt.subplots_adjust(right=0.9)
         plt.savefig(out_filename)
-        plt.show()
+        if show:
+            plt.show()
         print("saving {}".format(out_filename))
 
     def plot(self):
@@ -289,6 +299,7 @@ class QCLogPlotterv2():
         print('Normalization done. Creating inputs for plotting')
         depth = np.nan_to_num(depth)
         mwd_depth = self.mwd_helper.get_depth_column(self.mwd_df)
+
         qc_plot_input = QCBlastholePlotInputs(trace_array_dict=trace_array_dict,
                                                   sub_mwd_time = self.mwd_df[self.mwd_helper.start_time_column_name],
                                                   sub_mwd_depth_interp = depth,
@@ -296,10 +307,11 @@ class QCLogPlotterv2():
                                                   sub_mwd_depth = mwd_depth,
                                                   sub_mwd_wob = self.mwd_df[self.mwd_helper.wob_column_name]/1000.0,
                                                   sub_mwd_tob = self.mwd_df[self.mwd_helper.tob_column_name],
-                                                  peak_ampl_x=self.extracted_features_df['axial_primary_peak_amplitude'],
+                                                  sub_mwd_mse = self.mwd_df[self.mwd_helper.mse_column_name],
+                                                  peak_ampl_x=self.extracted_features_df['axial_primary_peak_sample'],
                                                   peak_ampl_y=self.extracted_features_df['tangential_primary_peak_sample'],
                                                   peak_ampl_z=self.extracted_features_df['radial_primary_peak_sample'],
-                                                  peak_mult_x=self.extracted_features_df['axial_multiple_peak_amplitude'],
+                                                  peak_mult_x=self.extracted_features_df['axial_multiple_peak_sample'],
                                                   lower_number_ms=lower_num_ms,
                                                   upper_number_ms=upper_num_ms,
                                                   mwd_tstart = self.mwd_df[self.mwd_helper.start_time_column_name].iloc[0],
@@ -315,7 +327,7 @@ class QCLogPlotterv2():
 
 
         print('Passing values to plot code- supporting qc blasthole plots')
-        self.qc_plot(self.mwd_df,qc_plot_input, self.output_file_path,plot_title, data_date, '', show=True,depth=self.plot_by_depth)
+        self.qc_plot(self.mwd_df,qc_plot_input, self.output_file_path,plot_title, data_date, '', show=False,depth=self.plot_by_depth)
 
 
 
@@ -387,6 +399,10 @@ class QCLogPlotInput(object):
         return 1. / self.primary_wavelet_width_sample
 
     @property
+    def axial_velocity_delay(self):
+        return self.df['axial_velocity_delay']
+
+    @property
     def primary_pseudo_density_sample(self):
         return 1e6 * self.reflection_coefficient_sample / self.primary_pseudo_velocity_sample**2
 
@@ -418,14 +434,39 @@ class QCLogPlotter():
         """
         units are 1/s or Hz
         """
+
         if sample_or_poly == 'sample':
-            data = qc_plot_input.primary_pseudo_velocity_sample
-            #x_limits = [4., 8., ]
-        elif sample_or_poly == 'poly':
-            data = 1000*qc_plot_input.primary_wavelet_width
-        well_log_panel_plot(ax, data,
+            ax2 = ax.twinx()
+
+            data_vel = qc_plot_input.primary_pseudo_velocity_sample
+
+            well_log_panel_plot(ax, data_vel,
                             qc_plot_input.depth, 'pseudo \n velocity (P)' , '(uncalibrated)',
                             x_limits=x_limits, color='blue')
+
+
+
+            #<SCALING AXIAL VELOCITY DELAY TO PLOT ON THE SAME PANEL. NEED TO KNOW THE UNITS
+            # OF PSEUDOVELOCITY AND VELOCITY DELAY, TO CORRECTLY SCALE IT TO SAME UNITS, MAY BE.
+            # ALSO VERY CRUDE WAY OF SCALING HERE. NEED TO DO IT BETTER. BUT FOR NOW, JUST TO MAKE IT PLOT
+
+            data_del= (qc_plot_input.axial_velocity_delay/10000.0)+180
+
+            well_log_panel_plot(ax2, data_del,
+                            qc_plot_input.depth, 'velocity delay \n scaled by 1e4' , '(uncalibrated)',
+                            x_limits=x_limits, color='red')
+
+
+            #x_limits = [4., 8., ]
+        elif sample_or_poly == 'poly':
+            data_vel = 1000*qc_plot_input.primary_wavelet_width
+
+            well_log_panel_plot(ax, data_vel,
+                            qc_plot_input.depth, 'pseudo \n velocity (P)' , '(uncalibrated)',
+                            x_limits=x_limits, color='blue')
+
+
+
 
     def pseudodensity_panel(self,ax, qc_plot_input, x_limits=[None, None], sample_or_poly='sample'):
         if sample_or_poly == 'sample':

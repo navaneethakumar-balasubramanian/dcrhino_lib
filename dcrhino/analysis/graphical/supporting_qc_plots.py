@@ -134,6 +134,17 @@ def header_plot(ax, X, qc_plot_input, out_filename, peak_amplitude_linewidth = 0
     ax.set_ylim(0.0, 2.0)
     return
 
+def rop_plot(ax,X,rop_plot_input, mwd_tstart,mwd_tend,
+             mwd_start_depth,mwd_end_depth,
+             out_filename,TD_linewidth = 0.2, ROP_linewidth = 0.3):
+    """
+    """
+    ax.plot(X,rop_plot_input.TD,label='TvsD', linewidth = TD_linewidth)
+    ax.plot(X,rop_plot_input.ROP,label='ROP',linewidth = ROP_linewidth)
+    ax.legend()
+    ax.set_xlim(mwd_tstart,mwd_tend)
+    ax.set_ylim(mwd_start_depth,mwd_end_depth)
+    return
 
 
 def qc_plot(qc_plot_input, out_filename, data_date, client_project_id,
@@ -159,7 +170,7 @@ def qc_plot(qc_plot_input, out_filename, data_date, client_project_id,
     Y = np.linspace(lower_num_ms, upper_num_ms, trace_array_dict[label].shape[0])
     Y = np.flipud(Y)
 
-    fig, ax = plt.subplots(nrows=4, sharex=True, figsize=(24,8.5))
+    fig, ax = plt.subplots(nrows=5, sharex=True, figsize=(24,8.5))
     header_plot(ax[0], X, qc_plot_input, out_filename)
     plt.subplots_adjust(right=10.5)
 
@@ -190,6 +201,8 @@ def qc_plot(qc_plot_input, out_filename, data_date, client_project_id,
 
     ax[3], heatmap3 = plot_hole_as_heatmap(ax[3], cbal.v_min_3, cbal.v_max_3, X, Y,
       trace_array_dict['radial'], cmap_string, y_tick_locations)#,
+    
+#    ax[4],plot()
 
     plt.tight_layout()
     if colourbar_type=='all_one':

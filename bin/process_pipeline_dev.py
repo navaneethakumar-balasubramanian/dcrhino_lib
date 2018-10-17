@@ -117,7 +117,6 @@ def bandpass_filter_trace(output_sampling_rate,trapezoidal_bpf_corner_1,trapezoi
 
     firls = FIRLSFilter(corners, fir_duration)
 
-    #pdb.set_trace()
     fir_taps = firls.make(sampling_rate)
 
     if (len(fir_taps) == 1) and (fir_taps[0]==1.0):
@@ -155,7 +154,6 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz, t
                                        sensitivity_xyz, is_ide_file, accelerometer_max_voltage,
                                        global_config, start_ts, debug_file_name='',debug=True):
     entire_ts = ts_data
-#    pdb.set_trace()
     entire_ts_int = entire_ts.astype(int)
 
     if len(sensitivity_xyz) != 3:
@@ -206,7 +204,6 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz, t
 
         for i, data in enumerate(entire_xyz):
 
-            #pdb.set_trace()
             actual_second = get_values_from_index(indexes_array_of_actual_second,data,np.float32)
             sensitivity = sensitivity_xyz[i]
 
@@ -216,7 +213,6 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz, t
             deconvolved_data_actual_second, r_xx0 = deconvolve_trace(global_config.deconvolution_filter_duration,global_config.num_taps_in_decon_filter,interpolated_actual_second)
             correlated_trace_actual_second = correlate_trace(interpolated_actual_second,deconvolved_data_actual_second)
             filtered_correlated_trace_actual_second = bandpass_filter_trace(global_config.output_sampling_rate,global_config.trapezoidal_bpf_corner_1,global_config.trapezoidal_bpf_corner_2,global_config.trapezoidal_bpf_corner_3,global_config.trapezoidal_bpf_corner_4,global_config.trapezoidal_bpf_duration,correlated_trace_actual_second)
-            #pdb.set_trace()
             trimmed_filtered_correlated_trace_actual_second = trim_trace(global_config.min_lag_trimmed_trace,global_config.max_lag_trimmed_trace,global_config.num_taps_in_decon_filter,global_config.output_sampling_rate,filtered_correlated_trace_actual_second)
             results[i] = trimmed_filtered_correlated_trace_actual_second
 
@@ -291,7 +287,6 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz, t
         axial_deconvolved_traces = np.asarray(axial_deconvolved_traces)
         tangential_deconvolved_traces = np.asarray(tangential_deconvolved_traces)
         radial_deconvolved_traces = np.asarray(radial_deconvolved_traces)
-        #pdb.set_trace()
         axial_interpolated_traces = np.asarray(axial_interpolated_traces)
         tangential_interpolated_traces = np.asarray(tangential_interpolated_traces)
         radial_interpolated_traces = np.asarray(radial_interpolated_traces)
@@ -315,7 +310,7 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz, t
 
     return [axial_traces,tangential_traces,radial_traces,ts]
 
-def get_features_extracted(extractor,axial_traces,tangential_traces,radial_traces,ts_array):
+def get_features_extracted(extractor,axial_traces,tangential_traces,radial_traces,ts_array,global_config):
     print ("Extracting features")
 
     extracted_features_list = [None] * len(ts_array)
@@ -332,7 +327,6 @@ def get_features_extracted(extractor,axial_traces,tangential_traces,radial_trace
 
     print ("Features extracted")
     return extracted_features_list
-#pdb.set_trace()
 
 
 
@@ -373,7 +367,6 @@ def qc_plot2(output_path,plot_title,axial,tangential,radial,ts_array,lower_num_m
     for component in components:
 
         #alterations to plot / transpose / max_amplitude / slice by samples back and forward
-        #pdb.set_trace()
         component = np.transpose(component)
         n_samples = global_config.n_samples_trimmed_trace
         max_amplitudes = np.max(component, axis=0)
@@ -405,7 +398,6 @@ def qc_plot2(output_path,plot_title,axial,tangential,radial,ts_array,lower_num_m
 #         #print(key,value)
 #         section = key.split("/")[0]
 #         param_name = key.split("/")[1]
-#         #pdb.set_trace()
 #         if config.has_section(section):
 #             config.set(section,param_name,value)
 #         else:
@@ -419,7 +411,7 @@ def main():
 
     h5_full_filename = None
     h5_full_filename = '/home/sjha/data/datacloud/mount_milligan/level_1/2018-05-04/piezo/4000hz/20180504_SSX55470_5306_4000.h5'
-    h5_full_filename = '20180504_SSX55470_5306_4000.h5'
+#    h5_full_filename = '20180504_SSX55470_5306_4000.h5'
     mwd_filename = None
     mwd_filename = 'mount_milligan_raw.csv'
     icl_string = ''
@@ -469,7 +461,6 @@ def main():
     computed_elevation_column = args.computed_elevation_column
     rig_id_column = args.rig_id_column
     interpolated_column_names = str(args.interpolated_column_names).split(",")
-    #pdb.set_trace()
     mse_column = args.mse_column
     rop_column = args.rop_column
     wob_column = args.wob_column
@@ -497,8 +488,7 @@ def main():
 
     f1 = h5py.File(args.h5_path,'r+')
 
-    mwd_df = pd.read_csv(args.mwd_path)
-    pdb.set_trace()
+    mwd_df = pd.read_csv(args.mwd_path,parse_dates = [start_time_column, end_time_column])
     mwd_helper = MwdDFHelper(mwd_df,
                            start_time_column=start_time_column,
                            end_time_column=end_time_column,
@@ -515,7 +505,6 @@ def main():
                            wob_column=wob_column,
                            easting_column=easting_column,
                            northing_column=northing_column)
-    #pdb.set_trace()
     print("mwd helper = {}".format(mwd_helper))
     if mwd_helper is False:
         sys.exit("Error in mwd dataframe.")
@@ -541,7 +530,10 @@ def main():
 
     print ("Identified ", len(holes_array) , " holes in this combination of mwd and h5")
 
-    extractor = FeatureExtractor(global_config.output_sampling_rate,global_config.primary_window_halfwidth_ms,global_config.multiple_window_search_width_ms,sensor_distance_to_source=global_config.sensor_distance_to_source)
+    extractor = FeatureExtractor(global_config.output_sampling_rate,
+                                 global_config.primary_window_halfwidth_ms,
+                                 global_config.multiple_window_search_width_ms,
+                                 sensor_distance_to_source=global_config.sensor_distance_to_source)
 
     for i,hole in enumerate(holes_array):
         #if i <= 5:
@@ -576,7 +568,6 @@ def main():
         tangential_file_path = os.path.join(temppath,'tangential.npy')
         radial_file_path = os.path.join(temppath,'radial.npy')
         ts_file_path = os.path.join(temppath,'ts.npy')
-        #pdb.set_trace()
         if os.path.isfile(axial_file_path):
             print ("Using cached files")
             axial = np.load(axial_file_path)
@@ -584,7 +575,6 @@ def main():
             radial = np.load(radial_file_path)
             ts_array = np.load(ts_file_path)
         else:
-            pdb.set_trace()
             axial, tangential, radial, ts_array = get_axial_tangential_radial_traces(
                 start_ts, end_ts, h5_helper.data_xyz, h5_helper.ts, h5_helper.sensitivity_xyz,
                 h5_helper.is_ide_file, accelerometer_max_voltage, global_config,
@@ -594,18 +584,16 @@ def main():
             np.save(os.path.join(temppath,'radial.npy'),radial)
             np.save(os.path.join(temppath,'ts.npy'),ts_array)
 
-        extracted_features_list = get_features_extracted(extractor,axial,tangential,radial,ts_array)
-        pdb.set_trace()
+        extracted_features_list = get_features_extracted(extractor,axial,tangential,radial,ts_array,global_config)
         extracted_features_df = pd.DataFrame(extracted_features_list)
         extracted_features_df['computed_elevation'], time_vector = mwd_helper.get_interpolated_column(hole,'computed_elevation',time_vector)
         extracted_features_df[mse_column], time_vector = mwd_helper.get_interpolated_column(hole,mse_column,time_vector)
-        pdb.set_trace()
         if interpolated_column_names[0] != '':
             for column_name in interpolated_column_names:
                 extracted_features_df[column_name], time_vector = mwd_helper.get_interpolated_column(hole,column_name,time_vector)
 
         extracted_features_df['depth'] = (np.asarray(extracted_features_df['computed_elevation'].values) - hole[collar_elevation_column].values[0]) * -1
-        pdb.set_trace()
+#        pdb.set_trace()
         qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'depth_plot.png'),global_config)
         qclogplotter_depth.plot()
         qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'time_plot.png'),global_config,plot_by_depth=False)
@@ -632,7 +620,6 @@ def main():
         plot_meta['rop_filename'] = os.path.join(plot_meta['rop_path'],'.png')
 
 
-
         # GENERATE QC PLOT
         title_line1 = "Correlated Trace QC Time Plots, {}, {}".format(global_config.mine_name, hole[start_time_column].min().strftime("%B %d, %Y"))
         title_line2 = "Hole: {}, Pattern/Area: {},Digitizer_ID: {},Sampling rate: {}".format(hole[hole_column].values[0],hole[pattern_column].values[0],global_config.sensor_serial_number,global_config.output_sampling_rate)
@@ -644,11 +631,11 @@ def main():
 
         #TODO: Make qcLogPlotInput have methods that generate amplitude ratio, etc
         qc_input.df = extracted_features_df
-        pdb.set_trace()
         qc_input.hole_start_time = extracted_features_df['datetime'].iloc[0].to_pydatetime()
         qc_input.observer_row = hole
         qc_input.plot_meta = plot_meta
         qc_input.time_stamps = extracted_features_df['datetime']
+
     #
         extracted_features_df['pseudo_ucs'] = pd.Series(qc_input.pseudo_ucs_sample, index = extracted_features_df.index)
         extracted_features_df['pseudo_velocity'] = pd.Series(qc_input.primary_pseudo_velocity_sample, index = extracted_features_df.index)
@@ -658,7 +645,21 @@ def main():
         extracted_features_df['axial_velocity_delay'] = 1.0/(extracted_features_df['axial_delay'])**3
         extracted_features_df.to_csv(os.path.join(plot_meta['log_path'],"extracted_features.csv"))
 
+
+
+#        qc_log_input = extracted_features_df
+#        qc_log_input.hole_start_time = extracted_features_df['datetime'].iloc[0].to_pydatetime()
+#        qc_log_input.observer_row = hole
+#        qc_log_input.plot_meta = plot_meta
+#        qc_log_input.time_stamps = extracted_features_df['datetime']
+#
+#        pdb.set_trace()
+
+
+#        QCLogPlotter(qc_log_input)
+#        pdb.set_trace()
         QCLogPlotter(qc_input)
+
 
         file = open(os.path.join(temppath,'log.txt'),'w')
 

@@ -110,7 +110,7 @@ class MwdDFHelper:
             periods = (max_dt-min_dt).total_seconds()
             time_vector = pd.date_range(start=min_dt, periods=periods, freq='1S')
 
-        interpolated_column = get_interpolated_column(time_vector, mwd, column_name,end_time_column_label=self.end_time_column_name)
+        interpolated_column = get_interpolated_column(time_vector, mwd, column_name,end_time_column_label=self.start_time_column_name)
         return np.asarray(interpolated_column),time_vector
 
 
