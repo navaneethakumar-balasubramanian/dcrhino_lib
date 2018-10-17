@@ -133,6 +133,7 @@ def plot_hole_as_heatmap(ax, v_min, v_max, X, Y, Z, cmap_string, y_tick_location
             ax.plot(np.asarray([X[0], X[-1]]), (two_way_travel_time_ms + multiple_search_forward_ms) * np.ones(2), 'k', linewidth=1.)
 
     ax.set_xlim(X[0], X[-1])
+    ax.set_xticklabels([])
     return ax, heatmap
 
 

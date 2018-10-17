@@ -58,6 +58,10 @@ class QCBlastholePlotInputs(object):
         self.sub_mwd_rop = kwargs.get('sub_mwd_rop',None)
         self.collar_elevation = kwargs.get('collar_elevation',None)
         self.sub_mwd_mse = kwargs.get('sub_mwd_mse', None)
+        self.pseudo_velocity = kwargs.get('pseudo_velocity',None)
+        self.pseudo_ucs = kwargs.get('pseudo_ucs', None)
+        self.reflection_coefficient =kwargs.get('reflection_coefficient',None)
+        self.log_depth = kwargs.get('log_depth',None)
 		#</These are variables needed to generate plots>
 
         #<these numbers dictate the y axis bounds>
