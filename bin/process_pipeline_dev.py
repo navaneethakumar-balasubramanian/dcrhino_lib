@@ -27,6 +27,8 @@ from dcrhino.analysis.graphical.unbinned_qc_log_plots_v3_west_angelas import pse
 from datetime import datetime
 from dcrhino.process_pipeline.config import Config
 from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotter,QCLogPlotInput
+#from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotInput
+
 from dcrhino.process_pipeline.feature_extractor import FeatureExtractor
 from dcrhino.process_pipeline.filters import FIRLSFilter
 
@@ -410,10 +412,10 @@ def qc_plot2(output_path,plot_title,axial,tangential,radial,ts_array,lower_num_m
 def main():
 
     h5_full_filename = None
-    h5_full_filename = '/home/sjha/data/datacloud/mount_milligan/level_1/2018-05-04/piezo/4000hz/20180504_SSX55470_5306_4000.h5'
-#    h5_full_filename = '20180504_SSX55470_5306_4000.h5'
+#    h5_full_filename = '/home/sjha/data/datacloud/mount_milligan/level_1/2018-05-04/piezo/4000hz/20180504_SSX55470_5306_4000.h5'
+    h5_full_filename = '20180504_SSX55470_5306_4000.h5'
     mwd_filename = None
-    mwd_filename = 'mount_milligan_raw.csv'
+    mwd_filename = 'mount_milligan_mwd_20181003.csv'
     icl_string = ''
     icl_string = 'weight_on_bit,rop,torque,vibration,rpm,air_pressure'
     ric_string = 'rig'
@@ -594,15 +596,16 @@ def main():
 
         extracted_features_df['depth'] = (np.asarray(extracted_features_df['computed_elevation'].values) - hole[collar_elevation_column].values[0]) * -1
 #        pdb.set_trace()
-        qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'depth_plot.png'),global_config)
-        qclogplotter_depth.plot()
-        qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'time_plot.png'),global_config,plot_by_depth=False)
-        qclogplotter_time.plot()
+#        qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'depth_plot.png'),global_config)
+#        qclogplotter_depth.plot()
+#        qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'time_plot.png'),global_config,plot_by_depth=False)
+#        qclogplotter_time.plot()
 
         hole.to_csv( os.path.join( temppath, "hole_mwd.csv" ) )
 
 
         qc_input = QCLogPlotInput()
+#        qc_input = QCLogPlotterv2()
         plot_meta = {}
 
 
@@ -645,20 +648,15 @@ def main():
         extracted_features_df['axial_velocity_delay'] = 1.0/(extracted_features_df['axial_delay'])**3
         extracted_features_df.to_csv(os.path.join(plot_meta['log_path'],"extracted_features.csv"))
 
-
-
-#        qc_log_input = extracted_features_df
-#        qc_log_input.hole_start_time = extracted_features_df['datetime'].iloc[0].to_pydatetime()
-#        qc_log_input.observer_row = hole
-#        qc_log_input.plot_meta = plot_meta
-#        qc_log_input.time_stamps = extracted_features_df['datetime']
-#
 #        pdb.set_trace()
+        qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'depth_plot.png'),global_config)
+        qclogplotter_depth.plot()
+        qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'time_plot.png'),global_config,plot_by_depth=False)
+        qclogplotter_time.plot()
 
 
-#        QCLogPlotter(qc_log_input)
-#        pdb.set_trace()
-        QCLogPlotter(qc_input)
+
+#        QCLogPlotter(qc_input)
 
 
         file = open(os.path.join(temppath,'log.txt'),'w')
