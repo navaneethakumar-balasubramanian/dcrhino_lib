@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pdb
+import string
 
 #home = os.path.expanduser("~/")
 class MeasurandDataKey(object):
@@ -52,11 +53,20 @@ class ClientMineDrillDataKey(MeasurandDataKey):
     to be used for those data
     """
     def __init__(self, **kwargs):
-        self.client = kwargs.get('client', '')
-        self.mine = kwargs.get('mine', None)
-        self.drill = kwargs.get('mine', None)
+        self._client = kwargs.get('client', '')
+        self._mine = kwargs.get('mine', None)
+        self._drill = kwargs.get('drill', None)
 
 
+    @property
+    def client(self):
+        return string.lower(self._client)
+    @property
+    def mine(self):
+        return string.lower(self._mine)
+    @property
+    def drill(self):
+        return string.lower(self._drill)
     @property
     def mini_path(self):
         """
@@ -67,8 +77,18 @@ class ClientMineDrillDataKey(MeasurandDataKey):
         This was known as measurand_mini_path in original implementation in 2016
         Now it is used to track sampling rate for exmaple.
         """
-        path_segment = os.path.join(self.client, self.mine, self.drill)
+        path_segment = os.path.join(self.client, self.mine, 'drill_',string.lower(self.drill))
         return path_segment
+
+
+class L0SlamStixDataKey(ClientMineDrillDataKey):
+    """
+    sensor_type: specifies piezo, mems, pressure, etc
+    """
+    def __init__(self, **kwargs):
+        self._start_time = kwargs.get('start_time', '')
+        self._serial_number = kwargs.get('serial_number', None)
+        #self._sensor_type = kwargs.get('sensor_type', None)
 
 
 class DigitizerDateDataKey(MeasurandDataKey):
