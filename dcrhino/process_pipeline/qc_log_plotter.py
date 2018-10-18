@@ -123,6 +123,7 @@ class QCLogPlotterv2():
         ax.set_ylim(0.0, 2.0)
         ax.set_xlim(X[0], X[-1])
         ax.set_xticklabels([])
+        ax.legend(loc=1)
         return
 
 
