@@ -133,7 +133,7 @@ class QCLogPlotterv2():
         ax1 = ax.twinx()
         ax2 = ax.twinx()        
         
-        depth_axis = np.linspace(min(qc_plot_input.log_depth),max(qc_plot_input.log_depth),len(qc_plot_input.log_depth))
+        depth_axis = np.linspace(min(qc_plot_input.sub_mwd_depth),max(qc_plot_input.sub_mwd_depth),len(qc_plot_input.log_depth))
 
         
         rc_ylim_min = 0.
@@ -214,7 +214,7 @@ class QCLogPlotterv2():
             X = np.nan_to_num(X)
         else:
             X = time_vector
-            pdb.set_trace()
+#            pdb.set_trace()
         #   X = get_interpolated_column(time_vector, sub_mwd_df, 'computed_elevation')
 
     	#if using depth plot
