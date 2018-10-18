@@ -542,10 +542,10 @@ for i,hole in enumerate(holes_array):
 
     extracted_features_df['depth'] = (np.asarray(extracted_features_df['computed_elevation'].values) - hole[collar_elevation_column].values[0]) * -1
     #pdb.set_trace()
-    qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'depth_plot.png'),global_config)
-    qclogplotter_depth.plot()
-    qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'time_plot.png'),global_config,plot_by_depth=False)
-    qclogplotter_time.plot()
+#    qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'depth_plot.png'),global_config)
+#    qclogplotter_depth.plot()
+#    qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'time_plot.png'),global_config,plot_by_depth=False)
+#    qclogplotter_time.plot()
 
     hole.to_csv( os.path.join( temppath, "hole_mwd.csv" ) )
 
@@ -595,6 +595,13 @@ for i,hole in enumerate(holes_array):
     extracted_features_df['northing'] = [hole[mwd_helper.northing_column_name].values[0]] * len(extracted_features_df['axial_delay'])
 
     extracted_features_df.to_csv(os.path.join(plot_meta['log_path'],"extracted_features.csv"))
+
+    qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'depth_plot.png'),global_config)
+    qclogplotter_depth.plot()
+    qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'time_plot.png'),global_config,plot_by_depth=False)
+    qclogplotter_time.plot()
+
+
 
     QCLogPlotter(qc_input)
 
