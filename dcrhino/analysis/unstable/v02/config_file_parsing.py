@@ -25,8 +25,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pdb
+from dcrhino.real_time.metadata import Metadata
 
 
+def get_metadata(cfg_path):
+    cfg_instance = ConfigParser.SafeConfigParser()
+    cfg_instance.read(cfg_path)
+    meta_instance = Metadata(cfg_instance)
+    return meta_instance
 #home = os.path.expanduser("~/")
 class L1L2ProcessConfiguration(object):
     """
@@ -35,6 +41,7 @@ class L1L2ProcessConfiguration(object):
     def __init__(self, config_filename):
         self.config = ConfigParser.SafeConfigParser()
         self.config.read(config_filename)
+
 #        self.deconvolution_filter_duration = 0.1#None#kwargs.get(deconvolution_filter_duration, 0.1)
 #        self.min_lag_trimmed_trace = -0.1
 #        self.max_lag_trimmed_trace = 0.1
@@ -71,6 +78,10 @@ class L1L2ProcessConfiguration(object):
         return self.config.getfloat('PROCESSING', 'trapezoidal_bpf_duration')
     @property
     def bandpass_corners(self):
+        return [self.bandpass_corner_1, self.bandpass_corner_2, self.bandpass_corner_3, self.bandpass_corner_4]
+
+    @property
+    def sensor_distance_to_source(self):
         return [self.bandpass_corner_1, self.bandpass_corner_2, self.bandpass_corner_3, self.bandpass_corner_4]
 
 

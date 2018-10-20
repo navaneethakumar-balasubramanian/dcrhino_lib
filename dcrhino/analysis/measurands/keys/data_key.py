@@ -188,7 +188,7 @@ class Level0IDEDataKey(MeasurandDataKey):
     client/mine/drill/level_0/YYYYMMDD/YYYYMMDD_SSXsssss_serial.cfg
     """
     def __init__(self):
-
+        pass
 
 def my_function():
     """
