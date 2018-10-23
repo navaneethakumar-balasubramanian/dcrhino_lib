@@ -121,6 +121,7 @@ class QCLogPlotterv2():
         ax.legend()
         ax.set_title(plot_title)
         ax.set_ylim(0.0, 2.0)
+        pdb.set_trace()
         ax.set_xlim(X[0], X[-1])
         ax.set_xticklabels([])
         ax.legend(loc=1)
@@ -208,12 +209,15 @@ class QCLogPlotterv2():
             	    #<choose X - time>
 
         if depth is not False:
+            
             X ,time_vector= np.array( self.mwd_helper.get_interpolated_column(hole_mwd,self.mwd_helper.computed_elevation_column_name,time_vector))
             X = X.astype(float) - float(qc_plot_input.collar_elevation)
             X = X * -1
             X = np.nan_to_num(X)
         else:
             X = time_vector
+            
+#            pdb.set_trace()
 #            pdb.set_trace()
         #   X = get_interpolated_column(time_vector, sub_mwd_df, 'computed_elevation')
 
