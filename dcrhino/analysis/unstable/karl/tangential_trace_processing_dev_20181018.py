@@ -44,6 +44,7 @@ from dcrhino.analysis.signal_processing.firls_bandpass import FIRLSFilter
 
 from dcrhino.analysis.signal_processing.seismic_processing import autocorrelate_trace
 from dcrhino.analysis.signal_processing.seismic_processing import deconvolve_trace_data
+from dcrhino.analysis.signal_processing.seismic_processing import calculate_spiking_decon_filter
 #from supporting_v02_processing import get_hole_data
 from dcrhino.analysis.unstable.v02.config_file_parsing import L1L2ProcessConfiguration
 from dcrhino.analysis.unstable.v02.config_file_parsing import get_metadata
@@ -53,7 +54,7 @@ from dcrhino.analysis.util.interval import TimeInterval
 from dcrhino.analysis.signal_processing.mwd_tools import get_interpolated_column
 
 
-def calculate_spiking_decon_filter(trace_data, filter_length,  dt, start_ms,
+def calculate_spiking_decon_filter_local(trace_data, filter_length,  dt, start_ms,
                                    end_ms, bpf_taps, decon_trace, **kwargs):
     """
     - you want to equalize (best you can) the spectrum from trace to trace
@@ -84,6 +85,7 @@ def calculate_spiking_decon_filter(trace_data, filter_length,  dt, start_ms,
     final_sample_to_use = first_sample_to_use + int(np.ceil(window_width/dt))
     #pdb.set_trace()
     sub_region_to_use_for_decon_calculation = trace_data[first_sample_to_use:final_sample_to_use]
+    #pdb.set_trace()
     R_xx = autocorrelate_trace(sub_region_to_use_for_decon_calculation, filter_length)
     R_xx[0] *= (1+noise_fraction)
     #pdb.set_trace()
@@ -96,7 +98,8 @@ def calculate_spiking_decon_filter(trace_data, filter_length,  dt, start_ms,
         return trace_data, R_xx[0]
     x_filter = nominal_scale_factor*ATAinv[0,:]
 
-    despike_trace = np.convolve(x_filter, trace_data, 'same')
+    despike_trace = np.convolve(x_filter, trace_data, 'same')#original
+#    despike_trace = np.convolve(trace_data, x_filter, 'same')#test 1029
     #bpf_orig = ssig.filtfilt(bpf_taps, 1., trace_data).astype('float32')
     bpf_despike = ssig.filtfilt(bpf_taps, 1., despike_trace).astype('float32')
 
@@ -124,45 +127,17 @@ def calculate_spiking_decon_filter(trace_data, filter_length,  dt, start_ms,
     #trim the correlated trace at 110 - 170 ms
     return bpf_despike, x_filter
 
-def spiking_decon(trace_data, filter_length, **kwargs):#plot=False):
-    """
-    20180909: variation on deconvolve trace,but input is numpy array, not
-    obspy structure.
-    #<OLD>
-    R_xx = autocorrelate_trace(trace_data, filter_length)
-    nominal_scale_factor = 1.0;#1./R_xx[0]#1.0
-    ATA = scipy.linalg.toeplitz(R_xx)
-    try:
-        ATAinv = scipy.linalg.inv(ATA)
-    except np.linalg.linalg.LinAlgError:
-        logger.warning('matrix inversion failed')
-        return trace_data, R_xx[0]
-    x_filter = nominal_scale_factor*ATAinv[0,:]
-    deconv_trace = np.convolve(x_filter, trace_data, 'same')
-    trace_data = deconv_trace
-    return trace_data, R_xx[0]
-    #</OLD>
-    """
-    #select data subset
-    pdb.set_trace()
-    R_xx = autocorrelate_trace(trace_data, filter_length)
-    nominal_scale_factor = 1.0;#1./R_xx[0]#1.0
-    ATA = scipy.linalg.toeplitz(R_xx)
-    try:
-        ATAinv = scipy.linalg.inv(ATA)
-    except np.linalg.linalg.LinAlgError:
-        logger.warning('matrix inversion failed')
-        return trace_data, R_xx[0]
-    x_filter = nominal_scale_factor*ATAinv[0,:]
-    deconv_trace = np.convolve(x_filter, trace_data, 'same')
-    trace_data = deconv_trace
-    return trace_data, R_xx[0]
 
 #(time_vector, mwd_hole_df, column_label,end_time_column_label='endtime'):
 ACOUSTIC_VELOCITY = 4755.0
 SHEAR_VELOCITY = 2654#ACOUSTIC_VELOCITY / 2.0
+sampling_rate = 4000.0; dt = 1./sampling_rate
 start_ms_despike_decon = 10.0
 end_ms_despike_decon = 60.#190.0#70.0
+add_noise_percent = 500.0#150.0
+#Spiking Decon (10 ms operator, 5% white noise, design window 110-170 ms)
+spiking_decon_filter_duration = 0.020 #10ms; parameterize in terms of trace length
+n_spiking_decon_filter_taps = int(sampling_rate * spiking_decon_filter_duration)
 
 home = os.path.expanduser("~")
 data_path = os.path.join(home, 'data', 'datacloud')
@@ -197,7 +172,6 @@ dzdt = np.hstack((dzdt[0], dzdt))
 print('dzdt is short by one value - hackaround for now')
 #match derivative here; You have a dz for each of
 n_traces, samples_per_trace = data.shape
-sampling_rate = 4000.0; dt = 1./sampling_rate
 
 config_filename = os.path.join('rio.cfg')
 config = L1L2ProcessConfiguration(config_filename)
@@ -230,17 +204,19 @@ for i_trace in range(hack_start_trace, n_traces):
 #    plt.plot(trace_data);plt.show()
     decon_trace, rxx0 = deconvolve_trace_data(trace_data, decon_filter_length)
     tr_corr_w_deconv = np.correlate(trace_data, decon_trace, 'same')
-
-    #here is where you add noise and
-    #Spiking Decon (10 ms operator, 5% white noise, design window 110-170 ms)
-    spiking_decon_filter_duration = 0.01 #10ms; parameterize in terms of trace length
-    n_spiking_decon_filter_taps = int(sampling_rate * spiking_decon_filter_duration)
-    #NB despiekd trace is bpf in routine below
-    despiked_trace, despike_filter = calculate_spiking_decon_filter(tr_corr_w_deconv,
+#    tr_corr_w_deconv = ssig.filtfilt(fir_taps, 1., tr_corr_w_deconv).astype('float32')
+    despiked_trace, despike_filter = calculate_spiking_decon_filter_local(tr_corr_w_deconv,
                                                       n_spiking_decon_filter_taps,
                                                       dt, start_ms_despike_decon,
                                                       end_ms_despike_decon, fir_taps,
-                                                      decon_trace)
+                                                      decon_trace, add_noise_percent=add_noise_percent)
+#    despiked_trace, despike_filter = calculate_spiking_decon_filter(trace_data,
+#                                                      n_spiking_decon_filter_taps,
+#                                                      dt, start_ms_despike_decon,
+#                                                      end_ms_despike_decon, fir_taps,
+#                                                      decon_trace)
+#    despike_trace = np.convolve(despike_filter, tr_corr_w_deconv, 'same')
+#    despike_trace = ssig.filtfilt(fir_taps, 1., despike_trace).astype('float32')
 #    despiked_trace = spiking_decon(tr_corr_w_deconv, n_spiking_decon_filter_taps)#, **kwargs):#plot=False):
 
     if (len(fir_taps) == 1) and (fir_taps[0]==1.0):
@@ -250,13 +226,14 @@ for i_trace in range(hack_start_trace, n_traces):
 
     #pdb.set_trace()
     qq = np.max(bpf_data)/np.max(despiked_trace)
+#    qq =1.0
     print('qq = {}'.format(qq))
     #time_axis = dt*np.arange(samples_per_trace)
     #plt.plot(qq*despiked_trace, label='dspk')
     #plt.plot(np.roll(bpf_data, -20), label='nodspk')
     #plt.legend();plt.show()
     little_data = bpf_data[back_ndx:fin_ndx]
-    despiked_trace = np.roll(despiked_trace,20)
+    despiked_trace = np.roll(despiked_trace, n_spiking_decon_filter_taps//2)
     little_despiked_trace = qq*despiked_trace[back_ndx:fin_ndx]
     print(len(little_data))
 
