@@ -32,8 +32,9 @@ import pandas as pd
 import pdb
 import scipy.signal as ssig
 import scipy
-
 from string import zfill
+
+from fatiando.vis.mpl import seismic_wiggle
 
 from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
 from dcrhino.analysis.math.windowing_scheme import sliding_window
@@ -91,18 +92,20 @@ def calculate_spiking_decon_filter(trace_data, filter_length,  dt, start_ms,
     try:
         ATAinv = scipy.linalg.inv(ATA)
     except np.linalg.linalg.LinAlgError:
-        logger.warning('matrix inversion failed')
+        print('matrix inversion failed')  #
         return trace_data, R_xx[0]
     x_filter = nominal_scale_factor*ATAinv[0,:]
+
     despike_trace = np.convolve(x_filter, trace_data, 'same')
-    bpf_orig = ssig.filtfilt(bpf_taps, 1., trace_data).astype('float32')
+    #bpf_orig = ssig.filtfilt(bpf_taps, 1., trace_data).astype('float32')
     bpf_despike = ssig.filtfilt(bpf_taps, 1., despike_trace).astype('float32')
 
 
-    n_samples = len(trace_data)
+
 
     if plot:
         fig, ax = plt.subplots(2,1, sharex=True)
+        #n_samples = len(trace_data)
         #time_axis = dt*np.arange(n_samples)
      #   pdb.set_trace()
         #ax.plot(time_axis, trace_data)
@@ -119,10 +122,7 @@ def calculate_spiking_decon_filter(trace_data, filter_length,  dt, start_ms,
         plt.show()
 
     #trim the correlated trace at 110 - 170 ms
-    return bpf_despike
-#    pdb.set_trace()
-#    pass
-#    return
+    return bpf_despike, x_filter
 
 def spiking_decon(trace_data, filter_length, **kwargs):#plot=False):
     """
@@ -162,7 +162,7 @@ def spiking_decon(trace_data, filter_length, **kwargs):#plot=False):
 ACOUSTIC_VELOCITY = 4755.0
 SHEAR_VELOCITY = 2654#ACOUSTIC_VELOCITY / 2.0
 start_ms_despike_decon = 10.0
-end_ms_despike_decon = 190.0#70.0
+end_ms_despike_decon = 60.#190.0#70.0
 
 home = os.path.expanduser("~")
 data_path = os.path.join(home, 'data', 'datacloud')
@@ -175,6 +175,7 @@ tangential_data_path = os.path.join(hole_path, 'tangential_interpolated_traces.n
 data = np.load(tangential_data_path)
 n_traces, samples_per_trace = data.shape
 tfct = np.load(os.path.join(hole_path, 'tangential_filtered_correlated_traces.npy'))
+#pdb.set_trace()
 holy_mwd = pd.read_csv(os.path.join(hole_path, 'hole_mwd.csv'), parse_dates=['starttime', 'endtime'])
 depthy_mcdepth = np.abs(holy_mwd.computed_elevation - holy_mwd.computed_elevation.iloc[0])
 time_vector = pd.date_range(holy_mwd.starttime.iloc[0], periods=n_traces, freq='1S')
@@ -212,12 +213,15 @@ t0_index = int(L + decon_filter_length) // 2
 back_ndx = t0_index - n_samples_back
 fin_ndx = t0_index + n_samples_fwd
 output_data = np.full((n_traces, samples_per_corr_trace), np.nan)
+despike_data = np.full((n_traces, samples_per_corr_trace), np.nan)
+
 multiple_time = 2 * (metameta.sensor_distance_to_source /SHEAR_VELOCITY)
 multiple_window_search_width_ms = 3.126
 earliest_multiple_time = multiple_time - (2.0 * dt)
 latest_multiple_time =  earliest_multiple_time + (multiple_window_search_width_ms * 1e-3)
 
 hack_start_trace = 0
+#n_traces = 4
 #for i_trace in range(0,n_traces):
 for i_trace in range(hack_start_trace, n_traces):
     print("trace # {}".format(i_trace))
@@ -231,7 +235,8 @@ for i_trace in range(hack_start_trace, n_traces):
     #Spiking Decon (10 ms operator, 5% white noise, design window 110-170 ms)
     spiking_decon_filter_duration = 0.01 #10ms; parameterize in terms of trace length
     n_spiking_decon_filter_taps = int(sampling_rate * spiking_decon_filter_duration)
-    despiked_trace = calculate_spiking_decon_filter(tr_corr_w_deconv,
+    #NB despiekd trace is bpf in routine below
+    despiked_trace, despike_filter = calculate_spiking_decon_filter(tr_corr_w_deconv,
                                                       n_spiking_decon_filter_taps,
                                                       dt, start_ms_despike_decon,
                                                       end_ms_despike_decon, fir_taps,
@@ -243,42 +248,51 @@ for i_trace in range(hack_start_trace, n_traces):
     else:
         bpf_data = ssig.filtfilt(fir_taps, 1., tr_corr_w_deconv).astype('float32')
 
-    pdb.set_trace()
-    little_data = bpf_data[back_ndx:fin_ndx]
-    print(len(little_data))
-    output_data[i_trace,:] = little_data
-
-
-    #        decon_trace.data = little_data
     #pdb.set_trace()
-    plt.figure(11);plt.clf()
-    t = dt * np.arange(samples_per_corr_trace)
-    half_time = t[len(t)//2]
-    t -= half_time
-    #pdb.set_trace
-    plt.plot(t, little_data);
-    y_min = -1.4; y_max = 1.4
-    plt.ylim(y_min, y_max)
-    v_line_ordinates = [0, earliest_multiple_time, latest_multiple_time]
-    plt.vlines(v_line_ordinates, y_min, y_max)
-    #plt.vlines([t[int(samples_per_corr_trace/2)], 0.1], y_min, y_max)
-    plt.hlines(0, t[0], t[-1])
-    plt.xlabel('Time [s]')
-    ttl_str1 = 'trace # {} of {}, max sample {} past zero-line'.format(i_trace, n_traces, np.argmax(little_data)-(len(t)//2))
-    ttl_str1 = '{}  dzdt={:.4f}'.format(ttl_str1, dzdt[i_trace])
-    ttl_str1 = '{}  rpm={}'.format(ttl_str1, int(1000*interped_mwd_dict['krpm'][i_trace]))
-    ttl_str1 = '{}  FOB kN={}'.format(ttl_str1, int(interped_mwd_dict['force_on_bit(n)'][i_trace])/1000)
-    ttl_str1 = '{}  Torque Nm={:.2f}'.format(ttl_str1, interped_mwd_dict['torque(nm)'][i_trace])
-    #r"$\bf{" + str(number) + "}$"
-    plt.title(ttl_str1)
-    if dzdt[i_trace] < 0.005:
-        plt.text(-0.1, 1.4, 'ROP', color='red', fontsize=12, bbox=dict(boxstyle="square",
-                   ec=(1., 0.5, 0.5),
-                   fc=(1., 0.8, 0.8),))
-    output_filename = os.path.join(trace_plot_path, '{}.png'.format(zfill(i_trace,4)))
-    plt.savefig(output_filename)
-    #plt.show()
+    qq = np.max(bpf_data)/np.max(despiked_trace)
+    print('qq = {}'.format(qq))
+    #time_axis = dt*np.arange(samples_per_trace)
+    #plt.plot(qq*despiked_trace, label='dspk')
+    #plt.plot(np.roll(bpf_data, -20), label='nodspk')
+    #plt.legend();plt.show()
+    little_data = bpf_data[back_ndx:fin_ndx]
+    despiked_trace = np.roll(despiked_trace,20)
+    little_despiked_trace = qq*despiked_trace[back_ndx:fin_ndx]
+    print(len(little_data))
 
+    output_data[i_trace, :] = little_data
+    despike_data[i_trace, :] = little_despiked_trace
+
+#    #        decon_trace.data = little_data
+#    #pdb.set_trace()
+#    plt.figure(11);plt.clf()
+#    t = dt * np.arange(samples_per_corr_trace)
+#    half_time = t[len(t)//2]
+#    t -= half_time
+#    #pdb.set_trace
+#    plt.plot(t, little_data);
+#    y_min = -1.4; y_max = 1.4
+#    plt.ylim(y_min, y_max)
+#    v_line_ordinates = [0, earliest_multiple_time, latest_multiple_time]
+#    plt.vlines(v_line_ordinates, y_min, y_max)
+#    #plt.vlines([t[int(samples_per_corr_trace/2)], 0.1], y_min, y_max)
+#    plt.hlines(0, t[0], t[-1])
+#    plt.xlabel('Time [s]')
+#    ttl_str1 = 'trace # {} of {}, max sample {} past zero-line'.format(i_trace, n_traces, np.argmax(little_data)-(len(t)//2))
+#    ttl_str1 = '{}  dzdt={:.4f}'.format(ttl_str1, dzdt[i_trace])
+#    ttl_str1 = '{}  rpm={}'.format(ttl_str1, int(1000*interped_mwd_dict['krpm'][i_trace]))
+#    ttl_str1 = '{}  FOB kN={}'.format(ttl_str1, int(interped_mwd_dict['force_on_bit(n)'][i_trace])/1000)
+#    ttl_str1 = '{}  Torque Nm={:.2f}'.format(ttl_str1, interped_mwd_dict['torque(nm)'][i_trace])
+#    #r"$\bf{" + str(number) + "}$"
+#    plt.title(ttl_str1)
+#    if dzdt[i_trace] < 0.005:
+#        plt.text(-0.1, 1.4, 'ROP', color='red', fontsize=12, bbox=dict(boxstyle="square",
+#                   ec=(1., 0.5, 0.5),
+#                   fc=(1., 0.8, 0.8),))
+#    output_filename = os.path.join(trace_plot_path, '{}.png'.format(zfill(i_trace,4)))
+#    plt.savefig(output_filename)
+    #plt.show()
+    np.save('despiked_traces', despike_data)
 #samples_per_corr_trace
 pdb.set_trace()
 
