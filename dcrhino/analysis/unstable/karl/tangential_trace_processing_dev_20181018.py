@@ -44,7 +44,7 @@ from dcrhino.analysis.signal_processing.firls_bandpass import FIRLSFilter
 
 from dcrhino.analysis.signal_processing.seismic_processing import autocorrelate_trace
 from dcrhino.analysis.signal_processing.seismic_processing import deconvolve_trace_data
-from dcrhino.analysis.signal_processing.seismic_processing import calculate_spiking_decon_filter
+#from dcrhino.analysis.signal_processing.seismic_processing import calculate_spiking_decon_filter
 #from supporting_v02_processing import get_hole_data
 from dcrhino.analysis.unstable.v02.config_file_parsing import L1L2ProcessConfiguration
 from dcrhino.analysis.unstable.v02.config_file_parsing import get_metadata
@@ -133,10 +133,10 @@ ACOUSTIC_VELOCITY = 4755.0
 SHEAR_VELOCITY = 2654#ACOUSTIC_VELOCITY / 2.0
 sampling_rate = 4000.0; dt = 1./sampling_rate
 start_ms_despike_decon = 10.0
-end_ms_despike_decon = 60.#190.0#70.0
-add_noise_percent = 500.0#150.0
+end_ms_despike_decon = 70.#190.0#70.0
+add_noise_percent = 200.0#150.0
 #Spiking Decon (10 ms operator, 5% white noise, design window 110-170 ms)
-spiking_decon_filter_duration = 0.020 #10ms; parameterize in terms of trace length
+spiking_decon_filter_duration = 0.010    #10ms; parameterize in terms of trace length
 n_spiking_decon_filter_taps = int(sampling_rate * spiking_decon_filter_duration)
 
 home = os.path.expanduser("~")
@@ -152,6 +152,8 @@ n_traces, samples_per_trace = data.shape
 tfct = np.load(os.path.join(hole_path, 'tangential_filtered_correlated_traces.npy'))
 #pdb.set_trace()
 holy_mwd = pd.read_csv(os.path.join(hole_path, 'hole_mwd.csv'), parse_dates=['starttime', 'endtime'])
+df_features = pd.read_csv(os.path.join(hole_path, 'extracted_features.csv'))#, parse_dates=['starttime', 'endtime'])
+pdb.set_trace()
 depthy_mcdepth = np.abs(holy_mwd.computed_elevation - holy_mwd.computed_elevation.iloc[0])
 time_vector = pd.date_range(holy_mwd.starttime.iloc[0], periods=n_traces, freq='1S')
 
