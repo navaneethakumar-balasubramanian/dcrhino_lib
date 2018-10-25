@@ -11,6 +11,19 @@ from dcrhino.analysis.supporting_datetime import get_seconds_into_day
 #from dcrhino.constants import DATA_PATH, ROOT_PATH
 #from dcrhino.interval import TimePeriod
 
+def reject_traces_with_small_rop(df, threshold=0.006):
+    """
+    20181024
+    This is not perfect - there is a bit of a cheat here I acknowledge (adding
+    the zero), but its pretty honest.
+    """
+    dz = np.diff(df.depth)
+    dz = np.hstack((0.0, dz))
+    #pdb.set_trace()
+    df['dz'] = pd.Series(dz, index=df.index)
+    sub_df = df[df.dz>threshold]
+    return sub_df
+
 def plot_mwd_quantity(plot_meta, column_name, interpolated_data, t_mwd, t_rhino, mwd_data):
     """
     """
