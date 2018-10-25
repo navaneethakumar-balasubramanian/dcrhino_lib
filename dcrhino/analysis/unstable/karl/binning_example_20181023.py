@@ -13,32 +13,15 @@ Steps:
 
 from __future__ import absolute_import, division, print_function
 
-import ConfigParser
 import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
 import pdb
-import scipy.signal as ssig
 
 from string import zfill
 
-from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
-from dcrhino.analysis.math.windowing_scheme import sliding_window
-#from dcrhino.analysis.signal_processing.seismic_processing import autocorrelate_trace
-import dcrhino.analysis.measurands.measurand_registry_west_angelas as MEASURAND_REGISTRY
-from dcrhino.analysis.signal_processing.firls_bandpass import FIRLSFilter
-
-from dcrhino.analysis.signal_processing.seismic_processing import autocorrelate_trace
-from dcrhino.analysis.signal_processing.seismic_processing import deconvolve_trace_data
-#from supporting_v02_processing import get_hole_data
-from dcrhino.analysis.unstable.v02.config_file_parsing import L1L2ProcessConfiguration
-from dcrhino.analysis.unstable.v02.config_file_parsing import get_metadata
-from dcrhino.analysis.measurands.keys.data_key import DAQSerialNumberSamplingRateComponentTimeIntervalDataKey
-from dcrhino.analysis.supporting_datetime import GMT
-from dcrhino.analysis.util.interval import TimeInterval
-from dcrhino.analysis.signal_processing.mwd_tools import get_interpolated_column
 
 
 #<Functions belong in a supporting_qc module>
@@ -186,15 +169,10 @@ for digitizer_id in digitizer_ids:
 #                #<Specific trace rejection by feature here>
 
 
-def my_function():
-    """
-    """
-    pass
 
 def main():
     """
     """
-    my_function()
     print("finito {}".format(datetime.datetime.now()))
 
 if __name__ == "__main__":
