@@ -14,17 +14,23 @@ Steps:
 - this will give us a dispersion curve which we can use to get the velocity; i.e
 by inverting the dispersion curve we get a better picking boundary for the multiple
 arrival time
+
+Shear modulus (SM_01):		( 1 – ratio ) / ( 1 + ratio )    where   ratio = sqrt ( max amplitude second multiple  /  abs (min amplitude primary) )
+				(Note: primary event is a trough, so negative amplitudes)
+Velocity proxy (INVDELAY):		1  /   0.5 * [ ( first multiple time – primary time ) + 0.5 * (second multiple time – primary time ) ]
+SAMP_ROP = S_AMP / ROP			sqrt (abs(primary amp)) / ROP
+
+
 """
 
 from __future__ import absolute_import, division, print_function
 
-import ConfigParser
 import datetime
 import matplotlib
 pgf_with_rc_fonts = {"pgf.texsystem": "pdflatex"}
 matplotlib.rcParams.update(pgf_with_rc_fonts)
 import matplotlib.pyplot as plt
-from matplotlib import rc
+#from matplotlib import rc
 #rc('text', usetex=True)
 import numpy as np
 import os
@@ -52,6 +58,7 @@ from dcrhino.analysis.measurands.keys.data_key import DAQSerialNumberSamplingRat
 from dcrhino.analysis.supporting_datetime import GMT
 from dcrhino.analysis.util.interval import TimeInterval
 from dcrhino.analysis.signal_processing.mwd_tools import get_interpolated_column
+from dcrhino.analysis.signal_processing.mwd_tools import reject_traces_with_small_rop
 
 
 def calculate_spiking_decon_filter_local(trace_data, filter_length,  dt, start_ms,
@@ -153,8 +160,15 @@ tfct = np.load(os.path.join(hole_path, 'tangential_filtered_correlated_traces.np
 #pdb.set_trace()
 holy_mwd = pd.read_csv(os.path.join(hole_path, 'hole_mwd.csv'), parse_dates=['starttime', 'endtime'])
 df_features = pd.read_csv(os.path.join(hole_path, 'extracted_features.csv'))#, parse_dates=['starttime', 'endtime'])
+
+#<cull traces with small delta-z>
+df_features = reject_traces_with_small_rop(df_features)#, threshold=0.006):
+data = data[df_features.index, :]
+tfct = tfct[df_features.index, :]
+n_traces, samples_per_trace = data.shape
+#<cull traces with small delta-z>
+
 pdb.set_trace()
-depthy_mcdepth = np.abs(holy_mwd.computed_elevation - holy_mwd.computed_elevation.iloc[0])
 time_vector = pd.date_range(holy_mwd.starttime.iloc[0], periods=n_traces, freq='1S')
 
 mwd_strings = ['krpm', 'force_on_bit(n)', 'torque(nm)', 'air_pressure(pa)',
@@ -168,7 +182,7 @@ for mwd_string in mwd_strings:
 #    plt.title('{}'.format(mwd_string))
 #    plt.show()
 
-pdb.set_trace()
+
 dzdt = -1 * np.diff(interped_mwd_dict['computed_elevation'])
 dzdt = np.hstack((dzdt[0], dzdt))
 print('dzdt is short by one value - hackaround for now')
@@ -176,9 +190,11 @@ print('dzdt is short by one value - hackaround for now')
 n_traces, samples_per_trace = data.shape
 
 config_filename = os.path.join('rio.cfg')
+#config_filename = os.path.join('rio_250_650.cfg')
 config = L1L2ProcessConfiguration(config_filename)
 metameta = get_metadata(config_filename)
 decon_filter_length = int(config.deconvolution_filter_duration * sampling_rate)
+pdb.set_trace()
 firls = FIRLSFilter(config.bandpass_corners, config.bandpass_filter_duration)
 fir_taps = firls.make_simple(sampling_rate)
 n_samples_back = int(sampling_rate * np.abs(config.min_lag_trimmed_trace))
@@ -212,14 +228,7 @@ for i_trace in range(hack_start_trace, n_traces):
                                                       dt, start_ms_despike_decon,
                                                       end_ms_despike_decon, fir_taps,
                                                       decon_trace, add_noise_percent=add_noise_percent)
-#    despiked_trace, despike_filter = calculate_spiking_decon_filter(trace_data,
-#                                                      n_spiking_decon_filter_taps,
-#                                                      dt, start_ms_despike_decon,
-#                                                      end_ms_despike_decon, fir_taps,
-#                                                      decon_trace)
-#    despike_trace = np.convolve(despike_filter, tr_corr_w_deconv, 'same')
-#    despike_trace = ssig.filtfilt(fir_taps, 1., despike_trace).astype('float32')
-#    despiked_trace = spiking_decon(tr_corr_w_deconv, n_spiking_decon_filter_taps)#, **kwargs):#plot=False):
+
 
     if (len(fir_taps) == 1) and (fir_taps[0]==1.0):
         bpf_data = tr_corr_w_deconv
@@ -241,6 +250,34 @@ for i_trace in range(hack_start_trace, n_traces):
 
     output_data[i_trace, :] = little_data
     despike_data[i_trace, :] = little_despiked_trace
+
+    print("Now apply feature extraction")
+    time_axis = dt*np.arange(len(little_despiked_trace))
+    primary_neighborhood = np.array([48, 58]) + 350
+
+    #primary pulse between samples 48 and 58 (usually 52 or 53)
+    #secondary between 88 and 99, usually around 93-95
+    primary_window_halfwidth_in_samples = 2 #half the positive half-sine
+    probable_primary_region = little_despiked_trace[primary_neighborhood[0]:primary_neighborhood[1]]
+    t_probable_primary_region = time_axis[primary_neighborhood[0]:primary_neighborhood[1]]
+    max_index = np.argmax(probable_primary_region)
+    left_hand_edge = max_index - primary_window_halfwidth_in_samples
+    right_hand_edge = max_index + primary_window_halfwidth_in_samples + 1
+    primary_window = probable_primary_region[left_hand_edge:right_hand_edge]
+    t_primary_window = t_probable_primary_region[left_hand_edge:right_hand_edge]
+
+    #<check if max is on edge throw out this trace>
+    expected_max_arg = primary_window_halfwidth_in_samples
+    if np.argmax(primary_window) !=
+    print("add check if max is on edge throw out this trace")
+    #<check if max is on edge throw out this trace>
+    expec
+    plt.plot(t_probable_primary_region, probable_primary_region);
+    plt.plot(t_primary_window, primary_window, 'r*');
+
+    plt.show()
+
+    #main_primary_window
 
 #    #        decon_trace.data = little_data
 #    #pdb.set_trace()
