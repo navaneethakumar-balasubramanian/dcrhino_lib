@@ -27,12 +27,14 @@ from string import zfill
 #<Functions belong in a supporting_qc module>
 def reject_traces_with_small_rop(df, threshold=0.006):
     """
-
+    This is not perfect - there is a bit of a cheat here I acknowledge (adding
+    the zero), but its pretty honest.
+    I'm placing a copy of it in mwd_tools for import with other methods
     """
     dz = np.diff(df.depth)
-    dzz = np.hstack((0.0, dz))
+    dz = np.hstack((0.0, dz))
     #pdb.set_trace()
-    df['dz'] = pd.Series(dzz, index=df.index)
+    df['dz'] = pd.Series(dz, index=df.index)
     sub_df = df[df.dz>threshold]
     return sub_df
 
@@ -82,6 +84,7 @@ sampling_rates = [3200.0,]
 data_keys = [(x,y) for x in digitizer_ids for y in sampling_rates]
 #pdb.set_trace()
 bin_width = 0.05 #5cm bin default.  Slow drills we can go to 1cm, fast may need 10cm
+#belongs in cfg
 averaging_scheme = 'median'
 
 hole_folders = ['793-MR_77-23531', '793-MR_77-23631', '793-MR_77-23731',
@@ -101,6 +104,7 @@ columns_to_keep = ['x', 'y']
 
 
 binned_df_dict = {}
+
 #<keep the easting, northing info etc>
 #columns_to_keep = ['x', 'y']
 #for column_name in columns_to_copy:
@@ -114,11 +118,14 @@ for digitizer_id in digitizer_ids:
         sampling_rate_path = os.path.join(digitizer_path, '{}'.format(int(sampling_rate)) )
         for hole_folder in hole_folders:
             hole_path = os.path.join(sampling_rate_path, hole_folder)
-            hole_mwd_filename = os.path.join(hole_path, 'hole_mwd.csv')
+            #hole_mwd_filename = os.path.join(hole_path, 'hole_mwd.csv')
             features_filename = os.path.join(hole_path, 'extracted_features.csv')
-            df_mwd = pd.read_csv(hole_mwd_filename)
+            #df_mwd = pd.read_csv(hole_mwd_filename)
             df_features = pd.read_csv(features_filename)
             max_depth = df_features['depth'].max()
+            #calc these lines on df_for_binning means may not go from surface to bottom of hole
+            n_bins = int(np.ceil(max_depth/bin_width))
+            bin_edges = bin_width * np.arange(n_bins+1)
 
             #<Do global trace rejection here>
             print("we may wish to split the df into features from mwd vs features\
@@ -127,15 +134,14 @@ for digitizer_id in digitizer_ids:
             df_features = reject_traces_with_small_rop(df_features, threshold=0.005)
             sub_df_for_binning = df_features[columns_to_bin]
 
-            #calc these lines on df_for_binning means may not go from surface to bottom of hole
-            n_bins = int(np.ceil(max_depth/bin_width))
-            bin_edges = bin_width * np.arange(n_bins+1)
+
             #</Do global trace rejection here>
 
 
             #pdb.set_trace()
             #N.B This section could probably be vectorized, but its pretty fast
             #anyhow so lets keep it as a "nested for loop" for now.
+            #<init dict>
             for column_name in columns_to_bin:
                 binned_df_dict[column_name] = np.full(n_bins, np.nan)
             for i_bin in range(n_bins):
@@ -146,6 +152,7 @@ for digitizer_id in digitizer_ids:
                 bin_df = sub_df_for_binning[condition_1 & condition_2]
                 if averaging_scheme == 'median':
                     median_over_bin = bin_df.median()
+                    #TODO: nan median is default for pandas dataframe?
                 else:
                     print("averaging scheme {} not yet supported".format(averaging_scheme))
                     raise Exception
