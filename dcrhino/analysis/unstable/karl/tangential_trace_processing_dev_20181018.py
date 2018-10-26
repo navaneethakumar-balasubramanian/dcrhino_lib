@@ -50,6 +50,7 @@ from dcrhino.analysis.signal_processing.firls_bandpass import FIRLSFilter
 
 from dcrhino.analysis.signal_processing.seismic_processing import autocorrelate_trace
 from dcrhino.analysis.signal_processing.seismic_processing import deconvolve_trace_data
+from dcrhino.analysis.signal_processing.seismic_processing import pick_poly_peak
 #from dcrhino.analysis.signal_processing.seismic_processing import calculate_spiking_decon_filter
 #from supporting_v02_processing import get_hole_data
 from dcrhino.analysis.unstable.v02.config_file_parsing import L1L2ProcessConfiguration
@@ -194,7 +195,7 @@ config_filename = os.path.join('rio.cfg')
 config = L1L2ProcessConfiguration(config_filename)
 metameta = get_metadata(config_filename)
 decon_filter_length = int(config.deconvolution_filter_duration * sampling_rate)
-pdb.set_trace()
+#pdb.set_trace()
 firls = FIRLSFilter(config.bandpass_corners, config.bandpass_filter_duration)
 fir_taps = firls.make_simple(sampling_rate)
 n_samples_back = int(sampling_rate * np.abs(config.min_lag_trimmed_trace))
@@ -215,6 +216,11 @@ latest_multiple_time =  earliest_multiple_time + (multiple_window_search_width_m
 hack_start_trace = 0
 #n_traces = 4
 #for i_trace in range(0,n_traces):
+primary_poly_indices = np.full(n_traces, np.nan)
+primary_poly_amplitudes = np.full(n_traces, np.nan)
+multiple_poly_indices = np.full(n_traces, np.nan)
+multiple_poly_amplitudes = np.full(n_traces, np.nan)
+
 for i_trace in range(hack_start_trace, n_traces):
     print("trace # {}".format(i_trace))
     trace_data = data[i_trace,:]
@@ -251,9 +257,11 @@ for i_trace in range(hack_start_trace, n_traces):
     output_data[i_trace, :] = little_data
     despike_data[i_trace, :] = little_despiked_trace
 
-    print("Now apply feature extraction")
+    print("PRIMARY feature extraction")
+
     time_axis = dt*np.arange(len(little_despiked_trace))
-    primary_neighborhood = np.array([48, 58]) + 350
+    skip_samples = 350
+    primary_neighborhood = np.array([48, 58]) + skip_samples
 
     #primary pulse between samples 48 and 58 (usually 52 or 53)
     #secondary between 88 and 99, usually around 93-95
@@ -268,14 +276,65 @@ for i_trace in range(hack_start_trace, n_traces):
 
     #<check if max is on edge throw out this trace>
     expected_max_arg = primary_window_halfwidth_in_samples
-    if np.argmax(primary_window) !=
-    print("add check if max is on edge throw out this trace")
+    if np.argmax(primary_window) != primary_window_halfwidth_in_samples:
+        print("max sample is on the egde rather than in center - \
+              timing error or some unexpected issue - reject this trace")
+        pdb.set_trace()
+        #continue
     #<check if max is on edge throw out this trace>
-    expec
-    plt.plot(t_probable_primary_region, probable_primary_region);
-    plt.plot(t_primary_window, primary_window, 'r*');
 
-    plt.show()
+    #<worked example>
+    #max_index = 4
+    #left_hand_edge = 2
+
+    max_poly_amplitude, max_poly_ndx = pick_poly_peak(primary_window, plot=False)
+    max_ndx_ref_to_probable_primary_region = max_poly_ndx + left_hand_edge
+    primary_poly_indices[i_trace] = max_ndx_ref_to_probable_primary_region
+    primary_poly_amplitudes[i_trace] = max_poly_amplitude
+
+    #plt.figure(1);plt.clf()
+    #plt.plot(t_probable_primary_region, probable_primary_region);
+    #plt.plot(t_primary_window, primary_window, 'r*');
+
+#    #<MULTIPLE>
+    print("MULTIPLE feature extraction")
+    multiple_neighborhood = np.array([88, 101]) + skip_samples
+    multiple_window_halfwidth_in_samples = 2 #half the positive half-sine
+    probable_multiple_region = little_despiked_trace[multiple_neighborhood[0]:multiple_neighborhood[1]]
+    t_probable_multiple_region = time_axis[multiple_neighborhood[0]:multiple_neighborhood[1]]
+#    if i_trace==100:
+#        pdb.set_trace()
+    max_index = np.argmax(probable_multiple_region)
+    left_hand_edge = max_index - multiple_window_halfwidth_in_samples
+    right_hand_edge = max_index + multiple_window_halfwidth_in_samples + 1
+    multiple_window = probable_multiple_region[left_hand_edge:right_hand_edge]
+    t_multiple_window = t_probable_multiple_region[left_hand_edge:right_hand_edge]
+    if len(multiple_window) == 0:
+        multiple_poly_indices[i_trace] = max_ndx_ref_to_probable_multiple_region
+        multiple_poly_amplitudes[i_trace] = max_poly_amplitude
+        continue
+    #<check if max is on edge throw out this trace>
+    expected_max_arg = multiple_window_halfwidth_in_samples
+    if np.argmax(multiple_window) != multiple_window_halfwidth_in_samples:
+        print("max sample is on the egde rather than in center - \
+              timing error or some unexpected issue - reject this trace")
+        pdb.set_trace()
+        #continue
+    #<check if max is on edge throw out this trace>
+
+    max_poly_amplitude, max_poly_ndx = pick_poly_peak(multiple_window, plot=False)
+    max_ndx_ref_to_probable_multiple_region = max_poly_ndx + left_hand_edge
+    multiple_poly_indices[i_trace] = max_ndx_ref_to_probable_multiple_region
+    multiple_poly_amplitudes[i_trace] = max_poly_amplitude
+
+
+    #pdb.set_trace()
+#    plt.figure(2);plt.clf()
+#    plt.plot(t_probable_multiple_region, probable_multiple_region);
+#    plt.plot(t_multiple_window, multiple_window, 'r*');
+#    plt.show()
+#    #</MULTIPLE>
+
 
     #main_primary_window
 
@@ -308,7 +367,28 @@ for i_trace in range(hack_start_trace, n_traces):
 #    output_filename = os.path.join(trace_plot_path, '{}.png'.format(zfill(i_trace,4)))
 #    plt.savefig(output_filename)
     #plt.show()
-    np.save('despiked_traces', despike_data)
+amplitude_ratio = np.sqrt( multiple_poly_amplitudes / primary_poly_amplitudes ) #R**2
+impedance = (1 - amplitude_ratio) / (1 + amplitude_ratio)
+shear_modulus = impedance# = (1 - amplitude_ratio) / (1 + amplitude_ratio)
+delay = multiple_poly_indices + 40 - primary_poly_indices
+svel =1./delay**4
+
+plt.figure(22)
+plt.subplot(2,1,1)
+plt.plot(df_features.depth, svel, label='1/delay^4')
+plt.legend()
+plt.subplot(2,1,2)
+plt.plot(df_features.depth, shear_modulus, label='1-m/p / (1+m/p)')
+plt.legend()
+plt.show()
+#plt.plot(df_features.depth, shear_modulus);plt.show()
+plt.plot(df_features.depth, 1./delay**4);plt.show()
+np.save('shear_modulus', shear_modulus)
+np.save('despiked_traces', despike_data)
+
+np.save('despiked_traces', despike_data)
+np.save('despiked_traces', despike_data)
+np.save('despiked_traces', despike_data)
 #samples_per_corr_trace
 pdb.set_trace()
 
