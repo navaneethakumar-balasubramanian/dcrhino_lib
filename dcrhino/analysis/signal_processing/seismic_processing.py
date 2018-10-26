@@ -250,6 +250,8 @@ def calculate_spiking_decon_filter(trace_data, filter_length,  dt, start_ms,
 
 def pick_poly_peak(region_in_max_neighborhood, **kwargs):
     """
+    usage:
+        max_amplitude, max_ndx = pick_poly_peak(region_in_max_neighborhood, plot=True)
     fit a poly, then find its critical point in your region of interest;
 
     Critical points are where first derivative is zero
