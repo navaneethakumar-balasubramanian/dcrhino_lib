@@ -121,6 +121,7 @@ class QCLogPlotterv2():
         ax.legend()
         ax.set_title(plot_title)
         ax.set_ylim(0.0, 2.0)
+        pdb.set_trace()
         ax.set_xlim(X[0], X[-1])
         ax.set_xticklabels([])
         ax.legend(loc=1)
@@ -133,7 +134,7 @@ class QCLogPlotterv2():
         ax1 = ax.twinx()
         ax2 = ax.twinx()        
         
-        depth_axis = np.linspace(min(qc_plot_input.log_depth),max(qc_plot_input.log_depth),len(qc_plot_input.log_depth))
+        depth_axis = np.linspace(min(qc_plot_input.sub_mwd_depth),max(qc_plot_input.sub_mwd_depth),len(qc_plot_input.log_depth))
 
         
         rc_ylim_min = 0.
@@ -208,13 +209,16 @@ class QCLogPlotterv2():
             	    #<choose X - time>
 
         if depth is not False:
+            
             X ,time_vector= np.array( self.mwd_helper.get_interpolated_column(hole_mwd,self.mwd_helper.computed_elevation_column_name,time_vector))
             X = X.astype(float) - float(qc_plot_input.collar_elevation)
             X = X * -1
             X = np.nan_to_num(X)
         else:
             X = time_vector
-            pdb.set_trace()
+            
+#            pdb.set_trace()
+#            pdb.set_trace()
         #   X = get_interpolated_column(time_vector, sub_mwd_df, 'computed_elevation')
 
     	#if using depth plot
@@ -486,8 +490,8 @@ class QCLogPlotInput(object):
         return 1e6 * self.reflection_coefficient_sample / self.primary_pseudo_velocity_sample**2
 
 class QCLogPlotter():
-    def __init__(self, ax,qc_plot_input, **kwargs):
-        self.plot_vs_depth(ax,qc_plot_input)
+    def __init__(self, qc_plot_input, **kwargs):
+        self.plot_vs_depth(qc_plot_input)
 
 
     def ucs_panel(self,ax, qc_plot_input, x_limits=[None, None], sample_or_poly='sample'):
@@ -556,7 +560,7 @@ class QCLogPlotter():
                             '(uncalibrated)', x_limits=x_limits, color='red')
 
 
-    def plot_vs_depth(self,ax, qc_plot_input, multi_mode=False):
+    def plot_vs_depth(self,qc_plot_input, multi_mode=False):
         """
         """
         project_id = 'west_angelas'
