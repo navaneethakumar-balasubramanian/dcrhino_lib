@@ -11,6 +11,19 @@ from dcrhino.analysis.supporting_datetime import get_seconds_into_day
 #from dcrhino.constants import DATA_PATH, ROOT_PATH
 #from dcrhino.interval import TimePeriod
 
+def reject_traces_with_small_rop(df, threshold=0.006):
+    """
+    20181024
+    This is not perfect - there is a bit of a cheat here I acknowledge (adding
+    the zero), but its pretty honest.
+    """
+    dz = np.diff(df.depth)
+    dz = np.hstack((0.0, dz))
+    #pdb.set_trace()
+    df['dz'] = pd.Series(dz, index=df.index)
+    sub_df = df[df.dz>threshold]
+    return sub_df
+
 def plot_mwd_quantity(plot_meta, column_name, interpolated_data, t_mwd, t_rhino, mwd_data):
     """
     """
@@ -106,7 +119,8 @@ def interpolate_to_assign_depths_to_log_csv(df_peak_info, df_hole_profile, plot_
         plt.clf()
     return depths
 
-def get_interpolated_column(time_vector, mwd_hole_df, column_label,end_time_column_label='endtime'):
+def get_interpolated_column(time_vector, mwd_hole_df, column_label,
+                            end_time_column_label='endtime'):
     """
     time_vector is actually a pandas date_range, for example:
     time_vector = pd.date_range(start=row.time_start, periods=num_traces_in_blasthole, freq='1S')
@@ -118,7 +132,8 @@ def get_interpolated_column(time_vector, mwd_hole_df, column_label,end_time_colu
     t_mwd = pd.DatetimeIndex(mwd_hole_df[end_time_column_label])
     t_mwd = t_mwd.astype(np.int64)
 
-    interp_function = interp1d(t_mwd, mwd_hole_df[column_label], kind='linear', bounds_error=False, fill_value='extrapolate')
+    interp_function = interp1d(t_mwd, mwd_hole_df[column_label], kind='linear',
+                               bounds_error=False, fill_value='extrapolate')
 
     time_vector = pd.DatetimeIndex(time_vector).astype(np.int64)
     interped_data = interp_function(time_vector)
