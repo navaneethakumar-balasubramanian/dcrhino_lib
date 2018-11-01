@@ -25,6 +25,7 @@ from dcrhino.analysis.signal_processing.supporting_segy_processing import sampli
 logger = init_logging(__name__)
 
 ACOUSTIC_VELOCITY = 4755
+SHEAR_VELOCITY = 2654
 MOUNT_POINTS_MONT_WRIGHT = ['mount_24_inch', 'mount_10_inch', 'mount_24_inch_180deg', 'mount_10_inch_180deg']
 SAMPLES_TO_POLY_ORDER = {}; SAMPLES_TO_POLY_ORDER[3]=2;SAMPLES_TO_POLY_ORDER[4]=3;
 SAMPLES_TO_POLY_ORDER[5]=3;SAMPLES_TO_POLY_ORDER[6]=3;SAMPLES_TO_POLY_ORDER[7]=4;
@@ -226,6 +227,26 @@ def calculate_spiking_decon_filter(trace_data, filter_length,  dt, start_ms,
     x_filter = nominal_scale_factor*ATAinv[0,:]
 
     despike_trace = np.convolve(x_filter, trace_data, 'same')#original
+#    if plot:
+#        fig, ax = plt.subplots(2,1, sharex=True)
+#        #n_samples = len(trace_data)
+#        #time_axis = dt*np.arange(n_samples)
+#     #   pdb.set_trace()
+#        #ax.plot(time_axis, trace_data)
+#        ax[0].plot(trace_data, label='parent trace')
+#        ax[0].plot(np.arange(first_sample_to_use,final_sample_to_use),
+#                sub_region_to_use_for_decon_calculation, label='subregion for calc decon filter')
+#        ax[0].plot(despike_trace, label='despiked deconvolved correlated trace')
+#        ax[0].vlines([first_sample_to_use, final_sample_to_use], ax[0].get_ylim()[0], ax[0].get_ylim()[1])
+#        ax[0].legend()
+#
+#        ax[1].plot(bpf_orig, label='orig')
+#        ax[1].plot(bpf_despike, label='despike')
+#        plt.legend()
+#        plt.show()
+
+    #trim the correlated trace at 110 - 170 ms
+    #return bpf_despike, x_filter
     return despike_trace, x_filter
 
 def max_reflection_amplitude(trace):
@@ -244,81 +265,11 @@ def max_reflection_amplitude(trace):
 
 
 
-def calculate_spiking_decon_filter(trace_data, filter_length,  dt, start_ms,
-                                   end_ms, bpf_taps, decon_trace, **kwargs):
-    """
-    20181024: Roughed this method out with Jamie yesterday.  It is still
-    unclear whether to use as input the raw trace, decon_trace, or corr_trace
-    as that on which we calculate the despiking operator.
-
-    - you want to equalize (best you can) the spectrum from trace to trace
-    - if you dont, and you have a variable center frequency (say 100-250Hz)
-    what that does it it creates a multiple with variable velocity ...
-    so you will get multiples with different velocities becuase of the varying frequencies
-    because its a dispersive wave
-    -
-    dt: float, time interval of a sample (1/sps)
-    start_ms: how long after the minimum phase max spike you want to start considering
-    data to input; specific to "correlated, deconvolved trace" ... can probably use
-    argmax to find the spot to start counting ms, alternatively can use some theoretical
-    value, but that depends on having the previous measurand info available and DC
-    is not ready for that yet
-    end_ms: when to stop admitting data, see above.
-
-    #trim the correlated trace at 110 - 170 ms
-    """
-    plot = kwargs.get('plot', False)
-    #dt = kwargs.get('dt', None)
-    add_noise_percent = kwargs.get('add_noise_percent', 5.0)
-    noise_fraction = add_noise_percent / 100.0
-    #pdb.set_trace()
-    max_trace_ndx = np.argmax(trace_data)
-    n_samples_from_max_to_window = int(np.floor((0.001 * start_ms) / dt))
-    first_sample_to_use = max_trace_ndx + n_samples_from_max_to_window
-    window_width = (end_ms - start_ms) * 0.001
-    final_sample_to_use = first_sample_to_use + int(np.ceil(window_width/dt))
-    sub_region_to_use_for_decon_calculation = trace_data[first_sample_to_use:final_sample_to_use]
-    R_xx = autocorrelate_trace(sub_region_to_use_for_decon_calculation, filter_length)
-    try:
-        R_xx[0] *= (1+noise_fraction)
-    except IndexError:
-        pdb.set_trace()
-    nominal_scale_factor = 1.0;#1./R_xx[0]#1.0
-    ATA = scipy.linalg.toeplitz(R_xx)
-    try:
-        ATAinv = scipy.linalg.inv(ATA)
-    except np.linalg.linalg.LinAlgError:
-        print('matrix inversion failed')  #
-        return trace_data, R_xx[0]
-    x_filter = nominal_scale_factor*ATAinv[0,:]
-
-    despike_trace = np.convolve(x_filter, trace_data, 'same')
-    #bpf_orig = ssig.filtfilt(bpf_taps, 1., trace_data).astype('float32')
-    bpf_despike = ssig.filtfilt(bpf_taps, 1., despike_trace).astype('float32')
 
 
 
 
-    if plot:
-        fig, ax = plt.subplots(2,1, sharex=True)
-        #n_samples = len(trace_data)
-        #time_axis = dt*np.arange(n_samples)
-     #   pdb.set_trace()
-        #ax.plot(time_axis, trace_data)
-        ax[0].plot(trace_data, label='parent trace')
-        ax[0].plot(np.arange(first_sample_to_use,final_sample_to_use),
-                sub_region_to_use_for_decon_calculation, label='subregion for calc decon filter')
-        ax[0].plot(despike_trace, label='despiked deconvolved correlated trace')
-        ax[0].vlines([first_sample_to_use, final_sample_to_use], ax[0].get_ylim()[0], ax[0].get_ylim()[1])
-        ax[0].legend()
 
-        ax[1].plot(bpf_orig, label='orig')
-        ax[1].plot(bpf_despike, label='despike')
-        plt.legend()
-        plt.show()
-
-    #trim the correlated trace at 110 - 170 ms
-    return bpf_despike, x_filter
 
 
 def pick_poly_peak(region_in_max_neighborhood, **kwargs):

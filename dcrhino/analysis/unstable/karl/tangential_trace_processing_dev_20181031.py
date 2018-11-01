@@ -50,6 +50,7 @@ import dcrhino.analysis.measurands.measurand_registry_west_angelas as MEASURAND_
 from dcrhino.analysis.signal_processing.firls_bandpass import FIRLSFilter
 
 from dcrhino.analysis.signal_processing.seismic_processing import autocorrelate_trace
+from dcrhino.analysis.signal_processing.seismic_processing import ACOUSTIC_VELOCITY, SHEAR_VELOCITY
 from dcrhino.analysis.signal_processing.seismic_processing import deconvolve_trace_data#hankel_style
 from dcrhino.analysis.signal_processing.seismic_processing import deconvolve_trace_data_dev#hankel_style
 from dcrhino.analysis.signal_processing.seismic_processing import pick_poly_peak
@@ -65,10 +66,6 @@ from dcrhino.analysis.signal_processing.mwd_tools import get_interpolated_column
 from dcrhino.analysis.signal_processing.mwd_tools import reject_traces_with_small_rop
 
 
-
-#(time_vector, mwd_hole_df, column_label,end_time_column_label='endtime'):
-ACOUSTIC_VELOCITY = 4755.0
-SHEAR_VELOCITY = 2654#ACOUSTIC_VELOCITY / 2.0
 sampling_rate = 4000.0; dt = 1./sampling_rate
 start_ms_despike_decon = 5.0; end_ms_despike_decon = 70.#190.0#70.0
 #start_ms_despike_decon = -12.0; end_ms_despike_decon = 70.#190.0#70.0
@@ -166,7 +163,7 @@ for i_trace in range(hack_start_trace, n_traces):
     decon_filters[i_trace, :] = x_filter; rxxs[i_trace] = rxx0
     tr_corr_w_deconv = np.correlate(trace_data, decon_trace, 'same')
 #    tr_corr_w_deconv = ssig.filtfilt(fir_taps, 1., tr_corr_w_deconv).astype('float32')
-    despiked_trace, despike_filter = calculate_spiking_decon_filter_local(tr_corr_w_deconv,
+    despiked_trace, despike_filter = calculate_spiking_decon_filter(tr_corr_w_deconv,
                                                       n_spiking_decon_filter_taps,
                                                       dt, start_ms_despike_decon,
                                                       end_ms_despike_decon,
