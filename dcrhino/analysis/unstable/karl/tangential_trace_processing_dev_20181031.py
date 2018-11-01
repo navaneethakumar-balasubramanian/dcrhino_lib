@@ -65,53 +65,6 @@ from dcrhino.analysis.signal_processing.mwd_tools import get_interpolated_column
 from dcrhino.analysis.signal_processing.mwd_tools import reject_traces_with_small_rop
 
 
-def calculate_spiking_decon_filter_local(trace_data, filter_length,  dt, start_ms,
-                                   end_ms, **kwargs):
-    """
-    - you want to equalize (best you can) the spectrum from trace to trace
-    - if you dont, and you have a variable center frequency (say 100-250Hz)
-    what that does it it creates a multiple with variable velocity ...
-    so you will get multiples with different velocities becuase of the varying frequencies
-    because its a dispersive wave
-    -
-    dt: float, time interval of a sample (1/sps)
-    start_ms: how long after the minimum phase max spike you want to start considering
-    data to input; specific to "correlated, deconvolved trace" ... can probably use
-    argmax to find the spot to start counting ms, alternatively can use some theoretical
-    value, but that depends on having the previous measurand info available and DC
-    is not ready for that yet
-    end_ms: when to stop admitting data, see above.
-
-    #trim the correlated trace at 110 - 170 ms
-    """
-    plot = kwargs.get('plot', False)
-    #dt = kwargs.get('dt', None)
-    add_noise_percent = kwargs.get('add_noise_percent', 5.0)
-    noise_fraction = add_noise_percent / 100.0
-
-    max_trace_arg = np.argmax(trace_data)
-    n_samples_from_max_to_window = int(np.floor((0.001 * start_ms) / dt))
-    first_sample_to_use = max_trace_arg + n_samples_from_max_to_window
-    window_width = (end_ms - start_ms) * 0.001
-    final_sample_to_use = first_sample_to_use + int(np.ceil(window_width/dt))
-    #pdb.set_trace()
-    sub_region_to_use_for_decon_calculation = trace_data[first_sample_to_use:final_sample_to_use]
-    #pdb.set_trace()
-    R_xx = autocorrelate_trace(sub_region_to_use_for_decon_calculation, filter_length)
-    R_xx[0] *= (1+noise_fraction)
-    #pdb.set_trace()
-    nominal_scale_factor = 1.0;#1./R_xx[0]#1.0
-    ATA = scipy.linalg.toeplitz(R_xx)
-    try:
-        ATAinv = scipy.linalg.inv(ATA)
-    except np.linalg.linalg.LinAlgError:
-        print('matrix inversion failed')  #
-        return trace_data, R_xx[0]
-    x_filter = nominal_scale_factor*ATAinv[0,:]
-
-    despike_trace = np.convolve(x_filter, trace_data, 'same')#original
-    return despike_trace, x_filter
-
 
 #(time_vector, mwd_hole_df, column_label,end_time_column_label='endtime'):
 ACOUSTIC_VELOCITY = 4755.0
