@@ -49,7 +49,7 @@ import dcrhino.analysis.measurands.measurand_registry_west_angelas as MEASURAND_
 from dcrhino.analysis.signal_processing.firls_bandpass import FIRLSFilter
 
 from dcrhino.analysis.signal_processing.seismic_processing import autocorrelate_trace
-from dcrhino.analysis.signal_processing.seismic_processing import deconvolve_trace_data
+from dcrhino.analysis.signal_processing.seismic_processing import deconvolve_trace_data#hankel_style
 from dcrhino.analysis.signal_processing.seismic_processing import pick_poly_peak
 #from dcrhino.analysis.signal_processing.seismic_processing import calculate_spiking_decon_filter
 #from supporting_v02_processing import get_hole_data
@@ -195,7 +195,7 @@ config_filename = os.path.join('rio.cfg')
 config = L1L2ProcessConfiguration(config_filename)
 metameta = get_metadata(config_filename)
 decon_filter_length = int(config.deconvolution_filter_duration * sampling_rate)
-#pdb.set_trace()
+pdb.set_trace()
 firls = FIRLSFilter(config.bandpass_corners, config.bandpass_filter_duration)
 fir_taps = firls.make_simple(sampling_rate)
 n_samples_back = int(sampling_rate * np.abs(config.min_lag_trimmed_trace))
@@ -221,12 +221,20 @@ primary_poly_amplitudes = np.full(n_traces, np.nan)
 multiple_poly_indices = np.full(n_traces, np.nan)
 multiple_poly_amplitudes = np.full(n_traces, np.nan)
 
+numeric_attenuation_correction = np.arange(3601,4001)
+numeric_attenuation_correction = np.flipud(numeric_attenuation_correction)
+numeric_attenuation_correction = 4000./numeric_attenuation_correction
+
 for i_trace in range(hack_start_trace, n_traces):
     print("trace # {}".format(i_trace))
+#    if i_trace==365:
+#        pdb.set_trace()
     trace_data = data[i_trace,:]
 #    trace_data -= np.mean(trace_data)
 #    plt.plot(trace_data);plt.show()
-    decon_trace, rxx0 = deconvolve_trace_data(trace_data, decon_filter_length)
+    decon_trace, rxx0 = deconvolve_trace_data(trace_data, decon_filter_length, hankel_style=True)
+                                              #, scale_factor=numeric_attenuation_correction)
+    #, hankel_style=True)
     tr_corr_w_deconv = np.correlate(trace_data, decon_trace, 'same')
 #    tr_corr_w_deconv = ssig.filtfilt(fir_taps, 1., tr_corr_w_deconv).astype('float32')
     despiked_trace, despike_filter = calculate_spiking_decon_filter_local(tr_corr_w_deconv,
@@ -271,8 +279,13 @@ for i_trace in range(hack_start_trace, n_traces):
     max_index = np.argmax(probable_primary_region)
     left_hand_edge = max_index - primary_window_halfwidth_in_samples
     right_hand_edge = max_index + primary_window_halfwidth_in_samples + 1
+    #try:
     primary_window = probable_primary_region[left_hand_edge:right_hand_edge]
     t_primary_window = t_probable_primary_region[left_hand_edge:right_hand_edge]
+#    if len(primary_window) == 0:
+##    except ValueError:#IndexError:
+#        print("AAAAAAAAAAAAAAAAAAAAAAAARRRRGH")
+#        continue
 
     #<check if max is on edge throw out this trace>
     expected_max_arg = primary_window_halfwidth_in_samples
@@ -385,10 +398,10 @@ plt.show()
 plt.plot(df_features.depth, 1./delay**4);plt.show()
 np.save('shear_modulus', shear_modulus)
 np.save('despiked_traces', despike_data)
-
-np.save('despiked_traces', despike_data)
-np.save('despiked_traces', despike_data)
-np.save('despiked_traces', despike_data)
+np.save('undespiked_traces', output_data)
+#np.save('despiked_traces', despike_data)
+#np.save('despiked_traces', despike_data)
+#np.save('despiked_traces', despike_data)
 #samples_per_corr_trace
 pdb.set_trace()
 
