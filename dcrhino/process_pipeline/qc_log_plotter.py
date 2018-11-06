@@ -490,8 +490,8 @@ class QCLogPlotInput(object):
         return 1e6 * self.reflection_coefficient_sample / self.primary_pseudo_velocity_sample**2
 
 class QCLogPlotter():
-    def __init__(self, ax,qc_plot_input, **kwargs):
-        self.plot_vs_depth(ax,qc_plot_input)
+    def __init__(self, qc_plot_input, **kwargs):
+        self.plot_vs_depth(qc_plot_input)
 
 
     def ucs_panel(self,ax, qc_plot_input, x_limits=[None, None], sample_or_poly='sample'):
@@ -560,7 +560,7 @@ class QCLogPlotter():
                             '(uncalibrated)', x_limits=x_limits, color='red')
 
 
-    def plot_vs_depth(self,ax, qc_plot_input, multi_mode=False):
+    def plot_vs_depth(self,qc_plot_input, multi_mode=False):
         """
         """
         project_id = 'west_angelas'
