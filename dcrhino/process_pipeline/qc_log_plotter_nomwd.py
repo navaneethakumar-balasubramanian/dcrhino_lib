@@ -20,7 +20,6 @@ from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots09192018 impo
 class QCLogPlotter_nomwd():
 
     def __init__(self,axial,tangential,radial,extracted_features_df,plot_title_id,output_file_path,global_config,start_ts, end_ts):
-
         self.axial = axial
         self.tangential = tangential
         self.radial = radial
@@ -83,7 +82,7 @@ class QCLogPlotter_nomwd():
 
         num_traces_per_component, num_samples = trace_array_dict[label].T.shape
         #X is time vector
-        X = pd.date_range(start=qc_plot_input.start_ts, periods=num_traces_per_component, freq='1S')
+        X = pd.date_range(start=qc_plot_input.tstart, periods=num_traces_per_component, freq='1S')
         
 
     	# Spread out Y
@@ -160,6 +159,7 @@ class QCLogPlotter_nomwd():
         print("saving {}".format(out_filename))
 
     def plot(self):
+        
         data_date =  self.start_ts
 #        depth = self.extracted_features_df['depth']
         components = [self.axial,self.tangential,self.radial]
@@ -186,24 +186,24 @@ class QCLogPlotter_nomwd():
             half_way = int(n_samples/2)
             trace_array_dict[component_label] = trace_array_dict[component_label][half_way-samples_back:half_way+samples_fwd,:]
 
+#        pdb.set_trace()
 
-
-        print('Normalizing amplitudes. If you want it not normalized, comment out the portion below')
-        normalize_by_max_amplitude =  True
-        if normalize_by_max_amplitude:
-            for component_label in COMPONENT_LABELS:#in ['x', 'y', 'z']:
-                nans_locations = np.where(np.isnan(trace_array_dict[component_label]))
-                trace_array_dict[component_label][nans_locations]=0.0
-                num_samples, num_traces = trace_array_dict[component_label].shape
-                max_amplitudes = np.max(trace_array_dict[component_label], axis=0)
-                trace_array_dict[component_label] = trace_array_dict[component_label]/max_amplitudes
-                trace_array_dict[component_label][nans_locations] = np.nan
-
-        print('Normalization done. Creating inputs for plotting')
+#        print('Normalizing amplitudes. If you want it not normalized, comment out the portion below')
+#        normalize_by_max_amplitude =  True
+#        if normalize_by_max_amplitude:
+#            for component_label in COMPONENT_LABELS:#in ['x', 'y', 'z']:
+#                nans_locations = np.where(np.isnan(trace_array_dict[component_label]))
+#                trace_array_dict[component_label][nans_locations]=0.0
+#                num_samples, num_traces = trace_array_dict[component_label].shape
+#                max_amplitudes = np.max(trace_array_dict[component_label], axis=0)
+#                trace_array_dict[component_label] = trace_array_dict[component_label]/max_amplitudes
+#                trace_array_dict[component_label][nans_locations] = np.nan
+#
+#        print('Normalization done. Creating inputs for plotting')
 #        depth = np.nan_to_num(depth)
         
 #        data_for_log = QCLogPlotInput()
-        pdb.set_trace()
+#        pdb.set_trace()
         qc_plot_input = QCBlastholePlotInputs(trace_array_dict=trace_array_dict,
                                                   peak_ampl_x=self.extracted_features_df['axial_primary_peak_sample'],
                                                   peak_ampl_y=self.extracted_features_df['tangential_primary_peak_sample'],
@@ -215,4 +215,4 @@ class QCLogPlotter_nomwd():
                                                   tstart = self.start_ts,
                                                   tend = self.end_ts)
         print('Passing values to plot code- supporting qc blasthole plots')
-        self.qc_plot(qc_plot_input, self.output_file_path,plot_title, data_date, '', show=False,depth=self.plot_by_depth)
+        self.qc_plot(qc_plot_input, self.output_file_path,plot_title, data_date, '', show=False)

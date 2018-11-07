@@ -64,6 +64,7 @@ class QCBlastholePlotInputs(object):
         self.log_depth = kwargs.get('log_depth',None)
         self.start_ts = kwargs.get('start_ts',None)
         self.end_ts = kwargs.get('end_ts',None)
+        self.tstart = kwargs.get('tstart',None)
 		#</These are variables needed to generate plots>
 
         #<these numbers dictate the y axis bounds>

@@ -377,7 +377,7 @@ argparser.add_argument('-compec', '--computed-elevation-column', help="COMPUTED 
 argparser.add_argument('-holeindex', '--hole-index', help="HOLE INDEX", default=False)
 argparser.add_argument('-icl', '--interpolated-column-names', help="INTERPOLATED COLUMN NAMES", default='')
 argparser.add_argument('-i', '--interactive-mode', help="INTERACTIVE MODE", default=False)
-argparser.add_argument('-t','--time-processing',help="TIME PROCESSING ONLY",default=True)
+argparser.add_argument('-t','--time-processing',help="TIME PROCESSING ONLY",default=False)
 args = argparser.parse_args()
 
 start_time_column = args.start_time_column
@@ -449,7 +449,8 @@ if args.time_processing:
     extracted_features_df['end_ts'] = int(h5_helper.max_ts)
     
     
-    qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,extracted_features_list,bph_string,os.path.join(temppath,'time_plot.png'),global_config,start_ts,end_ts)
+    
+    qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,extracted_features_df,bph_string,os.path.join(temppath,'time_plot.png'),global_config,start_ts,end_ts)
     qclogplotter_time.plot()
 
     file = open(os.path.join(temppath,'log.txt'),'w')
