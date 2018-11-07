@@ -10,6 +10,7 @@ import numpy as np
 import ConfigParser
 from datetime import datetime
 from dcrhino.real_time.metadata import Metadata
+import pandas as pd
 import pdb
 
 class H5Helper:
@@ -52,6 +53,71 @@ class H5Helper:
             self.y_sensitivity = self._sensitivity[0]
             self.z_sensitivity = self._sensitivity[0]
         return [self.x_sensitivity, self.y_sensitivity, self.z_sensitivity]
+
+
+
+    def acceleration_stats(self,time_interval,basic):
+        accelerations = []
+        current_time = int(self.min_ts)
+        next_time = current_time + time_interval
+        accel_df = None
+        # pdb.set_trace()
+        last_printed = None
+
+        if not basic:
+            while current_time <= int(self.max_ts):
+                # pdb.set_trace()
+                percentage = int(100-(self.max_ts-current_time)/(self.max_ts-self.min_ts)*100)
+                if percentage % 5 == 0:
+                    if percentage != last_printed:
+                        print("{}%".format(percentage))
+                        last_printed = percentage
+
+                a = self.ts>=current_time
+                b = self.ts<next_time
+                indices = np.logical_and(a, b)
+                if self._is_ide_file():
+                    max_x = np.max(self.x_data[indices])/self.x_sensitivity
+                    min_x = np.min(self.x_data[indices])/self.x_sensitivity
+                    max_y = np.max(self.y_data[indices])/self.y_sensitivity
+                    min_y = np.min(self.y_data[indices])/self.y_sensitivity
+                    max_z = np.max(self.z_data[indices])/self.z_sensitivity
+                    min_z = np.min(self.z_data[indices])/self.z_sensitivity
+                else:
+                    max_x = (3.3/2.0 - ((5.0/65535)*np.max(self.x_data[indices])))/self.x_sensitivity
+                    min_x = (3.3/2.0 - ((5.0/65535)*np.max(self.x_data[indices])))/self.x_sensitivity
+                    max_y = (3.3/2.0 - ((5.0/65535)*np.max(self.y_data[indices])))/self.y_sensitivity
+                    min_y = (3.3/2.0 - ((5.0/65535)*np.max(self.y_data[indices])))/self.y_sensitivity
+                    max_z = (3.3/2.0 - ((5.0/65535)*np.max(self.z_data[indices])))/self.z_sensitivity
+                    min_z = (3.3/2.0 - ((5.0/65535)*np.max(self.z_data[indices])))/self.z_sensitivity
+                row = [current_time,max_x,min_x,max_y,min_y,max_z,min_z]
+                #print(row)
+                accelerations.append(row)
+                current_time = next_time
+                next_time += time_interval
+            accel_df = pd.DataFrame(accelerations,columns=["Timestamp","max_x","min_x","max_y","min_y","max_z","minz"])
+        if self._is_ide_file():
+            max_x = np.max(self.x_data)/self.x_sensitivity
+            min_x = np.min(self.x_data)/self.x_sensitivity
+            max_y = np.max(self.y_data)/self.y_sensitivity
+            min_y = np.min(self.y_data)/self.y_sensitivity
+            max_z = np.max(self.z_data)/self.z_sensitivity
+            min_z = np.min(self.z_data)/self.z_sensitivity
+        else:
+            max_x = (3.3/2.0 - ((5.0/65535)*np.max(self.x_data)))/self.x_sensitivity
+            min_x = (3.3/2.0 - ((5.0/65535)*np.max(self.x_data)))/self.x_sensitivity
+            max_y = (3.3/2.0 - ((5.0/65535)*np.max(self.y_data)))/self.y_sensitivity
+            min_y = (3.3/2.0 - ((5.0/65535)*np.max(self.y_data)))/self.y_sensitivity
+            max_z = (3.3/2.0 - ((5.0/65535)*np.max(self.z_data)))/self.z_sensitivity
+            min_z = (3.3/2.0 - ((5.0/65535)*np.max(self.z_data)))/self.z_sensitivity
+        print("Max X {}".format(max_x))
+        print("Mim X {}".format(min_x))
+        print("Max Y {}".format(max_y))
+        print("Mim Y {}".format(min_y))
+        print("Max Z {}".format(max_z))
+        print("Mim Z {}".format(min_z))
+        return accel_df
+
 
     def _extract_metadata_from_h5_file(self):
         config = ConfigParser.ConfigParser()
