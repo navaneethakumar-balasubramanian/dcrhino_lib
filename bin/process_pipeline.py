@@ -27,6 +27,7 @@ from dcrhino.analysis.graphical.unbinned_qc_log_plots_v3_west_angelas import pse
 from datetime import datetime
 from dcrhino.process_pipeline.config import Config
 from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotter,QCLogPlotInput
+from dcrhino.process_pipeline.qc_log_plotter_nomwd import QCLogPlotter_nomwd
 from dcrhino.process_pipeline.feature_extractor import FeatureExtractor
 from dcrhino.process_pipeline.filters import FIRLSFilter
 
@@ -442,10 +443,14 @@ if args.time_processing:
     temppath = io_helper.get_output_base_path(sourcefilename)
     axial, tangential, radial, ts_array = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper.data_xyz, h5_helper.ts, h5_helper.sensitivity_xyz,debug_file_name=os.path.join(temppath,''))
     extracted_features_list = get_features_extracted(extractor,axial,tangential,radial,ts_array)
+    extracted_features_df['start_ts'] = int(h5_helper.min_ts)
+    extracted_features_df['end_ts'] = int(h5_helper.max_ts)
     extracted_features_df = pd.DataFrame(extracted_features_list)
     extracted_features_df.to_csv(os.path.join(temppath,"extracted_features.csv"))
-    #qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,None,None,extracted_features_list,bph_string,os.path.join(temppath,'time_plot.png'),global_config,plot_by_depth=False)
-    #qclogplotter_time.plot()
+    
+    
+    qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,None,None,extracted_features_list,bph_string,os.path.join(temppath,'time_plot.png'),global_config,plot_by_depth=False, start_ts,end_ts)
+    qclogplotter_time.plot()
 
     file = open(os.path.join(temppath,'log.txt'),'w')
 
@@ -486,6 +491,22 @@ else:
 
 
     if interactive_mode:
+            cb = plt.colorbar(heatmap1, cax = cbaxes)
+        ax[2], heatmap2 = plot_hole_as_heatmap(ax[2], cbal.v_min_2, cbal.v_max_2, X, Y,
+          trace_array_dict['tangential'], cmap_string, y_tick_locations)#,
+
+        ax[3], heatmap3 = plot_hole_as_heatmap(ax[3], cbal.v_min_3, cbal.v_max_3, X, Y,
+          trace_array_dict['radial'], cmap_string, y_tick_locations)#,
+
+#        plt.tight_layout()
+        if colourbar_type=='all_one':
+            cbaxes = fig.add_axes([0.01, 0.1, 0.007, 0.8])
+            cb = plt.colorbar(heatmap1, cax = cbaxes)
+            plt.setp(cbaxes.get_xticklabels(), rotation='vertical', fontsize=10)
+            cbaxes.yaxis.set_ticks_position('right')
+
+    		#<Labeling>
+
         for i,hole in enumerate(holes_array):
             bph_string = str(hole[bench_column].values[0]) + "-" + str(hole[pattern_column].values[0])  + "-" + str(hole[hole_column].values[0])
             print str(i) + " - " + bph_string
