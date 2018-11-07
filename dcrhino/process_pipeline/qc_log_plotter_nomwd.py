@@ -160,7 +160,7 @@ class QCLogPlotter_nomwd():
         print("saving {}".format(out_filename))
 
     def plot(self):
-        data_date =  self.start_ts.dt.date.iloc[0]
+        data_date =  self.start_ts
 #        depth = self.extracted_features_df['depth']
         components = [self.axial,self.tangential,self.radial]
         trace_array_dict = {}
@@ -203,7 +203,7 @@ class QCLogPlotter_nomwd():
 #        depth = np.nan_to_num(depth)
         
 #        data_for_log = QCLogPlotInput()
-
+        pdb.set_trace()
         qc_plot_input = QCBlastholePlotInputs(trace_array_dict=trace_array_dict,
                                                   peak_ampl_x=self.extracted_features_df['axial_primary_peak_sample'],
                                                   peak_ampl_y=self.extracted_features_df['tangential_primary_peak_sample'],
