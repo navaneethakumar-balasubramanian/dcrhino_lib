@@ -45,10 +45,11 @@ class QCLogPlotter_nomwd():
         ax.legend()
         ax.set_title(plot_title)
         ax.set_ylim(0.0, 2.0)
-        pdb.set_trace()
+        
         ax.set_xlim(X[0], X[-1])
-        ax.set_xticklabels([])
+#        ax.set_xticklabels([])
         ax.legend(loc=1)
+#        ax.set_xlabel('Timestamps')
         return
 
 
@@ -142,6 +143,9 @@ class QCLogPlotter_nomwd():
         ax[1].text(1.01, 0.5, 'axial', fontsize=11.5, rotation='vertical', transform=ax[1].transAxes)
         ax[2].text(1.01, 0.6, 'tangential', fontsize=11.5, rotation='vertical', transform=ax[2].transAxes)
         ax[3].text(1.01, 0.5, 'radial', fontsize=11.5, rotation='vertical', transform=ax[3].transAxes)
+        ax[3].set_xlabel('Timestamps')
+#        ax[3].plt.xticks()
+#        ax[3].set_xlim(X[0], X[-1])
     		# </Labelling>
 
     #		<Need to figure out what the code below is for>
@@ -188,18 +192,18 @@ class QCLogPlotter_nomwd():
 
 #        pdb.set_trace()
 
-#        print('Normalizing amplitudes. If you want it not normalized, comment out the portion below')
-#        normalize_by_max_amplitude =  True
-#        if normalize_by_max_amplitude:
-#            for component_label in COMPONENT_LABELS:#in ['x', 'y', 'z']:
-#                nans_locations = np.where(np.isnan(trace_array_dict[component_label]))
-#                trace_array_dict[component_label][nans_locations]=0.0
-#                num_samples, num_traces = trace_array_dict[component_label].shape
-#                max_amplitudes = np.max(trace_array_dict[component_label], axis=0)
-#                trace_array_dict[component_label] = trace_array_dict[component_label]/max_amplitudes
-#                trace_array_dict[component_label][nans_locations] = np.nan
-#
-#        print('Normalization done. Creating inputs for plotting')
+        print('Normalizing amplitudes. If you want it not normalized, comment out the portion below')
+        normalize_by_max_amplitude =  True
+        if normalize_by_max_amplitude:
+            for component_label in COMPONENT_LABELS:#in ['x', 'y', 'z']:
+                nans_locations = np.where(np.isnan(trace_array_dict[component_label]))
+                trace_array_dict[component_label][nans_locations]=0.0
+                num_samples, num_traces = trace_array_dict[component_label].shape
+                max_amplitudes = np.max(trace_array_dict[component_label], axis=0)
+                trace_array_dict[component_label] = trace_array_dict[component_label]/max_amplitudes
+                trace_array_dict[component_label][nans_locations] = np.nan
+
+        print('Normalization done. Creating inputs for plotting')
 #        depth = np.nan_to_num(depth)
         
 #        data_for_log = QCLogPlotInput()
