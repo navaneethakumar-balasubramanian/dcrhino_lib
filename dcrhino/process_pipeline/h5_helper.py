@@ -111,11 +111,11 @@ class H5Helper:
             max_z = (3.3/2.0 - ((5.0/65535)*np.max(self.z_data)))/self.z_sensitivity
             min_z = (3.3/2.0 - ((5.0/65535)*np.max(self.z_data)))/self.z_sensitivity
         print("Max X {}".format(max_x))
-        print("Mim X {}".format(min_x))
+        print("Min X {}".format(min_x))
         print("Max Y {}".format(max_y))
-        print("Mim Y {}".format(min_y))
+        print("Min Y {}".format(min_y))
         print("Max Z {}".format(max_z))
-        print("Mim Z {}".format(min_z))
+        print("Min Z {}".format(min_z))
         return accel_df
 
 
