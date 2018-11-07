@@ -4,6 +4,7 @@ from dcrhino.process_pipeline.h5_helper import H5Helper
 import h5py
 import pdb
 import argparse
+import os
 import matplotlib.pyplot as plt
 
 
@@ -14,7 +15,7 @@ def main(fname,basic):
     output = fname.replace(".h5",".csv")
     hf = h5py.File(fname, 'r')
     h5h = H5Helper(hf)
-
+    print (os.path.basename(fname))
     accel_df = h5h.acceleration_stats(10,basic)
     if accel_df is not None:
         accel_df.to_csv(output)
