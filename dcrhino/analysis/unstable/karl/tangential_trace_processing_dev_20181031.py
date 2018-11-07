@@ -39,7 +39,6 @@ import pandas as pd
 import pdb
 import scipy.signal as ssig
 import scipy
-from string import zfill
 
 from fatiando.vis.mpl import seismic_wiggle
 
@@ -75,6 +74,9 @@ spiking_decon_filter_duration = 0.010    #10ms; parameterize in terms of trace l
 n_spiking_decon_filter_taps = int(sampling_rate * spiking_decon_filter_duration)
 multiple_window_search_width_ms = 3.126
 
+#<GET DATA>
+#if this were a funciton it would serve up
+#
 home = os.path.expanduser("~")
 data_path = os.path.join(home, 'data', 'datacloud')
 trace_plot_path = os.path.join(home, '.cache', 'datacloud', 'traces_movie')
@@ -83,9 +85,11 @@ despike_trace_plot_path = os.path.join(home, '.cache', 'datacloud', 'traces_movi
 #raw_data = np.load(raw_data_file)
 hole_path = os.path.join(data_path, 'rhino_process_pipeline_output/WEST_ANGELAS/5208/4000/710-197-3/2018-10-18_00001')
 tangential_data_path = os.path.join(hole_path, 'tangential_interpolated_traces.npy')
+
 data = np.load(tangential_data_path)
 n_traces, samples_per_trace = data.shape
 tfct = np.load(os.path.join(hole_path, 'tangential_filtered_correlated_traces.npy'))
+
 #pdb.set_trace()
 holy_mwd = pd.read_csv(os.path.join(hole_path, 'hole_mwd.csv'), parse_dates=['starttime', 'endtime'])
 df_features = pd.read_csv(os.path.join(hole_path, 'extracted_features.csv'))#, parse_dates=['starttime', 'endtime'])
@@ -98,9 +102,8 @@ n_traces, samples_per_trace = data.shape
 #<cull traces with small delta-z>
 
 dz = np.diff(df_features.depth)
-dz = np.hstack((0.0, dz))
+dz = np.hstack((0.0, dz))#almost dzdt
 
-pdb.set_trace()
 time_vector = pd.date_range(holy_mwd.starttime.iloc[0], periods=n_traces, freq='1S')
 
 mwd_strings = ['krpm', 'force_on_bit(n)', 'torque(nm)', 'air_pressure(pa)',
@@ -114,13 +117,11 @@ for mwd_string in mwd_strings:
 #    plt.title('{}'.format(mwd_string))
 #    plt.show()
 
+#</GET DATA>
 
-dzdt = -1 * np.diff(interped_mwd_dict['computed_elevation'])
-dzdt = np.hstack((dzdt[0], dzdt))
-print('dzdt is short by one value - hackaround for now')
-#match derivative here; You have a dz for each of
-n_traces, samples_per_trace = data.shape
 
+
+#<get,set cfg params>
 config_filename = os.path.join('rio.cfg')
 #config_filename = os.path.join('rio_250_650.cfg')
 config = L1L2ProcessConfiguration(config_filename)
@@ -139,21 +140,22 @@ multiple_time = 2 * (metameta.sensor_distance_to_source /SHEAR_VELOCITY)
 earliest_multiple_time = multiple_time - (2.0 * dt)
 latest_multiple_time =  earliest_multiple_time + (multiple_window_search_width_ms * 1e-3)
 
-output_data = np.full((n_traces, samples_per_corr_trace), np.nan)
-despike_data = np.full((n_traces, samples_per_corr_trace), np.nan)
-decon_filters = np.full((n_traces, decon_filter_length), np.nan)
-rxxs = np.full(n_traces, np.nan)
-
-hack_start_trace = 0
-#n_traces = 4
-#for i_trace in range(0,n_traces):
 primary_poly_indices = np.full(n_traces, np.nan)
 primary_poly_amplitudes = np.full(n_traces, np.nan)
 multiple_poly_indices = np.full(n_traces, np.nan)
 multiple_poly_amplitudes = np.full(n_traces, np.nan)
+#</get,set cfg params>
+
+#<prep containers to store results>
+output_data = np.full((n_traces, samples_per_corr_trace), np.nan)
+despike_data = np.full((n_traces, samples_per_corr_trace), np.nan)
+decon_filters = np.full((n_traces, decon_filter_length), np.nan)
+rxxs = np.full(n_traces, np.nan)
+#</prep containers to store results>
 
 
 pdb.set_trace()
+hack_start_trace = 0
 for i_trace in range(hack_start_trace, n_traces):
     print("trace # {}".format(i_trace))
     trace_data = data[i_trace,:]
