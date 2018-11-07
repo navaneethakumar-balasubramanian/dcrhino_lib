@@ -445,8 +445,9 @@ if args.time_processing:
     extracted_features_list = get_features_extracted(extractor,axial,tangential,radial,ts_array)
     extracted_features_df = pd.DataFrame(extracted_features_list)
     extracted_features_df.to_csv(os.path.join(temppath,"extracted_features.csv"))
-    extracted_features_df['start_ts'] = int(h5_helper.min_ts)
-    extracted_features_df['end_ts'] = int(h5_helper.max_ts)
+    extracted_features_df['start_ts'] = start_ts
+    extracted_features_df['end_ts'] = end_ts
+    
     
     
     
