@@ -15,6 +15,8 @@ import pdb
 import calendar
 import scipy.signal as ssig
 import warnings
+from operator import is_not
+from functools import partial
 #from dcrhino.real_time.metadata import Metadata
 warnings.filterwarnings("ignore")
 
@@ -357,8 +359,9 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
         np.save(debug_file_name+'radial_interpolated_traces.npy',radial_interpolated_traces)
 
         #Natal's Changes
-        # pdb.set_trace()
-        accel_df =pd.DataFrame(acceleration_stats,columns=["Timestamp","max_x","min_x","max_y","min_y","max_z","min_z"])
+        pdb.set_trace()
+        cleaned_acceleration_stats = filter(partial(is_not, None), acceleration_stats)
+        accel_df =pd.DataFrame(cleaned_acceleration_stats,columns=["Timestamp","max_x","min_x","max_y","min_y","max_z","min_z"])
         accel_df.to_csv(debug_file_name+'acceleration_values_by_second.csv')
 
 
