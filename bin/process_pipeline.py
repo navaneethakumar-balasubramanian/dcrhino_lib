@@ -74,9 +74,12 @@ def interpolate_data(ideal_timestamps, digitizer_timestamps, data):
 
 def autocorrelate_trace(trace_data, n_pts):
     """
-    TODO: make 2500 = len(trace)/2
-    confirm 5000 points is standard, or make depend on trace length
-    WARNING  wants even # points
+    @type trace_data: numpy array
+    @param trace_data: the time series to autocorrelate
+    @type n_pts: integer
+    @param n_pts: the max lag to consider in autocorrelation
+    @warning: trace_data is assumed to be an even number of points, not tested
+    for odd trace length
     """
     zero_time_index = len(trace_data) // 2
     acorr = np.correlate(trace_data, trace_data,'same')
