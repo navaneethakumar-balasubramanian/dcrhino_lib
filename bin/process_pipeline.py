@@ -677,9 +677,12 @@ else:
         extracted_features_df['reflection_coefficient'] = pd.Series(qc_input.reflection_coefficient_sample, index = extracted_features_df.index)
         extracted_features_df['axial_delay'] = extracted_features_df['axial_multiple_peak_time_sample'] - extracted_features_df['axial_primary_peak_time_sample']
         extracted_features_df['axial_velocity_delay'] = 1.0/(extracted_features_df['axial_delay'])**3
-        extracted_features_df['easting'] = [hole[mwd_helper.easting_column_name].values[0]] * len(extracted_features_df['axial_delay'])
-        extracted_features_df['northing'] = [hole[mwd_helper.northing_column_name].values[0]] * len(extracted_features_df['axial_delay'])
-
+        extracted_features_df['easting'] = hole[mwd_helper.easting_column_name].values[0]#[hole[mwd_helper.easting_column_name].values[0]] * len(extracted_features_df['axial_delay'])
+        extracted_features_df['northing'] = hole[mwd_helper.northing_column_name].values[0]#[hole[mwd_helper.northing_column_name].values[0]] * len(extracted_features_df['axial_delay'])
+        extracted_features_df["mine"] = global_config.mine_name
+        extracted_features_df["bench"] = hole[bench_column].values[0]
+        extracted_features_df["area"] = hole[pattern_column].values[0]
+        extracted_features_df["hole"] = hole[hole_column].values[0]
         extracted_features_df.to_csv(os.path.join(plot_meta['log_path'],"extracted_features.csv"))
 
         qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'depth_plot.png'),global_config)
