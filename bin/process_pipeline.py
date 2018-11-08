@@ -74,9 +74,12 @@ def interpolate_data(ideal_timestamps, digitizer_timestamps, data):
 
 def autocorrelate_trace(trace_data, n_pts):
     """
-    TODO: make 2500 = len(trace)/2
-    confirm 5000 points is standard, or make depend on trace length
-    WARNING  wants even # points
+    @type trace_data: numpy array
+    @param trace_data: the time series to autocorrelate
+    @type n_pts: integer
+    @param n_pts: the max lag to consider in autocorrelation
+    @warning: trace_data is assumed to be an even number of points, not tested
+    for odd trace length
     """
     zero_time_index = len(trace_data) // 2
     acorr = np.correlate(trace_data, trace_data,'same')
@@ -447,10 +450,10 @@ if args.time_processing:
     extracted_features_df.to_csv(os.path.join(temppath,"extracted_features.csv"))
     extracted_features_df['start_ts'] = start_ts
     extracted_features_df['end_ts'] = end_ts
-    
-    
-    
-    
+
+
+
+
     qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,extracted_features_df,bph_string,os.path.join(temppath,'time_plot.png'),global_config,start_ts,end_ts)
     qclogplotter_time.plot()
 
