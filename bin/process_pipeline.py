@@ -45,7 +45,7 @@ import matplotlib.pylab as pylab
 
 
 
-
+BIN_PATH = os.path.dirname(os.path.abspath(__file__))
 
 def get_ts_array_indexes(ts,arr):
     return np.array(np.where(arr == int(ts)))
@@ -176,6 +176,8 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
     tangential_traces = [None] * interval_seconds
     ts = [None] * interval_seconds
 
+
+
     if debug:
         axial_deconvolved_traces = [None] * interval_seconds
         radial_deconvolved_traces = [None] * interval_seconds
@@ -188,6 +190,11 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
         axial_filtered_correlated_traces = [None] * interval_seconds
         radial_filtered_correlated_traces = [None] * interval_seconds
         tangential_filtered_correlated_traces = [None] * interval_seconds
+
+        #Natal's changes
+        interval_second_index = 0
+        acceleration_stats = [None] * interval_seconds
+        # acceleration_stats = []
 
     while actual_ts < end:
 
@@ -208,11 +215,25 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
             results_interpolated = [None] * len(entire_xyz)
             results_filtered = [None] * len(entire_xyz)
 
+
+            #Natal's changes
+            row = [actual_ts,0,0,0,0,0,0]
+            start_index=[1,3,5]
+
         for i, data in enumerate(entire_xyz):
             actual_second = get_values_from_index(indexes_array_of_actual_second,data,np.float32)
+
+
             sensitivity = sensitivity_xyz[i]
 
             calibrated_actual_second = apply_calibration(h5_helper.is_ide_file,actual_second,sensitivity,accelerometer_max_voltage)
+
+            #Natal's changes
+            # pdb.set_trace()
+            row[start_index[i]] = np.max(calibrated_actual_second)
+            row[start_index[i]+1] = np.min(calibrated_actual_second)
+
+
             # Save to npy file calibrated_actual_second
             interpolated_actual_second = interpolate_data(global_config.ideal_timestamps, ts_actual_second, calibrated_actual_second)
             deconvolved_data_actual_second, r_xx0 = deconvolve_trace(global_config.deconvolution_filter_duration,global_config.num_taps_in_decon_filter,interpolated_actual_second)
@@ -227,6 +248,10 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
                 results_interpolated[i] = interpolated_actual_second
                 results_filtered[i] = filtered_correlated_trace_actual_second
 
+        #Natal's changes
+        # acceleration_stats.append(row)
+        acceleration_stats[interval_second_index]=row
+        interval_second_index+=1
 
         if global_config.sensor_axial_axis == 1:
             axial_trace = results[0]
@@ -328,6 +353,12 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
         np.save(debug_file_name+'tangential_interpolated_traces.npy',tangential_interpolated_traces)
         np.save(debug_file_name+'radial_interpolated_traces.npy',radial_interpolated_traces)
 
+        #Natal's Changes
+        # pdb.set_trace()
+        accel_df =pd.DataFrame(acceleration_stats,columns=["Timestamp","max_x","min_x","max_y","min_y","max_z","min_z"])
+        accel_df.to_csv(debug_file_name+'acceleration_values_by_second.csv')
+
+
     return [axial_traces,tangential_traces,radial_traces,ts]
 
 def get_features_extracted(extractor,axial_traces,tangential_traces,radial_traces,ts_array):
@@ -413,7 +444,7 @@ if args.cfg_path is not None:
 
 # Read Env Config Parser
 env_config_parser = ConfigParser()
-env_config_parser.read('env.cfg')
+env_config_parser.read(os.path.join(BIN_PATH,'env.cfg'))
 
 
 f1 = h5py.File(args.h5_path,'r+')
@@ -422,6 +453,7 @@ h5_helper = H5Helper(f1)
 # DATA FROM H5 CONFIG HEADER
 metadata = h5_helper.metadata
 global_config = Config(metadata,env_config_parser,config_parser)
+pdb.set_trace()
 io_helper = IOHelper(global_config)
 print (io_helper.get_mine_path())
 
@@ -447,10 +479,10 @@ if args.time_processing:
     extracted_features_df.to_csv(os.path.join(temppath,"extracted_features.csv"))
     extracted_features_df['start_ts'] = start_ts
     extracted_features_df['end_ts'] = end_ts
-    
-    
-    
-    
+
+
+
+
     qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,extracted_features_df,bph_string,os.path.join(temppath,'time_plot.png'),global_config,start_ts,end_ts)
     qclogplotter_time.plot()
 
