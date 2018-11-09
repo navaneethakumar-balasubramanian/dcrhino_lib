@@ -1,0 +1,6 @@
+file_path,file_size,max_ts,min_ts,mine_name,output_sampling_rate,processed,rig_id,sensor_serial_number
+/home/thiago/data_blob/data_cloud/HTX/1HTX1/level_0/run_1541021540/raw_data_2018_10_31_22.h5,126806536,1541026799.9999554,1541023200.000031,HTX,2800,False,HTX,S1021
+/home/thiago/data_blob/mount_milligan/level_1/2018-05-04/piezo/4000hz/20180504_SSX62708_5206_4000.h5,119253569,1525457669.05935,1525454709.003082,Mount Milligan Mine,4000,False,3,5206
+/home/thiago/data_blob/mount_milligan/level_1/2018-05-04/piezo/4000hz/20180504_SSX82051_5206_4000.h5,74341090,1525476006.945093,1525474052.005615,MOUNT_MILLIGAN_MINE,4000,False,3,5206
+/home/thiago/data_blob/west_angelas/level_1/2018-07-10/piezo/3200hz/20180710_SSX04491_5206_3200.h5,684678321,1531213382.7412035,1531185292.005798,WEST_ANGELAS,3200,False,21R11,5206
+/home/thiago/data_blob/line_creek/level_1/piezo/2800hz/1_whip_antenna_100G_2800.h5,85264020,1536605477.966778,1536602310.0,line creek creek creek creek,2800,False,31,S1008

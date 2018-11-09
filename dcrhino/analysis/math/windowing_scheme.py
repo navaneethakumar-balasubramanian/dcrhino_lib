@@ -7,8 +7,8 @@ Created on Wed Apr 12 09:46:53 2017
 """
 
 from __future__ import absolute_import, division, print_function
-import qfutils.log as logging
-logger = logging.getLogger(__name__)
+#import qfutils.log as logging
+#logger = logging.getLogger(__name__)
 
 from numpy.lib.stride_tricks import as_strided as ast
 import numpy as np
@@ -305,4 +305,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
