@@ -7,7 +7,7 @@ from ConfigParser import ConfigParser
 import argparse
 import os
 import scipy
-import json
+
 import matplotlib.pyplot as plt
 import pdb
 #from string import zfill
@@ -15,13 +15,11 @@ import pdb
 import calendar
 import scipy.signal as ssig
 import warnings
-from operator import is_not
-from functools import partial
 #from dcrhino.real_time.metadata import Metadata
 warnings.filterwarnings("ignore")
 
 
-#from dcrhino.models.feature_extracted import FeatureExtractedModel
+from dcrhino.models.feature_extracted import FeatureExtractedModel
 
 
 from dcrhino.analysis.graphical.unbinned_qc_log_plots_v3_west_angelas import pseudodensity_panel,primary_pseudovelocity_panel,reflection_coefficient_panel
@@ -29,7 +27,6 @@ from dcrhino.analysis.graphical.unbinned_qc_log_plots_v3_west_angelas import pse
 from datetime import datetime
 from dcrhino.process_pipeline.config import Config
 from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotter,QCLogPlotInput
-from dcrhino.process_pipeline.qc_log_plotter_nomwd import QCLogPlotter_nomwd
 from dcrhino.process_pipeline.feature_extractor import FeatureExtractor
 from dcrhino.process_pipeline.filters import FIRLSFilter
 
@@ -47,7 +44,7 @@ import matplotlib.pylab as pylab
 
 
 
-BIN_PATH = os.path.dirname(os.path.abspath(__file__))
+
 
 def get_ts_array_indexes(ts,arr):
     return np.array(np.where(arr == int(ts)))
@@ -76,12 +73,9 @@ def interpolate_data(ideal_timestamps, digitizer_timestamps, data):
 
 def autocorrelate_trace(trace_data, n_pts):
     """
-    @type trace_data: numpy array
-    @param trace_data: the time series to autocorrelate
-    @type n_pts: integer
-    @param n_pts: the max lag to consider in autocorrelation
-    @warning: trace_data is assumed to be an even number of points, not tested
-    for odd trace length
+    TODO: make 2500 = len(trace)/2
+    confirm 5000 points is standard, or make depend on trace length
+    WARNING  wants even # points
     """
     zero_time_index = len(trace_data) // 2
     acorr = np.correlate(trace_data, trace_data,'same')
@@ -181,8 +175,6 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
     tangential_traces = [None] * interval_seconds
     ts = [None] * interval_seconds
 
-
-
     if debug:
         axial_deconvolved_traces = [None] * interval_seconds
         radial_deconvolved_traces = [None] * interval_seconds
@@ -192,18 +184,9 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
         radial_interpolated_traces = [None] * interval_seconds
         tangential_interpolated_traces = [None] * interval_seconds
 
-        axial_unfiltered_correlated_traces = [None] * interval_seconds
-        radial_unfiltered_correlated_traces = [None] * interval_seconds
-        tangential_unfiltered_correlated_traces = [None] * interval_seconds
-
         axial_filtered_correlated_traces = [None] * interval_seconds
         radial_filtered_correlated_traces = [None] * interval_seconds
         tangential_filtered_correlated_traces = [None] * interval_seconds
-
-        #Natal's changes
-        interval_second_index = 0
-        acceleration_stats = [None] * interval_seconds
-        # acceleration_stats = []
 
     while actual_ts < end:
 
@@ -222,28 +205,13 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
         if debug:
             results_deconvolved = [None] * len(entire_xyz)
             results_interpolated = [None] * len(entire_xyz)
-            results_unfiltered = [None] * len(entire_xyz)
             results_filtered = [None] * len(entire_xyz)
-
-
-            #Natal's changes
-            row = [actual_ts,0,0,0,0,0,0]
-            start_index=[1,3,5]
 
         for i, data in enumerate(entire_xyz):
             actual_second = get_values_from_index(indexes_array_of_actual_second,data,np.float32)
-
-
             sensitivity = sensitivity_xyz[i]
 
             calibrated_actual_second = apply_calibration(h5_helper.is_ide_file,actual_second,sensitivity,accelerometer_max_voltage)
-
-            #Natal's changes
-            # pdb.set_trace()
-            row[start_index[i]] = np.max(calibrated_actual_second)
-            row[start_index[i]+1] = np.min(calibrated_actual_second)
-
-
             # Save to npy file calibrated_actual_second
             interpolated_actual_second = interpolate_data(global_config.ideal_timestamps, ts_actual_second, calibrated_actual_second)
             deconvolved_data_actual_second, r_xx0 = deconvolve_trace(global_config.deconvolution_filter_duration,global_config.num_taps_in_decon_filter,interpolated_actual_second)
@@ -256,13 +224,8 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
             if debug:
                 results_deconvolved[i] = deconvolved_data_actual_second
                 results_interpolated[i] = interpolated_actual_second
-                results_unfiltered[i] = correlated_trace_actual_second
                 results_filtered[i] = filtered_correlated_trace_actual_second
 
-        #Natal's changes
-        # acceleration_stats.append(row)
-        acceleration_stats[interval_second_index]=row
-        interval_second_index+=1
 
         if global_config.sensor_axial_axis == 1:
             axial_trace = results[0]
@@ -273,10 +236,6 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
                 axial_deconvolved_trace = results_deconvolved[0]
                 radial_deconvolved_trace = results_deconvolved[2]
                 tangential_deconvolved_trace = results_deconvolved[1]
-
-                axial_unfiltered_correlated_trace = results_unfiltered[0]
-                radial_unfiltered_correlated_trace = results_unfiltered[2]
-                tangential_unfiltered_correlated_trace = results_unfiltered[1]
 
                 axial_filtered_correlated_trace = results_filtered[0]
                 radial_filtered_correlated_trace = results_filtered[2]
@@ -294,10 +253,6 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
                 axial_deconvolved_trace = results_deconvolved[1]
                 radial_deconvolved_trace = results_deconvolved[2]
                 tangential_deconvolved_trace = results_deconvolved[0]
-
-                axial_unfiltered_correlated_trace = results_unfiltered[1]
-                radial_unfiltered_correlated_trace = results_unfiltered[2]
-                tangential_unfiltered_correlated_trace = results_unfiltered[0]
 
                 axial_filtered_correlated_trace = results_filtered[1]
                 radial_filtered_correlated_trace = results_filtered[2]
@@ -317,10 +272,6 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
             axial_deconvolved_traces[actual_ts-start_ts] = axial_deconvolved_trace
             tangential_deconvolved_traces[actual_ts-start_ts] = tangential_deconvolved_trace
             radial_deconvolved_traces[actual_ts-start_ts] = radial_deconvolved_trace
-
-            axial_unfiltered_correlated_traces[actual_ts-start_ts] = axial_unfiltered_correlated_trace
-            tangential_unfiltered_correlated_traces[actual_ts-start_ts] = tangential_unfiltered_correlated_trace
-            radial_unfiltered_correlated_traces[actual_ts-start_ts] = radial_unfiltered_correlated_trace
 
             axial_filtered_correlated_traces[actual_ts-start_ts] = axial_filtered_correlated_trace
             tangential_filtered_correlated_traces[actual_ts-start_ts] = tangential_filtered_correlated_trace
@@ -359,23 +310,14 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
         tangential_interpolated_traces = np.asarray(tangential_interpolated_traces)
         radial_interpolated_traces = np.asarray(radial_interpolated_traces)
 
-        axial_unfiltered_correlated_traces = np.asarray(axial_unfiltered_correlated_traces)
-        tangential_unfiltered_correlated_traces = np.asarray(tangential_unfiltered_correlated_traces)
-        radial_unfiltered_correlated_traces = np.asarray(radial_unfiltered_correlated_traces)
-
         axial_filtered_correlated_traces = np.asarray(axial_filtered_correlated_traces)
         tangential_filtered_correlated_traces = np.asarray(tangential_filtered_correlated_traces)
         radial_filtered_correlated_traces = np.asarray(radial_filtered_correlated_traces)
-
 
         #print (axial_deconvolved_traces.shape)
         np.save(debug_file_name+'axial_deconvolved_traces.npy',axial_deconvolved_traces)
         np.save(debug_file_name+'tangential_deconvolved_traces.npy',tangential_deconvolved_traces)
         np.save(debug_file_name+'radial_deconvolved_traces.npy',radial_deconvolved_traces)
-
-        np.save(debug_file_name+'axial_unfiltered_correlated_traces.npy',axial_unfiltered_correlated_traces)
-        np.save(debug_file_name+'tangential_unfiltered_correlated_traces.npy',tangential_unfiltered_correlated_traces)
-        np.save(debug_file_name+'radial_unfiltered_correlated_traces.npy',radial_unfiltered_correlated_traces)
 
         np.save(debug_file_name+'axial_filtered_correlated_traces.npy',axial_filtered_correlated_traces)
         np.save(debug_file_name+'tangential_filtered_correlated_traces.npy',tangential_filtered_correlated_traces)
@@ -384,12 +326,6 @@ def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_d
         np.save(debug_file_name+'axial_interpolated_traces.npy',axial_interpolated_traces)
         np.save(debug_file_name+'tangential_interpolated_traces.npy',tangential_interpolated_traces)
         np.save(debug_file_name+'radial_interpolated_traces.npy',radial_interpolated_traces)
-
-        #Natal's Changes
-        #pdb.set_trace()
-        cleaned_acceleration_stats = filter(partial(is_not, None), acceleration_stats)
-        accel_df =pd.DataFrame(cleaned_acceleration_stats,columns=["Timestamp","max_x","min_x","max_y","min_y","max_z","min_z"])
-        accel_df.to_csv(debug_file_name+'acceleration_values_by_second.csv')
 
     return [axial_traces,tangential_traces,radial_traces,ts]
 
@@ -441,7 +377,6 @@ argparser.add_argument('-holeindex', '--hole-index', help="HOLE INDEX", default=
 argparser.add_argument('-icl', '--interpolated-column-names', help="INTERPOLATED COLUMN NAMES", default='')
 argparser.add_argument('-i', '--interactive-mode', help="INTERACTIVE MODE", default=False)
 argparser.add_argument('-t','--time-processing',help="TIME PROCESSING ONLY",default=False)
-argparser.add_argument('-o','--output-folder',help="OUTPUT FOLDER",default=False)
 args = argparser.parse_args()
 
 start_time_column = args.start_time_column
@@ -461,7 +396,6 @@ easting_column = args.easting_column
 northing_column = args.northing_column
 hole_index = args.hole_index
 interactive_mode = args.interactive_mode
-output_folder = args.output_folder
 
 print ("H5 file path:" , args.h5_path)
 print ("MWD file path:" , args.mwd_path)
@@ -478,7 +412,7 @@ if args.cfg_path is not None:
 
 # Read Env Config Parser
 env_config_parser = ConfigParser()
-env_config_parser.read(os.path.join(BIN_PATH,'env.cfg'))
+env_config_parser.read('env.cfg')
 
 
 f1 = h5py.File(args.h5_path,'r+')
@@ -487,7 +421,6 @@ h5_helper = H5Helper(f1)
 # DATA FROM H5 CONFIG HEADER
 metadata = h5_helper.metadata
 global_config = Config(metadata,env_config_parser,config_parser)
-#pdb.set_trace()
 io_helper = IOHelper(global_config)
 print (io_helper.get_mine_path())
 
@@ -506,20 +439,13 @@ if args.time_processing:
     bph_string = "this will be the title"
     start_ts = int(h5_helper.min_ts)
     end_ts = int(h5_helper.max_ts)
-    if output_folder:
-        temppath = output_folder
-        io_helper.make_dirs_if_needed(temppath)
-    else:
-        temppath = io_helper.get_output_base_path(sourcefilename)
+    temppath = io_helper.get_output_base_path(sourcefilename)
     axial, tangential, radial, ts_array = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper.data_xyz, h5_helper.ts, h5_helper.sensitivity_xyz,debug_file_name=os.path.join(temppath,''))
     extracted_features_list = get_features_extracted(extractor,axial,tangential,radial,ts_array)
     extracted_features_df = pd.DataFrame(extracted_features_list)
     extracted_features_df.to_csv(os.path.join(temppath,"extracted_features.csv"))
-    extracted_features_df['start_ts'] = start_ts
-    extracted_features_df['end_ts'] = end_ts
-
-    qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,extracted_features_df,bph_string,os.path.join(temppath,'time_plot.png'),global_config,start_ts,end_ts)
-    qclogplotter_time.plot()
+    #qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,None,None,extracted_features_list,bph_string,os.path.join(temppath,'time_plot.png'),global_config,plot_by_depth=False)
+    #qclogplotter_time.plot()
 
     file = open(os.path.join(temppath,'log.txt'),'w')
 
@@ -528,8 +454,6 @@ if args.time_processing:
     file.write("\nConfig file path: " + str(args.cfg_path))
 
     file.close()
-
-
 
 else:
 
@@ -562,30 +486,14 @@ else:
 
 
     if interactive_mode:
-            cb = plt.colorbar(heatmap1, cax = cbaxes)
-            ax[2], heatmap2 = plot_hole_as_heatmap(ax[2], cbal.v_min_2, cbal.v_max_2, X, Y,
-              trace_array_dict['tangential'], cmap_string, y_tick_locations)#,
-
-            ax[3], heatmap3 = plot_hole_as_heatmap(ax[3], cbal.v_min_3, cbal.v_max_3, X, Y,
-              trace_array_dict['radial'], cmap_string, y_tick_locations)#,
-
-#        plt.tight_layout()
-            if colourbar_type=='all_one':
-                cbaxes = fig.add_axes([0.01, 0.1, 0.007, 0.8])
-                cb = plt.colorbar(heatmap1, cax = cbaxes)
-                plt.setp(cbaxes.get_xticklabels(), rotation='vertical', fontsize=10)
-                cbaxes.yaxis.set_ticks_position('right')
-
-    		#<Labeling>
-
-            for i,hole in enumerate(holes_array):
-                bph_string = str(hole[bench_column].values[0]) + "-" + str(hole[pattern_column].values[0])  + "-" + str(hole[hole_column].values[0])
-                print str(i) + " - " + bph_string
-            try:
-                hole_index=int(raw_input('Chose one hole number to be processed:'))
-            except ValueError:
-                print "Not a number"
-                exit()
+        for i,hole in enumerate(holes_array):
+            bph_string = str(hole[bench_column].values[0]) + "-" + str(hole[pattern_column].values[0])  + "-" + str(hole[hole_column].values[0])
+            print str(i) + " - " + bph_string
+        try:
+            hole_index=int(raw_input('Chose one hole number to be processed:'))
+        except ValueError:
+            print "Not a number"
+            exit()
 
 
 
@@ -611,11 +519,8 @@ else:
             print("MWD HAS MORE TIME THAN THE H5" ,end_ts,int(h5_helper.max_ts))
             end_ts = int(h5_helper.max_ts)
 
-        if output_folder:
-            temppath = output_folder
-            io_helper.make_dirs_if_needed(temppath)
-        else:
-            temppath = io_helper.get_output_base_path(hole_uid)
+
+        temppath = io_helper.get_output_base_path(hole_uid)
 
         startdt = datetime.utcfromtimestamp(start_ts)
         enddt = datetime.utcfromtimestamp(end_ts)
@@ -711,12 +616,9 @@ else:
         extracted_features_df['reflection_coefficient'] = pd.Series(qc_input.reflection_coefficient_sample, index = extracted_features_df.index)
         extracted_features_df['axial_delay'] = extracted_features_df['axial_multiple_peak_time_sample'] - extracted_features_df['axial_primary_peak_time_sample']
         extracted_features_df['axial_velocity_delay'] = 1.0/(extracted_features_df['axial_delay'])**3
-        extracted_features_df['easting'] = hole[mwd_helper.easting_column_name].values[0]#[hole[mwd_helper.easting_column_name].values[0]] * len(extracted_features_df['axial_delay'])
-        extracted_features_df['northing'] = hole[mwd_helper.northing_column_name].values[0]#[hole[mwd_helper.northing_column_name].values[0]] * len(extracted_features_df['axial_delay'])
-        extracted_features_df["mine"] = global_config.mine_name
-        extracted_features_df["bench"] = hole[bench_column].values[0]
-        extracted_features_df["area"] = hole[pattern_column].values[0]
-        extracted_features_df["hole"] = hole[hole_column].values[0]
+        extracted_features_df['easting'] = [hole[mwd_helper.easting_column_name].values[0]] * len(extracted_features_df['axial_delay'])
+        extracted_features_df['northing'] = [hole[mwd_helper.northing_column_name].values[0]] * len(extracted_features_df['axial_delay'])
+
         extracted_features_df.to_csv(os.path.join(plot_meta['log_path'],"extracted_features.csv"))
 
         qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'depth_plot.png'),global_config)
@@ -735,7 +637,3 @@ else:
         file.write("\nConfig file path: " + str(args.cfg_path))
 
         file.close()
-
-
-with open(os.path.join(temppath,'global_config.json'), 'w') as outfile:
-    json.dump(vars(global_config), outfile,indent=4)

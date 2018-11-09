@@ -72,10 +72,10 @@ class H5Helper:
                     if percentage != last_printed:
                         print("{}%".format(percentage))
                         last_printed = percentage
-
+                return np.array(np.where(arr == int(ts)))
                 a = self.ts>=current_time
                 b = self.ts<next_time
-                indices = np.logical_and(a, b)
+                indices = np.array(np.where(self.ts == int(ts)))
                 if self._is_ide_file():
                     max_x = np.max(self.x_data[indices])/self.x_sensitivity
                     min_x = np.min(self.x_data[indices])/self.x_sensitivity
@@ -84,12 +84,12 @@ class H5Helper:
                     max_z = np.max(self.z_data[indices])/self.z_sensitivity
                     min_z = np.min(self.z_data[indices])/self.z_sensitivity
                 else:
-                    max_x = (3.3/2.0 - ((5.0/65535)*np.max(self.x_data[indices])))/self.x_sensitivity
-                    min_x = (3.3/2.0 - ((5.0/65535)*np.max(self.x_data[indices])))/self.x_sensitivity
-                    max_y = (3.3/2.0 - ((5.0/65535)*np.max(self.y_data[indices])))/self.y_sensitivity
-                    min_y = (3.3/2.0 - ((5.0/65535)*np.max(self.y_data[indices])))/self.y_sensitivity
-                    max_z = (3.3/2.0 - ((5.0/65535)*np.max(self.z_data[indices])))/self.z_sensitivity
-                    min_z = (3.3/2.0 - ((5.0/65535)*np.max(self.z_data[indices])))/self.z_sensitivity
+                    max_x = (3.3/2.0 - ((5.0/65535)*np.max(self.x_data[indices])))/(self.x_sensitivity/1000)
+                    min_x = (3.3/2.0 - ((5.0/65535)*np.max(self.x_data[indices])))/(self.x_sensitivity/1000)
+                    max_y = (3.3/2.0 - ((5.0/65535)*np.max(self.y_data[indices])))/(self.y_sensitivity/1000)
+                    min_y = (3.3/2.0 - ((5.0/65535)*np.max(self.y_data[indices])))/(self.y_sensitivity/1000)
+                    max_z = (3.3/2.0 - ((5.0/65535)*np.max(self.z_data[indices])))/(self.z_sensitivity/1000)
+                    min_z = (3.3/2.0 - ((5.0/65535)*np.max(self.z_data[indices])))/(self.z_sensitivity/1000)
                 row = [current_time,max_x,min_x,max_y,min_y,max_z,min_z]
                 #print(row)
                 accelerations.append(row)
@@ -97,6 +97,7 @@ class H5Helper:
                 next_time += time_interval
             accel_df = pd.DataFrame(accelerations,columns=["Timestamp","max_x","min_x","max_y","min_y","max_z","minz"])
         if self._is_ide_file():
+            pdb.set_trace()
             max_x = np.max(self.x_data)/self.x_sensitivity
             min_x = np.min(self.x_data)/self.x_sensitivity
             max_y = np.max(self.y_data)/self.y_sensitivity
@@ -104,12 +105,12 @@ class H5Helper:
             max_z = np.max(self.z_data)/self.z_sensitivity
             min_z = np.min(self.z_data)/self.z_sensitivity
         else:
-            max_x = (3.3/2.0 - ((5.0/65535)*np.max(self.x_data)))/self.x_sensitivity
-            min_x = (3.3/2.0 - ((5.0/65535)*np.max(self.x_data)))/self.x_sensitivity
-            max_y = (3.3/2.0 - ((5.0/65535)*np.max(self.y_data)))/self.y_sensitivity
-            min_y = (3.3/2.0 - ((5.0/65535)*np.max(self.y_data)))/self.y_sensitivity
-            max_z = (3.3/2.0 - ((5.0/65535)*np.max(self.z_data)))/self.z_sensitivity
-            min_z = (3.3/2.0 - ((5.0/65535)*np.max(self.z_data)))/self.z_sensitivity
+            max_x = (3.3/2.0 - ((5.0/65535)*np.max(self.x_data)))/(self.x_sensitivity/1000)
+            min_x = (3.3/2.0 - ((5.0/65535)*np.max(self.x_data)))/(self.x_sensitivity/1000)
+            max_y = (3.3/2.0 - ((5.0/65535)*np.max(self.y_data)))/(self.y_sensitivity/1000)
+            min_y = (3.3/2.0 - ((5.0/65535)*np.max(self.y_data)))/(self.y_sensitivity/1000)
+            max_z = (3.3/2.0 - ((5.0/65535)*np.max(self.z_data)))/(self.z_sensitivity/1000)
+            min_z = (3.3/2.0 - ((5.0/65535)*np.max(self.z_data)))/(self.z_sensitivity/1000)
         print("Max X {}".format(max_x))
         print("Min X {}".format(min_x))
         print("Max Y {}".format(max_y))
