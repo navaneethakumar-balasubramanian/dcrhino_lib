@@ -15,15 +15,19 @@ import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import pdb
+import time
 
 from fatiando.vis.mpl import seismic_wiggle
 
 data = np.load('axial_filtered_correlated_traces.npy')
-trimmed_data = data[0::7, 1760-320:1760+320]
+pre_cut=20;
+post_add=140;
+trimmed_data = data[0::70, 1760-pre_cut:1760+post_add]
 sampling_rate = 3200.0
+t0 = time.time()
 seismic_wiggle(trimmed_data.T);
-plt.show()
-
+plt.savefig('q.png')
+print(time.time()-t0)
 
 def my_function():
     """
