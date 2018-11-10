@@ -54,6 +54,9 @@ mine = 'WEST_ANGELAS';
 component = 'tangential'
 #component = 'axial'
 plot_depth = 1#False
+cull_rop = True
+apply_adhoc_normalization = True
+do_processing = False
 
 if mine=='line_creek':
     data_path = '/home/kkappler/data/datacloud/rhino_process_pipeline_output/line_creek/5208/3200'
@@ -72,7 +75,7 @@ elif mine=='WEST_ANGELAS':
 dt= 1./sampling_rate
 normalize_traces_for_plotting = 1# False
 processing_trace_decimation_factor = 7# integer
-do_processing = 1#False
+
 #<boilerplate config file settings>
 #[PROCESSING]
 deconvolution_filter_duration = 0.1
@@ -103,7 +106,11 @@ def init_trace_dict():
     traces_dict['radial'] = None
     return traces_dict
 
-def get_axial_tangential_radial_traces(hole_uid, flavour, trace_decimation=None):
+def get_axial_tangential_radial_traces(hole_uid, flavour, trace_decimation=None,
+                                       indices=None):
+    """
+    indices allows one to slice by some index tracker, e.g. good rop, etc
+    """
 #start_time_ts,end_time_ts,entire_xyz,ts_data,sensitivity_xyz,debug_file_name='',debug=True):
     """
     """
@@ -114,6 +121,10 @@ def get_axial_tangential_radial_traces(hole_uid, flavour, trace_decimation=None)
     trace_dict['axial'] = np.load(debug_file_path +'axial_{}_traces.npy'.format(flavour))
     trace_dict['tangential'] = np.load(debug_file_path + 'tangential_{}_traces.npy'.format(flavour))
     trace_dict['radial'] = np.load(debug_file_path +'radial_{}_traces.npy'.format(flavour))
+    if indices is not None:
+        trace_dict['axial'] = trace_dict['axial'][indices,:]
+        trace_dict['tangential'] = trace_dict['tangential'][indices,:]
+        trace_dict['radial'] = trace_dict['radial'][indices,:]
     if trace_decimation is not None:
         for component_label in COMPONENT_LABELS:
             traces_dict[component_label] = traces_dict[component_label][0::every_nth,:]
@@ -126,13 +137,17 @@ hole_uid = hole_uids[0]
 
 mwd_df = pd.read_csv(os.path.join(data_path, hole_uid, 'hole_mwd.csv'))
 features_df = pd.read_csv(os.path.join(data_path, hole_uid, 'extracted_features.csv'))
-#features_df = reject_traces_with_small_rop(features_df)#, threshold=0.006):
+if cull_rop:
+    features_df = reject_traces_with_small_rop(features_df)#, threshold=0.006):
+    rop_ok_indices = features_df.index
+else:
+    rop_ok_indices = None
 depth = np.asarray(features_df.depth)
-interpolated_traces = get_axial_tangential_radial_traces(hole_uid, 'interpolated')
-deconvolved_traces = get_axial_tangential_radial_traces(hole_uid, 'deconvolved')
+interpolated_traces = get_axial_tangential_radial_traces(hole_uid, 'interpolated', indices=rop_ok_indices)
+deconvolved_traces = get_axial_tangential_radial_traces(hole_uid, 'deconvolved', indices=rop_ok_indices)
+filtered_correlated_traces = get_axial_tangential_radial_traces(hole_uid, 'filtered_correlated', indices=rop_ok_indices)
 unfiltered_correlated_traces = init_trace_dict()
 filtered_despiked_traces = init_trace_dict()
-filtered_correlated_traces = get_axial_tangential_radial_traces(hole_uid, 'filtered_correlated')
 middle = int((1+deconvolution_filter_duration)*sampling_rate/2 )
 n_back = int(sampling_rate * min_lag_trimmed_trace)
 n_advance = int(sampling_rate * max_lag_trimmed_trace)
@@ -179,8 +194,94 @@ filtered_despiked_traces[component] = np.load(os.path.join(data_path, hole_uid, 
 #<normalize traces before plotting AND see if multple better>
 #despiked_plotter_data = filtered_despiked_traces[component][0::every_nth,1760-320:1760+320].T
 despiked_plotter_data = filtered_despiked_traces[component][0::every_nth,middle+n_back:middle+n_advance].T
-qq = np.max(plotter_data, axis=0)/np.max(despiked_plotter_data, axis=0)
-despiked_plotter_data *= qq
+if apply_adhoc_normalization:
+    qq = np.max(plotter_data, axis=0)/np.max(despiked_plotter_data, axis=0)
+    despiked_plotter_data *= qq
+
+pdb.set_trace()
+
+print("steps in tangential multiple feature extraction:")
+print("1. specify the probable region of primary reflection")
+print("2. refine estimate of the region of primary reflection\
+      based on sample of maximum (or using phases)")
+print("3. extract features (peak_value, peak_sample, peak_time_poly, and possibly troughs and zero-crossings")
+print("4,5,6: repeat 1,2,3 above for the multiple reflection")
+#    print("PRIMARY feature extraction")
+#
+#    time_axis = dt*np.arange(len(radial_little_despiked_trace))
+#    skip_samples = 350
+#    primary_neighborhood = np.array([48, 58]) + skip_samples
+#
+#    #primary pulse between samples 48 and 58 (usually 52 or 53)
+#    #secondary between 88 and 99, usually around 93-95
+#    primary_window_halfwidth_in_samples = 2 #half the positive half-sine
+#    probable_primary_region = little_despiked_trace[primary_neighborhood[0]:primary_neighborhood[1]]
+#    t_probable_primary_region = time_axis[primary_neighborhood[0]:primary_neighborhood[1]]
+#    max_index = np.argmax(probable_primary_region)
+#    left_hand_edge = max_index - primary_window_halfwidth_in_samples
+#    right_hand_edge = max_index + primary_window_halfwidth_in_samples + 1
+#    #try:
+#    primary_window = probable_primary_region[left_hand_edge:right_hand_edge]
+#    t_primary_window = t_probable_primary_region[left_hand_edge:right_hand_edge]
+##    if len(primary_window) == 0:
+###    except ValueError:#IndexError:
+##        print("AAAAAAAAAAAAAAAAAAAAAAAARRRRGH")
+##        continue
+#
+#    #<check if max is on edge throw out this trace>
+#    expected_max_arg = primary_window_halfwidth_in_samples
+#    if np.argmax(primary_window) != primary_window_halfwidth_in_samples:
+#        print("max sample is on the egde rather than in center - \
+#              timing error or some unexpected issue - reject this trace")
+#        pdb.set_trace()
+#        #continue
+#    #<check if max is on edge throw out this trace>
+#
+#    #<worked example>
+#    #max_index = 4
+#    #left_hand_edge = 2
+#
+#    max_poly_amplitude, max_poly_ndx = pick_poly_peak(primary_window, plot=False)
+#    max_ndx_ref_to_probable_primary_region = max_poly_ndx + left_hand_edge
+#    primary_poly_indices[i_trace] = max_ndx_ref_to_probable_primary_region
+#    primary_poly_amplitudes[i_trace] = max_poly_amplitude
+#
+#    #plt.figure(1);plt.clf()
+#    #plt.plot(t_probable_primary_region, probable_primary_region);
+#    #plt.plot(t_primary_window, primary_window, 'r*');
+#
+##    #<MULTIPLE>
+#    print("MULTIPLE feature extraction")
+#    multiple_neighborhood = np.array([88, 101]) + skip_samples
+#    multiple_window_halfwidth_in_samples = 2 #half the positive half-sine
+#    probable_multiple_region = little_despiked_trace[multiple_neighborhood[0]:multiple_neighborhood[1]]
+#    t_probable_multiple_region = time_axis[multiple_neighborhood[0]:multiple_neighborhood[1]]
+##    if i_trace==100:
+#    #pdb.set_trace()
+#    max_index = np.argmax(probable_multiple_region)
+#    left_hand_edge = max_index - multiple_window_halfwidth_in_samples
+#    right_hand_edge = max_index + multiple_window_halfwidth_in_samples + 1
+#    multiple_window = probable_multiple_region[left_hand_edge:right_hand_edge]
+#    t_multiple_window = t_probable_multiple_region[left_hand_edge:right_hand_edge]
+#    if len(multiple_window) == 0:
+#        #pdb.set_trace()
+#        print("Bad trace! You a are very, very naughty trace")
+#        #multiple_poly_indices[i_trace] = max_ndx_ref_to_probable_multiple_region
+#        multiple_poly_amplitudes[i_trace] = max_poly_amplitude
+#        continue
+#    #<check if max is on edge throw out this trace>
+#    expected_max_arg = multiple_window_halfwidth_in_samples
+#    if np.argmax(multiple_window) != multiple_window_halfwidth_in_samples:
+#        print("max sample is on the egde rather than in center - \
+#              timing error or some unexpected issue - reject this trace")
+#        pdb.set_trace()
+#        #continue
+#    #<check if max is on edge throw out this trace>
+#    #pdb.set_trace()
+#    max_poly_amplitude, max_poly_ndx = pick_poly_peak(multiple_window, plot=False)
+#    max_ndx_ref_to_probable_multiple_region = max_poly_ndx + left_hand_edge
+#    multiple_poly_indices[i_trace] = max_ndx_ref_to_probable_multiple_region
+#    multiple_poly_amplitudes[i_trace] = max_poly_amplitude
 
 if normalize_traces_for_plotting:
     divvy = plotter_data.max(axis=0)
