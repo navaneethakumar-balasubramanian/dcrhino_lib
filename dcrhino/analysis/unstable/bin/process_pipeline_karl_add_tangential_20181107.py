@@ -206,6 +206,7 @@ print("2. refine estimate of the region of primary reflection\
       based on sample of maximum (or using phases)")
 print("3. extract features (peak_value, peak_sample, peak_time_poly, and possibly troughs and zero-crossings")
 print("4,5,6: repeat 1,2,3 above for the multiple reflection")
+print('2200')
 #    print("PRIMARY feature extraction")
 #
 #    time_axis = dt*np.arange(len(radial_little_despiked_trace))
