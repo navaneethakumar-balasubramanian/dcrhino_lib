@@ -8,7 +8,8 @@ Created on Thu Sep 27 21:14:10 2018
 import numpy as np
 import pdb
 
-class Config:
+
+class Config( object ):
 
 
     def __init__(self, metadata = None, env_config_parser=None, config_parser = None):
@@ -67,6 +68,11 @@ class Config:
     def ideal_timestamps(self):
         return np.arange(0,self.output_sampling_rate*self.trace_length_in_seconds)*(1.0/self.output_sampling_rate)
 
+    def set_data_from_json(self,data):
+        for _key in data.keys():
+            self.__dict__[_key] = data[_key]
+
+
     def _get_num_decon_taps(self,deconvolution_filter_duration,sampling_rate):
         dt = 1. / sampling_rate
         decon_filter_length_taps = int(deconvolution_filter_duration / dt)
@@ -97,7 +103,6 @@ class Config:
         sampling_rate = float(self.output_sampling_rate)
         n_samples_back = int(sampling_rate * np.abs(self.min_lag_trimmed_trace))
         n_samples_fwd = int(sampling_rate * self.max_lag_trimmed_trace)
-
         return int(n_samples_fwd + n_samples_back)
 
     def set_config_parser( self, config_parser ):
