@@ -511,10 +511,46 @@ if args.time_processing:
         io_helper.make_dirs_if_needed(temppath)
     else:
         temppath = io_helper.get_output_base_path(sourcefilename)
+
+    append_mode = False
+    if 'ts.npy' in os.listdir(temppath):
+        previous_ts_array = np.load(os.path.join(temppath,'ts.npy'))
+        previous_end_ts = previous_ts_array[-1]
+        print "File in folder",previous_end_ts,end_ts
+        if end_ts > previous_end_ts+1:
+            append_mode = True
+            print "changed start ts to ",previous_end_ts+1
+            start_ts = previous_end_ts+1
+        else:
+            print "File in the output folder have more time than the input file"
+            sys.exit(1)
+
+
+
+
     axial, tangential, radial, ts_array = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper.data_xyz, h5_helper.ts, h5_helper.sensitivity_xyz,debug_file_name=os.path.join(temppath,''))
     extracted_features_list = get_features_extracted(extractor,axial,tangential,radial,ts_array)
     extracted_features_df = pd.DataFrame(extracted_features_list)
-    extracted_features_df.to_csv(os.path.join(temppath,"extracted_features.csv"))
+
+    axial_file_path = os.path.join(temppath,'axial.npy')
+    tangential_file_path = os.path.join(temppath,'tangential.npy')
+    radial_file_path = os.path.join(temppath,'radial.npy')
+    ts_file_path = os.path.join(temppath,'ts.npy')
+    extracted_features_df_path = os.path.join(temppath,"extracted_features.csv")
+
+    if append_mode:
+        axial = np.concatenate((np.load(axial_file_path), axial))
+        tangential = np.concatenate((np.load(tangential_file_path), tangential))
+        radial = np.concatenate((np.load(radial_file_path), radial))
+        ts_array = np.concatenate((np.load(ts_file_path), ts_array))
+        extracted_features_df = pd.concat([pd.read_csv(extracted_features_df_path), extracted_features_df])
+
+    np.save(axial_file_path,axial)
+    np.save(tangential_file_path,tangential)
+    np.save(radial_file_path,radial)
+    np.save(ts_file_path,ts_array)
+
+    extracted_features_df.to_csv(extracted_features_df_path, index=False)
     extracted_features_df['start_ts'] = start_ts
     extracted_features_df['end_ts'] = end_ts
 

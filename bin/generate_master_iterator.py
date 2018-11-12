@@ -7,6 +7,8 @@ import pandas as pd
 import argparse
 import time
 import pdb
+import logging
+
 
 argparser = argparse.ArgumentParser(description="Copyright (c) 2018 DataCloud")
 argparser.add_argument('-f', '--h5-folder', help="H5 Folder Path", required=True)
@@ -17,7 +19,6 @@ has_df = False
 try:
     df = pd.read_csv(args.csv_file)
     has_df = True
-
 except:
     has_df = False
 
