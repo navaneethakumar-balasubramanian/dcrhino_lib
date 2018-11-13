@@ -527,7 +527,6 @@ if args.time_processing:
 
 
 
-
     axial, tangential, radial, ts_array = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper.data_xyz, h5_helper.ts, h5_helper.sensitivity_xyz,debug_file_name=os.path.join(temppath,''))
     extracted_features_list = get_features_extracted(extractor,axial,tangential,radial,ts_array)
     extracted_features_df = pd.DataFrame(extracted_features_list)
@@ -564,6 +563,10 @@ if args.time_processing:
     file.write("\nConfig file path: " + str(args.cfg_path))
 
     file.close()
+
+    with open(os.path.join(temppath,'global_config.json'), 'w') as outfile:
+        json.dump(vars(global_config), outfile,indent=4)
+
 
 
 
@@ -771,7 +774,5 @@ else:
         file.write("\nConfig file path: " + str(args.cfg_path))
 
         file.close()
-
-
-with open(os.path.join(temppath,'global_config.json'), 'w') as outfile:
-    json.dump(vars(global_config), outfile,indent=4)
+        with open(os.path.join(temppath,'global_config.json'), 'w') as outfile:
+            json.dump(vars(global_config), outfile,indent=4)
