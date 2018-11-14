@@ -22,13 +22,13 @@ class MwdDFHelper:
                  collar_elevation_column,
                  computed_elevation_column,
                  rig_id_column,
-                 mse_column,
-                 rop_column,
-                 wob_column,
-                 tob_column,
-                 easting_column,
-                 northing_column,
-                 mwd_map):
+                 mse_column='mse',
+                 rop_column='rop',
+                 wob_column='wob',
+                 tob_column='tob',
+                 easting_column='easting',
+                 northing_column='northing',
+                 mwd_map=False):
 
         self.df = df
         self.start_time_column_name = start_time_column
