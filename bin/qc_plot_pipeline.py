@@ -23,10 +23,11 @@ from dcrhino.process_pipeline.config import Config
 from dcrhino.process_pipeline.mwd_helper import MwdDFHelper
 from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotterv2
 from dcrhino.process_pipeline.qc_log_plotter_nomwd import QCLogPlotter_nomwd
+from dcrhino.process_pipeline.acceleration_plotter import acceleration_plotter
 
 def main():
 
-    ddir = '/mnt/sda1/data/datacloud/rhino_process_pipeline_output/line_creek/5208/3200/2018-11-13_00001'
+    ddir = '/mnt/sda1/data/datacloud/WEST_ANGELAS/5452/4000/778-141-242/2018-11-14_00004'
 
 
     argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
@@ -74,11 +75,13 @@ def main():
     config_filebase = "global_config.json"
     feature_csv_filebase = 'extracted_features.csv'
     mwd_csv_filebase = 'hole_mwd.csv'
+    accel_csv_filebase = 'acceleration_values_by_second.csv'
 
 
     mwd_fullfile = os.path.join(args.data_path,mwd_csv_filebase)
     feature_fullfile = os.path.join(args.data_path,feature_csv_filebase)
     config_fullfile = os.path.join(args.data_path,config_filebase)
+    accel_fullfile = os.path.join(args.data_path,accel_csv_filebase)
 
 
 
@@ -108,6 +111,8 @@ def main():
     ts = np.load(ts_file_path)
     start_ts = ts[0]
     end_ts = ts[-1]
+    
+    accel_df = pd.read_csv(accel_fullfile)
 
     bph_string = global_config.mine_name + "\nRig:" + global_config.rig_id + " From:" + datetime.utcfromtimestamp(start_ts).strftime('%Y-%m-%d %H:%M:%S') + " to " + datetime.utcfromtimestamp(end_ts).strftime('%Y-%m-%d %H:%M:%S')
 
@@ -119,6 +124,9 @@ def main():
 
     qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,feature_df,bph_string,qclogplot_output_path,global_config,start_ts,end_ts)
     qclogplotter_time.plot(save=(output_folder_path != False),show=(output_folder_path == False))
+    
+    acceleration_plotter(accel_df,'Acceleration_histogram',bph_string)
+
 
     if mwd_df is not None:
         print(feature_df)
