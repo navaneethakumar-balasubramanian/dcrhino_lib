@@ -111,8 +111,8 @@ def main():
     ts = np.load(ts_file_path)
     start_ts = ts[0]
     end_ts = ts[-1]
-    
-    accel_df = pd.read_csv(accel_fullfile)
+
+
 
     bph_string = global_config.mine_name + "\nRig:" + global_config.rig_id + " From:" + datetime.utcfromtimestamp(start_ts).strftime('%Y-%m-%d %H:%M:%S') + " to " + datetime.utcfromtimestamp(end_ts).strftime('%Y-%m-%d %H:%M:%S')
 
@@ -124,9 +124,13 @@ def main():
 
     qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,feature_df,bph_string,qclogplot_output_path,global_config,start_ts,end_ts)
     qclogplotter_time.plot(save=(output_folder_path != False),show=(output_folder_path == False))
-    
-    acceleration_plotter(accel_df,'Acceleration_histogram',bph_string)
 
+
+    try:
+        accel_df = pd.read_csv(accel_fullfile)
+        acceleration_plotter(accel_df,'Acceleration_histogram',bph_string)
+    except:
+        print ("No accel_df found on this folder")
 
     if mwd_df is not None:
         print(feature_df)
