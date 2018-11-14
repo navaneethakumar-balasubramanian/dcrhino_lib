@@ -10,48 +10,81 @@ import pdb
 
 
 class Config( object ):
-
-
     def __init__(self, metadata = None, env_config_parser=None, config_parser = None):
-         # DEFAULT VALUES
-         self.mine_name = ''
-         self.sensor_serial_number = ''
-         self.rig_id = ''
+        """
+        @TODO: change output_sampling_rate to sampling_rate or all resampled data
+        """
+        # DEFAULT VALUES
+        self.mine_name = ''
+        self.sensor_serial_number = ''
+        self.rig_id = ''
 
-         self.base_output_path = 'output_data'
-
-         self.accelerometer_max_voltage = 0
-         self.output_sampling_rate = 0
-         self.trace_length = 0
-         self.deconvolution_filter_duration = None
-         self.trapezoidal_bpf_corner_1 = 0.0
-         self.trapezoidal_bpf_corner_2 = 0.0
-         self.trapezoidal_bpf_corner_3 = 0.0
-         self.trapezoidal_bpf_corner_4 = 0.0
-         self.trapezoidal_bpf_duration = 0.0
-         self.min_lag_trimmed_trace = 0.0
-         self.max_lag_trimmed_trace = 0.0
-
-         self.sensor_axial_axis = 1
-         self.sensor_tangential_axis = 2
-
-         self.ACOUSTIC_VELOCITY = 4755.0
-         self.primary_window_halfwidth_ms = 2.0
-         self.multiple_window_search_width_ms = 3.126
-         self.sensor_distance_to_source = np.nan
-         #self.n_samples = 640.0
-         self.trace_length_in_seconds = 1.0
-
-         if metadata is not None:
-             self.set_metadata(metadata)
-
-         if env_config_parser is not None:
-             self.set_config_parser(env_config_parser)
-
-         if config_parser is not None:
-             self.set_config_parser(config_parser)
+        self.base_output_path = 'output_data'
+        self.accelerometer_max_voltage = 0
+        self.output_sampling_rate = 0
+        self.trace_length = 0
+        self.deconvolution_filter_duration = None
+        self.trapezoidal_bpf_corner_1 = 0.0
+        self.trapezoidal_bpf_corner_2 = 0.0
+        self.trapezoidal_bpf_corner_3 = 0.0
+        self.trapezoidal_bpf_corner_4 = 0.0
+        self.trapezoidal_bpf_duration = 0.0
 
 
+        self.min_lag_trimmed_trace = 0.0
+        self.max_lag_trimmed_trace = 0.0
+        self.sensor_axial_axis = 1
+        self.sensor_tangential_axis = 2
+
+        self.ACOUSTIC_VELOCITY = 4755.0
+        self.SHEAR_VELOCITY = 2654.0
+        self.primary_window_halfwidth_ms = 2.0
+        self.multiple_window_search_width_ms = 3.126
+        self.sensor_distance_to_source = np.nan
+        #self.n_samples = 640.0
+        self.trace_length_in_seconds = 1.0
+        #<adding for despike decon>
+        self.start_ms_despike_decon = 5.0
+        self.end_ms_despike_decon = 70.#190.0#70.0
+        self.add_noise_percent = 200.0#150.0
+        #Spiking Decon (10 ms operator, 5% white noise, design window 110-170 ms)
+        self.spiking_decon_filter_duration = 0.010    #10ms; parameterize in terms of trace length
+
+
+        if metadata is not None:
+            self.set_metadata(metadata)
+
+        if env_config_parser is not None:
+            self.set_config_parser(env_config_parser)
+
+        if config_parser is not None:
+            self.set_config_parser(config_parser)
+        return
+
+    def get_component_index(self, component_id):
+        """
+        """
+        if component_id == 'axial':
+            return self.sensor_axial_axis - 1
+        elif component_id == 'tangential':
+            return self.sensor_tangential_axis - 1
+        elif component_id == 'radial':
+            return 2
+        else:
+            print("unknown componet requested {} DNE".format(component_id))
+
+
+    @property
+    def sampling_rate(self):
+        return float(self.output_sampling_rate)
+
+    @property
+    def sampling_rate(self):
+        return float(self.output_sampling_rate)
+
+    @property
+    def dt(self):
+        return 1./self.sampling_rate
 
 
     @property
@@ -59,10 +92,13 @@ class Config( object ):
         """
         TODO: confirm type is int returned by get_num_decon_taps()
         """
-        sampling_rate = float(self.output_sampling_rate)
         deconvolution_filter_duration = float(self.deconvolution_filter_duration)
-        number_of_taps_in_decon_filter = self._get_num_decon_taps(deconvolution_filter_duration, sampling_rate)
+        number_of_taps_in_decon_filter = self._get_num_decon_taps(deconvolution_filter_duration, self.sampling_rate)
         return number_of_taps_in_decon_filter
+
+    @property
+    def n_spiking_decon_filter_taps(self):
+        return int(self.sampling_rate * self.spiking_decon_filter_duration)
 
     @property
     def ideal_timestamps(self):
