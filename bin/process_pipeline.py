@@ -4,52 +4,43 @@ python process_pipeline_sucks.py -h5 ~/data/datacloud/debug/run_1542066345/20181
 Example usage for mwd plot
 python process_pipeline_sucks.py -h5 20180504_SSX55470_5306_4000.h5 -mwd mount_milligan_raw.csv  -icl weight_on_bit,rop,torque,vibration,rpm,air_pressure -ric machine_id -sc time_start_utc -ec time_end_utc -mc MSE -tobc torque -wobc weight_on_bit
 """
-import numpy as np
+import argparse
+import calendar
 import h5py
+import json
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+import pdb
 import pandas as pd
-from scipy import interpolate
+import scipy
+import scipy.signal as ssig
+import sys
+import warnings
 
 from ConfigParser import ConfigParser
-import argparse
-import os
-import scipy
-import json
-import matplotlib.pyplot as plt
-import pdb
-#from string import zfill
-#from dcrhino.analysis.data_manager.temp_paths import ensure_dir
-import calendar
-import scipy.signal as ssig
-import warnings
-from operator import is_not
+from datetime import datetime
 from functools import partial
-#from dcrhino.real_time.metadata import Metadata
+from operator import is_not
+
+
 warnings.filterwarnings("ignore")
 
 
-#from dcrhino.models.feature_extracted import FeatureExtractedModel
-
-
-from dcrhino.analysis.graphical.unbinned_qc_log_plots_v3_west_angelas import pseudodensity_panel,primary_pseudovelocity_panel,reflection_coefficient_panel
+#from dcrhino.analysis.graphical.unbinned_qc_log_plots_v3_west_angelas import pseudodensity_panel,primary_pseudovelocity_panel,reflection_coefficient_panel
 #from dcrhino.analysis.math.mwd_tools import interpolate_to_assign_depths_to_log_csv
-from datetime import datetime
+from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
+from dcrhino.analysis.signal_processing.seismic_processing import calculate_spiking_decon_filter
 from dcrhino.process_pipeline.config import Config
-from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotter,QCLogPlotInput
-from dcrhino.process_pipeline.qc_log_plotter_nomwd import QCLogPlotter_nomwd
 from dcrhino.process_pipeline.feature_extractor import FeatureExtractor
 from dcrhino.process_pipeline.filters import FIRLSFilter
-
 from dcrhino.process_pipeline.h5_helper import H5Helper
-from dcrhino.process_pipeline.mwd_helper import MwdDFHelper
 from dcrhino.process_pipeline.io_helper import IOHelper
-#plt.rcParams['figure.figsize'] = [20, 12]
-import sys
-
-
+from dcrhino.process_pipeline.mwd_helper import MwdDFHelper
+from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotter,QCLogPlotInput
+from dcrhino.process_pipeline.qc_log_plotter_nomwd import QCLogPlotter_nomwd
 from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotterv2
-#from dcrhino.process_pipeline.mwd_mapper import MWDMapper
-
-import matplotlib.pylab as pylab
+#plt.rcParams['figure.figsize'] = [20, 12]
 
 
 
@@ -95,6 +86,7 @@ def autocorrelate_trace(trace_data, n_pts):
 
 def deconvolve_trace(deconvolution_filter_duration, num_taps_in_decon_filter, data):
     """
+    deconvolution_filter_duration:
     """
     deconvolution_filter_duration = float(deconvolution_filter_duration)
     R_xx = autocorrelate_trace(data, num_taps_in_decon_filter)
@@ -123,7 +115,9 @@ def correlate_trace( original_data, decon_data):
         return correlated_trace
 
 
-def bandpass_filter_trace(output_sampling_rate,trapezoidal_bpf_corner_1,trapezoidal_bpf_corner_2,trapezoidal_bpf_corner_3,trapezoidal_bpf_corner_4,trapezoidal_bpf_duration,data):
+def bandpass_filter_trace(output_sampling_rate, trapezoidal_bpf_corner_1,
+                          trapezoidal_bpf_corner_2, trapezoidal_bpf_corner_3,
+                          trapezoidal_bpf_corner_4, trapezoidal_bpf_duration, data):
     """
     TODO: calculate fir_taps once per header and leave fixed ...
     """
@@ -179,6 +173,9 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
     not good if we want to change this is going to require a fundamentally
     different iterator.  Iterator is currently actual_ts, which stands for
     actual_time_stamp maybe?
+
+    ::axial_traces:: these are the traces that are input to the feature extractor
+
     """
 
     entire_ts = ts_data
@@ -218,6 +215,16 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
         radial_filtered_correlated_traces = [None] * interval_seconds
         tangential_filtered_correlated_traces = [None] * interval_seconds
 
+        #<despike decon add>
+        axial_despike_unfiltered_traces = [None] * interval_seconds
+        radial_despike_unfiltered_traces = [None] * interval_seconds
+        tangential_despike_unfiltered_traces = [None] * interval_seconds
+
+        axial_despike_filtered_traces = [None] * interval_seconds
+        radial_despike_filtered_traces = [None] * interval_seconds
+        tangential_despike_filtered_traces = [None] * interval_seconds
+            #</despike decon add>
+
         #Natal's changes
         interval_second_index = 0
         acceleration_stats = [None] * interval_seconds
@@ -235,6 +242,7 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
 
         ts_actual_second = get_values_from_index(indexes_array_of_actual_second,entire_ts,np.float64)
         ts_actual_second = ts_actual_second-int(ts_actual_second[0])
+        trace_index = actual_ts - start_time_ts
 
         results = [None] * len(entire_xyz)
         if debug:
@@ -242,6 +250,8 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
             results_interpolated = [None] * len(entire_xyz)
             results_unfiltered = [None] * len(entire_xyz)
             results_filtered = [None] * len(entire_xyz)
+            results_despike_unfiltered = [None] * len(entire_xyz)
+            results_despike_filtered = [None] * len(entire_xyz)
 
 
             #Natal's changes
@@ -266,9 +276,33 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
             interpolated_actual_second = interpolate_data(global_config.ideal_timestamps, ts_actual_second, calibrated_actual_second)
             deconvolved_data_actual_second, r_xx0 = deconvolve_trace(global_config.deconvolution_filter_duration,global_config.num_taps_in_decon_filter,interpolated_actual_second)
             correlated_trace_actual_second = correlate_trace(interpolated_actual_second,deconvolved_data_actual_second)
-            filtered_correlated_trace_actual_second = bandpass_filter_trace(global_config.output_sampling_rate,global_config.trapezoidal_bpf_corner_1,global_config.trapezoidal_bpf_corner_2,global_config.trapezoidal_bpf_corner_3,global_config.trapezoidal_bpf_corner_4,global_config.trapezoidal_bpf_duration,correlated_trace_actual_second)
+            filtered_correlated_trace_actual_second = bandpass_filter_trace(global_config.sampling_rate,
+                                                                            global_config.trapezoidal_bpf_corner_1,
+                                                                            global_config.trapezoidal_bpf_corner_2,
+                                                                            global_config.trapezoidal_bpf_corner_3,
+                                                                            global_config.trapezoidal_bpf_corner_4,
+                                                                            global_config.trapezoidal_bpf_duration,
+                                                                            correlated_trace_actual_second)
             #pdb.set_trace()
-            trimmed_filtered_correlated_trace_actual_second = trim_trace(global_config.min_lag_trimmed_trace,global_config.max_lag_trimmed_trace,global_config.num_taps_in_decon_filter,global_config.output_sampling_rate,filtered_correlated_trace_actual_second)
+            trimmed_filtered_correlated_trace_actual_second = trim_trace(global_config.min_lag_trimmed_trace,
+                                                                         global_config.max_lag_trimmed_trace,
+                                                                         global_config.num_taps_in_decon_filter,
+                                                                         global_config.sampling_rate,
+                                                                         filtered_correlated_trace_actual_second)
+
+            despiked_trace, despike_filter = calculate_spiking_decon_filter(correlated_trace_actual_second,
+                                                          global_config.n_spiking_decon_filter_taps,
+                                                          global_config.dt, global_config.start_ms_despike_decon,
+                                                          global_config.end_ms_despike_decon,
+                                                          add_noise_percent=global_config.add_noise_percent)
+            filtered_despiked_trace_actual_second = bandpass_filter_trace(global_config.sampling_rate,
+                                                                global_config.trapezoidal_bpf_corner_1,
+                                                                global_config.trapezoidal_bpf_corner_2,
+                                                                global_config.trapezoidal_bpf_corner_3,
+                                                                global_config.trapezoidal_bpf_corner_4,
+                                                                global_config.trapezoidal_bpf_duration,
+                                                                despiked_trace)
+
             results[i] = trimmed_filtered_correlated_trace_actual_second
 
             if debug:
@@ -276,78 +310,82 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
                 results_interpolated[i] = interpolated_actual_second
                 results_unfiltered[i] = correlated_trace_actual_second
                 results_filtered[i] = filtered_correlated_trace_actual_second
+                results_despike_unfiltered[i] = despiked_trace
+                results_despike_filtered[i] = filtered_despiked_trace_actual_second
 
         #Natal's changes
         # acceleration_stats.append(row)
         acceleration_stats[interval_second_index]=row
         interval_second_index+=1
 
-        if global_config.sensor_axial_axis == 1:
-            axial_trace = results[0]
-            tangential_trace = results[1]
-            radial_trace = results[2]
+#        for component_label in COMPONENT_LABELS:
+#            component_
+#        COMPONENT_IDS = []
+        #pdb.set_trace()
+        axial_index = global_config.get_component_index('axial')
+        tangential_index = global_config.get_component_index('tangential')
+        radial_index = global_config.get_component_index('radial')
+        axial_trace = results[axial_index]
+        tangential_trace = results[tangential_index]
+        radial_trace = results[radial_index]
+        if debug:
+            axial_deconvolved_trace = results_deconvolved[axial_index]
+            radial_deconvolved_trace = results_deconvolved[radial_index]
+            tangential_deconvolved_trace = results_deconvolved[tangential_index]
 
-            if debug:
-                axial_deconvolved_trace = results_deconvolved[0]
-                radial_deconvolved_trace = results_deconvolved[2]
-                tangential_deconvolved_trace = results_deconvolved[1]
+            axial_unfiltered_correlated_trace = results_unfiltered[axial_index]
+            radial_unfiltered_correlated_trace = results_unfiltered[radial_index]
+            tangential_unfiltered_correlated_trace = results_unfiltered[tangential_index]
 
-                axial_unfiltered_correlated_trace = results_unfiltered[0]
-                radial_unfiltered_correlated_trace = results_unfiltered[2]
-                tangential_unfiltered_correlated_trace = results_unfiltered[1]
+            axial_filtered_correlated_trace = results_filtered[tangential_index]
+            radial_filtered_correlated_trace = results_filtered[radial_index]
+            tangential_filtered_correlated_trace = results_filtered[tangential_index]
 
-                axial_filtered_correlated_trace = results_filtered[0]
-                radial_filtered_correlated_trace = results_filtered[2]
-                tangential_filtered_correlated_trace = results_filtered[1]
+            axial_interpolated_trace = results_interpolated[tangential_index]
+            radial_interpolated_trace = results_interpolated[radial_index]
+            tangential_interpolated_trace = results_interpolated[tangential_index]
 
-                axial_interpolated_trace = results_interpolated[0]
-                radial_interpolated_trace = results_interpolated[2]
-                tangential_interpolated_trace = results_interpolated[1]
-        else:
-            axial_trace = results[1]
-            tangential_trace = results[0]
-            radial_trace = results[2]
+            #<despike decon add>
+            axial_despike_unfiltered_trace = results_despike_unfiltered[tangential_index]
+            radial_despike_unfiltered_trace = results_despike_unfiltered[radial_index]
+            tangential_despike_unfiltered_trace = results_despike_unfiltered[tangential_index]
 
-            if debug:
-                axial_deconvolved_trace = results_deconvolved[1]
-                radial_deconvolved_trace = results_deconvolved[2]
-                tangential_deconvolved_trace = results_deconvolved[0]
+            axial_despike_filtered_trace = results_despike_filtered[tangential_index]
+            radial_despike_filtered_trace = results_despike_filtered[radial_index]
+            tangential_despike_filtered_trace = results_despike_filtered[tangential_index]
+            #</despike decon add>
 
-                axial_unfiltered_correlated_trace = results_unfiltered[1]
-                radial_unfiltered_correlated_trace = results_unfiltered[2]
-                tangential_unfiltered_correlated_trace = results_unfiltered[0]
-
-                axial_filtered_correlated_trace = results_filtered[1]
-                radial_filtered_correlated_trace = results_filtered[2]
-                tangential_filtered_correlated_trace = results_filtered[0]
-
-                axial_interpolated_trace = results_interpolated[1]
-                radial_interpolated_trace = results_interpolated[2]
-                tangential_interpolated_trace = results_interpolated[0]
-
-
-        axial_traces[actual_ts - start_time_ts] = np.array(axial_trace)
-        tangential_traces[actual_ts - start_time_ts] = np.array(tangential_trace)
-        radial_traces[actual_ts - start_time_ts] = np.array(radial_trace)
-        ts[actual_ts - start_time_ts] = actual_ts
+        axial_traces[trace_index] = np.array(axial_trace)
+        tangential_traces[trace_index] = np.array(tangential_trace)
+        radial_traces[trace_index] = np.array(radial_trace)
+        ts[trace_index] = actual_ts
 
         if debug:
-            axial_deconvolved_traces[actual_ts - start_time_ts] = axial_deconvolved_trace
-            tangential_deconvolved_traces[actual_ts - start_time_ts] = tangential_deconvolved_trace
-            radial_deconvolved_traces[actual_ts - start_time_ts] = radial_deconvolved_trace
+            axial_deconvolved_traces[trace_index] = axial_deconvolved_trace
+            tangential_deconvolved_traces[trace_index] = tangential_deconvolved_trace
+            radial_deconvolved_traces[trace_index] = radial_deconvolved_trace
 
-            axial_unfiltered_correlated_traces[actual_ts - start_time_ts] = axial_unfiltered_correlated_trace
-            tangential_unfiltered_correlated_traces[actual_ts - start_time_ts] = tangential_unfiltered_correlated_trace
-            radial_unfiltered_correlated_traces[actual_ts - start_time_ts] = radial_unfiltered_correlated_trace
+            axial_unfiltered_correlated_traces[trace_index] = axial_unfiltered_correlated_trace
+            tangential_unfiltered_correlated_traces[trace_index] = tangential_unfiltered_correlated_trace
+            radial_unfiltered_correlated_traces[trace_index] = radial_unfiltered_correlated_trace
 
-            axial_filtered_correlated_traces[actual_ts - start_time_ts] = axial_filtered_correlated_trace
-            tangential_filtered_correlated_traces[actual_ts - start_time_ts] = tangential_filtered_correlated_trace
-            radial_filtered_correlated_traces[actual_ts - start_time_ts] = radial_filtered_correlated_trace
+            axial_filtered_correlated_traces[trace_index] = axial_filtered_correlated_trace
+            tangential_filtered_correlated_traces[trace_index] = tangential_filtered_correlated_trace
+            radial_filtered_correlated_traces[trace_index] = radial_filtered_correlated_trace
 
-            axial_interpolated_traces[actual_ts - start_time_ts] = axial_interpolated_trace
-            tangential_interpolated_traces[actual_ts - start_time_ts] = tangential_interpolated_trace
-            radial_interpolated_traces[actual_ts - start_time_ts] = radial_interpolated_trace
+            axial_interpolated_traces[trace_index] = axial_interpolated_trace
+            tangential_interpolated_traces[trace_index] = tangential_interpolated_trace
+            radial_interpolated_traces[trace_index] = radial_interpolated_trace
 
+            #<despike decon add>
+            axial_despike_unfiltered_traces[trace_index] = axial_despike_unfiltered_trace
+            radial_despike_unfiltered_traces[trace_index] = radial_despike_unfiltered_trace
+            tangential_despike_unfiltered_traces[trace_index] = tangential_despike_unfiltered_trace
+
+            axial_despike_filtered_traces[trace_index] = axial_despike_filtered_trace
+            radial_despike_filtered_traces[trace_index] = radial_despike_filtered_trace
+            tangential_despike_filtered_traces[trace_index] = tangential_despike_filtered_trace
+            #</despike decon add>
         actual_ts += 1
 
 
@@ -385,6 +423,13 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
         tangential_filtered_correlated_traces = np.asarray(tangential_filtered_correlated_traces)
         radial_filtered_correlated_traces = np.asarray(radial_filtered_correlated_traces)
 
+        axial_despike_unfiltered_traces = np.asarray(axial_despike_unfiltered_traces)
+        tangential_despike_unfiltered_traces = np.asarray(tangential_despike_unfiltered_traces)
+        radial_despike_unfiltered_traces = np.asarray(radial_despike_unfiltered_traces)
+
+        axial_despike_filtered_traces = np.asarray(axial_despike_filtered_traces)
+        tangential_despike_filtered_traces = np.asarray(tangential_despike_filtered_traces)
+        radial_despike_filtered_traces = np.asarray(radial_despike_filtered_traces)
 
         #print (axial_deconvolved_traces.shape)
         np.save(debug_file_name+'axial_deconvolved_traces.npy',axial_deconvolved_traces)
@@ -403,6 +448,13 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
         np.save(debug_file_name+'tangential_interpolated_traces.npy',tangential_interpolated_traces)
         np.save(debug_file_name+'radial_interpolated_traces.npy',radial_interpolated_traces)
 
+        np.save(debug_file_name+'axial_despike_unfiltered_traces.npy',axial_despike_unfiltered_traces)
+        np.save(debug_file_name+'tangential_despike_unfiltered_traces.npy',tangential_despike_unfiltered_traces)
+        np.save(debug_file_name+'radial_despike_unfiltered_traces.npy',radial_despike_unfiltered_traces)
+
+        np.save(debug_file_name+'axial_despike_filtered_traces.npy',axial_despike_filtered_traces)
+        np.save(debug_file_name+'tangential_despike_filtered_traces.npy',tangential_despike_filtered_traces)
+        np.save(debug_file_name+'radial_despike_filtered_traces.npy',radial_despike_filtered_traces)
         #Natal's Changes
         #pdb.set_trace()
         cleaned_acceleration_stats = filter(partial(is_not, None), acceleration_stats)
@@ -676,12 +728,6 @@ def main():
                 io_helper.make_dirs_if_needed(temppath)
             else:
                 temppath = io_helper.get_output_base_path(hole_uid)
-
-            startdt = datetime.utcfromtimestamp(start_ts)
-            enddt = datetime.utcfromtimestamp(end_ts)
-            #periods = (enddt-startdt).total_seconds()
-            #time_vector = pd.date_range(start=startdt, periods=periods, freq='1S')
-
 
             axial_file_path = os.path.join(temppath,'axial.npy')
             tangential_file_path = os.path.join(temppath,'tangential.npy')
