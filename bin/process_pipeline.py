@@ -192,64 +192,39 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
     num_traces_to_process = int(interval_seconds / trace_duration)
     samples_per_trace = int(trace_duration / global_config.dt)
     samples_per_trimmed_trace = global_config.n_samples_trimmed_trace
-#    global_config.
-#            self.min_lag_trimmed_trace = 0.0
-#        self.max_lag_trimmed_trace = 0.0
+
     print ("Getting axial,tangential,radial traces from interval: " + str(start_time_ts) +  " - " + str(end_time_ts) + " total of " + str(interval_seconds) + " seconds")
     axial_traces = np.full((num_traces_to_process, samples_per_trimmed_trace), np.nan)
-    #axial_traces = [None] * interval_seconds
-    #radial_traces = [None] * interval_seconds
     radial_traces = np.full((num_traces_to_process, samples_per_trimmed_trace), np.nan)
-    #tangential_traces = [None] * interval_seconds
     tangential_traces = np.full((num_traces_to_process, samples_per_trimmed_trace), np.nan)
     ts = [None] * interval_seconds
 
 
 
     if debug:
-        #axial_deconvolved_traces = [None] * interval_seconds
-        #pdb.set_trace()
         axial_deconvolved_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
-        #radial_deconvolved_traces = [None] * interval_seconds
         radial_deconvolved_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
-        #tangential_deconvolved_traces = [None] * interval_seconds
         tangential_deconvolved_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
 
-        #axial_interpolated_traces = [None] * interval_seconds
         axial_interpolated_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
-        #radial_interpolated_traces = [None] * interval_seconds
         radial_interpolated_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
-        #tangential_interpolated_traces = [None] * interval_seconds
         tangential_interpolated_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
 
-        #axial_unfiltered_correlated_traces = [None] * interval_seconds
         axial_unfiltered_correlated_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
-        #radial_unfiltered_correlated_traces = [None] * interval_seconds
         radial_unfiltered_correlated_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
-        #tangential_unfiltered_correlated_traces = [None] * interval_seconds
         tangential_unfiltered_correlated_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
 
-
-        #axial_filtered_correlated_traces = [None] * interval_seconds
         axial_filtered_correlated_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
-        #radial_filtered_correlated_traces = [None] * interval_seconds
         radial_filtered_correlated_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
-        #tangential_filtered_correlated_traces = [None] * interval_seconds
         tangential_filtered_correlated_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
 
         #<despike decon add>
-        #axial_despike_unfiltered_traces = [None] * interval_seconds
         axial_despike_unfiltered_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
-        #radial_despike_unfiltered_traces = [None] * interval_seconds
         radial_despike_unfiltered_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
-        #tangential_despike_unfiltered_traces = [None] * interval_seconds
         tangential_despike_unfiltered_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
 
-        #axial_despike_filtered_traces = [None] * interval_seconds
         axial_despike_filtered_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
-        #radial_despike_filtered_traces = [None] * interval_seconds
         radial_despike_filtered_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
-        #tangential_despike_filtered_traces = [None] * interval_seconds
         tangential_despike_filtered_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
         #</despike decon add>
 
@@ -324,6 +299,8 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
                                                           global_config.dt, global_config.start_ms_despike_decon,
                                                           global_config.end_ms_despike_decon,
                                                           add_noise_percent=global_config.add_noise_percent)
+            despiked_trace = np.roll(despiked_trace, global_config.n_spiking_decon_filter_taps//2)
+            #pdb.set_trace()
             filtered_despiked_trace_actual_second = bandpass_filter_trace(global_config.sampling_rate,
                                                                 global_config.trapezoidal_bpf_corner_1,
                                                                 global_config.trapezoidal_bpf_corner_2,
@@ -418,48 +395,12 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
         actual_ts += 1
 
 
-    #axial_traces = [x for x in axial_traces if x is not None]
-    #tangential_traces = [x for x in tangential_traces if x is not None]
-    #radial_traces = [x for x in radial_traces if x is not None]
-    #ts = [x for x in ts if x is not None]
-
-#    axial_traces = np.asarray(axial_traces)
-#    tangential_traces = np.asarray(tangential_traces)
-#    radial_traces = np.asarray(radial_traces)
     ts = np.asarray(ts)
 
-    # Remove missing
-    #axial_traces = axial_traces[axial_traces != np.array(None)]
-    #tangential_traces = tangential_traces[axial_traces != np.array(None)]
-    #radial_traces = radial_traces[axial_traces != np.array(None)]
-    #ts = ts[axial_traces != np.array(None)]
+
 
 
     if debug:
-#        axial_deconvolved_traces = np.asarray(axial_deconvolved_traces)
-#        tangential_deconvolved_traces = np.asarray(tangential_deconvolved_traces)
-#        radial_deconvolved_traces = np.asarray(radial_deconvolved_traces)
-#        #pdb.set_trace()
-#        axial_interpolated_traces = np.asarray(axial_interpolated_traces)
-#        tangential_interpolated_traces = np.asarray(tangential_interpolated_traces)
-#        radial_interpolated_traces = np.asarray(radial_interpolated_traces)
-#
-#        axial_unfiltered_correlated_traces = np.asarray(axial_unfiltered_correlated_traces)
-#        tangential_unfiltered_correlated_traces = np.asarray(tangential_unfiltered_correlated_traces)
-#        radial_unfiltered_correlated_traces = np.asarray(radial_unfiltered_correlated_traces)
-#
-#        axial_filtered_correlated_traces = np.asarray(axial_filtered_correlated_traces)
-#        tangential_filtered_correlated_traces = np.asarray(tangential_filtered_correlated_traces)
-#        radial_filtered_correlated_traces = np.asarray(radial_filtered_correlated_traces)
-#
-#        axial_despike_unfiltered_traces = np.asarray(axial_despike_unfiltered_traces)
-#        tangential_despike_unfiltered_traces = np.asarray(tangential_despike_unfiltered_traces)
-#        radial_despike_unfiltered_traces = np.asarray(radial_despike_unfiltered_traces)
-#
-#        axial_despike_filtered_traces = np.asarray(axial_despike_filtered_traces)
-#        tangential_despike_filtered_traces = np.asarray(tangential_despike_filtered_traces)
-#        radial_despike_filtered_traces = np.asarray(radial_despike_filtered_traces)
-
         #print (axial_deconvolved_traces.shape)
         np.save(debug_file_name+'axial_deconvolved_traces.npy',axial_deconvolved_traces)
         np.save(debug_file_name+'tangential_deconvolved_traces.npy',tangential_deconvolved_traces)
