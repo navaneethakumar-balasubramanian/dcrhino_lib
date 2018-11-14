@@ -429,7 +429,7 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
         #pdb.set_trace()
         cleaned_acceleration_stats = filter(partial(is_not, None), acceleration_stats)
         accel_df =pd.DataFrame(cleaned_acceleration_stats,columns=["Timestamp","max_x","min_x","max_y","min_y","max_z","min_z"])
-        accel_df.to_csv(debug_file_name+'acceleration_values_by_second.csv')
+        accel_df.to_csv(debug_file_name+'acceleration_values_by_second.csv', index=False)
 
     return [axial_traces,tangential_traces,radial_traces,ts,accel_df]
 
