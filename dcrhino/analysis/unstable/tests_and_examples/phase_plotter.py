@@ -13,8 +13,8 @@ matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 from phase_rotation import rotate_phase
-# plt.ion()
-# jj = np.complex(0.0, 1.0)
+l_bound = -360
+r_bound = 360
 class GUI():
     def __init__(self,master,figure,original_data=None,interactive=True):
         self.master = master
@@ -33,13 +33,13 @@ class GUI():
         plot_widget = canvas.get_tk_widget()
         plot_widget.grid(row=row,sticky='NEWS')
         row+=1
-        self.phase_scale = Scale(self.master, from_=-180, to=180, orient=HORIZONTAL, label="Phase",command=self.update)
+        self.phase_scale = Scale(self.master, from_=l_bound, to=r_bound, orient=HORIZONTAL, label="Phase",command=self.update)
         self.phase_scale.grid(row=row,sticky='NEWS')
         row+=1
 
         self.plot()
 
-        # Button(self.master,text="Update",command=self.update).grid(row=row, sticky='NEWS')
+        Button(self.master,text="Reset Axis",command=self.reset_view).grid(row=row, sticky='NEWS')
 
         self.master.grid_columnconfigure(0,weight=0)
 
@@ -52,19 +52,31 @@ class GUI():
 
     def plot(self):
         plt.plot(self.original_data,label="Original")
+        self.xmin,self.xmax = plt.xlim()
+        self.ymin,self.ymax = plt.ylim()
+
+
         if self._interactive:
             plt.show()
 
     def update(self,sv=None):
+        xmin, xmax = plt.xlim()
+        ymin, ymax = plt.ylim()
         plt.clf()
         plt.plot(self.original_data,label="Original")
         plt.plot(rotate_phase(self.original_data,self.phase),label="{} deg rotated".format(self.phase))
+        plt.xlim(xmin,xmax)
+        plt.ylim(ymin,ymax)
         plt.legend()
         if self._interactive:
             plt.show()
         else:
             self.figure.canvas.draw()
 
+    def reset_view(self):
+        plt.xlim(self.xmin,self.xmax)
+        plt.ylim(self.ymin,self.ymax)
+        plt.show()
 
     def exit(self):
         sys.exit(0)
@@ -73,7 +85,7 @@ class GUI():
 def main(args):
     original_data = np.load(args.source_file)
     master = Tk()
-    figure = plt.figure("Interactive Phase Plotter",figsize=(12,12), dpi=100)
+    figure = plt.figure("Interactive Phase Plotter", dpi=200)
     if args.interactive == 'True':
         plt.ion()
         interactive = True
