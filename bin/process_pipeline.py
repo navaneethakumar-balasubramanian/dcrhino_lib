@@ -231,18 +231,19 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
         # acceleration_stats = []
 
     while actual_ts < end:
-
+        trace_index = actual_ts - start_time_ts
         indexes_array_of_actual_second = get_ts_array_indexes(actual_ts,entire_ts_int)
 
         # PREVENT CRASH IF THERES NO DATA ON THE LASTS SECONDS OF THE HOLE
         if len(indexes_array_of_actual_second[0]) == 0:
             print ("Missing " , actual_ts)
+            ts[trace_index] = actual_ts
             actual_ts += 1
             continue
 
         ts_actual_second = get_values_from_index(indexes_array_of_actual_second,entire_ts,np.float64)
         ts_actual_second = ts_actual_second-int(ts_actual_second[0])
-        trace_index = actual_ts - start_time_ts
+
 
         results = [None] * len(entire_xyz)
         if debug:
@@ -389,10 +390,10 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
         actual_ts += 1
 
 
-    axial_traces = [x for x in axial_traces if x is not None]
-    tangential_traces = [x for x in tangential_traces if x is not None]
-    radial_traces = [x for x in radial_traces if x is not None]
-    ts = [x for x in ts if x is not None]
+    #axial_traces = [x for x in axial_traces if x is not None]
+    #tangential_traces = [x for x in tangential_traces if x is not None]
+    #radial_traces = [x for x in radial_traces if x is not None]
+    #ts = [x for x in ts if x is not None]
 
     axial_traces = np.asarray(axial_traces)
     tangential_traces = np.asarray(tangential_traces)
@@ -474,7 +475,7 @@ def get_features_extracted(extractor,axial_traces,tangential_traces,radial_trace
 
         if axial_trace is None:
             print ("Missing " + str((initial_ts+i)) + " in this h5 file sequence")
-            continue
+            #continue
 
         extracted_features = extractor.extract_features(actual_ts,axial_trace,tangential_trace,radial_trace,global_config.n_samples_trimmed_trace,-global_config.min_lag_trimmed_trace)
         extracted_features_list[i] = extracted_features

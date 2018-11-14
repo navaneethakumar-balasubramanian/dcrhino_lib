@@ -43,12 +43,7 @@ class H5Helper:
     def ts(self):
         if self.clock_ts is None:
             return self._ts
-
-        temp = np.arange(len(self._ts))
-        dt = float(self.max_ts - self.min_ts) / len(self._ts)
-        temp = dt * temp
-        temp = self.min_ts + temp
-        return temp
+        return self.clock_ts
 
     def _is_ide_file(self):
         if len(self._sensitivity) > 1:

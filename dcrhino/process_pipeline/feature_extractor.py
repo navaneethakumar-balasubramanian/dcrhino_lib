@@ -159,10 +159,11 @@ class FeatureExtractor():
             for wavelet_type in self.COMPONENT_WAVELET_MAP[component]:
                 for wavelet_feature in self.WAVELET_FEATURES[component]:
                     feature_string = '{}_{}_{}'.format(component, wavelet_type, wavelet_feature)
-                    feature_dict[feature_string] = np.full(num_traces_per_component, np.nan, dtype='float32')
+                    feature_dict[feature_string] = None
+                    #feature_dict[feature_string] = np.full(num_traces_per_component, np.nan, dtype='float32')
                     #feature_dict[feature_string] = pd.Series(feature_dict[feature_string], )
-        for k, v in feature_dict.iteritems():
-            feature_dict[k] = pd.Series(v, index=[data_datetime,])
+        #for k, v in feature_dict.iteritems():
+        #    feature_dict[k] = pd.Series(v, index=[data_datetime,])
         return feature_dict
 
 
@@ -173,6 +174,9 @@ class FeatureExtractor():
         """
         #data_datetime = trace.date
         df_dict = self.create_features_dictionary(data_datetime)
+        if axial_trace is None:
+            df_dict['datetime'] = datetime.fromtimestamp(data_datetime)
+            return df_dict
         ctr = 0
         #for i_comp, component in enumerate(self.COMPONENT_WAVELET_MAP.keys()):
 
