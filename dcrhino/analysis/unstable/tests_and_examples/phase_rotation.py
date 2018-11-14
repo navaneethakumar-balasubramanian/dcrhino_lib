@@ -18,6 +18,9 @@ import time
 jj = np.complex(0.0, 1.0)
 def rotate_phase(data, phase_shift, degrees=True):
     """
+    ::data:: numpy array (currently 1D, need to test as 2D might need to transpose)
+    ::phase shift:: float: #of degrees to shift signal phase
+    usage: phase_shifted_data_time = rotate_phase(data, phi)
     """
     if degrees is False:
         phase_shift_radians = phase_shift
