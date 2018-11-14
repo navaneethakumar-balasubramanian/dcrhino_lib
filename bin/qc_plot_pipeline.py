@@ -30,22 +30,23 @@ def main():
 
     argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
     argparser.add_argument('-ddir', '--data-path', help="Extracted Data Directory Path", default=ddir)
+    argparser.add_argument('-mmap', '--mwd-map-json', help="MWD MAP JSON", default=False)
     argparser.add_argument('-ric', '--rig-id-column', help="RIG ID COLUMN", default='rig')
     argparser.add_argument('-sc', '--start-time-column', help="START TIME COLUMN", default='starttime')
     argparser.add_argument('-ec', '--end-time-column', help="END TIME COLUMN", default='endtime')
     argparser.add_argument('-hc', '--hole-column', help="HOLE COLUMN", default='hole')
     argparser.add_argument('-mc', '--mse-column', help="MSE COLUMN", default='mse')
     argparser.add_argument('-bc', '--bench-column', help="BENCH COLUMN", default='bench')
-    argparser.add_argument('-ropc', '--rop-column', help="ROP COLUMN", default='rop(m/hr)')
-    argparser.add_argument('-wobc', '--wob-column', help="WOB COLUMN", default='force_on_bit(n)')
-    argparser.add_argument('-tobc', '--tob-column', help="TOB COLUMN", default='torque(nm)')
+    argparser.add_argument('-ropc', '--rop-column', help="ROP COLUMN", default='rop')
+    argparser.add_argument('-wobc', '--wob-column', help="WOB COLUMN", default='wob')
+    argparser.add_argument('-tobc', '--tob-column', help="TOB COLUMN", default='tob')
     argparser.add_argument('-eastc', '--easting-column', help="EASTING COLUMN", default='easting')
     argparser.add_argument('-nortc', '--northing-column', help="NORTHING COLUMN", default='northing')
     argparser.add_argument('-pc', '--pattern-column', help="PATTERN COLUMN", default='pattern')
     argparser.add_argument('-cec', '--collar-elevation-column', help="COLLAR ELEVATION COLUMN", default='collar_elevation')
     argparser.add_argument('-compec', '--computed-elevation-column', help="COMPUTED ELEVATION COLUMN", default='computed_elevation')
-
     args = argparser.parse_args()
+
     start_time_column = args.start_time_column
     end_time_column = args.end_time_column
     bench_column = args.bench_column
@@ -60,7 +61,12 @@ def main():
     tob_column = args.tob_column
     easting_column = args.easting_column
     northing_column = args.northing_column
+    mwd_map_json_path = args.mwd_map_json
 
+    mwd_map = False
+    if mwd_map_json_path:
+        with open(mwd_map_json_path) as f:
+          mwd_map = json.load(f)
 
     config_filebase = "global_config.json"
     feature_csv_filebase = 'extracted_features.csv'
@@ -71,9 +77,11 @@ def main():
     feature_fullfile = os.path.join(args.data_path,feature_csv_filebase)
     config_fullfile = os.path.join(args.data_path,config_filebase)
 
+
+
     mwd_df = None
     try:
-        mwd_df = pd.read_csv(mwd_fullfile, parse_dates=[start_time_column, end_time_column])
+        mwd_df = pd.read_csv(mwd_fullfile)
     except IOError:
         print('No files exist. Were the files extracted by running process pipeline?')
         #sys.exit()
@@ -125,9 +133,11 @@ def main():
                                tob_column=tob_column,
                                wob_column=wob_column,
                                easting_column=easting_column,
-                               northing_column=northing_column)
-
-
+                               northing_column=northing_column,
+                               mwd_map=mwd_map)
+        mwd_df[mwd_helper.start_time_column_name] = pd.to_datetime(mwd_df[mwd_helper.start_time_column_name])
+        mwd_df[mwd_helper.end_time_column_name] = pd.to_datetime(mwd_df[mwd_helper.end_time_column_name])
+        #mwd_df.parse_dates=[mwd_helper.start_time_column_name, mwd_helper.end_time_column_name]
 
 
         qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'depth_plot.png'),global_config)
