@@ -190,7 +190,7 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
     interval_seconds = (int(end_time_ts) - int(start_time_ts))
     trace_duration = 1.0
     num_traces_to_process = int(interval_seconds / trace_duration)
-    samples_per_trace = trace_duration / global_config.dt
+    samples_per_trace = int(trace_duration / global_config.dt)
     samples_per_trimmed_trace = global_config.n_samples_trimmed_trace
 #    global_config.
 #            self.min_lag_trimmed_trace = 0.0
@@ -208,6 +208,7 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
 
     if debug:
         #axial_deconvolved_traces = [None] * interval_seconds
+        pdb.set_trace()
         axial_deconvolved_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
         #radial_deconvolved_traces = [None] * interval_seconds
         radial_deconvolved_traces = np.full((num_traces_to_process, samples_per_trace), np.nan)
