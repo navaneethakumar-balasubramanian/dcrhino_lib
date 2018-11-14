@@ -14,6 +14,7 @@ import pdb
 import pandas as pd
 import json
 import sys
+from datetime import datetime
 import argparse
 import pdb
 
@@ -45,6 +46,7 @@ def main():
     argparser.add_argument('-pc', '--pattern-column', help="PATTERN COLUMN", default='pattern')
     argparser.add_argument('-cec', '--collar-elevation-column', help="COLLAR ELEVATION COLUMN", default='collar_elevation')
     argparser.add_argument('-compec', '--computed-elevation-column', help="COMPUTED ELEVATION COLUMN", default='computed_elevation')
+    argparser.add_argument('-o', '--output-folder-path', help="OUTPUT FILES TO FOLDER", default=False)
     args = argparser.parse_args()
 
     start_time_column = args.start_time_column
@@ -62,6 +64,7 @@ def main():
     easting_column = args.easting_column
     northing_column = args.northing_column
     mwd_map_json_path = args.mwd_map_json
+    output_folder_path = args.output_folder_path
 
     mwd_map = False
     if mwd_map_json_path:
@@ -105,10 +108,17 @@ def main():
     ts = np.load(ts_file_path)
     start_ts = ts[0]
     end_ts = ts[-1]
-    bph_string = 'Hackathon_Demo'
 
-    qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,feature_df,bph_string,os.path.join('time_plot.png'),global_config,start_ts,end_ts)
-    qclogplotter_time.plot(save=False,show=True)
+    bph_string = global_config.mine_name + "\nRig:" + global_config.rig_id + " From:" + datetime.utcfromtimestamp(start_ts).strftime('%Y-%m-%d %H:%M:%S') + " to " + datetime.utcfromtimestamp(end_ts).strftime('%Y-%m-%d %H:%M:%S')
+
+
+    if output_folder_path != False:
+        qclogplot_output_path = os.path.join(output_folder_path,'time_plot.png')
+    else:
+        qclogplot_output_path = ''
+
+    qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,feature_df,bph_string,qclogplot_output_path,global_config,start_ts,end_ts)
+    qclogplotter_time.plot(save=(output_folder_path != False),show=(output_folder_path == False))
 
     if mwd_df is not None:
         print(feature_df)

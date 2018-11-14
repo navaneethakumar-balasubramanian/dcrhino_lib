@@ -138,7 +138,7 @@ class QCLogPlotter_nomwd():
 
     		#<Labeling>
 
-        ax[0].text(1.01, 0.8, '{}'.format(data_date), fontsize=13, transform=ax[0].transAxes)
+        #ax[0].text(1.01, 0.8, '{}'.format(data_date), fontsize=13, transform=ax[0].transAxes)
         ax[0].text(1.01, 0.6, '{}'.format(client_project_id), fontsize=13, transform=ax[0].transAxes)
         ax[1].text(1.01, 0.5, 'axial', fontsize=11.5, rotation='vertical', transform=ax[1].transAxes)
         ax[2].text(1.01, 0.6, 'tangential', fontsize=11.5, rotation='vertical', transform=ax[2].transAxes)
@@ -176,7 +176,7 @@ class QCLogPlotter_nomwd():
 
         for i,component_label in enumerate(COMPONENT_LABELS):
 
-            plot_title = "Correlated Trace QC {} Plots_{}".format('Time',self.plot_title_id)
+            plot_title = "Correlated Trace QC Plots {}".format(self.plot_title_id)
 
             data = components[i]
 

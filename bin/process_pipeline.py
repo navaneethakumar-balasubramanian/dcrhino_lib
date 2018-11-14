@@ -490,7 +490,7 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
         accel_df =pd.DataFrame(cleaned_acceleration_stats,columns=["Timestamp","max_x","min_x","max_y","min_y","max_z","min_z"])
         accel_df.to_csv(debug_file_name+'acceleration_values_by_second.csv')
 
-    return [axial_traces,tangential_traces,radial_traces,ts]
+    return [axial_traces,tangential_traces,radial_traces,ts,accel_df]
 
 def get_features_extracted(extractor,axial_traces,tangential_traces,radial_traces,ts_array, global_config):
     print ("Extracting features")
