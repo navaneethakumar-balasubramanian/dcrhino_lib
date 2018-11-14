@@ -44,6 +44,7 @@ def main():
     argparser.add_argument('-pc', '--pattern-column', help="PATTERN COLUMN", default='pattern')
     argparser.add_argument('-cec', '--collar-elevation-column', help="COLLAR ELEVATION COLUMN", default='collar_elevation')
     argparser.add_argument('-compec', '--computed-elevation-column', help="COMPUTED ELEVATION COLUMN", default='computed_elevation')
+    argparser.add_argument('-mmap', '--mwd-map-json', help="MWD MAP JSON", default='')
 
     args = argparser.parse_args()
     start_time_column = args.start_time_column
@@ -60,6 +61,7 @@ def main():
     tob_column = args.tob_column
     easting_column = args.easting_column
     northing_column = args.northing_column
+
 
 
     config_filebase = "global_config.json"

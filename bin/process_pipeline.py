@@ -543,6 +543,7 @@ def main():
     argparser.add_argument('-i', '--interactive-mode', help="INTERACTIVE MODE", default=False)
     argparser.add_argument('-t','--time-processing',help="TIME PROCESSING ONLY",default=False)
     argparser.add_argument('-o','--output-folder',help="OUTPUT FOLDER",default=False)
+    argparser.add_argument('-mmap', '--mwd-map-json', help="MWD MAP JSON", default=False)
     args = argparser.parse_args()
 
     start_time_column = args.start_time_column
@@ -563,10 +564,12 @@ def main():
     hole_index = args.hole_index
     interactive_mode = args.interactive_mode
     output_folder = args.output_folder
+    mwd_map_json_path = args.mwd_map_json
     #</sort out args>
 
     print ("H5 file path:" , args.h5_path)
     print ("MWD file path:" , args.mwd_path)
+    print ("MWD MAP file path:" , args.mwd_map_json)
     #print ("Client Config file path:" , args.client_config_path)
     print ("Config file path:" , args.cfg_path)
 
@@ -575,6 +578,10 @@ def main():
     if args.cfg_path is not None:
         config_parser.read(args.cfg_path)
 
+    mwd_map = False
+    if mwd_map_json_path:
+        with open(mwd_map_json_path) as f:
+          mwd_map = json.load(f)
 
 
 
@@ -690,7 +697,8 @@ def main():
                                tob_column=tob_column,
                                wob_column=wob_column,
                                easting_column=easting_column,
-                               northing_column=northing_column)
+                               northing_column=northing_column,
+                               mwd_map=mwd_map)
 
         if mwd_helper is False:
             sys.exit("Error in mwd dataframe.")
@@ -731,20 +739,20 @@ def main():
 
 
         for i,hole in enumerate(holes_array):
-            bph_string = str(hole[bench_column].values[0]) + "-" + str(hole[pattern_column].values[0])  + "-" + str(hole[hole_column].values[0])
+            bph_string = str(hole[mwd_helper.bench_column_name].values[0]) + "-" + str(hole[mwd_helper.pattern_column_name].values[0])  + "-" + str(hole[mwd_helper.hole_column_name].values[0])
             if hole_index and i != hole_index:
                 print ("Ignoring hole " + bph_string)
                 continue
 
             hole_uid = bph_string
-            print ("Processing : " + bph_string + " from: " + str(hole[start_time_column].min()) + " to " + str(hole[end_time_column].max()))
+            print ("Processing : " + bph_string + " from: " + str(hole[mwd_helper.start_time_column_name].min()) + " to " + str(hole[mwd_helper.end_time_column_name].max()))
 
             if len(hole) == 1:
                 print ("Error in this hole. Please check mwd, there should be more than one line.")
                 continue
 
-            start_ts = calendar.timegm(hole[start_time_column].min().timetuple())
-            end_ts = calendar.timegm(hole[end_time_column].max().timetuple())
+            start_ts = calendar.timegm(hole[mwd_helper.start_time_column_name].min().timetuple())
+            end_ts = calendar.timegm(hole[mwd_helper.end_time_column_name].max().timetuple())
             if start_ts < h5_helper.min_ts:
                 start_ts = h5_helper.min_ts
 
@@ -791,13 +799,13 @@ def main():
 
             extracted_features_df = pd.DataFrame(extracted_features_list)
             extracted_features_df['computed_elevation'], time_vector = mwd_helper.get_interpolated_column(hole,'computed_elevation',time_vector)
-            extracted_features_df[mse_column], time_vector = mwd_helper.get_interpolated_column(hole,mse_column,time_vector)
+            extracted_features_df[mwd_helper.mse_column_name], time_vector = mwd_helper.get_interpolated_column(hole,mwd_helper.mse_column_name,time_vector)
 
             if interpolated_column_names[0] != '':
                 for column_name in interpolated_column_names:
                     extracted_features_df[column_name], time_vector = mwd_helper.get_interpolated_column(hole,column_name,time_vector)
 
-            extracted_features_df['depth'] = (np.asarray(extracted_features_df['computed_elevation'].values) - hole[collar_elevation_column].values[0]) * -1
+            extracted_features_df['depth'] = (np.asarray(extracted_features_df['computed_elevation'].values) - hole[mwd_helper.collar_elevation_column_name].values[0]) * -1
             #pdb.set_trace()
         #    qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'depth_plot.png'),global_config)
         #    qclogplotter_depth.plot()
@@ -827,8 +835,8 @@ def main():
 
 
             # GENERATE QC PLOT
-            title_line1 = "Correlated Trace QC Time Plots, {}, {}".format(global_config.mine_name, hole[start_time_column].min().strftime("%B %d, %Y"))
-            title_line2 = "Hole: {}, Pattern/Area: {},Digitizer_ID: {},Sampling rate: {}".format(hole[hole_column].values[0],hole[pattern_column].values[0],global_config.sensor_serial_number,global_config.output_sampling_rate)
+            title_line1 = "Correlated Trace QC Time Plots, {}, {}".format(global_config.mine_name, hole[mwd_helper.start_time_column_name].min().strftime("%B %d, %Y"))
+            title_line2 = "Hole: {}, Pattern/Area: {},Digitizer_ID: {},Sampling rate: {}".format(hole[mwd_helper.hole_column_name].values[0],hole[mwd_helper.pattern_column_name].values[0],global_config.sensor_serial_number,global_config.output_sampling_rate)
             title_line3 = "Sensor distance to source: {},Orientation: {},Drill Rig ID: {}".format(global_config.sensor_distance_to_source,'',global_config.rig_id)
             plot_title = title_line1+'\n'+title_line2+'\n'+title_line3
             #qc_plot(os.path.join(plot_meta['log_path'],"qc_plot.png"),plot_title,axial,tangential,radial,ts_array)
@@ -851,9 +859,9 @@ def main():
             extracted_features_df['easting'] = hole[mwd_helper.easting_column_name].values[0]#[hole[mwd_helper.easting_column_name].values[0]] * len(extracted_features_df['axial_delay'])
             extracted_features_df['northing'] = hole[mwd_helper.northing_column_name].values[0]#[hole[mwd_helper.northing_column_name].values[0]] * len(extracted_features_df['axial_delay'])
             extracted_features_df["mine"] = global_config.mine_name
-            extracted_features_df["bench"] = hole[bench_column].values[0]
-            extracted_features_df["area"] = hole[pattern_column].values[0]
-            extracted_features_df["hole"] = hole[hole_column].values[0]
+            extracted_features_df["bench"] = hole[mwd_helper.bench_column_name].values[0]
+            extracted_features_df["area"] = hole[mwd_helper.pattern_column_name].values[0]
+            extracted_features_df["hole"] = hole[mwd_helper.hole_column_name].values[0]
             extracted_features_df.to_csv(os.path.join(plot_meta['log_path'],"extracted_features.csv"))
 
             qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'depth_plot.png'),global_config)

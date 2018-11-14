@@ -322,10 +322,8 @@ class QCLogPlotterv2():
         print("saving {}".format(out_filename))
 
     def plot(self):
-
-        if self.plot_by_depth:
-            data_date =  self.mwd_df[self.mwd_helper.start_time_column_name].dt.date.iloc[0]
-            depth = self.extracted_features_df['depth']
+        data_date =  self.mwd_df[self.mwd_helper.start_time_column_name].dt.date.iloc[0]
+        depth = self.extracted_features_df['depth']
         components = [self.axial,self.tangential,self.radial]
         trace_array_dict = {}
 
