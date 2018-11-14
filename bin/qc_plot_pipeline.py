@@ -85,8 +85,6 @@ def main():
     global_config.set_data_from_json(data_conf)
     global_config.n_samples_trimmed_trace
 
-
-
     feature_df = pd.read_csv(feature_fullfile)
     axial_file_path = os.path.join(args.data_path,'axial.npy')
     tangential_file_path = os.path.join(args.data_path,'tangential.npy')
@@ -98,8 +96,7 @@ def main():
     radial = np.load(radial_file_path)
     ts = np.load(ts_file_path)
     start_ts = ts[0]
-    end_ts = ts[-1
-    ]
+    end_ts = ts[-1]
     bph_string = 'Hackathon_Demo'
 
     qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,feature_df,bph_string,os.path.join('time_plot.png'),global_config,start_ts,end_ts)
