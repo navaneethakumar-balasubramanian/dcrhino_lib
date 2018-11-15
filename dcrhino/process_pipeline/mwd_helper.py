@@ -22,12 +22,13 @@ class MwdDFHelper:
                  collar_elevation_column,
                  computed_elevation_column,
                  rig_id_column,
-                 mse_column,
-                 rop_column,
-                 wob_column,
-                 tob_column,
-                 easting_column,
-                 northing_column):
+                 mse_column='mse',
+                 rop_column='rop',
+                 wob_column='wob',
+                 tob_column='tob',
+                 easting_column='easting',
+                 northing_column='northing',
+                 mwd_map=False):
 
         self.df = df
         self.start_time_column_name = start_time_column
@@ -44,6 +45,11 @@ class MwdDFHelper:
         self.tob_column_name = tob_column
         self.easting_column_name = easting_column
         self.northing_column_name = northing_column
+        self.mwd_map = mwd_map
+
+        if self.mwd_map:
+            self.set_map_columns(self.mwd_map)
+
 
 
         self.expected_columns = {'start_time' : self.start_time_column_name ,
@@ -67,8 +73,13 @@ class MwdDFHelper:
             return False
 
         # change from str to datetime columns
-        self.df[start_time_column] = pd.to_datetime(self.df[start_time_column])
-        self.df[end_time_column] = pd.to_datetime(self.df[end_time_column])
+        self.df[self.start_time_column_name] = pd.to_datetime(self.df[self.start_time_column_name])
+        self.df[self.end_time_column_name] = pd.to_datetime(self.df[self.end_time_column_name])
+
+
+    def set_map_columns(self,mwd_map_obj):
+        for _key in mwd_map_obj.keys():
+            self.__dict__[_key+"_column_name"] = mwd_map_obj[_key]
 
 
     def check_existing_expected_columns(self,mwd_df):

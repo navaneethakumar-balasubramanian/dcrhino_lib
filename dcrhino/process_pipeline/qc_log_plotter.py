@@ -24,8 +24,8 @@ class QCLogPlotterv2():
         self.output_file_path = output_file_path
         self.global_config = global_config
         self.plot_by_depth = plot_by_depth
-        
-        
+
+
 
 
     def depth_vs_time_plot(self,ax,X,qc_plot_input):
@@ -98,7 +98,7 @@ class QCLogPlotterv2():
         ax.set_ylabel('force on \n bit (kN)')
         ax1.set_ylabel('Torque on \n bit (Nm)')
         ax2.set_ylabel('MSE (MPa)')
-        
+
         ax.spines['left'].set_color('blue')
         ax1.spines['right'].set_color('green')
         ax2.spines['right'].set_color('red')
@@ -111,9 +111,9 @@ class QCLogPlotterv2():
     def header_plot(self,ax, X, qc_plot_input, plot_title, peak_amplitude_linewidth = 0.2):
         """
         	#Peak axial, radial, tangential and multiple plots
-            
+
         """
-        
+
         ax.plot(X, qc_plot_input.peak_ampl_y, label='peak_y', linewidth=peak_amplitude_linewidth)
         ax.plot(X, qc_plot_input.peak_ampl_z, label='peak_z', linewidth=peak_amplitude_linewidth)
         ax.plot(X, qc_plot_input.peak_mult_x, label='mult_x', linewidth=peak_amplitude_linewidth)
@@ -121,7 +121,7 @@ class QCLogPlotterv2():
         ax.legend()
         ax.set_title(plot_title)
         ax.set_ylim(0.0, 2.0)
-        pdb.set_trace()
+        #pdb.set_trace()
         ax.set_xlim(X[0], X[-1])
         ax.set_xticklabels([])
         ax.legend(loc=1)
@@ -130,52 +130,52 @@ class QCLogPlotterv2():
 
 
     def log_plot(self, ax, qc_plot_input):
-        
+
         ax1 = ax.twinx()
-        ax2 = ax.twinx()        
-        
+        ax2 = ax.twinx()
+
         depth_axis = np.linspace(min(qc_plot_input.sub_mwd_depth),max(qc_plot_input.sub_mwd_depth),len(qc_plot_input.log_depth))
 
-        
+
         rc_ylim_min = 0.
         rc_ylim_max = 1.5
         ax.plot(depth_axis,qc_plot_input.reflection_coefficient, label = '1-R / 1+R',color = 'red' )
         ax.set_ylim([rc_ylim_min, rc_ylim_max])
         ax.set_ylabel('RC (Unitless)')
 #        self.reflection_coefficient_panel(ax, qc_plot_input, x_limits=[rc_xlim_min, rc_xlim_max])
-        
-        
+
+
 #        pdb.set_trace()
         primary_width_ylim_min = 250.; primary_width_ylim_max = 350.0;
         ax1.plot(depth_axis,qc_plot_input.pseudo_velocity,  label = 'pseudo velocity (P)',color = 'blue')
         ax1.set_ylim([primary_width_ylim_min, primary_width_ylim_max])
         ax1.set_ylabel('pseudo velocity \n (Uncallibrated)')
-        
+
 #        self.primary_pseudovelocity_panel(ax1, qc_plot_input,
 #                                     x_limits=[primary_width_xlim_min, primary_width_xlim_max])
-        
-        
+
+
         ucs_ylim_min = 0.1; ucs_ylim_max = 0.9;
         ax2.plot(depth_axis,qc_plot_input.pseudo_ucs,label = 'pseudo_UCS',color = 'green')
         ax2.set_ylim([ucs_ylim_min, ucs_ylim_max])
         ax2.spines['right'].set_position(('outward',60))
         ax2.set_ylabel('pseudo UCS \n (Uncallibrated)')
-        
+
         ax.set_xlim(depth_axis[0], depth_axis[-1])
         ax.legend(loc=2)
         ax1.legend(loc=9)
         ax2.legend(loc=3)
-        
+
         ax.spines['left'].set_color('red')
         ax1.spines['right'].set_color('blue')
         ax2.spines['right'].set_color('green')
 #        self.ucs_panel(ax2, qc_plot_input, x_limits=[ucs_xlim_min, ucs_xlim_max])
-        
-        
-        return
-        
 
-        
+
+        return
+
+
+
     def qc_plot(self,hole_mwd,qc_plot_input, out_filename, plot_title,data_date, client_project_id,
                    two_way_travel_time_ms=None, peak_search_interval_ms=None, dpi=300, show=False,depth=False):
         """
@@ -209,14 +209,14 @@ class QCLogPlotterv2():
             	    #<choose X - time>
 
         if depth is not False:
-            
+
             X ,time_vector= np.array( self.mwd_helper.get_interpolated_column(hole_mwd,self.mwd_helper.computed_elevation_column_name,time_vector))
             X = X.astype(float) - float(qc_plot_input.collar_elevation)
             X = X * -1
             X = np.nan_to_num(X)
         else:
             X = time_vector
-            
+
 #            pdb.set_trace()
 #            pdb.set_trace()
         #   X = get_interpolated_column(time_vector, sub_mwd_df, 'computed_elevation')
@@ -231,9 +231,9 @@ class QCLogPlotterv2():
         Y = np.flipud(Y)
 
     #    Generate figure and axis objects to plot. 6 rows, not sharing X axis
-    
+
         if self.plot_by_depth:
-            
+
             fig, ax = plt.subplots(nrows=7, sharex=False, figsize=(24,12))
             #Panel 7
             self.log_plot(ax[6],qc_plot_input)
@@ -250,9 +250,9 @@ class QCLogPlotterv2():
         self.depth_vs_time_plot(ax[4],X,qc_plot_input)
     	#Panel 6
         self.wob_tob_plot(ax[5],X,qc_plot_input)
-        
-        
-        
+
+
+
         #Now, go plot heatmaps.
 
         plt.subplots_adjust(right=10.5)
@@ -375,7 +375,7 @@ class QCLogPlotterv2():
         print('Normalization done. Creating inputs for plotting')
         depth = np.nan_to_num(depth)
         mwd_depth = self.mwd_helper.get_depth_column(self.mwd_df)
-        
+
 #        data_for_log = QCLogPlotInput()
 
         qc_plot_input = QCBlastholePlotInputs(trace_array_dict=trace_array_dict,
@@ -402,7 +402,7 @@ class QCLogPlotterv2():
                                                   pseudo_velocity = self.extracted_features_df['pseudo_velocity'],
                                                   reflection_coefficient = self.extracted_features_df['reflection_coefficient'],
                                                   log_depth = self.extracted_features_df['depth'])
-                                                  
+
 
 
 

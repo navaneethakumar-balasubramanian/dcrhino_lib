@@ -18,14 +18,22 @@ class H5Helper:
     def __init__(self, h5f):
         self.h5f = h5f
         self.metadata = self._extract_metadata_from_h5_file()
-        self.ts = np.asarray(self.h5f.get('ts'))
+        self._ts = np.asarray(self.h5f.get('ts'))
         self.x_data = np.asarray(self.h5f.get('x'))
         self.y_data = np.asarray(self.h5f.get('y'))
         self.z_data = np.asarray(self.h5f.get('z'))
         self.data_xyz = [self.x_data, self.y_data, self.z_data]
 
-        self.min_ts = self.ts.min()
-        self.max_ts = self.ts.max()
+        laptop_ts = self.h5f.get('laptop_ts')
+        #pdb.set_trace()
+        if laptop_ts is not None:
+            self.clock_ts = np.asarray(self.h5f.get('laptop_ts'))
+            self.min_ts = self.clock_ts.min()
+            self.max_ts = self.clock_ts.max()
+        else:
+            self.clock_ts = None
+            self.min_ts = self._ts.min()
+            self.max_ts = self._ts.max()
 
         self.max_dtime = datetime.utcfromtimestamp(int(self.max_ts))
         self.min_dtime = datetime.utcfromtimestamp(int(self.min_ts))
@@ -33,6 +41,13 @@ class H5Helper:
         self.sensitivity_xyz = self._get_sensitivity_xyz()
         self.is_ide_file = self._is_ide_file()
         #pdb.set_trace()
+
+    @property
+    def ts(self):
+        #pdb.set_trace()
+        if self.clock_ts is None:
+            return self._ts
+        return self.clock_ts
 
     def _is_ide_file(self):
         if len(self._sensitivity) > 1:

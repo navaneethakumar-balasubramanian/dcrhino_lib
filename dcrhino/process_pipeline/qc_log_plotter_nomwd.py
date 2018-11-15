@@ -29,15 +29,15 @@ class QCLogPlotter_nomwd():
         self.global_config = global_config
         self.start_ts = start_ts
         self.end_ts = end_ts
-        
-        
+
+
 
     def header_plot(self,ax, X, qc_plot_input, plot_title, peak_amplitude_linewidth = 0.2):
         """
         	#Peak axial, radial, tangential and multiple plots
-            
+
         """
-        
+
         ax.plot(X, qc_plot_input.peak_ampl_y, label='peak_y', linewidth=peak_amplitude_linewidth)
         ax.plot(X, qc_plot_input.peak_ampl_z, label='peak_z', linewidth=peak_amplitude_linewidth)
         ax.plot(X, qc_plot_input.peak_mult_x, label='mult_x', linewidth=peak_amplitude_linewidth)
@@ -45,7 +45,7 @@ class QCLogPlotter_nomwd():
         ax.legend()
         ax.set_title(plot_title)
         ax.set_ylim(0.0, 2.0)
-        
+
         ax.set_xlim(X[0], X[-1])
 #        ax.set_xticklabels([])
         ax.legend(loc=1)
@@ -53,9 +53,9 @@ class QCLogPlotter_nomwd():
         return
 
 
-        
+
     def qc_plot(self,qc_plot_input, out_filename, plot_title,data_date, client_project_id,
-                   two_way_travel_time_ms=None, peak_search_interval_ms=None, dpi=300, show=False,depth=False):
+                   two_way_travel_time_ms=None, peak_search_interval_ms=None, dpi=300, show=False,depth=False,save=True):
         """
         """
 
@@ -84,7 +84,7 @@ class QCLogPlotter_nomwd():
         num_traces_per_component, num_samples = trace_array_dict[label].T.shape
         #X is time vector
         X = pd.date_range(start=qc_plot_input.tstart, periods=num_traces_per_component, freq='1S')
-        
+
 
     	# Spread out Y
         Y = np.linspace(lower_num_ms, upper_num_ms, trace_array_dict[label].shape[0])
@@ -97,7 +97,7 @@ class QCLogPlotter_nomwd():
     	# Generate Peak plots
     	#Panel 1
         self.header_plot(ax[0], X, qc_plot_input, plot_title)
-        
+
         #Now, go plot heatmaps.
 
         plt.subplots_adjust(right=10.5)
@@ -138,7 +138,7 @@ class QCLogPlotter_nomwd():
 
     		#<Labeling>
 
-        ax[0].text(1.01, 0.8, '{}'.format(data_date), fontsize=13, transform=ax[0].transAxes)
+        #ax[0].text(1.01, 0.8, '{}'.format(data_date), fontsize=13, transform=ax[0].transAxes)
         ax[0].text(1.01, 0.6, '{}'.format(client_project_id), fontsize=13, transform=ax[0].transAxes)
         ax[1].text(1.01, 0.5, 'axial', fontsize=11.5, rotation='vertical', transform=ax[1].transAxes)
         ax[2].text(1.01, 0.6, 'tangential', fontsize=11.5, rotation='vertical', transform=ax[2].transAxes)
@@ -157,13 +157,14 @@ class QCLogPlotter_nomwd():
 
         plt.subplots_adjust(left=0.1)
         plt.subplots_adjust(right=0.9)
-        plt.savefig(out_filename)
+        if save:
+            plt.savefig(out_filename)
         if show:
             plt.show()
         print("saving {}".format(out_filename))
 
-    def plot(self):
-        
+    def plot(self,show=False,save=True):
+
         data_date =  self.start_ts
 #        depth = self.extracted_features_df['depth']
         components = [self.axial,self.tangential,self.radial]
@@ -174,8 +175,8 @@ class QCLogPlotter_nomwd():
         upper_num_ms=30.0
 
         for i,component_label in enumerate(COMPONENT_LABELS):
-            
-            plot_title = "Correlated Trace QC {} Plots_{}".format('Time',self.plot_title_id)
+
+            plot_title = "Correlated Trace QC Plots {}".format(self.plot_title_id)
 
             data = components[i]
 
@@ -205,7 +206,7 @@ class QCLogPlotter_nomwd():
 
         print('Normalization done. Creating inputs for plotting')
 #        depth = np.nan_to_num(depth)
-        
+
 #        data_for_log = QCLogPlotInput()
 #        pdb.set_trace()
         qc_plot_input = QCBlastholePlotInputs(trace_array_dict=trace_array_dict,
@@ -214,9 +215,9 @@ class QCLogPlotter_nomwd():
                                                   peak_ampl_z=self.extracted_features_df['radial_primary_peak_sample'],
                                                   peak_mult_x=self.extracted_features_df['axial_multiple_peak_sample'],
                                                   lower_number_ms=lower_num_ms,
-                                                  upper_number_ms=upper_num_ms,                                
+                                                  upper_number_ms=upper_num_ms,
 #                                                  log_depth = self.extracted_features_df['depth'],
                                                   tstart = self.start_ts,
                                                   tend = self.end_ts)
         print('Passing values to plot code- supporting qc blasthole plots')
-        self.qc_plot(qc_plot_input, self.output_file_path,plot_title, data_date, '', show=False)
+        self.qc_plot(qc_plot_input, self.output_file_path,plot_title, data_date, '', show=show,save=save)
