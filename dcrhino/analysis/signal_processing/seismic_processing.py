@@ -263,9 +263,156 @@ def max_reflection_amplitude(trace):
 
     return np.max(trace.data)
 
+def pick_max_from_trace_using_polyfit(data, time_axis, neighborhood_edge_indices,
+                                      polyfit_window_halfwidth_samples):
+    """
+    data: 1d array
+    start in wide neighborhoor, zero in on max value and place a narrow window
+    around the max; polyfit, pick max;
+
+    """
+    sanity_check_plot = False
+    data_probable_region = data[neighborhood_edge_indices[0]:neighborhood_edge_indices[1]]
+    t_probable_region = time_axis[neighborhood_edge_indices[0]:neighborhood_edge_indices[1]]
+    max_index = np.argmax(probable_region) #we expect this to be near the middle and not the edges
+    left_hand_edge_polyfit = max_index - polyfit_window_halfwidth_samples
+    right_hand_edge_poly_fit = max_index + polyfit_window_halfwidth_samples + 1
+
+    data_window_polyfit = data_probable_region[left_hand_edge_polyfit:right_hand_edge_poly_fit]
+    t_primary_window_polyfit = t_probable_region[left_hand_edge_polyfit:right_hand_edge_poly_fit]
 
 
+    #<check if max is on edge throw out this trace>
+    if np.argmax(primary_window_polyfit) != polyfit_primary_window_halfwidth_samples:
+        print("max sample is on the egde of the estimated window rather than in center - \
+              timing error or some unexpected issue - reject this trace")
+        max_poly_amplitude = np.nan
+        t_max = np.nan
+    #</check if max is on edge throw out this trace>
+    else:
+        max_poly_amplitude, max_poly_ndx = pick_poly_peak(data_window_polyfit, plot=False)
+        time_interp_ndx_fcn = interp1d(np.arange(len(t_primary_window_polyfit)), t_primary_window_polyfit)
+        t_max = time_interp_ndx_fcn(max_poly_ndx)
+        features['{}_primary_amplitude_poly'] = max_poly_amplitude
+        features['{}_primary_time_poly'] = max_poly_amplitude
+    if sanity_check_plot:
+        plt.figure(1);plt.clf()
+        plt.plot(t_probable_region, data_probable_region);
+        plt.plot(t_primary_window_polyfit, data_window_polyfit, 'r*');
+        ttl_string = 'peak at index={}, t={}'.format(max_poly_ndx, t_max)
+        plt.title(ttl_string)
+        plt.vlines(t_max, plt.ylim()[0], plt.ylim()[1])
+        plt.show()
+    return t_max, max_poly_amplitude
 
+
+def get_tangential_despike_filtered_trace_features(trace_data, global_config, component='tangential'):
+    """
+    trace_data is trimmed, and primary is approximately in the center
+    Start with a wide, estimated primary window (~4ms, or 16 samples wide)
+    look left and right of the trace (expected at the center) by 1.25ms
+
+    @returns: dictionary keyed by feature labels
+    For now these are:
+        primary_time_poly, primary_amplitude_poly, multiple1_time_poly, multiple1_ampltiude_poly
+    """
+    sanity_check_plot = False
+    #<initialize feature dictionary>
+    feature_labels = ['primary_time_poly', 'primary_amplitude_poly', 'multiple1_time_poly', 'multiple1_ampltiude_poly']
+    feature_labels = ['{}_{}'.format(component, x) for x in feature_labels]
+    features = {}
+    for feature_label in feature_labels:
+        features[feature_label] = np.nan
+    #</initialize feature dictionary>
+
+    polyfit_primary_window_halfwidth_samples = 2 #half the positive half-sine
+    dt = global_config.dt
+    time_axis = dt*np.arange(len(trace_data)) + global_config.min_lag_trimmed_trace
+    expected_center_of_trace_index = len(trace_data) // 2
+    global_config.primary_window_halfwidth_ms = 2.0
+    primary_window_halfwidth_samples = int(0.001 * global_config.primary_window_halfwidth_ms / global_config.dt)
+    primary_neighborhood_edge_indices = np.array([expected_center_of_trace_index - primary_window_halfwidth_samples,
+                                     expected_center_of_trace_index + primary_window_halfwidth_samples])
+    #<MODULE>
+    #inputs: data, time_axis, neighborhood_edge_indices, polyfit_window_halfwidth_samples
+    #returns:max_poly_amplitude, t_max
+    probable_primary_region = trace_data[primary_neighborhood_edge_indices[0]:primary_neighborhood_edge_indices[1]]
+    t_probable_primary_region = time_axis[primary_neighborhood_edge_indices[0]:primary_neighborhood_edge_indices[1]]
+    max_index = np.argmax(probable_primary_region) #we expect this to be near the middle and not the edges
+    left_hand_edge_polyfit = max_index - polyfit_primary_window_halfwidth_samples
+    right_hand_edge_poly_fit = max_index + polyfit_primary_window_halfwidth_samples + 1
+    #try:
+    primary_window_polyfit = probable_primary_region[left_hand_edge_polyfit:right_hand_edge_poly_fit]
+    t_primary_window_polyfit = t_probable_primary_region[left_hand_edge_polyfit:right_hand_edge_poly_fit]
+
+
+    #<check if max is on edge throw out this trace>
+    #expected_max_arg = primary_window_halfwidth_in_samples
+    if np.argmax(primary_window_polyfit) != polyfit_primary_window_halfwidth_samples:
+        print("max sample is on the egde of the estimated window rather than in center - \
+              timing error or some unexpected issue - reject this trace")
+    #</check if max is on edge throw out this trace>
+    else:
+        max_poly_amplitude, max_poly_ndx = pick_poly_peak(primary_window_polyfit, plot=False)
+        time_interp_ndx_fcn = interp1d(np.arange(len(t_primary_window_polyfit)), t_primary_window_polyfit)
+        t_max = time_interp_ndx_fcn(max_poly_ndx)
+        features['{}_primary_amplitude_poly'] = max_poly_amplitude
+        features['{}_primary_time_poly'] = max_poly_amplitude
+    #</MODULE>
+    print("above needs to be set so that t is zero at center ... ")
+    #max_ndx_ref_to_probable_primary_region = max_poly_ndx + left_hand_edge
+    #primary_poly_indices[i_trace] = max_ndx_ref_to_probable_primary_region
+    #primary_poly_amplitudes[i_trace] = max_poly_amplitude
+    #<sanity check plot>
+    if sanity_check_plot:
+        plt.figure(1);plt.clf()
+        plt.plot(t_probable_primary_region, probable_primary_region);
+        plt.plot(t_primary_window_polyfit, primary_window_polyfit, 'r*');
+        ttl_string = 'peak at index={}, t={}'.format(max_poly_ndx, t_max)
+        plt.title(ttl_string)
+        plt.vlines(t_max, plt.ylim()[0], plt.ylim()[1])
+        plt.show()
+    #</sanity check plot>
+    pdb.set_trace()
+#    #<MULTIPLE>
+    print("MULTIPLE feature extraction")
+    #the multiple without phase rotation is exepcted to be rotated by 90degrees
+    #so looking for peak here actually has an asymmetery
+    expected_multiple_time  = 2 * (global_config.sensor_distance_to_source /SHEAR_VELOCITY)
+    multiple_offset_samples = int(expected_multiple_time / dt)
+    expected_near_multiple_index = expected_center_of_trace_index + multiple_offset_samples
+    #look_left_ms = 1.0
+    #look_right_ms = 2.0
+    tangential_mult1_window_halfwidth_ms = 2.0; look_left_ms = tangential_mult1_window_halfwidth_ms; look_right_ms = tangential_mult1_window_halfwidth_ms;
+    multiple_neighborhood = np.array([-int(look_left_ms/dt), look_right_ms/dt]) + expected_near_multiple_index
+    polyfit_multiple_window_halfwidth_in_samples = 2 #half the positive half-sine
+    #<MODULE>
+    probable_multiple_region = trace_data[multiple_neighborhood[0]:multiple_neighborhood[1]]
+    t_probable_multiple_region = time_axis[multiple_neighborhood[0]:multiple_neighborhood[1]]
+    max_index = np.argmax(probable_multiple_region)
+    left_hand_edge = max_index - multiple_window_halfwidth_in_samples
+    right_hand_edge = max_index + multiple_window_halfwidth_in_samples + 1
+    multiple_window = probable_multiple_region[left_hand_edge:right_hand_edge]
+    t_multiple_window = t_probable_multiple_region[left_hand_edge:right_hand_edge]
+    if len(multiple_window) == 0:
+        print("Bad trace! You a are very, very naughty trace")
+        max_poly_amplitude, max_poly_ndx = None, None
+
+    #<check if max is on edge throw out this trace>
+    expected_max_arg = multiple_window_halfwidth_in_samples
+    if np.argmax(multiple_window) != multiple_window_halfwidth_in_samples:
+        print("max sample is on the egde rather than in center - \
+              timing error or some unexpected issue - reject this trace")
+        pdb.set_trace()
+        #continue
+    #<check if max is on edge throw out this trace>
+    #pdb.set_trace()
+    max_poly_amplitude, max_poly_ndx = pick_poly_peak(multiple_window, plot=False)
+    max_ndx_ref_to_probable_multiple_region = max_poly_ndx + left_hand_edge
+#    multiple_poly_indices[i_trace] = max_ndx_ref_to_probable_multiple_region
+#    multiple_poly_amplitudes[i_trace] = max_poly_amplitude
+#    pdb.set_trace()
+#    pass
 
 
 
