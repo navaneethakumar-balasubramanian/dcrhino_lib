@@ -1,8 +1,8 @@
 """
 Example usage for time plot
-python process_pipeline_sucks.py -h5 ~/data/datacloud/debug/run_1542066345/20181112_RTR85545_S1021.h5 -o /tmp/ -t True
+python process_pipeline.py -h5 ~/data/datacloud/debug/run_1542066345/20181112_RTR85545_S1021.h5 -o /tmp/ -t True
 Example usage for mwd plot
-python process_pipeline_sucks.py -h5 20180504_SSX55470_5306_4000.h5 -mwd mount_milligan_raw.csv  -icl weight_on_bit,rop,torque,vibration,rpm,air_pressure -ric machine_id -sc time_start_utc -ec time_end_utc -mc MSE -tobc torque -wobc weight_on_bit
+python process_pipeline.py -h5 20180504_SSX55470_5306_4000.h5 -mwd mount_milligan_raw.csv  -icl weight_on_bit,rop,torque,vibration,rpm,air_pressure -ric machine_id -sc time_start_utc -ec time_end_utc -mc MSE -tobc torque -wobc weight_on_bit
 """
 import argparse
 import calendar
@@ -578,6 +578,7 @@ def main():
 
         axial, tangential, radial, ts_array = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper.data_xyz, h5_helper.ts, h5_helper.sensitivity_xyz, h5_helper.is_ide_file, accelerometer_max_voltage, global_config,
                                                                                  debug_file_name=os.path.join(temppath,''))
+        pdb.set_trace()
         extracted_features_list = get_features_extracted(extractor,axial,tangential,radial,ts_array, global_config)
         extracted_features_df = pd.DataFrame(extracted_features_list)
 
