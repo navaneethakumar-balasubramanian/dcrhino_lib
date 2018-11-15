@@ -449,7 +449,6 @@ def get_features_extracted(extractor,axial_traces,tangential_traces,radial_trace
         extracted_features = extractor.extract_features(actual_ts,axial_trace,tangential_trace,radial_trace,global_config.n_samples_trimmed_trace,-global_config.min_lag_trimmed_trace)
         extracted_features_list[i] = extracted_features
 
-    extracted_features_list = [x for x in extracted_features_list if x is not None]
     print ("Features extracted")
     return extracted_features_list
 
