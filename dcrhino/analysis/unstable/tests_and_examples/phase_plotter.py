@@ -85,7 +85,7 @@ class GUI():
 def main(args):
     original_data = np.load(args.source_file)
     master = Tk()
-    figure = plt.figure("Interactive Phase Plotter", dpi=200)
+    figure = plt.figure("Interactive Phase Plotter", dpi=100)
     if args.interactive == 'True':
         plt.ion()
         interactive = True
