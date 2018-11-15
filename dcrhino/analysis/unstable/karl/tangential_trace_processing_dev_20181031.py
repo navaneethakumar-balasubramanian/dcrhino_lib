@@ -195,8 +195,8 @@ for i_trace in range(hack_start_trace, n_traces):
     despike_data[i_trace, :] = little_despiked_trace
     #pdb.set_trace()
     print("PRIMARY feature extraction")
-    print("hacktest similar??")
-    little_despiked_trace=little_data
+    #print("hacktest similar??")
+    #little_despiked_trace=little_data
     time_axis = dt*np.arange(len(little_despiked_trace))
     skip_samples = 350
     primary_neighborhood = np.array([48, 58]) + skip_samples
