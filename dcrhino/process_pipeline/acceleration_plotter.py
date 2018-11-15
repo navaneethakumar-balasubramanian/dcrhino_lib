@@ -87,7 +87,7 @@ def plot_data(data,ax,ax_title,stats):
     print(maxx,maxy)
     return maxx,maxy
 
-def acceleration_plotter(accel_df,output_name,title):
+def acceleration_plotter(accel_df,output_name,title,show = False):
     limits = []
     x_limits = []
     y_limits =[]
@@ -124,8 +124,10 @@ def acceleration_plotter(accel_df,output_name,title):
     ax_limits = [np.max(x_limits),np.max(y_limits)]
 
     add_stats(axs,ax_limits,data_stats)
+    
+    if show is not False:
+        plt.show()
 
-    plt.show()
     fig.savefig(output_name)
 
 def main(fname):

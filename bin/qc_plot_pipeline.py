@@ -27,11 +27,13 @@ from dcrhino.process_pipeline.acceleration_plotter import acceleration_plotter
 
 def main():
 
-    ddir = '/mnt/sda1/data/datacloud/WEST_ANGELAS/5452/4000/778-141-242/2018-11-14_00004'
-
+#    ddir = '/mnt/sda1/data/datacloud/WEST_ANGELAS/5452/4000/778-141-242/2018-11-14_00004'
+#    mmap = '/mnt/sda1/data/west_angelas_mwd_map.json'
+#    ofp = ddir
+#    ofp = False
 
     argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
-    argparser.add_argument('-ddir', '--data-path', help="Extracted Data Directory Path", default=ddir)
+    argparser.add_argument('-ddir', '--data-path', help="Extracted Data Directory Path", default=False)
     argparser.add_argument('-mmap', '--mwd-map-json', help="MWD MAP JSON", default=False)
     argparser.add_argument('-ric', '--rig-id-column', help="RIG ID COLUMN", default='rig')
     argparser.add_argument('-sc', '--start-time-column', help="START TIME COLUMN", default='starttime')
@@ -125,11 +127,16 @@ def main():
     qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,feature_df,bph_string,qclogplot_output_path,global_config,start_ts,end_ts)
     qclogplotter_time.plot(save=(output_folder_path != False),show=(output_folder_path == False))
 
-
+    
     try:
         accel_df = pd.read_csv(accel_fullfile)
-        acceleration_plotter(accel_df,'Acceleration_histogram',bph_string)
-    except:
+    
+        if output_folder_path is False:
+            acceleration_plotter(accel_df,'Acceleration_histogram.png',bph_string, show = True)
+        else:
+            output_name = os.path.join(output_folder_path,'Acceleration_histogram.png')
+            acceleration_plotter(accel_df,output_name,bph_string, show = False)
+    except IOError:
         print ("No accel_df found on this folder")
 
     if mwd_df is not None:
