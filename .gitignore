@@ -2,3 +2,4 @@
 *.png
 dcrhino.egg-info/*
 bin/*.cfg
+dcrhino/analysis/unstable/karl/*npy
