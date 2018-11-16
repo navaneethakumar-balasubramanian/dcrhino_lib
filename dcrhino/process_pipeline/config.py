@@ -18,6 +18,7 @@ class Config( object ):
         self.mine_name = ''
         self.sensor_serial_number = ''
         self.rig_id = ''
+        self.client_name = ''
 
         self.base_output_path = 'output_data'
         self.accelerometer_max_voltage = 0
@@ -119,6 +120,7 @@ class Config( object ):
     def set_metadata( self, metadata ):
         self.rig_id = str(metadata.rig_id)
         self.mine_name = str(metadata.mine_name)
+        self.client_name = str(metadata.company)
         self.sensor_serial_number = str(metadata.sensor_serial_number)
         self.sensor_distance_to_source = metadata.sensor_distance_to_source
         self.sensor_axial_axis =int(metadata.sensor_axial_axis)
