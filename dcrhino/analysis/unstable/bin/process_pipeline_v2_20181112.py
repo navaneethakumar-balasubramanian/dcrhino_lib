@@ -3,7 +3,7 @@ test FIR needs to run on 1s corr trace or can it run on tirimmed?
 it should be fine on either, because it is only 20ms long
 
 start working with trimmed correlated traces
-
+/home/kkappler/software/datacloud/dcrhino_lib/dcrhino/analysis/unstable/bin/process_pipeline_v2_20181112.py
 """
 import numpy as np
 #import h5py
@@ -25,92 +25,27 @@ from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
 
 #from dcrhino.analysis.graphical.unbinned_qc_log_plots_v3_west_angelas import pseudodensity_panel,primary_pseudovelocity_panel,reflection_coefficient_panel
 
-from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotter,QCLogPlotInput
-from dcrhino.process_pipeline.feature_extractor import FeatureExtractor
+#from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotter,QCLogPlotInput
+#from dcrhino.process_pipeline.feature_extractor import FeatureExtractor
 from dcrhino.process_pipeline.filters import FIRLSFilter
 from dcrhino.analysis.signal_processing.seismic_processing import calculate_spiking_decon_filter
 from dcrhino.process_pipeline.config import Config
 #from dcrhino.process_pipeline.h5_helper import H5Helper
-from dcrhino.process_pipeline.mwd_helper import MwdDFHelper
+#from dcrhino.process_pipeline.mwd_helper import MwdDFHelper
 #from dcrhino.process_pipeline.io_helper import IOHelper
 #plt.rcParams['figure.figsize'] = [20, 12]
-import sys
+#import sys
 
 #from fatiando.vis.mpl import seismic_wiggle
 from dcrhino.analysis.graphical.seismic_wiggle_fatiando_dev import seismic_wiggle
-from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotterv2
-
+#from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotterv2
+from dcrhino.analysis.signal_processing.seismic_processing import get_tangential_despike_filtered_trace_features
 
 from dcrhino.process_pipeline_pointer import trim_trace#, get_features_extracted
 from dcrhino.analysis.signal_processing.mwd_tools import reject_traces_with_small_rop
+from dcrhino.analysis.signal_processing.seismic_processing import ACOUSTIC_VELOCITY, SHEAR_VELOCITY
 
-SHEAR_VELOCITY = 2654
-ACOUSTIC_VELOCITY = 4755
-mine = 'line_creek';
-mine = 'WEST_ANGELAS';
-#<specify processing schemes>
-processing_scheme_list = ['standard', 'phase_rotated', 'despike_decon', 'simple_correlated',]
-wavelet_types = ['primary', 'mulitple_1', 'mulitple_2',]
-wavelet_feature_extractor_types = ['sample', 'polynomial', 'ricker',]
-
-
-processing_scheme_dict = {}
-for processing_scheme in processing_scheme_list:
-    processing_scheme_dict[processing_scheme] = {}
-    for component_label in COMPONENT_LABELS:
-        processing_scheme_dict[processing_scheme][component_label] = {}
-        for wavelet_type in wavelet_types:
-            processing_scheme_dict[processing_scheme][component_label][wavelet_type] = {}
-            for wavelet_feature_extractor_type in wavelet_feature_extractor_types:
-                print('ah')
-component = 'tangential'
-#component = 'axial'
-plot_depth = 1#False
-cull_rop = True
-apply_adhoc_normalization = True
-do_processing = False
-
-if mine=='line_creek':
-    data_path = '/home/kkappler/data/datacloud/rhino_process_pipeline_output/line_creek/5208/3200'
-    hole_uids = ['793-MR_77-23531', '793-MR_77-23631', '793-MR_77-23731',
-                 '793-MR_77-23831', '793-MR_77-23930', '793-MR_77-24030',
-                 '793-MR_77-24130',]
-    sampling_rate = 3200.0
-    sensor_distance_to_source = 20.967872
-    every_nth = 2
-elif mine=='WEST_ANGELAS':
-    data_path = os.path.join('/home/kkappler/data/datacloud/rhino_process_pipeline_output/WEST_ANGELAS/5208/4000/')
-    hole_uids = ['710-197-3/2018-10-18_00001', ]
-    sensor_distance_to_source = 16.37
-    sampling_rate = 4000.0
-    every_nth = 1#4
-dt= 1./sampling_rate
-normalize_traces_for_plotting = 1# False
-processing_trace_decimation_factor = 7# integer
-
-#<boilerplate config file settings>
-#[PROCESSING]
-deconvolution_filter_duration = 0.1
-min_lag_trimmed_trace = -0.1
-max_lag_trimmed_trace = 0.1
-trapezoidal_bpf_corner_1 = 80.0
-trapezoidal_bpf_corner_2 = 100.0
-trapezoidal_bpf_corner_3 = 300.0
-trapezoidal_bpf_corner_4 = 350.0
-trapezoidal_bpf_duration = 0.02
-spiking_decon_filter_duration = 0.010 #10ms; parameterize in terms of trace length
-start_ms_despike_decon = 3.0
-end_ms_despike_decon = 70.0
-add_noise_percent = 200.0
-multiple_window_search_width_ms = 3.126
-#</boilerplate config file settings>
-corners = [trapezoidal_bpf_corner_1, trapezoidal_bpf_corner_2,
-           trapezoidal_bpf_corner_3, trapezoidal_bpf_corner_4,]
-firls = FIRLSFilter(corners, trapezoidal_bpf_duration)
-fir1_taps = firls.make(sampling_rate)
-num_taps_in_decon_filter = int(deconvolution_filter_duration / dt)
-n_spiking_decon_filter_taps = int(sampling_rate * spiking_decon_filter_duration)
-
+#<supporting functions>
 def init_trace_dict():
     traces_dict = {}
     traces_dict['axial'] = None
@@ -136,6 +71,86 @@ def get_axial_tangential_radial_traces(hole_uid, flavour, trace_decimation=None,
         for component_label in COMPONENT_LABELS:
             traces_dict[component_label] = traces_dict[component_label][0::every_nth,:]
     return trace_dict
+#</supporting functions>
+
+#<Set High level>
+mine = 'line_creek';
+#mine = 'WEST_ANGELAS';
+#<specify processing schemes>
+processing_scheme_list = ['standard', 'phase_rotated', 'despike_decon', 'simple_correlated',]
+wavelet_types = ['primary', 'mulitple_1', 'mulitple_2',]
+wavelet_feature_extractor_types = ['sample', 'polynomial', 'ricker',]
+component = 'tangential'
+#component = 'axial'
+plot_depth = 1#False
+cull_rop = True
+apply_adhoc_normalization = True
+do_processing = False
+normalize_traces_for_plotting = 0#1# False
+processing_trace_decimation_factor = 7# integer
+#</Set High level>
+
+#<dev - no working yet>
+processing_scheme_dict = {}
+for processing_scheme in processing_scheme_list:
+    processing_scheme_dict[processing_scheme] = {}
+    for component_label in COMPONENT_LABELS:
+        processing_scheme_dict[processing_scheme][component_label] = {}
+        for wavelet_type in wavelet_types:
+            processing_scheme_dict[processing_scheme][component_label][wavelet_type] = {}
+            for wavelet_feature_extractor_type in wavelet_feature_extractor_types:
+                print('ah')
+#</dev - no working yet>
+
+#<Config File Stuffs>
+if mine=='line_creek':
+    data_path = '/home/kkappler/data/datacloud/rhino_process_pipeline_output/line_creek/5208/3200'
+    hole_uids = ['793-MR_77-23531', '793-MR_77-23631', '793-MR_77-23731',
+                 '793-MR_77-23831', '793-MR_77-23930', '793-MR_77-24030',
+                 '793-MR_77-24130',]
+    sampling_rate = 3200.0
+    sensor_distance_to_source = 20.967872
+    every_nth = 2
+elif mine=='WEST_ANGELAS':
+    data_path = os.path.join('/home/kkappler/data/datacloud/rhino_process_pipeline_output/WEST_ANGELAS/5208/4000/')
+    hole_uids = ['710-197-3/2018-10-18_00001', ]
+    sensor_distance_to_source = 16.37
+    sampling_rate = 4000.0
+    every_nth = 1#4
+#<Config File Stuffs>
+dt= 1./sampling_rate
+
+
+#<boilerplate config file settings>
+#[PROCESSING]
+deconvolution_filter_duration = 0.1
+min_lag_trimmed_trace = -0.1
+max_lag_trimmed_trace = 0.1
+trapezoidal_bpf_corner_1 = 80.0
+trapezoidal_bpf_corner_2 = 100.0
+trapezoidal_bpf_corner_3 = 300.0
+trapezoidal_bpf_corner_4 = 350.0
+trapezoidal_bpf_duration = 0.02
+spiking_decon_filter_duration = 0.010 #10ms; parameterize in terms of trace length
+start_ms_despike_decon = 5.0
+end_ms_despike_decon = 70.0
+add_noise_percent = 200.0
+multiple_window_search_width_ms = 3.126
+global_config = Config()
+global_config.output_sampling_rate = sampling_rate
+global_config.min_lag_trimmed_trace = min_lag_trimmed_trace
+global_config.max_lag_trimmed_trace = max_lag_trimmed_trace
+global_config.sensor_distance_to_source = sensor_distance_to_source
+#</boilerplate config file settings>
+corners = [trapezoidal_bpf_corner_1, trapezoidal_bpf_corner_2,
+           trapezoidal_bpf_corner_3, trapezoidal_bpf_corner_4,]
+firls = FIRLSFilter(corners, trapezoidal_bpf_duration)
+fir1_taps = firls.make(sampling_rate)
+num_taps_in_decon_filter = int(deconvolution_filter_duration / dt)
+n_spiking_decon_filter_taps = int(sampling_rate * spiking_decon_filter_duration)
+
+
+
 
 
 
@@ -191,19 +206,56 @@ if do_processing:
         filtered_despiked_trace = ssig.filtfilt(fir1_taps, 1., despiked_trace).astype('float32')
         filtered_despiked_traces[component][i_trace,:] = filtered_despiked_trace
         filtered_despiked_traces[component][i_trace,:] = np.roll(filtered_despiked_trace, n_spiking_decon_filter_taps//2)
-        #pdb.set_trace()
+        #pdb.set_trace()793-MR_77-23531
     #np.save(os.path.join(data_path, hole_uid, 'trimmed_filtered_correlated_traces.npy'), trimmed_filtered_correlated_traces)
     filtered_despiked_filebase = '{}_filtered_despiked_traces.npy'.format(component)
     np.save(os.path.join(data_path, hole_uid, filtered_despiked_filebase), filtered_despiked_traces[component])
 #pdb.set_trace()
 filtered_despiked_filebase = '{}_filtered_despiked_traces.npy'.format(component)
 filtered_despiked_traces[component] = np.load(os.path.join(data_path, hole_uid, filtered_despiked_filebase))
+print("Key question: how do results differ from feature logs with and without adhoc normalization?")
+num_traces_to_feature_extract, samples_per_trace = filtered_despiked_traces[component].shape #(489, 4000)
+feature_list_for_df = [None] * num_traces_to_feature_extract
+for i_trace in range(num_traces_to_feature_extract):
+    trace_data = filtered_despiked_traces[component][i_trace,:]
+    trimmed_trace_data = trim_trace(min_lag_trimmed_trace, max_lag_trimmed_trace,
+                                    num_taps_in_decon_filter, sampling_rate,
+                                    filtered_despiked_traces[component][i_trace,:])
+    #pdb.set_trace()
+    #qq = np.max(filtered_correlated_traces[component][i_trace,:])/np.max(trimmed_trace_data)
+    #trimmed_trace_data *= qq#np.max(filtered_correlated_traces[component][i_trace,:])/np.max(trimmed_trace_data)
+    #pdb.set_trace()
+    feature_dict = get_tangential_despike_filtered_trace_features(trimmed_trace_data, global_config, sanity_check_plot=False)
+    feature_dict['tangential_amplitude_ratio'] =  np.sqrt( feature_dict['tangential_multiple1_amplitude_poly'] / feature_dict['tangential_primary_amplitude_poly'])
+    feature_dict['tangential_impedance']  = (1 - feature_dict['tangential_amplitude_ratio'] ) / (1 + feature_dict['tangential_amplitude_ratio'] )
+    #feature_dict['shear_modulus'] = feature_dict['tangential_impedance']
+    feature_dict['tangential_delay']  = feature_dict['tangential_multiple1_time_poly'] - feature_dict['tangential_primary_time_poly']
+    feature_list_for_df[i_trace] = feature_dict
+
+pdb.set_trace()
+tangential_feature_df = pd.DataFrame(feature_list_for_df)
+
+svel = 1./(tangential_feature_df['tangential_delay']/global_config.dt+10)#1./delay**4
+svel = svel**4
+shear_modulus = tangential_feature_df['tangential_impedance']
+
+plt.figure(22)
+n_plots=2
+plt.subplot(n_plots,1,1)
+plt.plot(features_df.depth, svel, label='1/delay^4')
+plt.legend()
+plt.subplot(n_plots,1,2)
+plt.plot(features_df.depth, shear_modulus , label='1-m/p / (1+m/p)')
+#plt.plot(df_features.depth, dz, label='~rop')
+plt.show()
+#get_axial_tangential_radial_traces()
 #<normalize traces before plotting AND see if multple better>
 #despiked_plotter_data = filtered_despiked_traces[component][0::every_nth,1760-320:1760+320].T
 despiked_plotter_data = filtered_despiked_traces[component][0::every_nth,middle+n_back:middle+n_advance].T
 if apply_adhoc_normalization:
     qq = np.max(plotter_data, axis=0)/np.max(despiked_plotter_data, axis=0)
     despiked_plotter_data *= qq
+    despiked_plotter_data *= 3
 
 pdb.set_trace()
 
@@ -214,82 +266,7 @@ print("2. refine estimate of the region of primary reflection\
 print("3. extract features (peak_value, peak_sample, peak_time_poly, and possibly troughs and zero-crossings")
 print("4,5,6: repeat 1,2,3 above for the multiple reflection")
 print('2200')
-#    print("PRIMARY feature extraction")
-#
-#    time_axis = dt*np.arange(len(radial_little_despiked_trace))
-#    skip_samples = 350
-#    primary_neighborhood = np.array([48, 58]) + skip_samples
-#
-#    #primary pulse between samples 48 and 58 (usually 52 or 53)
-#    #secondary between 88 and 99, usually around 93-95
-#    primary_window_halfwidth_in_samples = 2 #half the positive half-sine
-#    probable_primary_region = little_despiked_trace[primary_neighborhood[0]:primary_neighborhood[1]]
-#    t_probable_primary_region = time_axis[primary_neighborhood[0]:primary_neighborhood[1]]
-#    max_index = np.argmax(probable_primary_region)
-#    left_hand_edge = max_index - primary_window_halfwidth_in_samples
-#    right_hand_edge = max_index + primary_window_halfwidth_in_samples + 1
-#    #try:
-#    primary_window = probable_primary_region[left_hand_edge:right_hand_edge]
-#    t_primary_window = t_probable_primary_region[left_hand_edge:right_hand_edge]
-##    if len(primary_window) == 0:
-###    except ValueError:#IndexError:
-##        print("AAAAAAAAAAAAAAAAAAAAAAAARRRRGH")
-##        continue
-#
-#    #<check if max is on edge throw out this trace>
-#    expected_max_arg = primary_window_halfwidth_in_samples
-#    if np.argmax(primary_window) != primary_window_halfwidth_in_samples:
-#        print("max sample is on the egde rather than in center - \
-#              timing error or some unexpected issue - reject this trace")
-#        pdb.set_trace()
-#        #continue
-#    #<check if max is on edge throw out this trace>
-#
-#    #<worked example>
-#    #max_index = 4
-#    #left_hand_edge = 2
-#
-#    max_poly_amplitude, max_poly_ndx = pick_poly_peak(primary_window, plot=False)
-#    max_ndx_ref_to_probable_primary_region = max_poly_ndx + left_hand_edge
-#    primary_poly_indices[i_trace] = max_ndx_ref_to_probable_primary_region
-#    primary_poly_amplitudes[i_trace] = max_poly_amplitude
-#
-#    #plt.figure(1);plt.clf()
-#    #plt.plot(t_probable_primary_region, probable_primary_region);
-#    #plt.plot(t_primary_window, primary_window, 'r*');
-#
-##    #<MULTIPLE>
-#    print("MULTIPLE feature extraction")
-#    multiple_neighborhood = np.array([88, 101]) + skip_samples
-#    multiple_window_halfwidth_in_samples = 2 #half the positive half-sine
-#    probable_multiple_region = little_despiked_trace[multiple_neighborhood[0]:multiple_neighborhood[1]]
-#    t_probable_multiple_region = time_axis[multiple_neighborhood[0]:multiple_neighborhood[1]]
-##    if i_trace==100:
-#    #pdb.set_trace()
-#    max_index = np.argmax(probable_multiple_region)
-#    left_hand_edge = max_index - multiple_window_halfwidth_in_samples
-#    right_hand_edge = max_index + multiple_window_halfwidth_in_samples + 1
-#    multiple_window = probable_multiple_region[left_hand_edge:right_hand_edge]
-#    t_multiple_window = t_probable_multiple_region[left_hand_edge:right_hand_edge]
-#    if len(multiple_window) == 0:
-#        #pdb.set_trace()
-#        print("Bad trace! You a are very, very naughty trace")
-#        #multiple_poly_indices[i_trace] = max_ndx_ref_to_probable_multiple_region
-#        multiple_poly_amplitudes[i_trace] = max_poly_amplitude
-#        continue
-#    #<check if max is on edge throw out this trace>
-#    expected_max_arg = multiple_window_halfwidth_in_samples
-#    if np.argmax(multiple_window) != multiple_window_halfwidth_in_samples:
-#        print("max sample is on the egde rather than in center - \
-#              timing error or some unexpected issue - reject this trace")
-#        pdb.set_trace()
-#        #continue
-#    #<check if max is on edge throw out this trace>
-#    #pdb.set_trace()
-#    max_poly_amplitude, max_poly_ndx = pick_poly_peak(multiple_window, plot=False)
-#    max_ndx_ref_to_probable_multiple_region = max_poly_ndx + left_hand_edge
-#    multiple_poly_indices[i_trace] = max_ndx_ref_to_probable_multiple_region
-#    multiple_poly_amplitudes[i_trace] = max_poly_amplitude
+print('This method is being developed in seismic_processing and the old code is in Halloween demo')
 
 if normalize_traces_for_plotting:
     divvy = plotter_data.max(axis=0)
@@ -353,18 +330,6 @@ plt.show()
 #extractor = FeatureExtractor(global_config.output_sampling_rate,global_config.primary_window_halfwidth_ms,global_config.multiple_window_search_width_ms,sensor_distance_to_source=global_config.sensor_distance_to_source)
 print("TODO: ask sumant for an atomic depth plotter and time plotter that works\
       with only these inputs loaded so far")
-#    # CREATE TIMEVECTOR WITHOUT MISSING SECONDS
-#    #time_vector = [None]*len(extracted_features_list)
-#    qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,
-#                                        hole,extracted_features_df,bph_string,
-#                                        os.path.join(temppath,'depth_plot.png'),
-#                                        global_config)
-#    qclogplotter_depth.plot()
-#    qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,
-#                                       extracted_features_df,bph_string,
-#                                       os.path.join(temppath,'time_plot.png'),
-#                                       global_config,plot_by_depth=False)
-#    qclogplotter_time.plot()
 
 
 print("TODO: load timestamps or pull from dataframe")
