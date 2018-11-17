@@ -9,7 +9,6 @@ import time
 import pdb
 import logging
 
-
 argparser = argparse.ArgumentParser(description="Copyright (c) 2018 DataCloud")
 argparser.add_argument('-f', '--h5-folder', help="H5 Folder Path", required=True)
 argparser.add_argument('-csv', '--csv-file', help="CSV File Path", required=True)
@@ -57,7 +56,8 @@ for file_match in matches:
         if not ignore:
             f1 = h5py.File(file_path,'r+')
             h5_helper = H5Helper(f1)
-            global_config = Config(h5_helper.metadata)
+            global_config = Config(h5_helper.metadata )
+            #pdb.set_trace()
             temp = {
                 "file_path":file_path,
                 "min_ts":h5_helper.min_ts,
@@ -65,6 +65,7 @@ for file_match in matches:
                 "file_size":file_size,
                 "mine_name":global_config.mine_name,
                 "rig_id":global_config.rig_id,
+                "client_name":global_config.client_name,
                 "sensor_serial_number":global_config.sensor_serial_number,
                 "output_sampling_rate":global_config.output_sampling_rate,
                 "processed":False,

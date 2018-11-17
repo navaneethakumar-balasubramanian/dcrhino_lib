@@ -321,6 +321,10 @@ def get_tangential_despike_filtered_trace_features(trace_data, global_config,
     @returns: dictionary keyed by feature labels
     For now these are:
         primary_time_poly, primary_amplitude_poly, multiple1_time_poly, multiple1_ampltiude_poly
+
+    @note: takes global_config as argument, but really only needs:
+        dt, min_lag_trimmed_trace, primary_window_halfwidth_ms, sensor_distance_to_source
+
     """
     #<initialize feature dictionary>
     feature_labels = ['primary_time_poly', 'primary_amplitude_poly', 'multiple1_time_poly', 'multiple1_amplitude_poly']
@@ -360,10 +364,10 @@ def get_tangential_despike_filtered_trace_features(trace_data, global_config,
 
     print("WARNING: tangential_mult1_window_halfwidth_ms should be in config file, and possibly component dependent??")
     tangential_mult1_window_halfwidth_ms = 2.0;
-    #look_left_ms = 1.0
-    #look_right_ms = 2.0
-    look_left_ms = tangential_mult1_window_halfwidth_ms;
-    look_right_ms = tangential_mult1_window_halfwidth_ms;
+    look_left_ms = 2.5
+    look_right_ms = 1.0
+    #look_left_ms = tangential_mult1_window_halfwidth_ms;
+    #look_right_ms = tangential_mult1_window_halfwidth_ms;
     look_left_index = -int(0.001 * look_left_ms/global_config.dt)
     look_right_index = int(0.001 * look_right_ms/global_config.dt)
 
