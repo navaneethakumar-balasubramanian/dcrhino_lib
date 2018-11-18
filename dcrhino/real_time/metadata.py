@@ -44,14 +44,14 @@ class Measurement():
         return "{},{}".format(self._value,self._units)
 
     def value_in_meters(self):
-        for m in range(3,6):
+        for m in range(4,6):
             if self._units == m:
-                return self._value / (10**(m-3))
+                return self._value / (10**(m-2))
         if self._units == 1:
             return self._value * 0.3048
         elif self._units == 2:
             return self._value * 0.0254
-        return None
+        return self._value
 
 
 
