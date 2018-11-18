@@ -33,7 +33,7 @@ def get_data_statistics(data):
     return stats
 
 def add_stats(axs,ax_limits,stats):
-    for i in range(3):
+    for i in range(len(stats)):
         # axs[i].text(ax_limits[0]*0.95,ax_limits[1]*0.78,"Mean: {} g\nStd Dev: {} g\nMedian: {} g\nLower Limit: {} g\nUpper Limit: {} g\nPositive Mean: {} g\nPositive Std Dev: {} g\nPositive Median: {} g\nNegative Mean: {} g\nNegative Std Dev: {} g\nNegative Median: {} g\n".format(
         #                                                                               stats[i]["mu"],
         #                                                                               stats[i]["sigma"],
@@ -69,6 +69,7 @@ def add_stats(axs,ax_limits,stats):
                                                                                       ))
 
 def plot_data(data,ax,ax_title,stats):
+    # pdb.set_trace()
     combined_data = np.hstack((data[0],data[1]))
     # combined_data = data[1]
     n_bins = 100
@@ -76,9 +77,14 @@ def plot_data(data,ax,ax_title,stats):
     ax.set_title(ax_title)
     miny,maxy = ax.get_ylim()
     minx,maxx = ax.get_xlim()
-    vals = ax.get_yticks()
+    # vals = ax.get_yticks()
+    if miny < .000001:
+        miny = .000001
+        ax.set_ylim(.0000001,1)
+    vals = [0,.01,.1,100,1000]
     ax.set_yticklabels(['{:,.0%}'.format(x) for x in vals])
     ax.set_yscale("log")
+
     for thisbin, thispatch in zip(bins, patches):
         if thisbin<stats["peak_neg"] or  thisbin>stats["peak_pos"]:
             thispatch.set_facecolor("red")
@@ -115,16 +121,19 @@ def acceleration_plotter(accel_df,output_name,title,show = False):
     x_limits.append(x)
     y_limits.append(y)
 
-    z = [np.asarray(accel_df["max_z"]),np.asarray(accel_df["min_z"])]
-    data_stats[2] = get_data_statistics(z)
-    x,y = plot_data(z,axs[2],"Z Axis",data_stats[2])
-    x_limits.append(x)
-    y_limits.append(y)
+    # pdb.set_trace()
+    max_z_data = np.asarray(accel_df["max_z"])
+    if  max_z_data.all() != np.zeros(len(max_z_data)).all():
+        z = [np.asarray(accel_df["max_z"]),np.asarray(accel_df["min_z"])]
+        data_stats[2] = get_data_statistics(z)
+        x,y = plot_data(z,axs[2],"Z Axis",data_stats[2])
+        x_limits.append(x)
+        y_limits.append(y)
 
     ax_limits = [np.max(x_limits),np.max(y_limits)]
 
     add_stats(axs,ax_limits,data_stats)
-    
+
     if show is not False:
         plt.show()
 
