@@ -73,17 +73,17 @@ def reject_other_criteria(input_csv_fullname, output_csv_fullname):
     """
     features_df = pd.read_csv(input_csv_fullname)
     print(len(features_df))
-    cond1 = (features_df['tangential_primary_peak_sample'] > 2 * features_df['axial_primary_peak_amplitude'])
+    cond1 = (features_df['tangential_primary_peak_sample'] > 3 * features_df['axial_primary_peak_amplitude'])
     features_df.drop(features_df[cond1].index, inplace=True)
     print(len(features_df))
 
-    cond2 = (features_df['radial_primary_peak_sample'] > 2 * features_df['axial_primary_peak_amplitude'])
+    cond2 = (features_df['radial_primary_peak_sample'] > 3 * features_df['axial_primary_peak_amplitude'])
     features_df.drop(features_df[cond2].index, inplace=True)
     print(len(features_df))
 
-    cond3 = (features_df['axial_primary_peak_amplitude'] < 0.125)
-    features_df.drop(features_df[cond3].index, inplace=True)
-    print(len(features_df))
+#    cond3 = (features_df['axial_primary_peak_amplitude'] < 0.125)
+#    features_df.drop(features_df[cond3].index, inplace=True)
+#    print(len(features_df))
 
     features_df.to_csv(output_csv_fullname)
     return
