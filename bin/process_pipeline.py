@@ -190,7 +190,8 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
     interval_seconds = (int(end_time_ts) - int(start_time_ts))
     trace_duration = 1.0
     num_traces_to_process = int(interval_seconds / trace_duration)
-    samples_per_trace = int(trace_duration / global_config.dt)
+    #samples_per_trace = int(trace_duration / global_config.dt)
+    samples_per_trace = int(np.round(trace_duration / global_config.dt))#Changed as per KK
     samples_per_trimmed_trace = global_config.n_samples_trimmed_trace
 
     print ("Getting axial,tangential,radial traces from interval: " + str(start_time_ts) +  " - " + str(end_time_ts) + " total of " + str(interval_seconds) + " seconds")
