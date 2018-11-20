@@ -578,7 +578,7 @@ def main():
 
         axial, tangential, radial, ts_array = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper.data_xyz, h5_helper.ts, h5_helper.sensitivity_xyz, h5_helper.is_ide_file, accelerometer_max_voltage, global_config,
                                                                                  debug_file_name=os.path.join(temppath,''))
-        pdb.set_trace()
+        # pdb.set_trace()
         extracted_features_list = get_features_extracted(extractor,axial,tangential,radial,ts_array, global_config)
         extracted_features_df = pd.DataFrame(extracted_features_list)
 
