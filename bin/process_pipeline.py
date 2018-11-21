@@ -190,7 +190,8 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
     interval_seconds = (int(end_time_ts) - int(start_time_ts))
     trace_duration = 1.0
     num_traces_to_process = int(interval_seconds / trace_duration)
-    samples_per_trace = int(trace_duration / global_config.dt)
+    #samples_per_trace = int(trace_duration / global_config.dt)
+    samples_per_trace = int(np.round(trace_duration / global_config.dt))#Changed as per KK
     samples_per_trimmed_trace = global_config.n_samples_trimmed_trace
 
     print ("Getting axial,tangential,radial traces from interval: " + str(start_time_ts) +  " - " + str(end_time_ts) + " total of " + str(interval_seconds) + " seconds")
@@ -556,7 +557,7 @@ def main():
         start_ts = int(h5_helper.min_ts)
         end_ts = int(h5_helper.max_ts)
         if output_folder:
-            temppath = output_folder
+            temppath = os.path.join(output_folder,io_helper.get_output_base_path(sourcefilename))
             io_helper.make_dirs_if_needed(temppath)
         else:
             temppath = io_helper.get_output_base_path(sourcefilename)
@@ -577,7 +578,7 @@ def main():
 
         axial, tangential, radial, ts_array = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper.data_xyz, h5_helper.ts, h5_helper.sensitivity_xyz, h5_helper.is_ide_file, accelerometer_max_voltage, global_config,
                                                                                  debug_file_name=os.path.join(temppath,''))
-        pdb.set_trace()
+        # pdb.set_trace()
         extracted_features_list = get_features_extracted(extractor,axial,tangential,radial,ts_array, global_config)
         extracted_features_df = pd.DataFrame(extracted_features_list)
 
@@ -702,7 +703,7 @@ def main():
                 end_ts = int(h5_helper.max_ts)
 
             if output_folder:
-                temppath = output_folder
+                temppath = io_helper.get_output_base_path(hole_uid,output_folder)
                 io_helper.make_dirs_if_needed(temppath)
             else:
                 temppath = io_helper.get_output_base_path(hole_uid)
