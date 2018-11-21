@@ -15,16 +15,19 @@ class IOHelper:
     def make_dirs_if_needed(self,path):
         if not os.path.exists(path):
             os.makedirs(path)
-        
+
     def get_mine_path(self):
         path = os.path.join(self.config.base_output_path,self.config.mine_name)
         if not os.path.exists(path):
             os.makedirs(path)
         return path
 
-    def get_output_base_path(self,hole_uid):
+    def get_output_base_path(self,hole_uid,output_path=None):
         path_date = datetime.now().strftime("%Y-%m-%d")
-        path = os.path.join(self.config.base_output_path,self.config.mine_name,str(self.config.sensor_serial_number),str(self.config.output_sampling_rate),hole_uid)
+        if output_path is None:
+            path = os.path.join(self.config.base_output_path,self.config.mine_name,str(self.config.sensor_serial_number),str(self.config.output_sampling_rate),hole_uid)
+        else:
+            path = os.path.join(output_path,self.config.mine_name,str(self.config.sensor_serial_number),str(self.config.output_sampling_rate),hole_uid)
         counter = 1
         if not os.path.exists(path):
             os.makedirs(path)
