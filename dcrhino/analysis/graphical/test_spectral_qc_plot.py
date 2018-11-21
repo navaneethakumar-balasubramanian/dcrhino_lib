@@ -109,7 +109,7 @@ while i_panel <= num_pcolor_plot_panels + 1:
         plt.pcolormesh(t, f, np.log10(Syy));
     elif component_to_plot == 'z':
         plt.pcolormesh(t, f, np.log10(Szz));
-    plt.clim(vmin=-5, vmax=0.0)
+    plt.clim(vmin=vmin, vmax=vmax)
     plt.title('component {}'.format(component_to_plot))
     plt.ylabel('Frequecny [Hx]')
     plt.xlabel('Trace index ({}[s])'.format(trace_duration_in_seconds))
@@ -133,20 +133,6 @@ plt.show()
 #    Sxx_binned[i_bin,:] = avg_bin;#np.mean(Sxx[bin_indices,:], axis=0)
 #    #print(Sxx_binned)
 #    pdb.set_trace()
-
-plt.pcolormesh(t, f, np.log10(Sxx));
-
-plt.clim(vmin=-5, vmax=0.0)
-plt.colorbar()
-plt.title('Axial Component, {}'.format(h5_basename))
-plt.ylabel('Frequecny [Hx]')
-plt.xlabel('Time [s]')
-plt.savefig('axial_component.png')
-plt.show()
-frq = np.logspace(0.0, 3.0, 100)
-
-
-pdb.set_trace()
 
 
 def my_function():
