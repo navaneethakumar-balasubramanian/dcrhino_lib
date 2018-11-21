@@ -703,7 +703,7 @@ def main():
                 end_ts = int(h5_helper.max_ts)
 
             if output_folder:
-                temppath = io_helper.get_output_base_path(hole_uid,output_folder))
+                temppath = io_helper.get_output_base_path(hole_uid,output_folder)
                 io_helper.make_dirs_if_needed(temppath)
             else:
                 temppath = io_helper.get_output_base_path(hole_uid)
