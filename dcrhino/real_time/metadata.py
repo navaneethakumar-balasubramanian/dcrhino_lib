@@ -16,23 +16,32 @@ import pdb
 #FUNCTIONS
 #==============================================================================
 def StandardString(s):
-    if type(s) is str:
-        s = s.replace("_"," ")
-        components = s.split(" ")
-        clean_components=[]
-        string=""
-        for ch in components:
-            word = ''.join(e for e in ch if (e.isalnum() or (e in ['&','.'])))
-            #if(word.isalnum()):
-            clean_components.append(word)
-        for i,c in enumerate(clean_components):
-            string += c
-            if i<len(clean_components)-1:
-                string+= "_"
-        return string.upper()
-    else:
-        raise TypeError("Argument needs to be a string")
+    #if type(s) is str:
+    s = str(s).replace("_"," ")
+    components = s.split(" ")
+    clean_components=[]
+    string=""
+    for ch in components:
+        word = ''.join(e for e in ch if (e.isalnum() or (e in ['&','.'])))
+        #if(word.isalnum()):
+        clean_components.append(word)
+    for i,c in enumerate(clean_components):
+        string += c
+        if i<len(clean_components)-1:
+            string+= "_"
+    return string.upper()
+    # else:
+    #     raise TypeError("Argument needs to be a string")
 
+def convert_to_meters(value,units):
+    for m in range(4,6):
+        if units == m:
+            vaulue = value / (10**(m-2))
+    if units == 1:
+        value = value * 0.3048
+    elif units == 2:
+        value =  value * 0.0254
+    return round(value,2)
 
 class Measurement():
     def __init__(self,tuple):
@@ -44,14 +53,15 @@ class Measurement():
         return "{},{}".format(self._value,self._units)
 
     def value_in_meters(self):
-        for m in range(4,6):
-            if self._units == m:
-                return self._value / (10**(m-2))
-        if self._units == 1:
-            return self._value * 0.3048
-        elif self._units == 2:
-            return self._value * 0.0254
-        return self._value
+        # for m in range(4,6):
+        #     if self._units == m:
+        #         return self._value / (10**(m-2))
+        # if self._units == 1:
+        #     return self._value * 0.3048
+        # elif self._units == 2:
+        #     return self._value * 0.0254
+        # return self._value
+        return convert_to_meters(self._value,self._units)
 
 
 
@@ -80,18 +90,19 @@ class Drill_String_Component():
 
     @property
     def length_in_meters(self):
-        value = None
-        for m in range(2,5):
-            if self._length_units == self.measurement_units_options[m]:
-                value =  self._length / (10**(m-2))
-        if self._length_units == self.measurement_units_options[0]:
-                value = self._length * 0.3048
-        elif self._length_units == self.measurement_units_options[1]:
-            value =  self._length * 0.0254
-
-        if value is not None:
-            value = round(value,2)
-        return value
+        # value = None
+        # for m in range(2,5):
+        #     if self._length_units == self.measurement_units_options[m]:
+        #         value =  self._length / (10**(m-2))
+        # if self._length_units == self.measurement_units_options[0]:
+        #         value = self._length * 0.3048
+        # elif self._length_units == self.measurement_units_options[1]:
+        #     value =  self._length * 0.0254
+        #
+        # if value is not None:
+        #     value = round(value,2)
+        # return value
+        return convert_to_meters(self._length,self._length_units)
 
     #@property
     #def drill_string_compnent_length_untis(self):
@@ -155,6 +166,7 @@ METADATA_HEADER_FORMAT_KEYS = {
         'ideal_time_of_last_sample_in_trace':DataType.DATETIME,
         'dummy_hole_id':DataType.INTEGER,
         'sensor_distance_to_source':DataType.FLOAT,
+        'sensor_distance_to_shocksub':DataType.FLOAT,
         'blasthole_easting':DataType.FLOAT,
         'blasthole_northing':DataType.FLOAT,
         'blasthole_collar_elevation':DataType.FLOAT,
@@ -205,6 +217,7 @@ class Metadata(object):
     __slots__ = [key for key,value in METADATA_HEADER_FORMAT_KEYS.items()]
 
     def __init__(self,cfg):
+        shocksub_length = None
         for key,key_type in METADATA_HEADER_FORMAT_KEYS.items():
             setattr(self,key,None)
         value = cfg.getint("COLLECTION","output_sampling_rate")
@@ -229,6 +242,15 @@ class Metadata(object):
                         data = cfg.get(section,key).split(",")
                         m = Measurement(data)
                         value = m.value_in_meters()
+                    elif key_type is DataType.DS_COMPONENT:
+                        value =  cfg.get(section,key)
+                        component = Drill_String_Component(value.split(","))
+                        if component._type == 5:
+                            # pdb.set_trace()
+                            if shocksub_length is None:
+                                shocksub_length = component.length_in_meters
+                            else:
+                                raise ValueError("There are more than one shocksubs declared")
                     else:
                         value = cfg.get(section,key)
                     #print(key,value)
@@ -236,7 +258,8 @@ class Metadata(object):
                 else:
                     pass
                     raise LookupError("The metadata value in the configuration file is not declared in the metadata class" , item )
-        self.sensor_distance_to_source = self.drill_string_total_length - self.sensor_position
+        self.sensor_distance_to_source = round(self.drill_string_total_length - self.sensor_position,2)
+        self.sensor_distance_to_shocksub = round(self.sensor_position - shocksub_length,2)
 
 
     def __str__(self):
@@ -294,6 +317,7 @@ class Metadata(object):
             dict["orientation"] = "z_axis"
         dict["sampling_rate"] = self.output_sampling_rate
         dict["sensor_distance_to_source_in_meters"] = self.sensor_distance_to_source
+        dict["sensor_distance_to_shocksub"] = self.sensor_distance_to_shocksub
         if self.sensor_accelerometer_type == 8:
             dict["accelerometer_type"] = "piezo"
         else:
