@@ -217,7 +217,7 @@ class Metadata(object):
     __slots__ = [key for key,value in METADATA_HEADER_FORMAT_KEYS.items()]
 
     def __init__(self,cfg):
-        shocksub_length = None
+        shocksub_length = 0
         for key,key_type in METADATA_HEADER_FORMAT_KEYS.items():
             setattr(self,key,None)
         value = cfg.getint("COLLECTION","output_sampling_rate")
@@ -247,7 +247,7 @@ class Metadata(object):
                         component = Drill_String_Component(value.split(","))
                         if component._type == 5:
                             # pdb.set_trace()
-                            if shocksub_length is None:
+                            if shocksub_length == 0:
                                 shocksub_length = component.length_in_meters
                             else:
                                 raise ValueError("There are more than one shocksubs declared")
