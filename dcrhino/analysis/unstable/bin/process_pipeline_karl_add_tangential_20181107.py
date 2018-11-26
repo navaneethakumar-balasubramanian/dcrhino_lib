@@ -43,7 +43,7 @@ from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotterv2
 #from process_pipeline_functions import get_ts_array_indexes, get_values_from_index
 #from process_pipeline_functions import apply_calibration, interpolate_data, autocorrelate_trace
 #from process_pipeline_functions import deconvolve_trace, correlate_trace, bandpass_filter_trace,
-from dcrhino.process_pipeline.process_pipeline_functions import trim_trace, get_features_extracted
+from dcrhino.process_pipeline.process_pipeline_functions import trim_trace
 from dcrhino.analysis.signal_processing.mwd_tools import reject_traces_with_small_rop
 
 print('wtf')
