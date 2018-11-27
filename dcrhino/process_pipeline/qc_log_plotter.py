@@ -321,7 +321,7 @@ class QCLogPlotterv2():
             plt.show()
         print("saving {}".format(out_filename))
 
-    def plot(self):
+    def plot(self,show=False):
         data_date =  self.mwd_df[self.mwd_helper.start_time_column_name].dt.date.iloc[0]
         depth = self.extracted_features_df['depth']
         components = [self.axial,self.tangential,self.radial]
@@ -410,7 +410,7 @@ class QCLogPlotterv2():
 
 
         print('Passing values to plot code- supporting qc blasthole plots')
-        self.qc_plot(self.mwd_df,qc_plot_input, self.output_file_path,plot_title, data_date, '', show=False,depth=self.plot_by_depth)
+        self.qc_plot(self.mwd_df,qc_plot_input, self.output_file_path,plot_title, data_date, '', show=show,depth=self.plot_by_depth)
 
 
 

@@ -47,7 +47,7 @@ class MwdDFHelper:
         self.northing_column_name = northing_column
         self.mwd_map = mwd_map
 
-        if self.mwd_map is not False:
+        if self.mwd_map:
             self.set_map_columns(self.mwd_map)
 
 
@@ -78,7 +78,6 @@ class MwdDFHelper:
 
 
     def set_map_columns(self,mwd_map_obj):
-
         for _key in mwd_map_obj.keys():
             self.__dict__[_key+"_column_name"] = mwd_map_obj[_key]
 

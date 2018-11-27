@@ -19,7 +19,6 @@ import argparse
 import pdb
 
 from dcrhino.process_pipeline.config import Config
-
 from dcrhino.process_pipeline.mwd_helper import MwdDFHelper
 from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotterv2
 from dcrhino.process_pipeline.qc_log_plotter_nomwd import QCLogPlotter_nomwd
@@ -111,6 +110,7 @@ def main():
     tangential = np.load(tangential_file_path)
     radial = np.load(radial_file_path)
     ts = np.load(ts_file_path)
+    #pdb.set_trace()
     start_ts = ts[0]
     end_ts = ts[-1]
 
@@ -127,10 +127,10 @@ def main():
     qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,feature_df,bph_string,qclogplot_output_path,global_config,start_ts,end_ts)
     qclogplotter_time.plot(save=(output_folder_path != False),show=(output_folder_path == False))
 
-    
+
     try:
         accel_df = pd.read_csv(accel_fullfile)
-    
+
         if output_folder_path is False:
             acceleration_plotter(accel_df,'Acceleration_histogram.png',bph_string, show = True)
         else:
@@ -170,9 +170,9 @@ def main():
 
 
         qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'depth_plot.png'),global_config)
-        qclogplotter_depth.plot()
-        qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'time_plot.png'),global_config,plot_by_depth=False)
-        qclogplotter_time.plot()
+        qclogplotter_depth.plot(show=True)
+        #qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'time_plot.png'),global_config,plot_by_depth=False)
+        #qclogplotter_time.plot(show=True)
 
 
         print("ok, now make the qc plot")

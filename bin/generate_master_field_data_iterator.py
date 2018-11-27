@@ -21,7 +21,10 @@ try:
 except:
     has_df = False
 
+
 folder_path = args.h5_folder
+if folder_path[-1] != '/':
+    folder_path = folder_path + '/'
 
 matches = []
 for root, dirnames, filenames in os.walk(folder_path):
@@ -32,10 +35,12 @@ for root, dirnames, filenames in os.walk(folder_path):
             matches.append(path)
 
 
+
 files_props = []
 for file_match in matches:
     try:
         file_path = os.path.join(folder_path,file_match)
+
         file_size = os.path.getsize(file_path)
 
         ignore = False
