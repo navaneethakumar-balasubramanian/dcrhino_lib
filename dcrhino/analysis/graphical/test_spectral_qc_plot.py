@@ -10,9 +10,9 @@ TODO: add binning in frequency as well
 from __future__ import absolute_import, division, print_function
 
 
-import h5py
 
 import datetime
+import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -24,7 +24,7 @@ home = os.path.expanduser("~/")
 
 def make_spectral_qc_plot(h5_helper, components_to_plot=['x', 'y', 'z'],
                           vmin=-5.0, vmax=0.0, header_frequency_band=[100.0,300.0],
-                          frequency_high_cut=1000.0):
+                          frequency_high_cut=1000.0, show_global_max=True):
     """
     @TODO: @Natal: can we make trace_duration_in_seconds depend on
     h5_helper.metadata.trace_length; currently returns None
@@ -98,16 +98,19 @@ def make_spectral_qc_plot(h5_helper, components_to_plot=['x', 'y', 'z'],
     header_linewidth = 0.7
     if 'x' in components_to_plot:
         xyz='x'
-        ax[0].plot(t_axis, max_xx, label='\nglobal max x', color=header_color_scheme['x'], linewidth=header_linewidth)
+        if show_global_max:
+            ax[0].plot(t_axis, max_xx, label='\nglobal max x', color=header_color_scheme['x'], linewidth=header_linewidth)
         ax[0].plot(t_axis, max_xx_band, label='in-band max x', color=header_color_scheme['x'],
           linewidth=header_linewidth, linestyle='--')#, alpha=0.5)
     if 'y' in components_to_plot:
-        ax[0].plot(t_axis, max_yy, label='global max y', color=header_color_scheme['y'], linewidth=header_linewidth)
+        if show_global_max:
+            ax[0].plot(t_axis, max_yy, label='global max y', color=header_color_scheme['y'], linewidth=header_linewidth)
         #ax[0].plot(t_axis, max_yy_band, label='in-band max y')
         ax[0].plot(t_axis, max_yy_band, label='in-band max y', color=header_color_scheme['y'],
           linestyle='--', linewidth=header_linewidth)#, alpha=0.5)
     if 'z' in components_to_plot:
-        ax[0].plot(t_axis, max_zz, label='global max z', color=header_color_scheme['z'], linewidth=header_linewidth)
+        if show_global_max:
+            ax[0].plot(t_axis, max_zz, label='global max z', color=header_color_scheme['z'], linewidth=header_linewidth)
         ax[0].plot(t_axis, max_zz_band, label='in-band max z', color=header_color_scheme['z'],
           linestyle='--', linewidth=header_linewidth)#, alpha=0.5)
         #ax[0].plot(t_axis, max_zz_band, label='in-band max z')
@@ -160,16 +163,20 @@ def make_spectral_qc_plot(h5_helper, components_to_plot=['x', 'y', 'z'],
 def main():
     """
     """
-    use_debug_file = True
+    use_debug_file = False
     #pdb.set_trace()
-    h5_basename = '20181119_SSX54322_5209_3200.h5'
+    client = 'detour_gold'; mine = 'detour_lake_mine'; h5_basename = '20181119_SSX54322_5209_3200.h5'
+    #client = 'teck'; mine = 'line_creek'; h5_basename = '20180910_SSX57868_5208_2800.h5'
+    #mine_path = os.path.join(home, 'data/datacloud', '{}'.format(client), '{}'.format(mine))
     mine_path = os.path.join(home, 'data/datacloud/field_data/detour_gold/detour_lake_mine')
     h5_path = os.path.join(mine_path,'level_1/piezo/3200hz', h5_basename)
+    h5_path = '/home/kkappler/data/datacloud/teck/line_creek/field_data/2018-09-10/drill_31/5208/level_1/20180910_SSX57868_5208_2800.h5'
     if use_debug_file:
         h5_path = os.path.join(home, 'data/datacloud/debug/run_1542066345/20181112_RTR85545_S1021.h5')
+
     h5 = h5py.File(h5_path)
     h5_helper = H5Helper(h5)
-    pdb.set_trace()
+    #pdb.set_trace()
     make_spectral_qc_plot(h5_helper)# components_to_plot=['x', 'y', 'z'])
 
     print("finito {}".format(datetime.datetime.now()))
