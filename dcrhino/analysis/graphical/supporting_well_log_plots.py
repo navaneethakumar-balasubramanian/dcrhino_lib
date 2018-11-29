@@ -89,6 +89,7 @@ def well_log_panel_plot(ax, log_data, depth, data_label, x_label, x_limits=[None
         x_lim_max = x_limits[1]
     ax.set_xlim([x_lim_min, x_lim_max])
 #
+    
     plt.grid(axis='y', ls='solid')
     ax.yaxis.set_major_locator(MultipleLocator(1))
     ax.yaxis.set_minor_locator(MultipleLocator(0.1))

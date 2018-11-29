@@ -134,7 +134,8 @@ class QCLogPlotterv2():
         ax1 = ax.twinx()
         ax2 = ax.twinx()
 
-        depth_axis = np.linspace(min(qc_plot_input.sub_mwd_depth),max(qc_plot_input.sub_mwd_depth),len(qc_plot_input.log_depth))
+        #depth_axis = np.linspace(min(qc_plot_input.sub_mwd_depth),max(qc_plot_input.sub_mwd_depth),len(qc_plot_input.log_depth))
+        depth_axis = qc_plot_input.sub_mwd_depth_interp
 
 
         rc_ylim_min = 0.
@@ -210,12 +211,15 @@ class QCLogPlotterv2():
 
         if depth is not False:
 
-            X ,time_vector= np.array( self.mwd_helper.get_interpolated_column(hole_mwd,self.mwd_helper.computed_elevation_column_name,time_vector))
-            X = X.astype(float) - float(qc_plot_input.collar_elevation)
-            X = X * -1
-            X = np.nan_to_num(X)
+            #X ,time_vector= np.array( self.mwd_helper.get_interpolated_column(hole_mwd,self.mwd_helper.computed_elevation_column_name,time_vector))
+            #X = X.astype(float) - float(qc_plot_input.collar_elevation)
+            #X = X * -1
+            #X = np.nan_to_num(X)
+            X = qc_plot_input.sub_mwd_depth_interp
         else:
             X = time_vector
+
+        pdb.set_trace()
 
 #            pdb.set_trace()
 #            pdb.set_trace()
@@ -503,7 +507,7 @@ class QCLogPlotter():
         elif sample_or_poly == 'poly':
             data = np.sqrt(qc_plot_input.axial_primary_peak_amplitude)
         #pdb.set_trace()
-        well_log_panel_plot(ax, data, qc_plot_input.depth, 'pseudo UCS', '(uncalibrated)', x_limits=x_limits, color='grey')
+        well_log_panel_plot(ax, data, qc_plot_input.sub_mwd_depth_interp, 'pseudo UCS', '(uncalibrated)', x_limits=x_limits, color='grey')
 
 
     def reflection_coefficient_panel(self,ax, qc_plot_input, x_limits=[None, None], sample_or_poly='sample'):
@@ -511,7 +515,7 @@ class QCLogPlotter():
             data = qc_plot_input.reflection_coefficient_sample
         elif sample_or_poly == 'poly':
             data = qc_plot_input.reflection_coefficient
-        well_log_panel_plot(ax, data, qc_plot_input.depth, '1-R / 1+R', '(Unitless)', x_limits=x_limits, color='green')
+        well_log_panel_plot(ax, data, qc_plot_input.sub_mwd_depth_interp, '1-R / 1+R', '(Unitless)', x_limits=x_limits, color='green')
 
     def primary_pseudovelocity_panel(self,ax, qc_plot_input, x_limits=[None, None], sample_or_poly='sample'):
         """
@@ -524,7 +528,7 @@ class QCLogPlotter():
             data_vel = qc_plot_input.primary_pseudo_velocity_sample
 
             well_log_panel_plot(ax, data_vel,
-                            qc_plot_input.depth, 'pseudo \n velocity (P)' , '(uncalibrated)',
+                            qc_plot_input.sub_mwd_depth_interp, 'pseudo \n velocity (P)' , '(uncalibrated)',
                             x_limits=x_limits, color='blue')
 
 
@@ -536,7 +540,7 @@ class QCLogPlotter():
             data_del= (qc_plot_input.axial_velocity_delay/10000.0)+180
 
             well_log_panel_plot(ax2, data_del,
-                            qc_plot_input.depth, 'velocity delay \n scaled by 1e4' , '(uncalibrated)',
+                            qc_plot_input.sub_mwd_depth_interp, 'velocity delay \n scaled by 1e4' , '(uncalibrated)',
                             x_limits=x_limits, color='red')
 
 
@@ -545,7 +549,7 @@ class QCLogPlotter():
             data_vel = 1000*qc_plot_input.primary_wavelet_width
 
             well_log_panel_plot(ax, data_vel,
-                            qc_plot_input.depth, 'pseudo \n velocity (P)' , '(uncalibrated)',
+                            qc_plot_input.sub_mwd_depth_interp, 'pseudo \n velocity (P)' , '(uncalibrated)',
                             x_limits=x_limits, color='blue')
 
 
@@ -556,7 +560,7 @@ class QCLogPlotter():
             data = qc_plot_input.primary_pseudo_density_sample
         elif sample_or_poly == 'poly':
             data = qc_plot_input.reflection_coefficient* qc_plot_input.primary_wavelet_width**2
-        well_log_panel_plot(ax, data, qc_plot_input.depth, 'pseudo \n density',
+        well_log_panel_plot(ax, data, qc_plot_input.sub_mwd_depth_interp, 'pseudo \n density',
                             '(uncalibrated)', x_limits=x_limits, color='red')
 
 
