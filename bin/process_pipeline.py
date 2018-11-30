@@ -653,19 +653,19 @@ def main():
 
 
         if interactive_mode:
-                cb = plt.colorbar(heatmap1, cax = cbaxes)
-                ax[2], heatmap2 = plot_hole_as_heatmap(ax[2], cbal.v_min_2, cbal.v_max_2, X, Y,
-                  trace_array_dict['tangential'], cmap_string, y_tick_locations)#,
-
-                ax[3], heatmap3 = plot_hole_as_heatmap(ax[3], cbal.v_min_3, cbal.v_max_3, X, Y,
-                  trace_array_dict['radial'], cmap_string, y_tick_locations)#,
-
-    #        plt.tight_layout()
-                if colourbar_type=='all_one':
-                    cbaxes = fig.add_axes([0.01, 0.1, 0.007, 0.8])
-                    cb = plt.colorbar(heatmap1, cax = cbaxes)
-                    plt.setp(cbaxes.get_xticklabels(), rotation='vertical', fontsize=10)
-                    cbaxes.yaxis.set_ticks_position('right')
+    #             cb = plt.colorbar(heatmap1, cax = cbaxes)
+    #             ax[2], heatmap2 = plot_hole_as_heatmap(ax[2], cbal.v_min_2, cbal.v_max_2, X, Y,
+    #               trace_array_dict['tangential'], cmap_string, y_tick_locations)#,
+    #
+    #             ax[3], heatmap3 = plot_hole_as_heatmap(ax[3], cbal.v_min_3, cbal.v_max_3, X, Y,
+    #               trace_array_dict['radial'], cmap_string, y_tick_locations)#,
+    #
+    # #        plt.tight_layout()
+    #             if colourbar_type=='all_one':
+    #                 cbaxes = fig.add_axes([0.01, 0.1, 0.007, 0.8])
+    #                 cb = plt.colorbar(heatmap1, cax = cbaxes)
+    #                 plt.setp(cbaxes.get_xticklabels(), rotation='vertical', fontsize=10)
+    #                 cbaxes.yaxis.set_ticks_position('right')
 
         		#<Labeling>
 
