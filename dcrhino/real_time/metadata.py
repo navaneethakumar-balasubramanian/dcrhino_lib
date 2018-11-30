@@ -36,7 +36,7 @@ def StandardString(s):
 def convert_to_meters(value,units):
     for m in range(4,6):
         if units == m:
-            vaulue = value / (10**(m-2))
+            value = value / (10**(m-2))
     if units == 1:
         value = value * 0.3048
     elif units == 2:
