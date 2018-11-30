@@ -1,6 +1,7 @@
 import argparse
 import json
 import pandas as pd
+import pdb
 import time
 import os
 import fnmatch
@@ -36,9 +37,13 @@ def get_numpys_from_folder_by_interval(folder_path,ts_min,ts_max):
 
 def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
     output_folder = output_folder_path
+
     mwdHelper = MwdDFHelper(mwd_df,mwd_map=mmap)
+    print h5_iterator_df['rig_id'].unique()
+    temp = mwd_df[mwd_df[mwdHelper.rig_id_column_name].isin(h5_iterator_df['rig_id'].values)].copy()
+    mwd_df = temp
     print "Splitting mwd by bench,pattern,hole"
-    holes = mwdHelper._split_df_to_bph_df(mwdHelper.df)
+    holes = mwdHelper._split_df_to_bph_df(mwd_df)
     print "Found " + str(len(holes)) + " holes in this mwd"
     holes_h5 = {}
     for hole in holes:
@@ -48,10 +53,12 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
             pattern = hole[mwdHelper.pattern_column_name].values[0]
             hole_id = hole[mwdHelper.hole_column_name].values[0]
             hole_start_time = int(time.mktime(hole[mwdHelper.start_time_column_name].min().timetuple()))
-            hole_end_time = int(time.mktime(hole[mwdHelper.end_time_column_name].max().timetuple()))
-            bph_str = str(bench) + "," + str(pattern) + "," +str(hole_id)
+            hole_end_time = int(time.mktime(hole[mwdHelper.start_time_column_name].max().timetuple()))
+            bph_str = str(bench) + "," + str(pattern) + "," +str(hole_id) +','+ str(rig_id)
             for h5 in h5_iterator_df.itertuples():
-                if ((rig_id == h5.rig_id) and (int(hole_start_time) >= h5.min_ts and int(hole_start_time) <= h5.max_ts) or (int(hole_end_time) >= h5.min_ts and int(hole_end_time) <= h5.max_ts)) :
+
+                if (rig_id == h5.rig_id) and ((int(hole_start_time) >= h5.min_ts and int(hole_start_time) <= h5.max_ts) or (int(hole_end_time) >= h5.min_ts and int(hole_end_time) <= h5.max_ts)) :
+                    #pdb.set_trace()
                     if bph_str not in holes_h5.keys():
                         holes_h5[bph_str] = {}
                         holes_h5[bph_str]['bench'] = bench
@@ -66,7 +73,6 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
                     print hole_start_time, hole_end_time, h5.min_ts, h5.max_ts
 
     for hole in holes_h5.keys():
-
         hole_ts = np.arange(holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts'])
         hole_output_folder = os.path.join(output_folder,hole)
         make_dirs_if_needed(hole_output_folder)
@@ -75,7 +81,6 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         hole_mwd = holes_h5[hole]['hole_mwd_df']
         hole_features_dict_columns = {}
         for h5 in holes_h5[hole]['h5s']:
-
             h5_row = h5_iterator_df.loc[[h5]]
             processed_files_path = h5_row['output_path_folder'].values[0]
 
@@ -133,8 +138,10 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
             datetime_list.append(datetime.utcfromtimestamp(ts))
         hole_features_extracted['datetime'] = datetime_list
         #interpolate mwd columns
-        hole_features_extracted['computed_elevation'], time_vector = mwdHelper.get_interpolated_column(hole_mwd,'computed_elevation',hole_features_extracted['datetime'])
+        hole_features_extracted['computed_elevation'], time_vector = mwdHelper.get_interpolated_column(hole_mwd,'computed_elevation')
         hole_features_extracted['mse'], time_vector = mwdHelper.get_interpolated_column(hole_mwd,mwdHelper.mse_column_name,time_vector)
+        if hole == '965,106,3014,3':
+            pdb.set_trace()
         hole_features_extracted['depth'] = (np.asarray(hole_features_extracted['computed_elevation'].values) - hole_mwd[mwdHelper.collar_elevation_column_name].values[0]) * -1
 
         qc_input = QCLogPlotInput()

@@ -219,7 +219,7 @@ class QCLogPlotterv2():
         else:
             X = time_vector
 
-        pdb.set_trace()
+        #pdb.set_trace()
 
 #            pdb.set_trace()
 #            pdb.set_trace()
