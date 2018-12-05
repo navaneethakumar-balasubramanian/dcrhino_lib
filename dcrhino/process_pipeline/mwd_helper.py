@@ -117,12 +117,14 @@ class MwdDFHelper:
 
     def get_interpolated_column(self,mwd,column_name,time_vector=None):
         if time_vector is None:
+            #pdb.set_trace()
             min_dt = mwd[self.start_time_column_name].min()
             max_dt = mwd[self.start_time_column_name].max()
             periods = (max_dt-min_dt).total_seconds()
             time_vector = pd.date_range(start=min_dt, periods=periods, freq='1S')
         #pdb.set_trace()
         interpolated_column = get_interpolated_column(time_vector, mwd, column_name,end_time_column_label=self.start_time_column_name)
+        #pdb.set_trace()
         return np.asarray(interpolated_column),time_vector
 
 

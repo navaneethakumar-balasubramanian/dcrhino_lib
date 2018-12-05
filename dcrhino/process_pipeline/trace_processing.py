@@ -3,7 +3,7 @@ from dcrhino.process_pipeline.filters import FIRLSFilter
 import scipy
 import scipy.signal as ssig
 import pdb
-#from dcrhino.analysis.signal_processing.seismic_processing import calculate_spiking_decon_filter
+from dcrhino.analysis.signal_processing.seismic_processing import calculate_spiking_decon_filter
 
 class TraceProcessing:
     def __init__(self,global_config,is_ide_file,accelerometer_max_voltage):
@@ -28,20 +28,20 @@ class TraceProcessing:
 
         trimmed_filtered_correlated_trace_actual_second = self._trim_trace(filtered_correlated_trace_actual_second)
 
-        #despiked_trace, despike_filter = calculate_spiking_decon_filter(correlated_trace_actual_second,
-        #                                              self.config.n_spiking_decon_filter_taps,
-        #                                              self.config.dt, self.config.start_ms_despike_decon,
-        #                                              self.config.end_ms_despike_decon,
-        #                                              add_noise_percent=self.config.add_noise_percent)
+        despiked_trace, despike_filter = calculate_spiking_decon_filter(correlated_trace_actual_second,
+                                                      self.config.n_spiking_decon_filter_taps,
+                                                      self.config.dt, self.config.start_ms_despike_decon,
+                                                      self.config.end_ms_despike_decon,
+                                                      add_noise_percent=self.config.add_noise_percent)
+        despiked_trace = np.roll(despiked_trace, self.config.n_spiking_decon_filter_taps//2)
 
-        #despiked_trace = np.roll(despiked_trace, self.config.n_spiking_decon_filter_taps//2)
-        #filtered_despiked_trace_actual_second = self._bandpass_filter_trace(self.config.sampling_rate,
-        #                                                    self.config.trapezoidal_bpf_corner_1,
-        #                                                    self.config.trapezoidal_bpf_corner_2,
-        #                                                    self.config.trapezoidal_bpf_corner_3,
-        #                                                    self.config.trapezoidal_bpf_corner_4,
-        #                                                    self.config.trapezoidal_bpf_duration,
-        #                                                    despiked_trace)
+        filtered_despiked_trace_actual_second = self._bandpass_filter_trace(self.config.sampling_rate,
+                                                            self.config.trapezoidal_bpf_corner_1,
+                                                            self.config.trapezoidal_bpf_corner_2,
+                                                            self.config.trapezoidal_bpf_corner_3,
+                                                            self.config.trapezoidal_bpf_corner_4,
+                                                            self.config.trapezoidal_bpf_duration,
+                                                            despiked_trace)
 
 
         #pdb.set_trace()
@@ -54,8 +54,8 @@ class TraceProcessing:
             output_dict[component+'_correlated'] = correlated_trace_actual_second
             output_dict[component+'_filtered_correlated'] = filtered_correlated_trace_actual_second
             output_dict[component+'_trimmed_filtered_correlated'] = trimmed_filtered_correlated_trace_actual_second
-            #output_dict[component+'_despiked_correlated'] = despiked_trace
-            #output_dict[component+'_filtered_despiked_correlated'] = filtered_despiked_trace_actual_second
+            output_dict[component+'_despiked_correlated'] = despiked_trace
+            output_dict[component+'_filtered_despiked_correlated'] = filtered_despiked_trace_actual_second
         return output_dict
 
     def _trim_trace(self, data):

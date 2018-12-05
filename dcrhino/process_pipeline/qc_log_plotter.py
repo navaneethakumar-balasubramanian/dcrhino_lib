@@ -40,7 +40,7 @@ class QCLogPlotterv2():
         ax2 = ax.twinx()
         if self.plot_by_depth:
             depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)
-            depth_axis = np.linspace(min(qc_plot_input.sub_mwd_depth_interp),max(qc_plot_input.sub_mwd_depth_interp),len(qc_plot_input.sub_mwd_depth))
+            depth_axis = np.linspace(min(qc_plot_input.sub_mwd_depth),max(qc_plot_input.sub_mwd_depth),len(qc_plot_input.sub_mwd_depth))
             ax.plot(depth_axis, qc_plot_input.sub_mwd_depth, '*',label = 'Datapoints')
             ax.plot(depth_axis, qc_plot_input.sub_mwd_depth, label = 'Interpolated')
             ax2.plot(depth_axis,qc_plot_input.sub_mwd_rop,label = 'RoP (m/hr)',color = 'r')
@@ -73,7 +73,7 @@ class QCLogPlotterv2():
         if self.plot_by_depth:
             #<Depth Part>
             depth_axis = -1*(qc_plot_input.sub_mwd_depth-qc_plot_input.collar_elevation)
-            depth_axis = np.linspace(min(qc_plot_input.sub_mwd_depth_interp),max(qc_plot_input.sub_mwd_depth_interp),len(qc_plot_input.sub_mwd_depth))
+            depth_axis = np.linspace(min(qc_plot_input.sub_mwd_depth),max(qc_plot_input.sub_mwd_depth),len(qc_plot_input.sub_mwd_depth))
             ax.plot(depth_axis, qc_plot_input.sub_mwd_wob,label = 'Force on Bit',color = 'b')
             ax1.plot(depth_axis, qc_plot_input.sub_mwd_mse*1000,label = 'MSE (scaled by 1000)',color = 'g')
             ax2.plot(depth_axis, qc_plot_input.sub_mwd_tob,label = 'Torque on Bit',color = 'r')

@@ -98,6 +98,7 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
     while actual_ts < end:
         trace_index = actual_ts - start_time_ts
         ts[trace_index] = actual_ts
+
         indexes_array_of_actual_second = get_ts_array_indexes(actual_ts,entire_ts_int)
 
         # PREVENT CRASH IF THERES NO DATA ON THE LASTS SECONDS OF THE HOLE
@@ -194,6 +195,7 @@ def process_h5_file(h5py_file, output_folder, cfg_file_path=False):
     # DATA FROM H5 CONFIG HEADER
     metadata = h5_helper.metadata
     global_config = Config(metadata,env_config_parser,config_parser)
+    global_config.output_sampling_rate = global_config.output_sampling_rate *1.25
     io_helper = IOHelper(global_config)
     #print (io_helper.get_mine_path())
 
@@ -211,7 +213,9 @@ def process_h5_file(h5py_file, output_folder, cfg_file_path=False):
     #sourcefilename = os.path.basename(args.h5_path).split(".")[0]
     bph_string = "this will be the title"
     start_ts = int(h5_helper.min_ts)
+    #pdb.set_trace()
     end_ts = int(h5_helper.max_ts)
+    #end_ts = start_ts +100
     #if output_folder:
     temppath = output_folder
     io_helper.make_dirs_if_needed(temppath)
@@ -252,6 +256,7 @@ def process_h5_file(h5py_file, output_folder, cfg_file_path=False):
     radial = traces_dict['radial_trimmed_filtered_correlated_array']
     tangential = traces_dict['tangential_trimmed_filtered_correlated_array']
     ts_array = traces_dict['ts_array']
+
     #pdb.set_trace()
     extracted_features_list = get_features_extracted(extractor,axial,tangential,radial,ts_array, global_config)
     extracted_features_df = pd.DataFrame(extracted_features_list)
