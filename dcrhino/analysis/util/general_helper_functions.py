@@ -7,8 +7,7 @@ Created on Sat Apr 26 13:59:10 2014
 Basic tools, mostly taken from websites
 """
 
-
-#<Standard Imports>
+import collections
 import datetime
 import fnmatch
 import glob
@@ -16,7 +15,6 @@ import numpy as np
 import os
 from string import zfill
 import subprocess
-#<\Standard Imports>
 
 #<temporary logging>
 import logging
@@ -344,3 +342,17 @@ def merge_two_dicts(x, y):
     z = x.copy() #start with x's keys and values
     z.update(y) #modifies z with y's keys and values and returns None
     return z
+
+def flatten(d, parent_key='', sep='_'):
+    """
+    https://stackoverflow.com/questions/6027558/flatten-nested-python-dictionaries-compressing-keys
+
+    """
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, collections.MutableMapping):
+            items.extend(flatten(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
