@@ -11,10 +11,6 @@ Need field metadata, which I will take from an h5 file;
 
 ~/data/datacloud/rhino_process_pipeline_output/line_creek/5208/3200/
 
-An assumption in here is that the earliest possible primary time is 0.0,
-('becuase we are minimum phase sajs Jamie'), but I think we have seen exceptions to this,
-so a follow on task will be to check, with real data that the "local maximum" in the
-primary window is always at a positive time
 """
 
 from __future__ import absolute_import, division, print_function
@@ -182,10 +178,6 @@ def populate_window_data_dict(window_boundaries_indices, trimmed_trace,
 
     trace_data_window_dict = {}
     trace_time_vector_dict = {}
-    #for component_label in window_boundaries_indices.keys():
-    #    sub_dict = window_boundaries_indices[component_label]
-    #    trace_data_window_dict[component_label] = {}
-    #    trace_time_vector_dict[component_label] = {}
     for window_label in window_boundaries_indices.keys():
         sub_dict = window_boundaries_indices[window_label]
         lower_index = sub_dict[0]; upper_index = sub_dict[1]
@@ -212,29 +204,20 @@ def test_populate_window_data_dict(trace_data_window_dict, trace_time_vector_dic
         i_color = 0
         for window_label in data_sub_dict.keys():
             print(window_label)
-#            data = data_sub_dict[window_label]
-#            time = time_sub_dict[window_label]
-            #pdb.set_trace()
             ax[i_label].plot(time_sub_dict[window_label], data_sub_dict[window_label],
               color=color_cycle[i_color], linewidth=1, label=window_label)
             i_color+=1
         ax[i_label].legend()
     plt.show()
     return
-    #primary
+
 
 def extract_features_from_each_window(window_data_dict, time_vector_dict):
     """
     """
     new_feature_dict = {}
-    #for component_label in window_data_dict.keys():
-    #    data_sub_dict = window_data_dict[component_label]
-    #    time_sub_dict = time_vector_dict[component_label]
-    #    new_feature_dict[component_label] = {}
     for window_label in window_data_dict.keys():
-        #case_label = '{}_{}'.format(component_label, window_label)
         tmp = {}
-        #print(case_label)
         data_window = window_data_dict[window_label]
         time_vector = time_vector_dict[window_label]
         tmp['max_amplitude'] = np.max(data_window)
@@ -266,30 +249,11 @@ def calculate_boolean_features(feature_dict):
     if snr_mult1 < 1.0:
         output_dict['mask_snr_mult1'] = True
     return output_dict
-import collections
 
-def flatten(d, parent_key='', sep='_'):
-    items = []
-    for k, v in d.items():
-        new_key = parent_key + sep + k if parent_key else k
-        if isinstance(v, collections.MutableMapping):
-            items.extend(flatten(v, new_key, sep=sep).items())
-        else:
-            items.append((new_key, v))
-    return dict(items)
-#def unnest_dictionary(input_dict):
-#    output_dict = {}
-#    for component_label in input_dict.keys():
-#        subdict =
-#        for xlabel in
-#        print(k, v)
-#    pdb.set_trace()
-#    return
 
 def feature_extractor_augment_example():
     """
     """
-    #pdb.set_trace()
     #<Define intervals of data for analysis and prep containers>
     expected_mulitple_periods = get_expected_mulitple_times_vA(sensor_distance_to_source,
                                                                sensor_distance_to_shocksub)
@@ -298,13 +262,10 @@ def feature_extractor_augment_example():
     window_boundaries_indices = convert_window_boundaries_to_sample_indices(window_boundaries_time, dt)#sampling_interval)
     #</Define intervals of data for analysis and prep containers>
 
-    #Allocate space for feature arrays!
+    #Allocate space for feature arrays
     feature_dict_lists = n_traces * [None]
-#    feature_dict_lists = {}
-#    for component_label in window_boundaries_time.keys():
-#        feature_dict_lists[component_label] = n_traces * [None]
-    #DATA ENTERS PICTUURE HERE!
 
+    #DATA ENTERS PICTUURE HERE!
     for i_trace in range(n_traces):
         #loop over axial and tangential
         new_features_dict = {}
@@ -323,9 +284,7 @@ def feature_extractor_augment_example():
             new_features_dict[component_label] = extracted_features_dict
             #pdb.set_trace()
         #pdb.set_trace()
-        unnested_dictionary = flatten(new_features_dict)
-        #pdb.set_trace()
-        print('now dump out with dict keys concatenated')
+        unnested_dictionary = flatten(new_features_dict)#print('now dump out with dict keys concatenated')
         feature_dict_lists[i_trace] = unnested_dictionary
     #pdb.set_trace()
     new_features_df = pd.DataFrame(feature_dict_lists, index=features_df.index)
@@ -334,8 +293,8 @@ def feature_extractor_augment_example():
     merged_features_df = pd.concat((features_df, new_features_df), axis=1) #use pd.concat()
     merged_features_df.to_csv(os.path.join(npy_folder, 'merged_features.csv'))
     #<TODO>
-    for col in new_features_df.columns:
-        print(col)
+#    for col in new_features_df.columns:
+#        print(col)
     pdb.set_trace()
 
     pass
@@ -348,12 +307,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    #if os.path.isfile(metadata_csv):
-#    pd.read_csv
-#    metadata = Metadata.load(metadata_csv)
-#else:
-#    f1 = h5py.File(h5_filename,'r+')
-#    h5_helper = H5Helper(f1)
-#    metadata = h5_helper.metadata
-#    metadata.save(metadata_csv)
-#    print('get from h5')
