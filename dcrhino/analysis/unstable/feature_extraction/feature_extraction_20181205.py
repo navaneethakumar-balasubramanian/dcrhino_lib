@@ -42,32 +42,30 @@ h5_filename = os.path.join(field_data_path, '2018-09-10', 'drill_31', '5208', 'l
 #f1 = h5py.File(h5_filename,'r+')
 #h5_helper = H5Helper(f1)
 #metadata = h5_helper.metadata
-
-npy_folder = os.path.join(processed_data_path,'bench/793-MR_77-23531/piezo/5208' )
-metadata_csv = os.path.join(npy_folder, 'metadata.csv')
-features_csv = os.path.join(npy_folder, 'extracted_features.csv')
-features_df = pd.read_csv(features_csv)
-pdb.set_trace()
-
-#if os.path.isfile(metadata_csv):
-#    pd.read_csv
-#    metadata = Metadata.load(metadata_csv)
-#else:
-#    f1 = h5py.File(h5_filename,'r+')
-#    h5_helper = H5Helper(f1)
-#    metadata = h5_helper.metadata
-#    metadata.save(metadata_csv)
-#    print('get from h5')
-
 #<From Metadata>
 sensor_distance_to_source = 20.97 #m
 sensor_distance_to_shocksub = 0.77 #m
+sampling_rate = 3200.0; dt = 1./ sampling_rate; #where is this accessed from????
+min_lag = 0.1 #ms This tells us the starting time referneced to t=0 (perfect overlapping xcorr)
 #</From Metadata>
 
 #<From Config>
 AXIAL_VELOCITY_STEEL = 4755.0 #m/s
 SHEAR_VELOCITY_STEEL = 2630.0 #m/s
 #</From Config>
+
+npy_folder = os.path.join(processed_data_path,'bench/793-MR_77-23531/piezo/5208' )
+metadata_csv = os.path.join(npy_folder, 'metadata.csv')
+features_csv = os.path.join(npy_folder, 'extracted_features.csv')
+features_df = pd.read_csv(features_csv)
+
+tmp = np.load(os.path.join(npy_folder, 'axial_filtered_despiked_traces.npy'))
+print("warning: this needs to use parameterized trim!; sps, decon filter len")
+trimmed_traces = tmp[:,1600+160-320:1600+160+320]
+n_traces, samples_per_trace = trimmed_traces.shape#(1220, 320)
+time_vector = (dt * np.arange(samples_per_trace)) - min_lag#from dcrhino/feature_extraction/feature_extractor.py:43:
+
+
 
 #<There is a better way to do this>
 window_widths_ms = {}
@@ -90,14 +88,10 @@ processing_scheme_list = ['standard', 'phase_rotated', 'despike_decon', 'simple_
 trace_window_labels_for_feature_extraction = ['primary', 'multiple_1', 'multiple_2',
                                         'multiple_3', 'noise_1', 'noise_2']
 
-wavelet_feature_extractor_types = ['sample', 'polynomial', 'ricker',]
-component = 'tangential'
-component = 'axial'
-#metadata.save(metadata_csv)
+#wavelet_feature_extractor_types = ['sample', 'polynomial', 'ricker',]
+#component = 'tangential'
+#component = 'axial'
 
-AXIAL_VELOCITY_STEEL = 4755.0 #m/s
-SHEAR_VELOCITY_STEEL = 2630.0 #m/s
-#home = os.path.expanduser("~/")
 
 def get_expected_mulitple_times_vA(sensor_distance_to_bit, distance_sensor_to_shock_sub_bottom):
     """
@@ -142,42 +136,102 @@ def set_window_boundaries_in_time(expected_multiple_periods, window_widths_ms):
                 window_bounds = np.array([start_of_window, end_of_window])
             window_boundaries_time[component][window_label] = window_bounds
     return window_boundaries_time
+
+def convert_window_boundaries_to_sample_indices(window_boundaries_time, sampling_interval):
+    """
+    takes a dictionary of times as input
+    Returns a dictioanry of same shape, but [t0, t1] replaced by [ndx0, ndx1]
+    @ToDo: Spruce this up by using iterative dictionary comprehension
+    """
+    dt = sampling_interval
+    window_boundaries_indices = {}
+    for component_label in window_boundaries_time.keys():
+        sub_dict = window_boundaries_time[component_label]
+        window_boundaries_indices[component_label] = {}
+        for window_label in sub_dict.keys():
+            subsub_dict = sub_dict[window_label]
+            lower_time = subsub_dict[0]; upper_time = subsub_dict[1]
+            lower_index = np.floor(lower_time/dt)
+            upper_index = np.ceil(upper_time/dt)
+            window_boundaries_indices[component_label][window_label] = [lower_index, upper_index]
+
+    return window_boundaries_indices
+
+
+def populate_window_data_dict(window_boundaries_indices, trimmed_trace, trimmed_trace_time_vector):#time_vector needed here?, n_samples):
+    """
+    #time_vector needed here?,
+    takes a dictionary of times as input
+    Returns a dictioanry of same keys, but [ndx0, ndx1] replaced by data_series from
+    @TODO: Spruce this up by using iterative dictionary comprehension
+    @TODO: time vector splitting is redundant -  calulate once outside here?
+    """
+
+    trace_data_window_dict = {}
+    trace_time_vector_dict = {}
+    for component_label in window_boundaries_indices.keys():
+        sub_dict = window_boundaries_indices[component_label]
+        trace_data_window_dict[component_label] = {}
+        trace_time_vector_dict[component_label] = {}
+        for window_label in sub_dict.keys():
+            subsub_dict = sub_dict[window_label]
+            lower_index = sub_dict[0]; upper_index = subsub_dict[1]
+            trace_data_window_dict[component_label][window_label] = trimmed_trace[lower_index:upper_index]
+            trace_time_vector_dict[component_label][window_label] = trimmed_trace_time_vector[lower_index:upper_index]
+            print('check for offbyone error above - maybe upper_index+1')
+
+    return trace_data_window_dict, trace_time_vector_dict
     #primary
-def get_expected_wavelet_from_trace(wavelet_type):
-    """
-    wavelet_type: primary, M1, M2, M3, N12, N23
-    returns the indices of primary window,
-    """
-    pass
-def split_wavelet_into_snr_windows_m1m2m3():
-    """
-    """
-    pass
 
-def extract_signal_and_noise_features():
-    pass
+def extract_features_from_each_window(window_data_dict, time_vector_dict):
+    """
+    """
+    new_feature_dict = {}
+    for component_label in window_data_dict.keys():
+        data_sub_dict = window_data_dict[component_label]
+        time_sub_dict = window_data_dict[component_label]
+        new_feature_dict[component_label] = {}
+        for window_label in data_sub_dict.keys():
+            data_window = data_sub_dict[window_label]
+            time_vector = time_sub_dict[window_label]
+            new_feature_dict['primary_max_amplitude'] = np.max(data_window)
+            new_feature_dict['primary_max_time'] = np.argmax(data_window)
+            new_feature_dict['primary_min_amplitude'] = np.min(data_window)
+            new_feature_dict['primary_min_time'] = np.argmin(data_window)
+            new_feature_dict['integrated_abs_amplitude'] = np.sum(np.abs(data_window))/(time_vector[-1]-time_vector[0])
 
-def feature_extractor():
+
+    return new_feature_dict
+
+
+
+def feature_extractor_augment_example():
     """
     """
     pdb.set_trace()
+    #<Define intervals of data for analysis and prep containers>
     expected_mulitple_periods = get_expected_mulitple_times_vA(sensor_distance_to_source,
                                                                sensor_distance_to_shocksub)
     window_boundaries_time = set_window_boundaries_in_time(expected_mulitple_periods, window_widths_ms)
-    #<TODO>
-    window_boundaries_indices = convert_window_boundaries_to_sample_indices(window_time_boundaries, sampling_interval)
-    window_data_dict = populate_window_data_dict() #go and associate with each window_label, the data in that window
-    extracted_features_dict = extract_features_from_each_window()
-    print("now these features are to be added onto the existing table")
+
+    window_boundaries_indices = convert_window_boundaries_to_sample_indices(window_boundaries_time, dt)#sampling_interval)
+    #</Define intervals of data for analysis and prep containers>
+
+    #DATA ENTERS PICTUURE HERE!
+    feature_dict_list = n_traces * [None]
+    for i_trace in range(n_traces):
+        trimmed_trace = trimmed_traces[i_trace, :]
+        window_data_dict, window_time_vector_dict = populate_window_data_dict(window_boundaries_indices, trimmed_trace) #associate with each window_label, the data in that window
+        extracted_features_dict = extract_features_from_each_window(window_data_dict, window_time_dict)
+        boolean_features_dict = calculate_booleans(extracted_features_dict)
+        extracted_features_dict.update(boolean_features_dict)
+        feature_dict_list[i_trace] = extracted_features_dict
     new_features_df = pd.DataFrame(extracted_features_dict, index=features_df.index)
+
+    print("new features df is now read into the plotter and booleans are applied to mute traces")
     merged_features_df = merge_data_frames_with_common_index() #use pd.concat()
 
-
-
-    #for this trac
-    #window_time_dict = window_boundaries_time
-
-    #</TODO>
+    #<TODO>
     pdb.set_trace()
 
     pass
@@ -185,8 +239,17 @@ def feature_extractor():
 def main():
     """
     """
-    my_function()
+    feature_extractor_augment_example()
     print("finito {}".format(datetime.datetime.now()))
 
 if __name__ == "__main__":
     main()
+    #if os.path.isfile(metadata_csv):
+#    pd.read_csv
+#    metadata = Metadata.load(metadata_csv)
+#else:
+#    f1 = h5py.File(h5_filename,'r+')
+#    h5_helper = H5Helper(f1)
+#    metadata = h5_helper.metadata
+#    metadata.save(metadata_csv)
+#    print('get from h5')
