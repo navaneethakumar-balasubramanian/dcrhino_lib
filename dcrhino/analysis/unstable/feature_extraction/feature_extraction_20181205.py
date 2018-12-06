@@ -62,10 +62,15 @@ metadata_csv = os.path.join(npy_folder, 'metadata.csv')
 features_csv = os.path.join(npy_folder, 'extracted_features.csv')
 features_df = pd.read_csv(features_csv)
 
-tmp = np.load(os.path.join(npy_folder, 'axial_filtered_despiked_traces.npy'))
+
+trimmed_traces_dict = {}
+tmp = np.load(os.path.join(npy_folder, 'axial_filtered_correlated_traces.npy'))
 print("warning: this needs to use parameterized trim!; sps, decon filter len")
-trimmed_traces = tmp[:,1600+160-320:1600+160+320]
-n_traces, samples_per_trace = trimmed_traces.shape#(1220, 320)
+trimmed_traces_dict['axial'] = tmp[:,1600+160-320:1600+160+320]
+tmp = np.load(os.path.join(npy_folder, 'tangential_filtered_correlated_traces.npy'))
+trimmed_traces_dict['tangential'] = tmp[:,1600+160-320:1600+160+320]
+
+n_traces, samples_per_trace = trimmed_traces_dict['axial'].shape#(1220, 320)
 trimmed_time_vector = (dt * np.arange(samples_per_trace)) - min_lag#from dcrhino/feature_extraction/feature_extractor.py:43:
 
 
@@ -233,9 +238,9 @@ def extract_features_from_each_window(window_data_dict, time_vector_dict):
             data_window = data_sub_dict[window_label]
             time_vector = time_sub_dict[window_label]
             tmp['max_amplitude'] = np.max(data_window)
-            tmp['max_time'] = np.argmax(data_window)
+            tmp['max_time'] = time_vector[np.argmax(data_window)]
             tmp['min_amplitude'] = np.min(data_window)
-            tmp['min_time'] = np.argmin(data_window)
+            tmp['min_time'] = time_vector[np.argmin(data_window)]
             tmp['integrated_absolute_amplitude'] = np.sum(np.abs(data_window))/(time_vector[-1]-time_vector[0])
             new_feature_dict[component_label][window_label] = tmp
     return new_feature_dict
@@ -300,18 +305,17 @@ def feature_extractor_augment_example():
 #        feature_dict_lists[component_label] = n_traces * [None]
     #DATA ENTERS PICTUURE HERE!
     for i_trace in range(n_traces):
-        trimmed_trace = trimmed_traces[i_trace, :]
-        window_data_dict, window_time_vector_dict = populate_window_data_dict(window_boundaries_indices,
+        #loop over axial and tangential
+        for component_label in window_boundaries_indices.keys():
+            trimmed_trace = trimmed_traces_dict[component_label][i_trace, :]
+            window_data_dict, window_time_vector_dict = populate_window_data_dict(window_boundaries_indices,
                                                                               trimmed_trace,
                                                                               trimmed_time_vector)
-        #test_populate_window_data_dict(window_data_dict, window_time_vector_dict,
-        #                           trimmed_trace, trimmed_time_vector)
-        extracted_features_dict = extract_features_from_each_window(window_data_dict,
-                                                                    window_time_vector_dict)
+            #test_populate_window_data_dict(window_data_dict, window_time_vector_dict,
+                                            #                           trimmed_trace, trimmed_time_vector)
+            extracted_features_dict = extract_features_from_each_window(window_data_dict,
+                                                                        window_time_vector_dict)
 
-        #pdb.set_trace()
-        #loop over axial and tangential
-        for component_label in extracted_features_dict.keys():
             boolean_features_dict = calculate_boolean_features(extracted_features_dict[component_label])
             extracted_features_dict[component_label]['boolean'] = boolean_features_dict
             #pdb.set_trace()
@@ -319,13 +323,13 @@ def feature_extractor_augment_example():
         unnested_dictionary = flatten(extracted_features_dict)
         #pdb.set_trace()
         print('now dump out with dict keys concatenated')
-        feature_dict_lists[i_trace] = extracted_features_dict
-    pdb.set_trace()
+        feature_dict_lists[i_trace] = unnested_dictionary
+    #pdb.set_trace()
     new_features_df = pd.DataFrame(feature_dict_lists, index=features_df.index)
 
     print("new features df is now read into the plotter and booleans are applied to mute traces")
-    merged_features_df = merge_data_frames_with_common_index() #use pd.concat()
-
+    merged_features_df = pd.concat((features_df, new_features_df), axis=1) #use pd.concat()
+    merged_features_df.to_csv(os.path.join(npy_folder, 'merged_features.csv'))
     #<TODO>
     pdb.set_trace()
 
