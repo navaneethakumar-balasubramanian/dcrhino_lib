@@ -273,6 +273,23 @@ class Metadata(object):
         return "{}_{}".format(StandardString(str(self.datetime_data_recorded)),StandardString(self.sensor_serial_number))
 
 
+    def field_base_path(self):
+        return os.path.join(self.company,self.mine_name,"field_data",self.rig_id,self.sensor_serial_number).lower()
+
+    def level_0_path(self):
+        return os.path.join(self.field_base_path(),"level_0").lower()
+
+    def level_1_path(self):
+        if self.sensor_accelerometer_type == 8:
+            sensor_type = "piezo"
+        elif self.sensor_accelerometer_type == 32:
+            sensor_type = "mems"
+        else:
+            sensor_type = "need_to_declare_a_new_sensor_type"
+        return os.path.join(self.field_base_path(),"level_1",sensor_type).lower()
+
+
+
     def save(self,filename):
         _str=''
         metafile = open(filename, 'w')
