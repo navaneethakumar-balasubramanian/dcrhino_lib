@@ -122,10 +122,10 @@ def main():
     if output_folder_path != False:
         qclogplot_output_path = os.path.join(output_folder_path,'time_plot.png')
     else:
-        qclogplot_output_path = ''
+        qclogplot_output_path = os.path.join(args.data_path,'time_plot.png')
 
     qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,feature_df,bph_string,qclogplot_output_path,global_config,start_ts,end_ts)
-    qclogplotter_time.plot(save=(output_folder_path != False),show=(output_folder_path == False))
+    qclogplotter_time.plot(save=True,show=True)
 
 
     try:

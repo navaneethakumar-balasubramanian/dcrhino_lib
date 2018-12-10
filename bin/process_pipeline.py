@@ -791,6 +791,7 @@ def main():
             qc_input.observer_row = hole
             qc_input.plot_meta = plot_meta
             qc_input.time_stamps = extracted_features_df['datetime']
+            qc_input.sub_mwd_depth_interp = extracted_features_df['depth']
         #
             extracted_features_df['pseudo_ucs'] = pd.Series(qc_input.pseudo_ucs_sample, index = extracted_features_df.index)
             extracted_features_df['pseudo_velocity'] = pd.Series(qc_input.primary_pseudo_velocity_sample, index = extracted_features_df.index)
