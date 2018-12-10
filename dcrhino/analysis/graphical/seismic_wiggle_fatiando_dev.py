@@ -66,7 +66,6 @@ try:
 except:
     pass
 
-import fatiando.gridder
 
 # Dummy variable to laizy import the basemap toolkit (slow)
 Basemap = None
@@ -866,6 +865,7 @@ def contour(x, y, v, shape, levels, interp=False, extrapolate=False, color='k',
         List with the values of the contour levels
 
     """
+    import fatiando.gridder
     if style not in ['solid', 'dashed', 'mixed']:
         raise ValueError("Invalid contour style %s" % (style))
     if x.shape != y.shape != v.shape:
@@ -933,6 +933,7 @@ def contourf(x, y, v, shape, levels, interp=False, extrapolate=False,
         List with the values of the contour levels
 
     """
+    import fatiando.gridder
     if x.shape != y.shape != v.shape:
         raise ValueError("Input arrays x, y, and v must have same shape!")
     if interp:
@@ -986,6 +987,7 @@ def pcolor(x, y, v, shape, interp=False, extrapolate=False, cmap=pyplot.cm.jet,
         The axes element of the plot
 
     """
+    import fatiando.gridder
     if x.shape != y.shape != v.shape:
         raise ValueError("Input arrays x, y, and v must have same shape!")
     if vmin is None:
