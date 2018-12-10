@@ -30,8 +30,14 @@ if __name__ == "__main__":
     argparser.add_argument('-i', '--input-file', help="Master iterator csv path", required=True)
     argparser.add_argument('-o','--output-folder',help="OUTPUT FOLDER", required=True)
     args = argparser.parse_args()
+    #can we add an assignment layer like the two lines below?
+    #that way it is easy to comment out the command line usage and 
+    #and directly assign args when debugging?
+    input_file = args.input_file
+    output_folder = args.output_folder
+#    input_file = '/home/kkappler/data/datacloud/teck/line_creek/test_line_creek_iterator_ssx.csv'
+#    output_folder = '/home/kkappler/data/datacloud/teck/line_creek/processed_data/'
+    master_iterator_df = pd.read_csv(input_file)
 
-    master_iterator_df = pd.read_csv(args.input_file)
-
-    master_iterator_df = process_master_iterator(master_iterator_df,args.output_folder)
-    master_iterator_df.to_csv(args.input_file,index=False)
+    master_iterator_df = process_master_iterator(master_iterator_df, output_folder)
+    master_iterator_df.to_csv(input_file,index=False)
