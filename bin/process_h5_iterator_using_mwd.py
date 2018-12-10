@@ -197,7 +197,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
 
 
 if __name__ == "__main__":
-    use_argparser = False
+    use_argparser = True
     if use_argparser:
         argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
         argparser.add_argument('-i', '--h5-iterator-path', help="H5 Iterator File Path", required=True)
