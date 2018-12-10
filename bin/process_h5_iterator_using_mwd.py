@@ -68,7 +68,8 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
             bph_str = str(bench) + "," + str(pattern) + "," +str(hole_id) +','+ str(rig_id)
             for h5 in h5_iterator_df.itertuples():
                 #pdb.set_trace()
-                temp_id = bph_str + ',' + h5.sensor_serial_number
+                temp_id = '{},{}'.format(bph_str, h5.sensor_serial_number)
+                #temp_id = bph_str + ',' + h5.sensor_serial_number
                 if (rig_id == h5.rig_id) and ((int(hole_start_time) >= h5.min_ts and int(hole_start_time) <= h5.max_ts) or (int(hole_end_time) >= h5.min_ts and int(hole_end_time) <= h5.max_ts)) :
                     if temp_id not in holes_h5.keys():
                         holes_h5[temp_id] = {}
