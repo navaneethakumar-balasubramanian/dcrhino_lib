@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Sep 27 21:14:10 2018
-
+/home/kkappler/software/datacloud/dcrhino_lib/dcrhino/process_pipeline/config.py
 @author: thiago
 """
 import numpy as np
 import pdb
-
+from dcrhino.real_time.metadata import METADATA_HEADER_FORMAT_KEYS
 
 class Config( object ):
     def __init__(self, metadata = None, env_config_parser=None, config_parser = None):
@@ -117,24 +117,12 @@ class Config( object ):
             decon_filter_length_taps+=1
         return decon_filter_length_taps
 
-    def set_metadata( self, metadata ):
-        self.rig_id = str(metadata.rig_id)
-        self.mine_name = str(metadata.mine_name)
-        self.client_name = str(metadata.company)
-        self.sensor_serial_number = str(metadata.sensor_serial_number)
-        self.sensor_distance_to_source = metadata.sensor_distance_to_source
-        self.sensor_axial_axis =int(metadata.sensor_axial_axis)
-        self.sensor_tangential_axis = int(metadata.sensor_tangential_axis)
-        self.output_sampling_rate = int(metadata.output_sampling_rate)
-        self.deconvolution_filter_duration = float(metadata.deconvolution_filter_duration)
-        self.trapezoidal_bpf_corner_1 = float(metadata.trapezoidal_bpf_corner_1)
-        self.trapezoidal_bpf_corner_2 = float(metadata.trapezoidal_bpf_corner_2)
-        self.trapezoidal_bpf_corner_3 = float(metadata.trapezoidal_bpf_corner_3)
-        self.trapezoidal_bpf_corner_4 = float(metadata.trapezoidal_bpf_corner_4)
-        self.trapezoidal_bpf_duration = float(metadata.trapezoidal_bpf_duration)
-        self.min_lag_trimmed_trace = float(metadata.min_lag_trimmed_trace)
-        self.max_lag_trimmed_trace = float(metadata.max_lag_trimmed_trace)
-        self.trace_length_in_seconds = float(metadata.trace_length_in_seconds)
+    def set_metadata(self, metadata):
+        key_list = [key for key,value in METADATA_HEADER_FORMAT_KEYS.items()]
+        for key in key_list:
+            setattr(self, key, metadata.__getattribute__(key))
+        return
+
 
     @property
     def n_samples_trimmed_trace(self):
