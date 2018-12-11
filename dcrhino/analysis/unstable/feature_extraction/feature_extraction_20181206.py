@@ -97,20 +97,23 @@ trace_window_labels_for_feature_extraction = ['primary', 'multiple_1', 'multiple
 #component = 'axial'
 
 
-def get_expected_mulitple_times_vA(sensor_distance_to_bit, distance_sensor_to_shock_sub_bottom):
+def get_expected_mulitple_times(sensor_distance_to_bit,
+                                distance_sensor_to_shock_sub_bottom, recipe='J1'):
     """
     calculates the time_intervals between resonances along the pipe for each of P and S
     waves, axial and tangential components
     """
-    expected_mulitple_periods = {}
-    total_distance = sensor_distance_to_bit + distance_sensor_to_shock_sub_bottom
-    expected_mulitple_periods['axial'] = 2 * total_distance / AXIAL_VELOCITY_STEEL
-    expected_mulitple_periods['tangential'] = 2 * total_distance / SHEAR_VELOCITY_STEEL
+    if recipe=='J1':
+        expected_mulitple_periods = {}
+        total_distance = sensor_distance_to_bit + distance_sensor_to_shock_sub_bottom
+        expected_mulitple_periods['axial'] = 2 * total_distance / AXIAL_VELOCITY_STEEL
+        expected_mulitple_periods['tangential'] = 2 * total_distance / SHEAR_VELOCITY_STEEL
     return expected_mulitple_periods
 
 
 
-def set_window_boundaries_in_time(expected_multiple_periods, window_widths):
+def set_window_boundaries_in_time(expected_multiple_periods, window_widths,
+                                  primary_shift = 0.0):
     """
     sets t0, t1,
     returns window bounds in seconds
@@ -122,13 +125,11 @@ def set_window_boundaries_in_time(expected_multiple_periods, window_widths):
         for window_label in trace_window_labels_for_feature_extraction:
             #pdb.set_trace()
             if window_label == 'primary':
-                delay = 0.0
                 width = window_widths[component][window_label]
-                window_bounds = np.array([delay, delay+width])
+                window_bounds = np.array([primary_shift, primary_shift + width])
             elif bool(re.match('multiple', window_label)):
-            #elif window_label == 'multiple_1':
                 n_multiple = int(window_label[-1])
-                print(n_multiple)
+                #print(n_multiple)
                 delay = n_multiple * expected_multiple_periods[component]
                 width = window_widths[component][window_label]
                 window_bounds = np.array([delay, delay+width])
@@ -251,11 +252,11 @@ def calculate_boolean_features(feature_dict):
     return output_dict
 
 
-def feature_extractor_augment_example():
+def feature_extractor_J1():
     """
     """
     #<Define intervals of data for analysis and prep containers>
-    expected_mulitple_periods = get_expected_mulitple_times_vA(sensor_distance_to_source,
+    expected_mulitple_periods = get_expected_mulitple_times(sensor_distance_to_source,
                                                                sensor_distance_to_shocksub)
     window_boundaries_time = set_window_boundaries_in_time(expected_mulitple_periods, window_widths)
 
@@ -302,7 +303,7 @@ def feature_extractor_augment_example():
 def main():
     """
     """
-    feature_extractor_augment_example()
+    feature_extractor_J1()
     print("finito {}".format(datetime.datetime.now()))
 
 if __name__ == "__main__":
