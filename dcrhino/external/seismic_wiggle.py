@@ -1,3 +1,5 @@
+import numpy as np
+
 def seismic_wiggle(ax,section, dt, ranges=None, scale=1., color='k',
                    normalize=False):
     """
