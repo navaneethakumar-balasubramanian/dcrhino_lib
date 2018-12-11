@@ -42,7 +42,7 @@ from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotterv2
 
 import matplotlib.pylab as pylab
 
-
+from trace_processing import trim_trace
 
 
 
@@ -136,24 +136,7 @@ def bandpass_filter_trace(output_sampling_rate,trapezoidal_bpf_corner_1,trapezoi
     return bpf_data
 
 
-def trim_trace(min_lag_trimmed_trace, max_lag_trimmed_trace,num_taps_in_decon_filter,output_sampling_rate, data):
-        """
-        add min_lag and max_lag
-        """
-        min_lag = min_lag_trimmed_trace
-        max_lag = max_lag_trimmed_trace
-        zero_time_index = len(data) // 2
-        decon_filter_offset = num_taps_in_decon_filter // 2
-        t0_index = zero_time_index + decon_filter_offset #2750
-        sampling_rate = float(output_sampling_rate)
-        n_samples_back = int(sampling_rate * np.abs(min_lag))
-        n_samples_fwd = int(sampling_rate * max_lag)
 
-        back_ndx = t0_index - n_samples_back
-        fin_ndx = t0_index + n_samples_fwd
-
-        little_data = data[back_ndx:fin_ndx]
-        return little_data
 
 
 def get_axial_tangential_radial_traces(start_time_ts,end_time_ts,entire_xyz,ts_data,sensitivity_xyz,debug_file_name='',debug=True):
@@ -449,20 +432,20 @@ if args.mwd_path is not None:
     global_config = Config(metadata,env_config_parser,config_parser)
     io_helper = IOHelper(global_config)
     #print (io_helper.get_mine_path())
-    
+
     accelerometer_max_voltage = float(f1.attrs['PLAYBACK/accelerometer_max_voltage'])
-    
+
     print ("Mine name = " + global_config.mine_name)
     print ("Rig id = " + global_config.rig_id)
     print ("sensor_serial_number = " + global_config.sensor_serial_number)
     print ("H5 data from " + str(h5_helper.min_dtime) + " to " + str(h5_helper.max_dtime))
-    
+
     holes_array = mwd_helper.get_holes_df_from_rig_timeinterval(mwd_df,global_config.rig_id, h5_helper.min_dtime, h5_helper.max_dtime)
-    
+
     print ("Identified ", len(holes_array) , " holes in this combination of mwd and h5")
-    
+
     extractor = FeatureExtractor(global_config.output_sampling_rate,global_config.primary_window_halfwidth_ms,global_config.multiple_window_search_width_ms,sensor_distance_to_source=global_config.sensor_distance_to_source)
-    
+
     if interactive_mode:
         for i,hole in enumerate(holes_array):
             bph_string = str(hole[bench_column].values[0]) + "-" + str(hole[pattern_column].values[0])  + "-" + str(hole[hole_column].values[0])
@@ -472,45 +455,45 @@ if args.mwd_path is not None:
         except ValueError:
             print "Not a number"
             exit()
-    
-    
-    
+
+
+
     for i,hole in enumerate(holes_array):
         bph_string = str(hole[bench_column].values[0]) + "-" + str(hole[pattern_column].values[0])  + "-" + str(hole[hole_column].values[0])
         if hole_index and i != hole_index:
             print ("Ignoring hole " + bph_string)
             continue
-    
+
         hole_uid = bph_string
         print ("Processing : " + bph_string + " from: " + str(hole[start_time_column].min()) + " to " + str(hole[end_time_column].max()))
-    
+
         if len(hole) == 1:
             print ("Error in this hole. Please check mwd, there should be more than one line.")
             continue
-    
+
         start_ts = calendar.timegm(hole[start_time_column].min().timetuple())
         end_ts = calendar.timegm(hole[end_time_column].max().timetuple())
         if start_ts < h5_helper.min_ts:
             start_ts = h5_helper.min_ts
-    
+
         if end_ts > h5_helper.max_ts:
             print("MWD HAS MORE TIME THAN THE H5" ,end_ts,int(h5_helper.max_ts))
             end_ts = int(h5_helper.max_ts)
-    
-    
+
+
         temppath = io_helper.get_output_base_path(hole_uid)
-    
+
         startdt = datetime.utcfromtimestamp(start_ts)
         enddt = datetime.utcfromtimestamp(end_ts)
         #periods = (enddt-startdt).total_seconds()
         #time_vector = pd.date_range(start=startdt, periods=periods, freq='1S')
-    
-    
+
+
         axial_file_path = os.path.join(temppath,'axial.npy')
         tangential_file_path = os.path.join(temppath,'tangential.npy')
         radial_file_path = os.path.join(temppath,'radial.npy')
         ts_file_path = os.path.join(temppath,'ts.npy')
-    
+
         if os.path.isfile(axial_file_path):
             print ("Using cached files")
             axial = np.load(axial_file_path)
@@ -524,9 +507,9 @@ if args.mwd_path is not None:
             np.save(os.path.join(temppath,'tangential.npy'),tangential)
             np.save(os.path.join(temppath,'radial.npy'),radial)
             np.save(os.path.join(temppath,'ts.npy'),ts_array)
-    
+
         extracted_features_list = get_features_extracted(extractor,axial,tangential,radial,ts_array)
-    
+
         # CREATE TIMEVECTOR WITHOUT MISSING SECONDS
         time_vector = [None]*len(extracted_features_list)
         count = 0
@@ -534,15 +517,15 @@ if args.mwd_path is not None:
             if ts is not None:
                 time_vector[count] = datetime.utcfromtimestamp(int(ts))
                 count += 1
-    
+
         extracted_features_df = pd.DataFrame(extracted_features_list)
         extracted_features_df['computed_elevation'], time_vector = mwd_helper.get_interpolated_column(hole,'computed_elevation',time_vector)
         extracted_features_df[mse_column], time_vector = mwd_helper.get_interpolated_column(hole,mse_column,time_vector)
-    
+
         if interpolated_column_names[0] != '':
             for column_name in interpolated_column_names:
                 extracted_features_df[column_name], time_vector = mwd_helper.get_interpolated_column(hole,column_name,time_vector)
-    
+
         extracted_features_df['depth'] = (np.asarray(extracted_features_df['computed_elevation'].values) - hole[collar_elevation_column].values[0]) * -1
         pdb.set_trace()
         #pdb.set_trace()
@@ -550,38 +533,38 @@ if args.mwd_path is not None:
     #    qclogplotter_depth.plot()
     #    qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'time_plot.png'),global_config,plot_by_depth=False)
     #    qclogplotter_time.plot()
-    
+
         hole.to_csv( os.path.join( temppath, "hole_mwd.csv" ) )
-    
-    
+
+
         qc_input = QCLogPlotInput()
         plot_meta = {}
-    
-    
+
+
         plot_meta['path'] = temppath#os.path.join(level3_csv_out_measurand.data_level_path(), 'unbinned', row.area)
         plot_meta['log_path'] = temppath
-    
-    
-    
-    
-    
+
+
+
+
+
         plot_meta['rop_path'] = os.path.join(plot_meta['path'], 'rop')
-    
-    
+
+
         plot_meta['log_filename'] = os.path.join(temppath,'qc_log.png')
         plot_meta['rop_filename'] = os.path.join(plot_meta['rop_path'],'.png')
-    
-    
-    
+
+
+
         # GENERATE QC PLOT
         title_line1 = "Correlated Trace QC Time Plots, {}, {}".format(global_config.mine_name, hole[start_time_column].min().strftime("%B %d, %Y"))
         title_line2 = "Hole: {}, Pattern/Area: {},Digitizer_ID: {},Sampling rate: {}".format(hole[hole_column].values[0],hole[pattern_column].values[0],global_config.sensor_serial_number,global_config.output_sampling_rate)
         title_line3 = "Sensor distance to source: {},Orientation: {},Drill Rig ID: {}".format(global_config.sensor_distance_to_source,'',global_config.rig_id)
         plot_title = title_line1+'\n'+title_line2+'\n'+title_line3
         #qc_plot(os.path.join(plot_meta['log_path'],"qc_plot.png"),plot_title,axial,tangential,radial,ts_array)
-    
+
         plot_meta['row'] = hole
-    
+
         #TODO: Make qcLogPlotInput have methods that generate amplitude ratio, etc
         qc_input.df = extracted_features_df
         qc_input.hole_start_time = extracted_features_df['datetime'].iloc[0].to_pydatetime()
@@ -597,27 +580,27 @@ if args.mwd_path is not None:
         extracted_features_df['axial_velocity_delay'] = 1.0/(extracted_features_df['axial_delay'])**3
         extracted_features_df['easting'] = [hole[mwd_helper.easting_column_name].values[0]] * len(extracted_features_df['axial_delay'])
         extracted_features_df['northing'] = [hole[mwd_helper.northing_column_name].values[0]] * len(extracted_features_df['axial_delay'])
-    
+
         extracted_features_df.to_csv(os.path.join(plot_meta['log_path'],"extracted_features.csv"))
-        
-    
+
+
         qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'depth_plot.png'),global_config)
         qclogplotter_depth.plot()
         qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'time_plot.png'),global_config,plot_by_depth=False)
         qclogplotter_time.plot()
-    
-    
-    
+
+
+
     #    QCLogPlotter(qc_input)
-    
+
         file = open(os.path.join(temppath,'log.txt'),'w')
-    
+
         file.write("H5 file path: " + str(args.h5_path))
         file.write("\nMWD file path: " + str(args.mwd_path))
         file.write("\nConfig file path: " + str(args.cfg_path))
-    
+
         file.close()
-        
+
 else:
     h5_helper = H5Helper(f1)
 
@@ -627,59 +610,59 @@ else:
     global_config = Config(metadata,env_config_parser,config_parser)
     io_helper = IOHelper(global_config)
     #print (io_helper.get_mine_path())
-    
+
     accelerometer_max_voltage = float(f1.attrs['PLAYBACK/accelerometer_max_voltage'])
-    
+
     print ("Mine name = " + global_config.mine_name)
     print ("Rig id = " + global_config.rig_id)
     print ("sensor_serial_number = " + global_config.sensor_serial_number)
     print ("H5 data from " + str(h5_helper.min_dtime) + " to " + str(h5_helper.max_dtime))
-    
+
     holes_array = mwd_helper.get_holes_df_from_rig_timeinterval(mwd_df,global_config.rig_id, h5_helper.min_dtime, h5_helper.max_dtime)
-    
+
     print ("Identified ", len(holes_array) , " holes in this combination of mwd and h5")
-    
+
     extractor = FeatureExtractor(global_config.output_sampling_rate,global_config.primary_window_halfwidth_ms,global_config.multiple_window_search_width_ms,sensor_distance_to_source=global_config.sensor_distance_to_source)
-    
-    
-    
-    
+
+
+
+
     for i,hole in enumerate(holes_array):
         bph_string = str(hole[bench_column].values[0]) + "-" + str(hole[pattern_column].values[0])  + "-" + str(hole[hole_column].values[0])
         if hole_index and i != hole_index:
             print ("Ignoring hole " + bph_string)
             continue
-    
+
         hole_uid = bph_string
         print ("Processing : " + bph_string + " from: " + str(hole[start_time_column].min()) + " to " + str(hole[end_time_column].max()))
-    
+
         if len(hole) == 1:
             print ("Error in this hole. Please check mwd, there should be more than one line.")
             continue
-    
+
         start_ts = calendar.timegm(hole[start_time_column].min().timetuple())
         end_ts = calendar.timegm(hole[end_time_column].max().timetuple())
         if start_ts < h5_helper.min_ts:
             start_ts = h5_helper.min_ts
-    
+
         if end_ts > h5_helper.max_ts:
             print("MWD HAS MORE TIME THAN THE H5" ,end_ts,int(h5_helper.max_ts))
             end_ts = int(h5_helper.max_ts)
-    
-    
+
+
         temppath = io_helper.get_output_base_path(hole_uid)
-    
+
         startdt = datetime.utcfromtimestamp(start_ts)
         enddt = datetime.utcfromtimestamp(end_ts)
         #periods = (enddt-startdt).total_seconds()
         #time_vector = pd.date_range(start=startdt, periods=periods, freq='1S')
-    
-    
+
+
         axial_file_path = os.path.join(temppath,'axial.npy')
         tangential_file_path = os.path.join(temppath,'tangential.npy')
         radial_file_path = os.path.join(temppath,'radial.npy')
         ts_file_path = os.path.join(temppath,'ts.npy')
-    
+
         if os.path.isfile(axial_file_path):
             print ("Using cached files")
             axial = np.load(axial_file_path)
@@ -693,9 +676,9 @@ else:
             np.save(os.path.join(temppath,'tangential.npy'),tangential)
             np.save(os.path.join(temppath,'radial.npy'),radial)
             np.save(os.path.join(temppath,'ts.npy'),ts_array)
-    
+
         extracted_features_list = get_features_extracted(extractor,axial,tangential,radial,ts_array)
-    
+
         # CREATE TIMEVECTOR WITHOUT MISSING SECONDS
         time_vector = [None]*len(extracted_features_list)
         count = 0
@@ -703,15 +686,15 @@ else:
             if ts is not None:
                 time_vector[count] = datetime.utcfromtimestamp(int(ts))
                 count += 1
-    
+
         extracted_features_df = pd.DataFrame(extracted_features_list)
         extracted_features_df['computed_elevation'], time_vector = mwd_helper.get_interpolated_column(hole,'computed_elevation',time_vector)
         extracted_features_df[mse_column], time_vector = mwd_helper.get_interpolated_column(hole,mse_column,time_vector)
-    
+
         if interpolated_column_names[0] != '':
             for column_name in interpolated_column_names:
                 extracted_features_df[column_name], time_vector = mwd_helper.get_interpolated_column(hole,column_name,time_vector)
-    
+
         extracted_features_df['depth'] = (np.asarray(extracted_features_df['computed_elevation'].values) - hole[collar_elevation_column].values[0]) * -1
         pdb.set_trace()
         #pdb.set_trace()
@@ -719,38 +702,38 @@ else:
     #    qclogplotter_depth.plot()
     #    qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'time_plot.png'),global_config,plot_by_depth=False)
     #    qclogplotter_time.plot()
-    
+
         hole.to_csv( os.path.join( temppath, "hole_mwd.csv" ) )
-    
-    
+
+
         qc_input = QCLogPlotInput()
         plot_meta = {}
-    
-    
+
+
         plot_meta['path'] = temppath#os.path.join(level3_csv_out_measurand.data_level_path(), 'unbinned', row.area)
         plot_meta['log_path'] = temppath
-    
-    
-    
-    
-    
+
+
+
+
+
         plot_meta['rop_path'] = os.path.join(plot_meta['path'], 'rop')
-    
-    
+
+
         plot_meta['log_filename'] = os.path.join(temppath,'qc_log.png')
         plot_meta['rop_filename'] = os.path.join(plot_meta['rop_path'],'.png')
-    
-    
-    
+
+
+
         # GENERATE QC PLOT
         title_line1 = "Correlated Trace QC Time Plots, {}, {}".format(global_config.mine_name, hole[start_time_column].min().strftime("%B %d, %Y"))
         title_line2 = "Hole: {}, Pattern/Area: {},Digitizer_ID: {},Sampling rate: {}".format(hole[hole_column].values[0],hole[pattern_column].values[0],global_config.sensor_serial_number,global_config.output_sampling_rate)
         title_line3 = "Sensor distance to source: {},Orientation: {},Drill Rig ID: {}".format(global_config.sensor_distance_to_source,'',global_config.rig_id)
         plot_title = title_line1+'\n'+title_line2+'\n'+title_line3
         #qc_plot(os.path.join(plot_meta['log_path'],"qc_plot.png"),plot_title,axial,tangential,radial,ts_array)
-    
+
         plot_meta['row'] = hole
-    
+
         #TODO: Make qcLogPlotInput have methods that generate amplitude ratio, etc
         qc_input.df = extracted_features_df
         qc_input.hole_start_time = extracted_features_df['datetime'].iloc[0].to_pydatetime()
@@ -766,23 +749,23 @@ else:
         extracted_features_df['axial_velocity_delay'] = 1.0/(extracted_features_df['axial_delay'])**3
         extracted_features_df['easting'] = [hole[mwd_helper.easting_column_name].values[0]] * len(extracted_features_df['axial_delay'])
         extracted_features_df['northing'] = [hole[mwd_helper.northing_column_name].values[0]] * len(extracted_features_df['axial_delay'])
-    
+
         extracted_features_df.to_csv(os.path.join(plot_meta['log_path'],"extracted_features.csv"))
-        
-    
+
+
         qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'depth_plot.png'),global_config)
         qclogplotter_depth.plot()
         qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,hole,extracted_features_df,bph_string,os.path.join(temppath,'time_plot.png'),global_config,plot_by_depth=False)
         qclogplotter_time.plot()
-    
-    
-    
+
+
+
     #    QCLogPlotter(qc_input)
-    
+
         file = open(os.path.join(temppath,'log.txt'),'w')
-    
+
         file.write("H5 file path: " + str(args.h5_path))
         file.write("\nMWD file path: " + str(args.mwd_path))
         file.write("\nConfig file path: " + str(args.cfg_path))
-    
+
         file.close()
