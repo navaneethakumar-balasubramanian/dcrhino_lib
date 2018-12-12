@@ -13,47 +13,40 @@ import matplotlib.pyplot as plt
 import os
 import pdb
 import pandas as pd
-import sys
 import warnings
 
 from ConfigParser import ConfigParser
-from datetime import datetime
-from functools import partial
-from operator import is_not
 
 from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
-from dcrhino.analysis.signal_processing.seismic_processing import get_tangential_despike_filtered_trace_features
+from dcrhino.analysis.unstable.feature_extraction.feature_extraction_tangential_bob_20181031 import get_tangential_despike_filtered_trace_features
 from dcrhino.analysis.unstable.feature_extraction.feature_extraction_20181211 import feature_extractor_J1
 from dcrhino.process_pipeline.config import Config
-from dcrhino.process_pipeline.trace_processing import TraceProcessing
 from dcrhino.process_pipeline.feature_extractor import FeatureExtractor
 from dcrhino.process_pipeline.h5_helper import H5Helper
 from dcrhino.process_pipeline.io_helper import IOHelper
-from dcrhino.process_pipeline.mwd_helper import MwdDFHelper
-from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotter,QCLogPlotInput
-from dcrhino.process_pipeline.qc_log_plotter_nomwd import QCLogPlotter_nomwd
-from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotterv2
-from dcrhino.process_pipeline.util import drop_empty_columns_from_dataframe
+from dcrhino.process_pipeline.trace_processing import TraceProcessing
+from dcrhino.process_pipeline.trace_processing import trim_trace
 
+#from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotter,QCLogPlotInput
+#from dcrhino.process_pipeline.qc_log_plotter_nomwd import QCLogPlotter_nomwd
+#from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotterv2
 
-
-from trace_processing import trim_trace
 
 warnings.filterwarnings("ignore")
 
 
 #from dcrhino.analysis.graphical.unbinned_qc_log_plots_v3_west_angelas import pseudodensity_panel,primary_pseudovelocity_panel,reflection_coefficient_panel
-#from dcrhino.analysis.math.mwd_tools import interpolate_to_assign_depths_to_log_csv
-#from dcrhino.analysis.signal_processing.seismic_processing import calculate_spiking_decon_filter
-#plt.rcParams['figure.figsize'] = [20, 12]
 
 BIN_PATH = os.path.dirname(os.path.abspath(__file__))
 
+#<Put these in dcrhino.process_pipeline.util>
 def get_ts_array_indexes(ts,arr):
     return np.array(np.where(arr == int(ts)))
 
 def get_values_from_index(index_ar, values_ar, dtype):
     return values_ar[index_ar.min():index_ar.max()]
+#</Put these in dcrhino.process_pipeline.util>
+
 
 def get_df_acceleration_stats(traces_dict):
     df_acceleration_stats = pd.DataFrame()
@@ -76,7 +69,8 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
     actual_time_stamp maybe?
 
     ::axial_traces:: these are the traces that are input to the feature extractor
-
+    @note: interval_seconds = (int(end_time_ts) - int(start_time_ts))
+    this line could better be int(floor(end_time_ts)) - int(ceil(start_time_ts))
     """
     trace_processor = TraceProcessing(global_config, is_ide_file, accelerometer_max_voltage)
     entire_ts = ts_data
@@ -90,13 +84,11 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
     interval_seconds = (int(end_time_ts) - int(start_time_ts))
     trace_duration = 1.0
     num_traces_to_process = int(interval_seconds / trace_duration)
-    samples_per_trace = int(trace_duration / global_config.dt)
-    samples_per_trimmed_trace = global_config.n_samples_trimmed_trace
+    #samples_per_trace = int(trace_duration / global_config.dt)
+    #samples_per_trimmed_trace = global_config.n_samples_trimmed_trace
 
     print ("Getting axial,tangential,radial traces from interval: {} - {} total of {} seconds".format(start_time_ts, end_time_ts, interval_seconds))
-    #axial_traces = np.full((num_traces_to_process, samples_per_trimmed_trace), np.nan)
-    #radial_traces = np.full((num_traces_to_process, samples_per_trimmed_trace), np.nan)
-    #tangential_traces = np.full((num_traces_to_process, samples_per_trimmed_trace), np.nan)
+
     ts = [None] * interval_seconds
 
     output_dict = {}
@@ -144,27 +136,6 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
     return output_dict
 
 
-def get_features_extracted(extractor, axial_traces, tangential_traces,
-                           radial_traces, ts_array, global_config):
-    print("Extracting features")
-    initial_ts = ts_array[0]
-    extracted_features_list = [None] * len(ts_array)
-    for i, actual_ts in enumerate(ts_array):
-        axial_trace = axial_traces[i]
-        tangential_trace = tangential_traces[i]
-        radial_trace = radial_traces[i]
-
-        if axial_trace is None:
-            print ("Missing " + str((initial_ts+i)) + " in this h5 file sequence")
-            #continue
-
-        extracted_features = extractor.extract_features(actual_ts,axial_trace,tangential_trace,radial_trace,global_config.n_samples_trimmed_trace,-global_config.min_lag_trimmed_trace)
-        extracted_features_list[i] = extracted_features
-
-    extracted_features_list = [x for x in extracted_features_list if x is not None]
-    print ("Features extracted")
-    return extracted_features_list
-
 def get_features_extracted_v2(traces_dict, global_config, recipe_list):
     """
     #can we get a definition of 'actual timestamp'... otherwise maybe we can give
@@ -198,10 +169,6 @@ def get_features_extracted_v2(traces_dict, global_config, recipe_list):
         radial_trace = radial_traces[i]
         tangential_despiked_filtered_correlated = tangential_despiked_filtered_correlated_traces[i,:]
 
-
-        if axial_trace is None:
-            print ("Missing {} in this h5 file sequence".format(initial_timestamp + i))
-            #continue
         if 'original' in recipe_list:
 
             original_features = extractor.extract_features(actual_timestamp, axial_trace, tangential_trace,
@@ -209,7 +176,6 @@ def get_features_extracted_v2(traces_dict, global_config, recipe_list):
                                                        -global_config.min_lag_trimmed_trace)
             all_features_great_and_small.update(original_features)
         if 'tangential_201810' in recipe_list:
-            #@TODO: add '1810' tag to features from get_tangential_despike_filtered_trace_features
             feature_dict = {}
             trim_tang_dspk = trim_trace(global_config.min_lag_trimmed_trace, global_config.max_lag_trimmed_trace,
                                         global_config.num_taps_in_decon_filter, global_config.output_sampling_rate,
@@ -217,53 +183,23 @@ def get_features_extracted_v2(traces_dict, global_config, recipe_list):
             qq = np.max(trim_tang_dspk)/np.max(tangential_trace)
             trim_tang_dspk *= qq
 
-            feature_dict = get_tangential_despike_filtered_trace_features(trim_tang_dspk, global_config, sanity_check_plot=False)
-            #<add '1810' tag to features from get_tangential_despike_filtered_trace_features>
-            feature_dict['1810_tangential_multiple1_amplitude_poly'] = feature_dict.pop('tangential_multiple1_amplitude_poly')
-            feature_dict['1810_tangential_primary_amplitude_poly'] = feature_dict.pop('tangential_primary_amplitude_poly')
-            feature_dict['1810_tangential_multiple1_time_poly'] = feature_dict.pop('tangential_multiple1_time_poly')
-            feature_dict['1810_tangential_primary_time_poly'] = feature_dict.pop('tangential_primary_time_poly')
-            feature_dict['1810_tangential_amplitude_ratio'] =  np.sqrt( feature_dict['1810_tangential_multiple1_amplitude_poly'] / feature_dict['1810_tangential_primary_amplitude_poly'])
-            feature_dict['1810_tangential_impedance']  = (1 - feature_dict['1810_tangential_amplitude_ratio'] ) / (1 + feature_dict['1810_tangential_amplitude_ratio'] )
-            #feature_dict['shear_modulus'] = feature_dict['tangentia(l_impedance']
-            feature_dict['1810_tangential_delay']  = feature_dict['1810_tangential_multiple1_time_poly'] - feature_dict['1810_tangential_primary_time_poly']
-            #<add '1810' tag to features from get_tangential_despike_filtered_trace_features>
+            feature_dict = get_tangential_despike_filtered_trace_features(trim_tang_dspk, global_config,
+                                                                          sanity_check_plot=False)
             all_features_great_and_small.update(feature_dict)
-            #feature_list_for_df[i_trace] = feature_dict
 
         if 'J1' in recipe_list:
-            #<From [FEATURE_EXTRACTION] config>
-            window_widths = {}
-            component = 'axial'
-            window_widths[component] = {}
-            window_widths[component]['primary'] = 4.0 * 1e-3
-            window_widths[component]['multiple_1'] = 4.0 * 1e-3
-            window_widths[component]['multiple_2'] = 4.0 * 1e-3
-            window_widths[component]['multiple_3'] = 4.0 * 1e-3
-            component = 'tangential'
-            window_widths[component] = {}
-            window_widths[component]['primary'] = 4.0 * 1e-3
-            window_widths[component]['multiple_1'] = 4.0 * 1e-3
-            window_widths[component]['multiple_2'] = 4.0 * 1e-3
-            window_widths[component]['multiple_3'] = 4.0 * 1e-3
-            #</From [FEATURE_EXTRACTION] config>
             trimmed_traces_dict = {}
             trimmed_traces_dict['axial'] = axial_trace
             trimmed_traces_dict['tangential'] = tangential_trace
 
-            feature_dict = feature_extractor_J1(global_config, window_widths, trimmed_traces_dict)
-            for k in feature_dict.keys():
-                print(k, feature_dict[k])
-                feature_dict['J1_{}'.format(k)] = feature_dict.pop('{}'.format(k))
-            print('populate')
-            print('awfk')
-            #pdb.set_trace()
+            feature_dict = feature_extractor_J1(global_config, trimmed_traces_dict)
             all_features_great_and_small.update(feature_dict)
 
         extracted_features_list[i] = all_features_great_and_small
     pdb.set_trace()
     temp_df_to_file = pd.DataFrame(extracted_features_list)
     temp_df_to_file.to_csv('/tmp/df_tmp.csv')
+    print("hey Thiago do we still need the line below if we are using df.dropna()???")
     extracted_features_list = [x for x in extracted_features_list if x is not None]
     print ("Features extracted")
     return extracted_features_list
@@ -335,19 +271,30 @@ def process_h5_file(h5py_file, output_folder, cfg_file_path=False):
 #            sys.exit(1)
     #</DO we need this for v2?>
     pdb.set_trace()
-    traces_dict = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper.data_xyz, h5_helper.ts, h5_helper.sensitivity_xyz, h5_helper.is_ide_file, accelerometer_max_voltage, global_config)
-    #['tangential_filtered_despiked_correlated_array', 'tangential_trimmed_filtered_correlated_array',
-      #'axial_correlated_array', 'axial_despiked_correlated_array', 'radial_trimmed_filtered_correlated_array',
-      #'radial_despiked_correlated_array', 'axial_deconvolved_array', 'radial_min_acceleration_array',
-      #'radial_filtered_despiked_correlated_array', 'tangential_filtered_correlated_array',
-      #'tangential_min_acceleration_array', 'axial_interpolated_array', 'radial_interpolated_array',
-      #'axial_filtered_despiked_correlated_array', 'radial_correlated_array',
-      #'axial_trimmed_filtered_correlated_array', 'axial_max_acceleration_array', 'axial_min_acceleration_array',
-      #'radial_max_acceleration_array', 'tangential_interpolated_array', 'tangential_despiked_correlated_array',
-      #'ts_array', 'radial_deconvolved_array', 'axial_filtered_correlated_array',
-      #'radial_filtered_correlated_array', 'tangential_max_acceleration_array', 'tangential_deconvolved_array',
-      #'tangential_correlated_array']
+    load_debug = True
+    if load_debug:
+        traces_dict = {}
+        tmp = np.load(os.path.join(temppath, 'axial.npy'))
+        traces_dict['axial_trimmed_filtered_correlated_array'] = tmp
+
+        tmp = np.load(os.path.join(temppath, 'tangential.npy'))
+        traces_dict['tangential_trimmed_filtered_correlated_array'] = tmp
+
+        tmp = np.load(os.path.join(temppath, 'radial.npy'))
+        traces_dict['radial_trimmed_filtered_correlated_array'] = tmp
+
+        tmp = np.load(os.path.join(temppath, 'tangential_filtered_despiked_correlated.npy'))
+        traces_dict['tangential_filtered_despiked_correlated_array'] = tmp
+
+        tmp = np.load(os.path.join(temppath, 'ts.npy'))
+        traces_dict['ts_array'] = tmp
+    else:
+        traces_dict = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper.data_xyz,
+                                                         h5_helper.ts, h5_helper.sensitivity_xyz,
+                                                         h5_helper.is_ide_file,
+                                                         accelerometer_max_voltage, global_config)
     # SAVE FILES
+    pdb.set_trace()
     for _key in traces_dict.keys():
         if _key == 'axial_trimmed_filtered_correlated_array':
             save_or_append_npy(os.path.join(temppath, 'axial.npy'), traces_dict[_key], append_mode)
@@ -363,28 +310,15 @@ def process_h5_file(h5py_file, output_folder, cfg_file_path=False):
 
     #<Prepare inputs for feature extraction>
     #need switches here to control which feature extraction is being used
-    #<Original>
-    axial = traces_dict['axial_trimmed_filtered_correlated_array']
-    radial = traces_dict['radial_trimmed_filtered_correlated_array']
-    tangential = traces_dict['tangential_trimmed_filtered_correlated_array']
-    ts_array = traces_dict['ts_array']
-
-    #</Original>
-    #<Tangential>
 
     feature_recipe_list = ['original', 'tangential_201810', 'J1', 'extra_crispy']
     extracted_features_list = get_features_extracted_v2(traces_dict, global_config,
                                                         feature_recipe_list)
 
-    #<Original>
-    #pdb.set_trace()
-    extracted_features_list = get_features_extracted(extractor, axial, tangential,
-                                                     radial, ts_array, global_config)
-
     extracted_features_df = pd.DataFrame(extracted_features_list)
-    extracted_features_df = drop_empty_columns_from_dataframe(extracted_features_df)
-    acceleration_stats_df = get_df_acceleration_stats(traces_dict)
+    extracted_features_df.dropna(axis=1, how='all', inplace=True)
 
+    acceleration_stats_df = get_df_acceleration_stats(traces_dict)
     extracted_features_df_path = os.path.join(temppath,"extracted_features.csv")
     acceleration_stats_df_path = os.path.join(temppath,"acceleration_values_by_second.csv")
 
