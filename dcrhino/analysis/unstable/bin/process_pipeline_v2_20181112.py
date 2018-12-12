@@ -39,7 +39,7 @@ from dcrhino.process_pipeline.config import Config
 #from fatiando.vis.mpl import seismic_wiggle
 from dcrhino.analysis.graphical.seismic_wiggle_fatiando_dev import seismic_wiggle
 #from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotterv2
-from dcrhino.analysis.signal_processing.seismic_processing import get_tangential_despike_filtered_trace_features
+from dcrhino.analysis.unstable.feature_extraction.feature_extraction_tangential_bob_20181031 import get_tangential_despike_filtered_trace_features
 
 from dcrhino.process_pipeline_pointer import trim_trace#, get_features_extracted
 from dcrhino.analysis.signal_processing.mwd_tools import reject_traces_with_small_rop
