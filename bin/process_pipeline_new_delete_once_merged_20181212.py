@@ -33,7 +33,7 @@ from dcrhino.process_pipeline.mwd_helper import MwdDFHelper
 from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotter,QCLogPlotInput
 from dcrhino.process_pipeline.qc_log_plotter_nomwd import QCLogPlotter_nomwd
 from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotterv2
-
+from dcrhino.process_pipeline.util import drop_empty_columns_from_dataframe
 
 
 
@@ -170,24 +170,6 @@ def get_features_extracted_v2(traces_dict, global_config, recipe_list):
     #can we get a definition of 'actual timestamp'... otherwise maybe we can give
     it a better name - "signed" actual_karl
 
-    for i_trace in range(num_traces_to_feature_extract):
-        trace_data = filtered_despiked_traces[component][i_trace,:]
-        trimmed_trace_data = trim_trace(min_lag_trimmed_trace, max_lag_trimmed_trace,
-                                        num_taps_in_decon_filter, sampling_rate,
-                                        filtered_despiked_traces[component][i_trace,:])
-        #pdb.set_trace()
-        #qq = np.max(filtered_correlated_traces[component][i_trace,:])/np.max(trimmed_trace_data)
-        #trimmed_trace_data *= qq#np.max(filtered_correlated_traces[component][i_trace,:])/np.max(trimmed_trace_data)
-        #pdb.set_trace()
-        feature_dict = get_tangential_despike_filtered_trace_features(trimmed_trace_data, global_config, sanity_check_plot=False)
-        feature_dict['tangential_amplitude_ratio'] =  np.sqrt( feature_dict['tangential_multiple1_amplitude_poly'] / feature_dict['tangential_primary_amplitude_poly'])
-        feature_dict['tangential_impedance']  = (1 - feature_dict['tangential_amplitude_ratio'] ) / (1 + feature_dict['tangential_amplitude_ratio'] )
-        #feature_dict['shear_modulus'] = feature_dict['tangentia(l_impedance']
-        feature_dict['tangential_delay']  = feature_dict['tangential_multiple1_time_poly'] - feature_dict['tangential_primary_time_poly']
-        feature_dict['hole_id'] = hole_uid
-        feature_list_for_df[i_trace] = feature_dict
-
-    #pdb.set_trace()
     tangential_feature_df = pd.DataFrame(feature_list_for_df)
 
     svel = 1./(tangential_feature_df['tangential_delay'])#/global_config.dt)#1./delay**4
@@ -269,7 +251,7 @@ def get_features_extracted_v2(traces_dict, global_config, recipe_list):
             trimmed_traces_dict['axial'] = axial_trace
             trimmed_traces_dict['tangential'] = tangential_trace
 
-            feature_dict =feature_extractor_J1(global_config, window_widths, trimmed_traces_dict)
+            feature_dict = feature_extractor_J1(global_config, window_widths, trimmed_traces_dict)
             for k in feature_dict.keys():
                 print(k, feature_dict[k])
                 feature_dict['J1_{}'.format(k)] = feature_dict.pop('{}'.format(k))
@@ -400,6 +382,7 @@ def process_h5_file(h5py_file, output_folder, cfg_file_path=False):
                                                      radial, ts_array, global_config)
 
     extracted_features_df = pd.DataFrame(extracted_features_list)
+    extracted_features_df = drop_empty_columns_from_dataframe(extracted_features_df)
     acceleration_stats_df = get_df_acceleration_stats(traces_dict)
 
     extracted_features_df_path = os.path.join(temppath,"extracted_features.csv")
