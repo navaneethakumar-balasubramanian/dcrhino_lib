@@ -40,6 +40,7 @@ files_props = []
 for file_match in matches:
     try:
         file_path = os.path.join(folder_path,file_match)
+        file_path = os.path.abspath(file_path)
 
         file_size = os.path.getsize(file_path)
 

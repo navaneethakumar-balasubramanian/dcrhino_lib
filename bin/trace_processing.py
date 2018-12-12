@@ -4,6 +4,8 @@ import scipy
 import scipy.signal as ssig
 import pdb
 #from dcrhino.analysis.signal_processing.seismic_processing import calculate_spiking_decon_filter
+from dcrhino.process_pipeline.trace_processing import trim_trace
+
 
 class TraceProcessing:
     def __init__(self,global_config,is_ide_file,accelerometer_max_voltage):
@@ -59,26 +61,27 @@ class TraceProcessing:
         return output_dict
 
     def _trim_trace(self, data):
-            """
-            add min_lag and max_lag
-            """
-            min_lag = self.config.min_lag_trimmed_trace
-            max_lag = self.config.max_lag_trimmed_trace
-            num_taps_in_decon_filter = self.config.num_taps_in_decon_filter
-            output_sampling_rate = self.config.sampling_rate
-
-            zero_time_index = len(data) // 2
-            decon_filter_offset = num_taps_in_decon_filter // 2
-            t0_index = zero_time_index + decon_filter_offset #2750
-            sampling_rate = float(output_sampling_rate)
-            n_samples_back = int(sampling_rate * np.abs(min_lag))
-            n_samples_fwd = int(sampling_rate * max_lag)
-
-            back_ndx = t0_index - n_samples_back
-            fin_ndx = t0_index + n_samples_fwd
-
-            little_data = data[back_ndx:fin_ndx]
-            return little_data
+        """
+        add min_lag and max_lag
+        """
+        min_lag = self.config.min_lag_trimmed_trace
+        max_lag = self.config.max_lag_trimmed_trace
+        num_taps_in_decon_filter = self.config.num_taps_in_decon_filter
+        output_sampling_rate = self.config.sampling_rate
+        little_data = trim_trace(min_lag, max_lag, num_taps_in_decon_filter,
+                                 output_sampling_rate, data)
+#        zero_time_index = len(data) // 2
+#        decon_filter_offset = num_taps_in_decon_filter // 2
+#        t0_index = zero_time_index + decon_filter_offset #2750
+#        sampling_rate = float(output_sampling_rate)
+#        n_samples_back = int(sampling_rate * np.abs(min_lag))
+#        n_samples_fwd = int(sampling_rate * max_lag)
+#
+#        back_ndx = t0_index - n_samples_back
+#        fin_ndx = t0_index + n_samples_fwd
+#
+#        little_data = data[back_ndx:fin_ndx]
+        return little_data
 
 
 
