@@ -160,7 +160,7 @@ def get_features_extracted_v2(traces_dict, global_config, recipe_list):
     #pdb.set_trace()
     timestamp_array = traces_dict['ts_array']
     print("Extracting features")
-    initial_timestamp = timestamp_array[0]
+    #initial_timestamp = timestamp_array[0]
     extracted_features_list = [None] * len(timestamp_array)
     for i, actual_timestamp in enumerate(timestamp_array):
         all_features_great_and_small = {}
@@ -176,7 +176,6 @@ def get_features_extracted_v2(traces_dict, global_config, recipe_list):
                                                        -global_config.min_lag_trimmed_trace)
             all_features_great_and_small.update(original_features)
         if 'tangential_201810' in recipe_list:
-            feature_dict = {}
             trim_tang_dspk = trim_trace(global_config.min_lag_trimmed_trace, global_config.max_lag_trimmed_trace,
                                         global_config.num_taps_in_decon_filter, global_config.output_sampling_rate,
                                         tangential_despiked_filtered_correlated)
@@ -196,10 +195,9 @@ def get_features_extracted_v2(traces_dict, global_config, recipe_list):
             all_features_great_and_small.update(feature_dict)
 
         extracted_features_list[i] = all_features_great_and_small
-    pdb.set_trace()
-    temp_df_to_file = pd.DataFrame(extracted_features_list)
-    temp_df_to_file.to_csv('/tmp/df_tmp.csv')
-    print("hey Thiago do we still need the line below if we are using df.dropna()???")
+    #pdb.set_trace()
+    #temp_df_to_file = pd.DataFrame(extracted_features_list)
+    #temp_df_to_file.to_csv('/tmp/df_tmp.csv')
     extracted_features_list = [x for x in extracted_features_list if x is not None]
     print ("Features extracted")
     return extracted_features_list
@@ -244,10 +242,6 @@ def process_h5_file(h5py_file, output_folder, cfg_file_path=False):
     print ("sensor_serial_number = " + global_config.sensor_serial_number)
     print ("H5 data from " + str(h5_helper.min_dtime) + " to " + str(h5_helper.max_dtime))
 
-    extractor = FeatureExtractor(global_config.output_sampling_rate,
-                                 global_config.primary_window_halfwidth_ms,
-                                 global_config.multiple_window_search_width_ms,
-                                 sensor_distance_to_source=global_config.sensor_distance_to_source)
 
     start_ts = int(h5_helper.min_ts)
     end_ts = int(h5_helper.max_ts)
