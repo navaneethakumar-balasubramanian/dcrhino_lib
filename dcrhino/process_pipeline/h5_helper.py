@@ -24,16 +24,18 @@ class H5Helper:
         self.z_data = np.asarray(self.h5f.get('z'))
         self.data_xyz = [self.x_data, self.y_data, self.z_data]
 
-        laptop_ts = self.h5f.get('laptop_ts')
-        #pdb.set_trace()
-        if laptop_ts is not None:
-            self.clock_ts = np.asarray(self.h5f.get('laptop_ts'))
-            self.min_ts = self.clock_ts.min()
-            self.max_ts = self.clock_ts.max()
-        else:
-            self.clock_ts = None
-            self.min_ts = self._ts.min()
-            self.max_ts = self._ts.max()
+        # laptop_ts = self.h5f.get('laptop_ts')
+        # if laptop_ts is not None:
+        #     self.clock_ts = np.asarray(self.h5f.get('laptop_ts'))
+        #     self.min_ts = self.clock_ts.min()
+        #     self.max_ts = self.clock_ts.max()
+        # else:
+        #     self.clock_ts = None
+        #     self.min_ts = self._ts.min()
+        #     self.max_ts = self._ts.max()
+        self.clock_ts = None
+        self.min_ts = self._ts.min()
+        self.max_ts = self._ts.max()
 
         self.max_dtime = datetime.utcfromtimestamp(int(self.max_ts))
         self.min_dtime = datetime.utcfromtimestamp(int(self.min_ts))
