@@ -167,7 +167,8 @@ class FeatureExtractor():
         return feature_dict
 
 
-    def extract_features(self,data_datetime,axial_trace,tangential_trace,radial_trace,n_samples,min_lag):
+    def extract_features(self, data_datetime, axial_trace, tangential_trace,
+                         radial_trace, n_samples, min_lag):
         """
         this be an atomic feature extractor, taking as input a single time chunk,
         1s (for now).

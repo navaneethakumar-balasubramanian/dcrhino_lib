@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 from dcrhino.process_pipeline.config import Config
 
 def make_dirs_if_needed(path):
-        if not os.path.exists(path):
-            os.makedirs(path)
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 def get_values_from_index(index_ar, values_ar):
     return values_ar[index_ar.min():index_ar.max()]
@@ -50,39 +50,48 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
     mwd_df = temp
     print "Splitting mwd by bench,pattern,hole"
     holes = mwdHelper._split_df_to_bph_df(mwd_df)
-    print "Found " + str(len(holes)) + " holes in this mwd"
+    print "Found {} holes in this mwd".format(len(holes))
     holes_h5 = {}
 
+    #Loop over holes, for each one create a
     for hole in holes:
 
         hole_rig_ids = hole[mwdHelper.rig_id_column_name].unique()
-        for rig_id in hole_rig_ids:
+        if len(hole_rig_ids) == 1:
+            rig_id = hole_rig_ids[0]
+        else:
+            continue
 
-            bench = hole[mwdHelper.bench_column_name].values[0]
-            pattern = hole[mwdHelper.pattern_column_name].values[0]
-            hole_id = hole[mwdHelper.hole_column_name].values[0]
-            print hole[mwdHelper.start_time_column_name].min()
-            hole_start_time = int(calendar.timegm(hole[mwdHelper.start_time_column_name].min().timetuple()))
-            hole_end_time = int(calendar.timegm(hole[mwdHelper.start_time_column_name].max().timetuple()))
+        bench = hole[mwdHelper.bench_column_name].values[0]
+        pattern = hole[mwdHelper.pattern_column_name].values[0]
+        hole_id = hole[mwdHelper.hole_column_name].values[0]
+        print hole[mwdHelper.start_time_column_name].min()
+        hole_start_time = int(calendar.timegm(hole[mwdHelper.start_time_column_name].min().timetuple()))
+        hole_end_time = int(calendar.timegm(hole[mwdHelper.start_time_column_name].max().timetuple()))
 
-            bph_str = str(bench) + "," + str(pattern) + "," +str(hole_id) +','+ str(rig_id)
-            for h5 in h5_iterator_df.itertuples():
-                #pdb.set_trace()
-                temp_id = bph_str + ',' + h5.sensor_serial_number
-                if (rig_id == h5.rig_id) and ((int(hole_start_time) >= h5.min_ts and int(hole_start_time) <= h5.max_ts) or (int(hole_end_time) >= h5.min_ts and int(hole_end_time) <= h5.max_ts)) :
-                    if temp_id not in holes_h5.keys():
-                        holes_h5[temp_id] = {}
-                        holes_h5[temp_id]['bench'] = bench
-                        holes_h5[temp_id]['pattern'] = pattern
-                        holes_h5[temp_id]['hole'] = hole
-                        holes_h5[temp_id]['min_ts'] = hole_start_time
-                        holes_h5[temp_id]['max_ts'] = hole_end_time
-                        holes_h5[temp_id]['h5s'] = []
-                        holes_h5[temp_id]['hole_mwd_df'] = hole
-                    holes_h5[temp_id]['h5s'].append(h5.Index)
-                    print "MATCH FOUND - " + temp_id + " in " + h5.file_path
-                    print hole_start_time, hole_end_time, h5.min_ts, h5.max_ts
+        #bph_str = str(bench) + "," + str(pattern) + "," +str(hole_id) +','+ str(rig_id)
+        bph_str = '{},{},{},{}'.format(bench, pattern, hole_id, rig_id)
+        for h5 in h5_iterator_df.itertuples():
+            #pdb.set_trace()
+            temp_id = '{},{}'.format(bph_str, h5.sensor_serial_number)
+            cond_1 = (rig_id == h5.rig_id)
+            cond_2 = (int(hole_start_time) >= h5.min_ts and int(hole_start_time) <= h5.max_ts)
+            cond_3 = (int(hole_end_time) >= h5.min_ts and int(hole_end_time) <= h5.max_ts)
+            if cond_1 and (cond_2 or cond_3):
+                if temp_id not in holes_h5.keys():
+                    holes_h5[temp_id] = {}
+                    holes_h5[temp_id]['bench'] = bench
+                    holes_h5[temp_id]['pattern'] = pattern
+                    holes_h5[temp_id]['hole'] = hole
+                    holes_h5[temp_id]['min_ts'] = hole_start_time
+                    holes_h5[temp_id]['max_ts'] = hole_end_time
+                    holes_h5[temp_id]['h5s'] = []
+                    holes_h5[temp_id]['hole_mwd_df'] = hole
+                holes_h5[temp_id]['h5s'].append(h5.Index)
+                print "MATCH FOUND - {} in {}".format(temp_id, h5.file_path)
+                print hole_start_time, hole_end_time, h5.min_ts, h5.max_ts
 
+    #pdb.set_trace()
     for hole in holes_h5.keys():
         #if hole != '88,5,221,DR5,S1020':
         #    print hole , 'skipped'
@@ -188,19 +197,32 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
 
 
 if __name__ == "__main__":
-    argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
-    argparser.add_argument('-i', '--h5-iterator-path', help="H5 Iterator File Path", required=True)
-    argparser.add_argument('-m', '--mwd-path', help="MWD File Path", required=True)
-    argparser.add_argument('-mmap','--mwd-map-path',help="MWD Map File Path", required=True)
-    argparser.add_argument('-o','--output-folder-path',help="Output Folder Path", required=True)
-    args = argparser.parse_args()
+    use_argparser = True
+    if use_argparser:
+        argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
+        argparser.add_argument('-i', '--h5-iterator-path', help="H5 Iterator File Path", required=True)
+        argparser.add_argument('-m', '--mwd-path', help="MWD File Path", required=True)
+        argparser.add_argument('-mmap','--mwd-map-path',help="MWD Map File Path", required=True)
+        argparser.add_argument('-o','--output-folder-path',help="Output Folder Path", required=True)
+        args = argparser.parse_args()
 
-    print "Loading h5 iterator",args.h5_iterator_path
-    h5_iterator_df = pd.read_csv(args.h5_iterator_path)
-    print "Loading MWD",args.mwd_path
-    mwd_df = pd.read_csv(args.mwd_path)
-    print "Loading MWD map",args.mwd_map_path
-    with open(args.mwd_map_path) as f:
+        h5_iterator_path = args.h5_iterator_path
+        mwd_path = args.mwd_path
+        mwd_map_path = args.mwd_map_path
+        output_folder_path = args.output_folder_path
+    else:
+        mine_path = '/home/kkappler/data/datacloud/teck/line_creek/'
+        h5_iterator_path = os.path.join(mine_path, 'test_line_creek_iterator_ssx.csv')
+        output_folder_path = os.path.join(mine_path, 'processed_data')
+        mwd_path = os.path.join(mine_path, 'mwd/line_creek_mwd_20180924.csv')
+        mwd_map_path = os.path.join(mine_path, 'mwd/mmap.json')
+
+    print("Loading h5 iterator {}".format(h5_iterator_path))
+    h5_iterator_df = pd.read_csv(h5_iterator_path)
+    print("Loading MWD {}".format(mwd_path))
+    mwd_df = pd.read_csv(mwd_path)
+    print("Loading MWD map {}".format(mwd_map_path))
+    with open(mwd_map_path) as f:
         mmap = json.load(f)
 
-    process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,args.output_folder_path)
+    process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder_path)
