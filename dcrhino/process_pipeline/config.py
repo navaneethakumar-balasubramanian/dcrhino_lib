@@ -139,9 +139,17 @@ class Config( object ):
         return int(n_samples_fwd + n_samples_back)
 
     def set_config_parser( self, config_parser ):
+        """
+        can be the env_config_parser here ...
+        """
         for section in config_parser.sections():
             for option in config_parser.options(section):
-                var = getattr(self,option)
+                #<Dear Thiago, we are sorry, it's complicated, but lets talk about it tomrrow>
+                try:
+                    var = config_parser.get(section, option)
+                except:
+                    var = getattr(self,option)
+                #</Dear Thiago, we are sorry, it's complicated, but lets talk about it tomrrow>
                 if isinstance( var, int ):
                     setattr(self,option,config_parser.getint(section,option))
                 if isinstance( var, float ):

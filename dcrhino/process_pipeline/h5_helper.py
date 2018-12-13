@@ -15,9 +15,9 @@ import pdb
 
 class H5Helper:
 
-    def __init__(self, h5f,global):
+    def __init__(self, h5f):
         self.h5f = h5f
-        self.metadata = self._extract_metadata_from_h5_file(global_config)
+        self.metadata = self._extract_metadata_from_h5_file()
         self._ts = np.asarray(self.h5f.get('ts'))
         self.x_data = np.asarray(self.h5f.get('x'))
         self.y_data = np.asarray(self.h5f.get('y'))
