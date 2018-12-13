@@ -220,54 +220,54 @@ class Metadata(object):
     __slots__ = [key for key,value in METADATA_HEADER_FORMAT_KEYS.items()]
 
     def __init__(self,cfg):
-        try:
-            shocksub_length = 0
-            for key,key_type in METADATA_HEADER_FORMAT_KEYS.items():
-                setattr(self,key,None)
-            value = cfg.getint("COLLECTION","output_sampling_rate")
-            setattr(self,"output_sampling_rate",value)
-            for section in ["INSTALLATION","PROCESSING","COLLECTION","FEATURE_EXTRACTION_J1"]:
-                for item in cfg.items(section):
-                    key = item[0]
-                    #pdb.set_trace()
-                    if key in METADATA_HEADER_FORMAT_KEYS.keys():
-                        key_type = METADATA_HEADER_FORMAT_KEYS[key]
-                        if key_type is DataType.FLOAT:
-                            value = cfg.getfloat(section,key)
-                        elif key_type is DataType.INTEGER:
-                            value = cfg.getint(section,key)
-                        elif key_type is DataType.DATE:
-                            value = datetime.strptime(cfg.get(section,key),"%Y-%m-%d")
-                        elif key_type is DataType.DATETIME:
-                            value = datetime.strptime(cfg.get(section,key),"%Y-%m-%d %H:%M:%S.%f")
-                        elif key_type is DataType.BOOLEAN:
-                            value = cfg.getboolean(section,key)
-                        elif key_type is DataType.MEASUREMENT:
-                            data = cfg.get(section,key).split(",")
-                            m = Measurement(data)
-                            value = m.value_in_meters()
-                        elif key_type is DataType.DS_COMPONENT:
-                            value =  cfg.get(section,key)
-                            component = Drill_String_Component(value.split(","))
-                            if component._type == 5:
-                                # pdb.set_trace()
-                                if shocksub_length == 0:
-                                    shocksub_length = component.length_in_meters
-                                else:
-                                    raise ValueError("There are more than one shocksubs declared")
-                        else:
-                            value = cfg.get(section,key)
-                        #print(key,value)
-                        setattr(self,key,value)
+        pdb.set_trace()
+        excluded_sections = ["RUNTIME","DATAUNIT","DATA_TRANSMISSION","PLAYBACK",]
+        sections_to_iterate = [x for x in cfg.sections() if x not in excluded_sections]
+        print(sections_to_iterate)
+
+        shocksub_length = 0
+        for key,key_type in METADATA_HEADER_FORMAT_KEYS.items():
+            setattr(self,key,None)
+        value = cfg.getint("COLLECTION","output_sampling_rate")
+        setattr(self,"output_sampling_rate",value)
+        for section in sections_to_iterate:
+            for item in cfg.items(section):
+                key = item[0]
+                #pdb.set_trace()
+                if key in METADATA_HEADER_FORMAT_KEYS.keys():
+                    key_type = METADATA_HEADER_FORMAT_KEYS[key]
+                    if key_type is DataType.FLOAT:
+                        value = cfg.getfloat(section,key)
+                    elif key_type is DataType.INTEGER:
+                        value = cfg.getint(section,key)
+                    elif key_type is DataType.DATE:
+                        value = datetime.strptime(cfg.get(section,key),"%Y-%m-%d")
+                    elif key_type is DataType.DATETIME:
+                        value = datetime.strptime(cfg.get(section,key),"%Y-%m-%d %H:%M:%S.%f")
+                    elif key_type is DataType.BOOLEAN:
+                        value = cfg.getboolean(section,key)
+                    elif key_type is DataType.MEASUREMENT:
+                        data = cfg.get(section,key).split(",")
+                        m = Measurement(data)
+                        value = m.value_in_meters()
+                    elif key_type is DataType.DS_COMPONENT:
+                        value =  cfg.get(section,key)
+                        component = Drill_String_Component(value.split(","))
+                        if component._type == 5:
+                            # pdb.set_trace()
+                            if shocksub_length == 0:
+                                shocksub_length = component.length_in_meters
+                            else:
+                                raise ValueError("There are more than one shocksubs declared")
                     else:
-                        pass
-                        raise LookupError("The metadata value in the configuration file is not declared in the metadata class" , item )
-            self.sensor_distance_to_source = round(self.drill_string_total_length - self.sensor_position,2)
-            self.sensor_distance_to_shocksub = round(self.sensor_position - shocksub_length,2)
-        except NoSectionError:
-            pass
-        except:
-            print (sys.exc_info())
+                        value = cfg.get(section,key)
+                    #print(key,value)
+                    setattr(self,key,value)
+                else:
+                    pass
+                    raise LookupError("The metadata value in the configuration file is not declared in the metadata class" , item )
+        self.sensor_distance_to_source = round(self.drill_string_total_length - self.sensor_position,2)
+        self.sensor_distance_to_shocksub = round(self.sensor_position - shocksub_length,2)
 
 
     def __str__(self):
