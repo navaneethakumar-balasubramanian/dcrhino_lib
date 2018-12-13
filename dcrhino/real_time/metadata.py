@@ -226,7 +226,7 @@ class Metadata(object):
                 setattr(self,key,None)
             value = cfg.getint("COLLECTION","output_sampling_rate")
             setattr(self,"output_sampling_rate",value)
-            for section in ["INSTALLATION","PROCESSING","COLLECTION","FEATURE_EXTRACTION_J1"]:
+            for section in ["INSTALLATION","PROCESSING","COLLECTION",]:
                 for item in cfg.items(section):
                     key = item[0]
                     #pdb.set_trace()
