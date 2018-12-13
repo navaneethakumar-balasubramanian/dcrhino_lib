@@ -37,6 +37,7 @@ for root, dirnames, filenames in os.walk(folder_path):
 
 
 files_props = []
+print "Found " + str(len(matches)) + " files"
 for file_match in matches:
     try:
         file_path = os.path.join(folder_path,file_match)
@@ -61,7 +62,7 @@ for file_match in matches:
 
         if not ignore:
             f1 = h5py.File(file_path,'r+')
-            h5_helper = H5Helper(f1)
+            h5_helper = H5Helper(f1,load_xyz=False)
             global_config = Config(h5_helper.metadata )
             #pdb.set_trace()
             temp = {
