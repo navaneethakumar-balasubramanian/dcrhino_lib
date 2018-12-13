@@ -264,10 +264,10 @@ class Metadata(object):
                         raise LookupError("The metadata value in the configuration file is not declared in the metadata class" , item )
             self.sensor_distance_to_source = round(self.drill_string_total_length - self.sensor_position,2)
             self.sensor_distance_to_shocksub = round(self.sensor_position - shocksub_length,2)
-        except NoSectionError:
-            pass
         except:
-            print (sys.exc_info())
+            print('expected NoSectionError here ... sigh ... ')
+            pass
+
 
 
     def __str__(self):
