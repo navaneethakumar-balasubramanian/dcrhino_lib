@@ -15,14 +15,12 @@ import pdb
 
 class H5Helper:
 
-    def __init__(self, h5f):
+    def __init__(self, h5f,load_xyz=True):
         self.h5f = h5f
         self.metadata = self._extract_metadata_from_h5_file()
         self._ts = np.asarray(self.h5f.get('ts'))
-        self.x_data = np.asarray(self.h5f.get('x'))
-        self.y_data = np.asarray(self.h5f.get('y'))
-        self.z_data = np.asarray(self.h5f.get('z'))
-        self.data_xyz = [self.x_data, self.y_data, self.z_data]
+        if load_xyz:
+            self.load_xyz()
 
         # laptop_ts = self.h5f.get('laptop_ts')
         # if laptop_ts is not None:
@@ -44,6 +42,12 @@ class H5Helper:
         self.is_ide_file = self._is_ide_file()
         #pdb.set_trace()
 
+
+    def load_xyz():
+        self.x_data = np.asarray(self.h5f.get('x'))
+        self.y_data = np.asarray(self.h5f.get('y'))
+        self.z_data = np.asarray(self.h5f.get('z'))
+        self.data_xyz = [self.x_data, self.y_data, self.z_data]
     @property
     def ts(self):
         #pdb.set_trace()
