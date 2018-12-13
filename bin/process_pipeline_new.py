@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import os
 import pdb
 import pandas as pd
+import sys
 import warnings
 
 from ConfigParser import ConfigParser
@@ -249,10 +250,11 @@ def process_h5_file(h5py_file, output_folder, cfg_file_path=False):
     io_helper.make_dirs_if_needed(temppath)
 
     append_mode = False
+    print("WHY IS THIS HERE? it is making processing crash when reproc - knk20181212")
     if 'ts.npy' in os.listdir(temppath):
         previous_ts_array = np.load(os.path.join(temppath,'ts.npy'))
         previous_end_ts = previous_ts_array[-1]
-        print "File in folder",previous_end_ts,end_ts
+        print "File in folder previous_end_ts {},end_ts {}".format(previous_end_ts, end_ts)
         if end_ts > previous_end_ts+1:
             append_mode = True
             print "changed start ts to ",previous_end_ts+1
