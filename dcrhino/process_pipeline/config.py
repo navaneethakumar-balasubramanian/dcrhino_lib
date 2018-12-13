@@ -8,6 +8,7 @@ Created on Thu Sep 27 21:14:10 2018
 import numpy as np
 import pdb
 from dcrhino.real_time.metadata import METADATA_HEADER_FORMAT_KEYS
+from dcrhino.real_time.metadata import DataType
 
 class Config( object ):
     def __init__(self, metadata = None, env_config_parser=None, config_parser = None):
@@ -118,9 +119,15 @@ class Config( object ):
         return decon_filter_length_taps
 
     def set_metadata(self, metadata):
-        key_list = [key for key,value in METADATA_HEADER_FORMAT_KEYS.items()]
-        for key in key_list:
-            setattr(self, key, metadata.__getattribute__(key))
+        """
+        @chnage 20181212: json.dump does not seem to like datetime objects, so we cast as strings
+        #key_list = [key for key, data_type in METADATA_HEADER_FORMAT_KEYS.items()]
+        """
+        for key, data_type in METADATA_HEADER_FORMAT_KEYS.items():
+            if data_type is DataType.DATE:
+                setattr(self, key, metadata.__getattribute__(key).__str__())
+            else:
+                setattr(self, key, metadata.__getattribute__(key))
         return
 
 
