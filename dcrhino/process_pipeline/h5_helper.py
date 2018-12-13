@@ -43,7 +43,7 @@ class H5Helper:
         #pdb.set_trace()
 
 
-    def load_xyz():
+    def load_xyz(self):
         self.x_data = np.asarray(self.h5f.get('x'))
         self.y_data = np.asarray(self.h5f.get('y'))
         self.z_data = np.asarray(self.h5f.get('z'))
