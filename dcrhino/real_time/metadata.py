@@ -220,8 +220,8 @@ class Metadata(object):
     __slots__ = [key for key,value in METADATA_HEADER_FORMAT_KEYS.items()]
 
     def __init__(self,cfg):
-        pdb.set_trace()
-        excluded_sections = ["RUNTIME","DATAUNIT","DATA_TRANSMISSION","PLAYBACK",]
+        #pdb.set_trace()
+        excluded_sections = ["RUNTIME", "DATAUNIT", "DATA_TRANSMISSION", "PLAYBACK", "DB"]
         sections_to_iterate = [x for x in cfg.sections() if x not in excluded_sections]
         print(sections_to_iterate)
 
