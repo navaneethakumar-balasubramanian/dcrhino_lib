@@ -208,6 +208,7 @@ METADATA_HEADER_FORMAT_KEYS = {
         'channels_per_sensor':DataType.INTEGER,
         'packet_length':DataType.INTEGER,
         'baud_rate':DataType.INTEGER,
+        'window_widths':DataType.STRING
         }
 
 
@@ -222,7 +223,7 @@ class Metadata(object):
             setattr(self,key,None)
         value = cfg.getint("COLLECTION","output_sampling_rate")
         setattr(self,"output_sampling_rate",value)
-        for section in ["INSTALLATION","PROCESSING","COLLECTION"]:
+        for section in ["INSTALLATION","PROCESSING","COLLECTION","FEATURE_EXTRACTION_J1"]:
             for item in cfg.items(section):
                 key = item[0]
                 #pdb.set_trace()
