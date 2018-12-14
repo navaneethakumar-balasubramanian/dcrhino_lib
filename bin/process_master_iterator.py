@@ -5,6 +5,8 @@ import os
 import pdb
 from process_pipeline_new import process_h5_file
 
+import subprocess
+
 def process_master_iterator(master_iterator_df,output_path):
     if 'output_path_folder' not in master_iterator_df.columns:
         output_path_folder = [None] * master_iterator_df.shape[0]
@@ -14,9 +16,11 @@ def process_master_iterator(master_iterator_df,output_path):
     processed = master_iterator_df['processed'].values
     for index, row in master_iterator_df.iterrows():
         if not row['processed']:
-            h5F = h5py.File(row['file_path'],'r+')
+            #h5F = h5py.File(row['file_path'],'r+')
             output_folder = os.path.join(output_path,str(index))
-            process_h5_file(h5F,output_folder)
+            subprocess.call(["python", "process_pipeline_new.py",'-h5',row['file_path'],'-o',output_folder ])
+            #process_h5_file(h5F,output_folder)
+
             processed[index] = True
             output_path_folder[index] = output_folder
             print row['file_path']
@@ -31,7 +35,7 @@ if __name__ == "__main__":
     argparser.add_argument('-o','--output-folder',help="OUTPUT FOLDER", required=True)
     args = argparser.parse_args()
     #can we add an assignment layer like the two lines below?
-    #that way it is easy to comment out the command line usage and 
+    #that way it is easy to comment out the command line usage and
     #and directly assign args when debugging?
     input_file = args.input_file
     output_folder = args.output_folder
