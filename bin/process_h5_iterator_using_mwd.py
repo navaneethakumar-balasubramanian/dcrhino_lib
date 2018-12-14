@@ -168,17 +168,18 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         datetime_list = []
         for ts in hole_ts:
             datetime_list.append(datetime.utcfromtimestamp(ts))
-        #pdb.set_trace()
+
         hole_features_extracted['datetime'] = datetime_list
         #pdb.set_trace()
         #interpolate mwd columns
         #pdb.set_trace()
         hole_features_extracted['computed_elevation'], time_vector = mwdHelper.get_interpolated_column(hole_mwd,'computed_elevation')
-
         hole_features_extracted['mse'], time_vector = mwdHelper.get_interpolated_column(hole_mwd,mwdHelper.mse_column_name,time_vector)
-        #if hole == '965,106,3014,3':
-        #    pdb.set_trace()
         hole_features_extracted['depth'] = (np.asarray(hole_features_extracted['computed_elevation'].values) - hole_mwd[mwdHelper.collar_elevation_column_name].values[0]) * -1
+
+        for col in hole_mwd.columns:
+            if col not in hole_features_extracted.columns and hole_mwd[col].values.dtype in [np.int,np.float]:
+                hole_features_extracted[col], time_vector = mwdHelper.get_interpolated_column(hole_mwd,col,time_vector)
 
         qc_input = QCLogPlotInput()
         qc_input.df = hole_features_extracted
@@ -192,6 +193,8 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         hole_features_extracted['reflection_coefficient'] = pd.Series(qc_input.reflection_coefficient_sample, index = hole_features_extracted.index)
         hole_features_extracted['axial_delay'] = hole_features_extracted['axial_multiple_peak_time_sample'] - hole_features_extracted['axial_primary_peak_time_sample']
         hole_features_extracted['axial_velocity_delay'] = 1.0/(hole_features_extracted['axial_delay'])**3
+
+        hole_features_extracted.dropna(axis=1, how='all', inplace=True)
         hole_features_extracted.to_csv(os.path.join(hole_output_folder,"extracted_features.csv"),index=False)
         holes_h5[hole]['hole_mwd_df'].to_csv(os.path.join(hole_output_folder,"hole_mwd.csv"),index=False)
 
