@@ -114,8 +114,6 @@ def main():
     start_ts = ts[0]
     end_ts = ts[-1]
 
-
-
     bph_string = global_config.mine_name + "\nRig:" + global_config.rig_id + " From:" + datetime.utcfromtimestamp(start_ts).strftime('%Y-%m-%d %H:%M:%S') + " to " + datetime.utcfromtimestamp(end_ts).strftime('%Y-%m-%d %H:%M:%S')
 
 
@@ -130,9 +128,9 @@ def main():
 
     try:
         accel_df = pd.read_csv(accel_fullfile)
-
+        
         if output_folder_path is False:
-            acceleration_plotter(accel_df,'Acceleration_histogram.png',bph_string, show = True)
+            acceleration_plotter(accel_df,os.path.join(args.data_path,'Acceleration_histogram.png'),bph_string, show = True)
         else:
             output_name = os.path.join(output_folder_path,'Acceleration_histogram.png')
             acceleration_plotter(accel_df,output_name,bph_string, show = False)

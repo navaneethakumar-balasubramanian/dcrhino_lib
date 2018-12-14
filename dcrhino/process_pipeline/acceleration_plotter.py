@@ -13,19 +13,23 @@ import pdb
 def get_data_statistics(data):
     stats = {}
     combined_data = np.hstack((data[0],data[1]))
+
     # combined_data = data[1]
     mu = round(np.mean(combined_data),2)
     sigma = round(np.std(combined_data),2)
     stats["mu"] = mu
     stats["sigma"]=sigma
-    stats["median"]= np.median([int(x) for x in combined_data])
+    #stats["median"]= np.median([int(x) for x in combined_data])
+    stats["median"]= np.median(combined_data.astype(np.int))
     stats["peak_neg"]= mu - (3*sigma)
     stats["peak_pos"]= mu + (3*sigma)
 
     stats["mu_pos"] = round(np.mean(data[0]),2)
     stats["mu_neg"] = round(np.mean(data[1]),2)
-    stats["median_pos"] = np.median([int(x) for x in data[0]])
-    stats["median_neg"] = np.median([int(x) for x in data[1]])
+    #stats["median_pos"] = np.median([int(x) for x in data[0]])
+    #stats["median_neg"] = np.median([int(x) for x in data[1]])
+    stats["median_pos"] = np.median(data[0].astype(np.int))
+    stats["median_neg"] = np.median(data[1].astype(np.int))
     stats["sigma_pos"] = round(np.std(data[0]),2)
     stats["sigma_neg"] = round(np.std(data[1]),2)
 
@@ -69,8 +73,12 @@ def add_stats(axs,ax_limits,stats):
                                                                                       ))
 
 def plot_data(data,ax,ax_title,stats):
-    # pdb.set_trace()
+    #pdb.set_trace()
+    data[0] = data[0][~np.isnan(data[0])]
+    data[1] = data[1][~np.isnan(data[1])]
     combined_data = np.hstack((data[0],data[1]))
+
+
     # combined_data = data[1]
     n_bins = 100
     N, bins, patches = ax.hist(combined_data, bins=n_bins,density=True)
@@ -94,6 +102,8 @@ def plot_data(data,ax,ax_title,stats):
     return maxx,maxy
 
 def acceleration_plotter(accel_df,output_name,title,show = False):
+    accel_df = accel_df.dropna(how='any')
+
     limits = []
     x_limits = []
     y_limits =[]
@@ -109,24 +119,24 @@ def acceleration_plotter(accel_df,output_name,title,show = False):
     labels= ["Within 99.5%","Outside 99.5%"]
     fig.legend(handles, labels,loc="upper right")
 
-    x = [np.asarray(accel_df["max_x"]),np.asarray(accel_df["min_x"])]
+    x = [np.asarray(accel_df["axial_max"]),np.asarray(accel_df["axial_min"])]
     data_stats[0] = get_data_statistics(x)
-    x,y = plot_data(x,axs[0],"X Axis",data_stats[0])
+    x,y = plot_data(x,axs[0],"Axial Axis",data_stats[0])
     x_limits.append(x)
     y_limits.append(y)
 
-    y = [np.asarray(accel_df["max_y"]),np.asarray(accel_df["min_y"])]
+    y = [np.asarray(accel_df["radial_max"]),np.asarray(accel_df["radial_min"])]
     data_stats[1] = get_data_statistics(y)
-    x,y = plot_data(y,axs[1],"Y Axis",data_stats[1])
+    x,y = plot_data(y,axs[1],"Radial Axis",data_stats[1])
     x_limits.append(x)
     y_limits.append(y)
 
     # pdb.set_trace()
-    max_z_data = np.asarray(accel_df["max_z"])
+    max_z_data = np.asarray(accel_df["tangential_max"])
     if  max_z_data.all() != np.zeros(len(max_z_data)).all():
-        z = [np.asarray(accel_df["max_z"]),np.asarray(accel_df["min_z"])]
+        z = [np.asarray(accel_df["tangential_max"]),np.asarray(accel_df["tangential_min"])]
         data_stats[2] = get_data_statistics(z)
-        x,y = plot_data(z,axs[2],"Z Axis",data_stats[2])
+        x,y = plot_data(z,axs[2],"Tangential Axis",data_stats[2])
         x_limits.append(x)
         y_limits.append(y)
 
