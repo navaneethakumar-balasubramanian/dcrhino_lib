@@ -282,7 +282,7 @@ class Metadata(object):
 
 
     def field_base_path(self):
-        return os.path.join(self.company,self.mine_name,"field_data",self.rig_id,self.sensor_serial_number).lower()
+        return os.path.join(self.company,self.mine_name,"field_data",self.rig_id,self.digitizer_serial_number,self.sensor_serial_number).lower()
 
     def level_0_path(self):
         return os.path.join(self.field_base_path(),"level_0").lower()
