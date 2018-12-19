@@ -210,7 +210,8 @@ METADATA_HEADER_FORMAT_KEYS = {
         'channels_per_sensor':DataType.INTEGER,
         'packet_length':DataType.INTEGER,
         'baud_rate':DataType.INTEGER,
-        'window_widths':DataType.STRING
+        'window_widths':DataType.STRING,
+        'binning_interval_in_cm':DataType.FLOAT
         }
 
 
