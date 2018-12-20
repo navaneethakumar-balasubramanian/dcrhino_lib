@@ -24,6 +24,24 @@ from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotterv2
 from dcrhino.process_pipeline.qc_log_plotter_nomwd import QCLogPlotter_nomwd
 from dcrhino.process_pipeline.acceleration_plotter import acceleration_plotter
 
+def get_multiples(global_config):
+# Calculate 1st and 2nd multiples for axial and tangential data. These are theoretical. Actual multiples will be different
+#            pdb.set_trace()
+            Vaxial = global_config.acoustic_velocity #m/s
+            Vtang =  global_config.shear_velocity #m/s
+#            pdb.set_trace()
+            
+            ax_1_mult = (2*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vaxial)*1000
+            ax_2_mult = (4*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vaxial)*1000
+            
+            tang_1_mult = (2*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vtang)*1000
+            tang_2_mult = (4*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vtang)*1000
+    
+            mult_pos = pd.DataFrame({'axial_first_multiple':[ax_1_mult], 'axial_second_multiple':[ax_2_mult], 
+                                     'tangential_first_multiple':[tang_1_mult], 'tangential_second_multiple':[tang_2_mult]})
+            return mult_pos
+
+
 def main():
 
 #    ddir = '/mnt/sda1/data/datacloud/WEST_ANGELAS/5452/4000/778-141-242/2018-11-14_00004'
@@ -84,7 +102,7 @@ def main():
     config_fullfile = os.path.join(args.data_path,config_filebase)
     accel_fullfile = os.path.join(args.data_path,accel_csv_filebase)
 
-
+    mult_pos = get_multiples(global_config)
 
     mwd_df = None
     try:
@@ -122,7 +140,7 @@ def main():
     else:
         qclogplot_output_path = os.path.join(args.data_path,'time_plot.png')
 
-    qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,feature_df,bph_string,qclogplot_output_path,global_config,start_ts,end_ts)
+    qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,feature_df,bph_string,qclogplot_output_path,global_config,mult_pos,start_ts,end_ts)
     qclogplotter_time.plot(save=True,show=True)
 
 
@@ -167,7 +185,7 @@ def main():
         #mwd_df.parse_dates=[mwd_helper.start_time_column_name, mwd_helper.end_time_column_name]
 
 
-        qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'depth_plot.png'),global_config)
+        qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'depth_plot.png'),global_config,mult_pos)
         qclogplotter_depth.plot(show=True)
         #qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'time_plot.png'),global_config,plot_by_depth=False)
         #qclogplotter_time.plot(show=True)

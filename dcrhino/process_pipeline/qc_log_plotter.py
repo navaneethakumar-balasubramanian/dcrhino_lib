@@ -11,7 +11,7 @@ from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots09192018 impo
 
 class QCLogPlotterv2():
 
-    def __init__(self,axial,tangential,radial,mwd_helper,mwd_df,extracted_features_df,plot_title_id,output_file_path,global_config,plot_by_depth=True):
+    def __init__(self,axial,tangential,radial,mwd_helper,mwd_df,extracted_features_df,plot_title_id,output_file_path,global_config,mult_pos,plot_by_depth=True):
 
         self.axial = axial
         self.tangential = tangential
@@ -23,6 +23,7 @@ class QCLogPlotterv2():
         self.plot_title_id = plot_title_id
         self.output_file_path = output_file_path
         self.global_config = global_config
+        self.mult_pos = mult_pos
         self.plot_by_depth = plot_by_depth
 
 
@@ -284,6 +285,9 @@ class QCLogPlotterv2():
           two_way_travel_time_ms=qc_plot_input.two_way_travel_time_ms,
           multiple_search_back_ms=qc_plot_input.multiple_search_back_ms,
           multiple_search_forward_ms=qc_plot_input.multiple_search_forward_ms)
+        ax[1].axhline(y = self.mult_pos.axial_first_multiple[0],xmin = 0, xmax = X[-1], color = 'k',linestyle = '--',linewidth = 2)
+        ax[1].axhline(y = self.mult_pos.axial_second_multiple[0],xmin = 0, xmax = X[-1], color = 'k',linestyle = '--',linewidth = 2)
+
 
         if colourbar_type == 'each_axis':
             #[left, bottom, width, height],
@@ -291,6 +295,10 @@ class QCLogPlotterv2():
             cb = plt.colorbar(heatmap1, cax = cbaxes)
         ax[2], heatmap2 = plot_hole_as_heatmap(ax[2], cbal.v_min_2, cbal.v_max_2, X, Y,
           trace_array_dict['tangential'], cmap_string, y_tick_locations)#,
+        ax[2].axhline(y = self.mult_pos.tangential_first_multiple[0],xmin = 0, xmax = X[-1], color = 'k',linestyle = '-',linewidth = 2)
+        ax[2].axhline(y = self.mult_pos.tangential_second_multiple[0],xmin = 0, xmax = X[-1], color = 'k',linestyle = '-',linewidth = 2)
+
+
 
         ax[3], heatmap3 = plot_hole_as_heatmap(ax[3], cbal.v_min_3, cbal.v_max_3, X, Y,
           trace_array_dict['radial'], cmap_string, y_tick_locations)#,

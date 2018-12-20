@@ -19,7 +19,7 @@ from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots09192018 impo
 
 class QCLogPlotter_nomwd():
 
-    def __init__(self,axial,tangential,radial,extracted_features_df,plot_title_id,output_file_path,global_config,start_ts, end_ts):
+    def __init__(self,axial,tangential,radial,extracted_features_df,plot_title_id,output_file_path,global_config,mult_pos,start_ts, end_ts):
         self.axial = axial
         self.tangential = tangential
         self.radial = radial
@@ -29,6 +29,8 @@ class QCLogPlotter_nomwd():
         self.global_config = global_config
         self.start_ts = start_ts
         self.end_ts = end_ts
+        self.global_config = global_config
+        self.mult_pos = mult_pos
 
 
 
@@ -42,6 +44,8 @@ class QCLogPlotter_nomwd():
         ax.plot(X, qc_plot_input.peak_ampl_z, label='peak_z', linewidth=peak_amplitude_linewidth)
         ax.plot(X, qc_plot_input.peak_mult_x, label='mult_x', linewidth=peak_amplitude_linewidth)
         ax.plot(X, qc_plot_input.peak_ampl_x, label='peak_x', linewidth=peak_amplitude_linewidth)
+#        ax.axhline(y = self.noise_threshold,xmin = 0, xmax = X[-1], color = 'k')
+
         ax.legend()
         ax.set_title(plot_title)
         ax.set_ylim(0.0, 2.0)
@@ -118,6 +122,11 @@ class QCLogPlotter_nomwd():
           two_way_travel_time_ms=qc_plot_input.two_way_travel_time_ms,
           multiple_search_back_ms=qc_plot_input.multiple_search_back_ms,
           multiple_search_forward_ms=qc_plot_input.multiple_search_forward_ms)
+        ax[1].axhline(y = self.mult_pos.axial_first_multiple[0],xmin = 0, xmax = X[-1], color = 'k',linestyle = '--',linewidth = 2)
+        ax[1].axhline(y = self.mult_pos.axial_second_multiple[0],xmin = 0, xmax = X[-1], color = 'k',linestyle = '--',linewidth = 2)
+
+        
+
 
         if colourbar_type == 'each_axis':
             #[left, bottom, width, height],
@@ -125,6 +134,9 @@ class QCLogPlotter_nomwd():
             cb = plt.colorbar(heatmap1, cax = cbaxes)
         ax[2], heatmap2 = plot_hole_as_heatmap(ax[2], cbal.v_min_2, cbal.v_max_2, X, Y,
           trace_array_dict['tangential'], cmap_string, y_tick_locations)#,
+        ax[2].axhline(y = self.mult_pos.tangential_first_multiple[0],xmin = 0, xmax = X[-1], color = 'k',linestyle = '-',linewidth = 2)
+        ax[2].axhline(y = self.mult_pos.tangential_second_multiple[0],xmin = 0, xmax = X[-1], color = 'k',linestyle = '-',linewidth = 2)
+
 
         ax[3], heatmap3 = plot_hole_as_heatmap(ax[3], cbal.v_min_3, cbal.v_max_3, X, Y,
           trace_array_dict['radial'], cmap_string, y_tick_locations)#,
