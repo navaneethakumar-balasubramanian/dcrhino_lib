@@ -11,7 +11,7 @@ import calendar
 from dcrhino.process_pipeline.mwd_helper import MwdDFHelper
 from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotInput
 import matplotlib.pyplot as plt
-
+from binner import apply_bin_df
 from dcrhino.process_pipeline.config import Config
 
 def make_dirs_if_needed(path):
@@ -93,10 +93,6 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
 
     #pdb.set_trace()
     for hole in holes_h5.keys():
-        #if hole != '88,5,221,DR5,S1020':
-        #    print hole , 'skipped'
-        #    continue
-        #print hole , 'not skipped'
         hole_ts = np.arange(holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts'])
         print hole_ts
 
@@ -143,13 +139,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
                     for key in series.to_dict().keys():
                         hole_features_dict_columns[key][i] = series[key].values[0]
 
-            #hole_features_extracted = h5_features_extracted[h5_features_extracted['datetime_ts'].isin(hole_ts)].copy()
-            #h5_features_extracted.index = h5_features_extracted['datetime_ts']
-            #hole_features_extracted.update( h5_features_extracted )
-            #hole_features_extracted.join(h5_features_extracted)
-            #hole_features_extracted = pd.merge(hole_features_extracted, h5_features_extracted, on='datetime_ts' )
-            #print hole_features_extracted
-            #pdb.set_trace()
+
             numpys_h5_hole_files = get_numpys_from_folder_by_interval(processed_files_path,holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts'])
             for key in numpys_h5_hole_files:
                 if key not in holes_dict.keys() and key != 'ts':
@@ -179,13 +169,14 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
 
         for col in hole_mwd.columns:
             if col not in hole_features_extracted.columns and hole_mwd[col].values.dtype in [np.int,np.float]:
-                hole_features_extracted[col], time_vector = mwdHelper.get_interpolated_column(hole_mwd,col,time_vector)
+                hole_features_extracted['mwd_'+col], time_vector = mwdHelper.get_interpolated_column(hole_mwd,col,time_vector)
 
         qc_input = QCLogPlotInput()
         qc_input.df = hole_features_extracted
         qc_input.hole_start_time = hole_features_extracted['datetime'].iloc[0].to_pydatetime()
         qc_input.observer_row = hole_mwd
         qc_input.time_stamps = hole_features_extracted['datetime']
+
 
         hole_features_extracted['pseudo_ucs'] = pd.Series(qc_input.pseudo_ucs_sample, index = hole_features_extracted.index)
         hole_features_extracted['pseudo_velocity'] = pd.Series(qc_input.primary_pseudo_velocity_sample, index = hole_features_extracted.index)
@@ -194,8 +185,41 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         hole_features_extracted['axial_delay'] = hole_features_extracted['axial_multiple_peak_time_sample'] - hole_features_extracted['axial_primary_peak_time_sample']
         hole_features_extracted['axial_velocity_delay'] = 1.0/(hole_features_extracted['axial_delay'])**3
 
+
+        columns_rename = {  "mse":"mwd_mse",
+                            "axial_multiple_peak_sample": "axial_multiple_peak_amplitude",
+                            "axial_multiple_peak_time_sample": "axial_multiple_peak_time",
+                            "axial_primary_peak_sample":"axial_primary_peak_amplitude",
+                            "axial_primary_peak_time_sample":"axial_primary_peak_time",
+                            "radial_primary_peak_sample":"radial_primary_peak_amplitude_sample",
+                            "tangential_primary_peak_sample":"tangential_primary_peak_amplitude",
+                            "pseudo_ucs":"c_str",
+                            "pseudo_velocity":"a_vel",
+                            "pseudo_density":"a_dens",
+                            "reflection_coefficient":"a_reflection-coefficient",
+                            "axial_delay":"a_delay",
+                            "tangential_amplitude_ratio":"t_reflection_coef",
+                            "tangential_delay":"t_delay",
+                            "tangential_impedance":"t_mod",
+                            "shear_velocity":"t_vel"}
+
+
+        hole_features_extracted = hole_features_extracted.rename(index=str, columns=columns_rename)
         hole_features_extracted.dropna(axis=1, how='all', inplace=True)
+        hole_features_extracted = hole_features_extracted.drop(['datetime'],axis=1)
+
+        columns_to_bin = hole_features_extracted.columns
+        print columns_to_bin
+        binned_df = apply_bin_df(hole_features_extracted,global_config.binning_interval_in_cm/100,columns_to_bin)
+        binned_df['x'] = hole_mwd[mwdHelper.easting_column_name].values[0]
+        binned_df['y'] = hole_mwd[mwdHelper.northing_column_name].values[0]
+        binned_df["mine"] = global_config.mine_name
+        binned_df["mwd_bench"] = hole_mwd[mwdHelper.bench_column_name].values[0]
+        binned_df["mwd_area"] = hole_mwd[mwdHelper.pattern_column_name].values[0]
+        binned_df["mwd_hole"] = hole_mwd[mwdHelper.hole_column_name].values[0]
+
         hole_features_extracted.to_csv(os.path.join(hole_output_folder,"extracted_features.csv"),index=False)
+        binned_df.to_csv(os.path.join(hole_output_folder,"binned.csv"),index=False)
         holes_h5[hole]['hole_mwd_df'].to_csv(os.path.join(hole_output_folder,"hole_mwd.csv"),index=False)
 
 

@@ -60,9 +60,10 @@ def get_df_acceleration_stats(traces_dict):
     df_acceleration_stats["tangential_min"] = traces_dict['tangential_min_acceleration_array'][:,0]
     return df_acceleration_stats
 
-def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
+def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, h5_helper,
                                        ts_data, sensitivity_xyz, is_ide_file,
                                        accelerometer_max_voltage, global_config, debug=True):
+    #entire_xyz = h5_helper.load_xyz()
     """
     @warning: 20181113: This method appears hard coded to 1s traces ...
     not good if we want to change this is going to require a fundamentally
@@ -93,7 +94,7 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
     ts = [None] * interval_seconds
 
     output_dict = {}
-
+    xyz = ['x','y','z']
     while actual_ts < end_time_ts:
         trace_index = actual_ts - start_time_ts
         ts[trace_index] = actual_ts
@@ -109,13 +110,15 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, entire_xyz,
         ts_actual_second = get_values_from_index(indexes_array_of_actual_second,entire_ts,np.float64)
         ts_actual_second = ts_actual_second-int(ts_actual_second[0])
 
-        for i in range(0,len(entire_xyz)):
+        for i in range(0,len(xyz)):
             component_sensitivity = sensitivity_xyz[i]
             component_name = COMPONENT_LABELS[i]
             component_index = global_config.get_component_index(component_name)
 
-            component_trace_raw_data = get_values_from_index(indexes_array_of_actual_second,
-                                                             entire_xyz[component_index], np.float32)
+            component_trace_raw_data = h5_helper.load_axis_boundaries(xyz[i],indexes_array_of_actual_second.min(),indexes_array_of_actual_second.max())
+            #component_trace_raw_data = get_values_from_index(indexes_array_of_actual_second,
+            #                                                 entire_xyz[component_index], np.float32)
+            #pdb.set_trace()
             component_trace_dict = trace_processor.process(component_trace_raw_data,
                                                            ts_actual_second,
                                                            component_name,
@@ -226,7 +229,7 @@ def process_h5_file(h5py_file, output_folder, cfg_file_path=False):
 
     #pdb.set_trace()
     #f1 = h5py.File(h5_path,'r+')
-    h5_helper = H5Helper(h5py_file)
+    h5_helper = H5Helper(h5py_file,load_xyz=False)
 
     # DATA FROM H5 CONFIG HEADER
     metadata = h5_helper.metadata
@@ -263,7 +266,7 @@ def process_h5_file(h5py_file, output_folder, cfg_file_path=False):
             print "File in the output folder have more time than the input file"
             sys.exit(1)
 
-    traces_dict = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper.data_xyz, h5_helper.ts, h5_helper.sensitivity_xyz, h5_helper.is_ide_file, accelerometer_max_voltage, global_config)
+    traces_dict = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper, h5_helper.ts, h5_helper.sensitivity_xyz, h5_helper.is_ide_file, accelerometer_max_voltage, global_config)
 
     # SAVE FILES
     for _key in traces_dict.keys():
