@@ -117,6 +117,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
             with open(os.path.join(hole_output_folder,'global_config.json'), 'w') as outfile:
                 json.dump(vars(global_config), outfile,indent=4)
 
+            acceleration_values_by_second = pd.read_csv(os.path.join(processed_files_path,'acceleration_values_by_second.csv'))
             h5_features_extracted = pd.read_csv(os.path.join(processed_files_path,'extracted_features.csv'))
             #pdb.set_trace()
             h5_features_extracted['datetime'] = pd.to_datetime(h5_features_extracted['datetime'])
@@ -125,6 +126,8 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
             print h5_features_extracted['datetime'][0] , h5_features_extracted['datetime_ts'][0]
             #h5_features_extracted.index = h5_features_extracted['datetime_ts']
             h5_features_extracted = h5_features_extracted[(h5_features_extracted['datetime_ts'] >= holes_h5[hole]['min_ts']) & (h5_features_extracted['datetime_ts'] <= holes_h5[hole]['max_ts'])]
+            acceleration_values_by_second = acceleration_values_by_second[(acceleration_values_by_second['Timestamp'] >= holes_h5[hole]['min_ts']) & (acceleration_values_by_second['Timestamp'] <= holes_h5[hole]['max_ts'])]
+
             #pdb.set_trace()
 
             for column in h5_features_extracted.columns:
@@ -217,7 +220,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         binned_df["mwd_bench"] = hole_mwd[mwdHelper.bench_column_name].values[0]
         binned_df["mwd_area"] = hole_mwd[mwdHelper.pattern_column_name].values[0]
         binned_df["mwd_hole"] = hole_mwd[mwdHelper.hole_column_name].values[0]
-
+        acceleration_values_by_second.to_csv(os.path.join(hole_output_folder,"acceleration_values_by_second.csv"),index=False)
         hole_features_extracted.to_csv(os.path.join(hole_output_folder,"extracted_features.csv"),index=False)
         binned_df.to_csv(os.path.join(hole_output_folder,"binned.csv"),index=False)
         holes_h5[hole]['hole_mwd_df'].to_csv(os.path.join(hole_output_folder,"hole_mwd.csv"),index=False)
