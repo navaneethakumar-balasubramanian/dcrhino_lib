@@ -31,7 +31,7 @@ class Config( object ):
         self.trapezoidal_bpf_corner_3 = 0.0
         self.trapezoidal_bpf_corner_4 = 0.0
         self.trapezoidal_bpf_duration = 0.0
-
+        self.binning_interval_in_cm = 5.0
 
         self.min_lag_trimmed_trace = 0.0
         self.max_lag_trimmed_trace = 0.0
