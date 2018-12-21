@@ -47,6 +47,7 @@ def reject_traces_with_small_rop(df, threshold=0.006):
 
     """
     dz = np.diff(df.depth)
+
     dzz = np.hstack((0.0, dz))
     #pdb.set_trace()
     df['dz'] = pd.Series(dzz, index=df.index)
@@ -88,47 +89,45 @@ def reject_other_criteria(input_csv_fullname, output_csv_fullname):
     features_df.to_csv(output_csv_fullname)
     return
 
-def apply_bin_df(folder_path,bin_width):
+def apply_bin_df(df_features,bin_width,columns_to_bin=[]):
     averaging_scheme = 'median'
 
-    hole_folders = ['793-MR_77-23531', '793-MR_77-23631', '793-MR_77-23731',
-                    '793-MR_77-23831', '793-MR_77-23930', '793-MR_77-24030',
-                    '793-MR_77-24130', ]
-
-    columns_to_bin = ['axial_multiple_peak_sample', 'axial_multiple_peak_time_sample',
-                      'axial_primary_left_trough_time', 'axial_primary_left_trough_time_sample',
-                      'axial_primary_peak_sample', 'axial_primary_peak_time_sample',
-                      'axial_primary_zero_crossing_after_sample', 'axial_primary_zero_crossing_prior_sample',
-                      'radial_primary_peak_sample', 'tangential_primary_peak_sample',
-                      'mse','MSE', 'weight_on_bit', 'rop', 'torque', 'rpm', 'air_pressure',
-                      'depth', 'pseudo_ucs', 'pseudo_velocity', 'pseudo_density',
-                      'reflection_coefficient', 'axial_delay', 'axial_velocity_delay',]
+    #columns_to_bin = ['axial_multiple_peak_sample', 'axial_multiple_peak_time_sample',
+    #                  'axial_primary_left_trough_time', 'axial_primary_left_trough_time_sample',
+    #                  'axial_primary_peak_sample', 'axial_primary_peak_time_sample',
+    #                  'axial_primary_zero_crossing_after_sample', 'axial_primary_zero_crossing_prior_sample',
+    #                  'radial_primary_peak_sample', 'tangential_primary_peak_sample',
+    #                  'mse','MSE', 'weight_on_bit', 'rop', 'torque', 'rpm', 'air_pressure',
+    #                  'depth', 'pseudo_ucs', 'pseudo_velocity', 'pseudo_density',
+    #                  'reflection_coefficient', 'axial_delay', 'axial_velocity_delay',]
 
     columns_to_keep = ['x', 'y']
 
     binned_df_dict = {}
 
 
-    hole_mwd_filename = os.path.join(folder_path, 'hole_mwd.csv')
-    features_filename = os.path.join(folder_path, 'extracted_features.csv')
-    df_mwd = pd.read_csv(hole_mwd_filename)
-    df_features = pd.read_csv(features_filename)
+    #hole_mwd_filename = os.path.join(folder_path, 'hole_mwd.csv')
+    #features_filename = os.path.join(folder_path, 'extracted_features.csv')
+    #df_mwd = pd.read_csv(hole_mwd_filename)
+    #df_features = pd.read_csv(features_filename)
     max_depth = df_features['depth'].max()
 
     #<Do global trace rejection here>
     print("we may wish to split the df into features from mwd vs features\
           from rhino.  Bad traces we reject from rhino but not necessarily\
           from mwd columns")
+    #df_ignored = df_features[ignore_cols]
+    #df_features = df_features.drop(ignore_cols,axis=1)
     df_features = reject_traces_with_small_rop(df_features, threshold=0.005)
     matched_columns_to_bin = (list(set(columns_to_bin) & set(df_features.columns)))
-    print (matched_columns_to_bin)
+    #matched_columns_to_bin = matched_columns_to_bin + list(df_ignored.columns)
     sub_df_for_binning = df_features[matched_columns_to_bin]
+    #sub_df_for_binning = pd.concat([sub_df_for_binning, df_ignored], ignore_index=True)
 
     #calc these lines on df_for_binning means may not go from surface to bottom of hole
     n_bins = int(np.ceil(max_depth/bin_width))
     bin_edges = bin_width * np.arange(n_bins+1)
     #</Do global trace rejection here>
-
 
     #pdb.set_trace()
     #N.B This section could probably be vectorized, but its pretty fast
@@ -136,7 +135,7 @@ def apply_bin_df(folder_path,bin_width):
     for column_name in matched_columns_to_bin:
         binned_df_dict[column_name] = np.full(n_bins, np.nan)
     for i_bin in range(n_bins):
-        print("ibin {}, from {} to {}".format(i_bin, bin_edges[i_bin], bin_edges[i_bin+1]))
+        #print("ibin {}, from {} to {}".format(i_bin, bin_edges[i_bin], bin_edges[i_bin+1]))
         condition_1 = (sub_df_for_binning['depth'] >= bin_edges[i_bin])
         condition_2 = (sub_df_for_binning['depth'] < bin_edges[i_bin + 1])
         #pdb.set_trace()
@@ -151,8 +150,9 @@ def apply_bin_df(folder_path,bin_width):
 
     binned_df = pd.DataFrame.from_dict(data=binned_df_dict)
     #binned_blasthole_measurand.save(binned_df) **** <- need to start using this I think ...
-    outfname = features_filename.replace('features', 'features_binned_{}cm'.format(int(100*bin_width)))
-    binned_df.to_csv(outfname)
+    #outfname = features_filename.replace('features', 'features_binned_{}cm'.format(int(100*bin_width)))
+    #binned_df.to_csv(outfname)
+    return binned_df
 
 def main():
 
@@ -167,7 +167,13 @@ def main():
 
 
     hole_folder = args.hole_folder
-    apply_bin_df(hole_folder,float(args.bin_width))
+    features_filename = os.path.join(folder_path, 'extracted_features.csv')
+    df_features = pd.read_csv(features_filename)
+    bin_width = float(args.bin_width)
+    binned_df = apply_bin_df(df_features,bin_width)
+    outfname = features_filename.replace('features', 'features_binned_{}cm'.format(int(100*bin_width)))
+    binned_df.to_csv(outfname)
+
 
     print("finito {}".format(datetime.datetime.now()))
 

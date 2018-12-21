@@ -210,7 +210,8 @@ METADATA_HEADER_FORMAT_KEYS = {
         'channels_per_sensor':DataType.INTEGER,
         'packet_length':DataType.INTEGER,
         'baud_rate':DataType.INTEGER,
-        'window_widths':DataType.STRING
+        'window_widths':DataType.STRING,
+        'binning_interval_in_cm':DataType.FLOAT
         }
 
 
@@ -282,7 +283,7 @@ class Metadata(object):
 
 
     def field_base_path(self):
-        return os.path.join(self.company,self.mine_name,"field_data",self.rig_id,self.sensor_serial_number).lower()
+        return os.path.join(self.company,self.mine_name,"field_data",self.rig_id,self.digitizer_serial_number,self.sensor_serial_number).lower()
 
     def level_0_path(self):
         return os.path.join(self.field_base_path(),"level_0").lower()
