@@ -397,6 +397,20 @@ class QCLogPlotterv3():
 
         legend_lines3 = [Line2D([0],[0],color = 'k',linestyle = '--', linewidth = 2,label = 'Axial Multiples'),
                         Line2D([0],[0],color = 'k',linestyle = '-', linewidth = 2,label = 'Tangential Multiples')]
+        
+        mult_title1 = "wax1b = {}".format(round(self.mult_pos.axial_first_multiple[0]-4),1)+"  wax1e = {}".format(round(self.mult_pos.axial_first_multiple[0]+4),1)
+        mult_title2 = "wax2b = {}".format(round(self.mult_pos.axial_second_multiple[0]-4),1)+"  wax2e = {}".format(round(self.mult_pos.axial_second_multiple[0]+4),1)
+        mult_title3 = "wtang1b = {}".format(round(self.mult_pos.tangential_first_multiple[0]-4),1)+"  wtang1e = {}".format(round(self.mult_pos.tangential_first_multiple[0]+4),1)
+        mult_title4 = "wtang2b = {}".format(round(self.mult_pos.tangential_first_multiple[0]-4),1)+"  wtang2e = {}".format(round(self.mult_pos.tangential_second_multiple[0]+4),1)
+        
+        mult_title = mult_title1 + '\n' + mult_title2 + '\n' + mult_title3 + '\n' + mult_title4
+        
+#        pdb.set_trace()
+        
+        ax1.annotate(mult_title, xy=(10, 10), xycoords='axes points',
+                     size=10, ha='left', va='center',
+                     bbox=dict(boxstyle='square', fc='w'))
+        
         ax.legend(handles = legend_lines1, loc = 2)
         ax1.legend(handles = legend_lines2,loc = 9)
         ax2.legend(handles = legend_lines3, loc = 1)
