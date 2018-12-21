@@ -6,7 +6,7 @@ from dcrhino.feature_extraction.supporting_minimal_feature_extraction import get
 from dcrhino.feature_extraction.supporting_minimal_feature_extraction import get_trough_times
 from dcrhino.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_multiple_wavelet
 #from dcrhino.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_primary_wavelet
-import pdb
+
 ACOUSTIC_VELOCITY = 4755.0
 
 class WaveletForFeatureExtraction(object):
@@ -167,8 +167,7 @@ class FeatureExtractor():
         return feature_dict
 
 
-    def extract_features(self, data_datetime, axial_trace, tangential_trace,
-                         radial_trace, n_samples, min_lag):
+    def extract_features(self,data_datetime,axial_trace,tangential_trace,radial_trace,n_samples,min_lag):
         """
         this be an atomic feature extractor, taking as input a single time chunk,
         1s (for now).
@@ -176,8 +175,7 @@ class FeatureExtractor():
         #data_datetime = trace.date
         df_dict = self.create_features_dictionary(data_datetime)
         if axial_trace is None:
-            df_dict['datetime'] = datetime.utcfromtimestamp(data_datetime)
-            df_dict['datetime_ts'] = data_datetime
+            df_dict['datetime'] = datetime.fromtimestamp(data_datetime)
             return df_dict
         ctr = 0
         #for i_comp, component in enumerate(self.COMPONENT_WAVELET_MAP.keys()):
@@ -237,8 +235,5 @@ class FeatureExtractor():
             print ("Couldnt find this date in database " + str(data_datetime ))
             return None
 
-        df_dict['datetime'] = datetime.utcfromtimestamp(data_datetime)
-        df_dict['datetime_ts'] = data_datetime
-        #pdb.set_trace()
-
+        df_dict['datetime'] = datetime.fromtimestamp(data_datetime)
         return df_dict

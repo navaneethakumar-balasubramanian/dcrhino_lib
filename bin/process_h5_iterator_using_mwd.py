@@ -193,7 +193,11 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         hole_features_extracted['reflection_coefficient'] = pd.Series(qc_input.reflection_coefficient_sample, index = hole_features_extracted.index)
         hole_features_extracted['axial_delay'] = hole_features_extracted['axial_multiple_peak_time_sample'] - hole_features_extracted['axial_primary_peak_time_sample']
         hole_features_extracted['axial_velocity_delay'] = 1.0/(hole_features_extracted['axial_delay'])**3
-
+        
+        hole_features_extracted['tangential_RC'] = pd.Series(qc_input.tangential_reflection_coefficient_sample,index = hole_features_extracted.index) # Added variable for tangential reflection coefficient')]
+        hole_features_extracted['tangential_delay'] = hole_features_extracted['tangential_multiple_peak_sample'] - hole_features_extracted['tangential_primary_peak_sample']
+        hole_features_extracted['tangential_velocity_delay'] = 1.0/(hole_features_extracted['tangential_delay'])
+        
         hole_features_extracted.dropna(axis=1, how='all', inplace=True)
         hole_features_extracted.to_csv(os.path.join(hole_output_folder,"extracted_features.csv"),index=False)
         holes_h5[hole]['hole_mwd_df'].to_csv(os.path.join(hole_output_folder,"hole_mwd.csv"),index=False)

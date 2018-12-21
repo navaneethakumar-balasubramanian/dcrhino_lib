@@ -500,6 +500,22 @@ class QCLogPlotInput(object):
     @property
     def primary_pseudo_density_sample(self):
         return 1e6 * self.reflection_coefficient_sample / self.primary_pseudo_velocity_sample**2
+    
+    @property
+    def tangential_primary_peak_sample(self):
+        return self.df['tangential_primary_peak_sample']
+
+    @property
+    def tangential_amplitude_ratio_sample(self):
+        return self.df['tangential_multiple_peak_sample'] / self.df['tangential_primary_peak_sample']
+
+    @property
+    def tangential_reflection_coefficient_sample(self):
+        return (1.0 - self.tangential_amplitude_ratio_sample) / (1.0 + self.tangential_amplitude_ratio_sample)
+    
+    @property
+    def tangential_velocity_delay(self):
+        return self.df['tangential_velocity_delay']
 
 class QCLogPlotter():
     def __init__(self, qc_plot_input, **kwargs):
