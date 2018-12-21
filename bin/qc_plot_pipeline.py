@@ -24,25 +24,28 @@ from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotterv2
 from dcrhino.process_pipeline.qc_log_plotter_nomwd import QCLogPlotter_nomwd
 from dcrhino.process_pipeline.acceleration_plotter import acceleration_plotter
 from dcrhino.process_pipeline.qc_log_plotter_for_jamie import QCLogPlotterv3
+from dcrhino.analysis.unstable.feature_extraction.feature_extraction_20181211 import get_expected_multiple_times
 
 def get_multiples(global_config):
+            expected_multiple = get_expected_multiple_times(global_config, recipe='J1')
+            pdb.set_trace()
 # Calculate 1st and 2nd multiples for axial and tangential data. These are theoretical. Actual multiples will be different
 #            pdb.set_trace()
     
-            Vaxial = global_config.ACOUSTIC_VELOCITY #m/s
-            Vtang =  global_config.SHEAR_VELOCITY #m/s
-#            pdb.set_trace()
-            
-            ax_1_mult = (2*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vaxial)*1000
-            ax_2_mult = (4*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vaxial)*1000
-            
-            tang_1_mult = (2*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vtang)*1000
-            tang_2_mult = (4*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vtang)*1000
-    
-            mult_pos = pd.DataFrame({'axial_first_multiple':[ax_1_mult], 'axial_second_multiple':[ax_2_mult], 
-                                     'tangential_first_multiple':[tang_1_mult], 'tangential_second_multiple':[tang_2_mult]})
+#            Vaxial = global_config.ACOUSTIC_VELOCITY #m/s
+#            Vtang =  global_config.SHEAR_VELOCITY #m/s
+##            pdb.set_trace()
+#            
+#            ax_1_mult = (2*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vaxial)*1000
+#            ax_2_mult = (4*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vaxial)*1000
+#            
+#            tang_1_mult = (2*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vtang)*1000
+#            tang_2_mult = (4*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vtang)*1000
+## Using Karl's code now.
+            mult_pos = pd.DataFrame({'axial_first_multiple':[expected_multiple['axial']*1000], 'axial_second_multiple':[expected_multiple['axial_second_multiple']*1000], 
+                                     'tangential_first_multiple':[expected_multiple['tangential']*1000], 'tangential_second_multiple':[expected_multiple['tangential_second_multiple']*1000]})
+            pdb.set_trace()
             return mult_pos
-#<<<CHANGE THE ABOVE WITH KARLs CODE AFTER HE IS DONE>>>>
             
 def get_ax_lim(extracted_features_df):
         min_ax_RC = min(extracted_features_df['reflection_coefficient'])
