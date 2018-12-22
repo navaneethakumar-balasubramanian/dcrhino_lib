@@ -130,6 +130,12 @@ def get_plot_title(global_config,mwd_df):
     
     return plot_title
     
+
+def get_output_file_name(mwd_df):
+    output_file_name = "{}_{}_depth_plot.png".format(mwd_df.bench.values[0], mwd_df.hole.values[0])
+    return output_file_name
+    
+    
 def get_noise_threshold(global_config):
         noise_threshold = global_config.sensor_saturation_g/2000.
         return noise_threshold
@@ -288,7 +294,8 @@ def main():
         qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'depth_plot.png'),global_config,mult_pos)
         qclogplotter_depth.plot(show=True)
         
-        qclogplotter_depth_v2 = QCLogPlotterv3(axial,tangential,radial,mwd_helper,mwd_df,feature_df,plot_title,os.path.join(args.data_path,'depth_plot_v2.png'),global_config,ax_lim,noise_threshold,mult_pos)
+        output_filename = get_output_file_name(mwd_df)
+        qclogplotter_depth_v2 = QCLogPlotterv3(axial,tangential,radial,mwd_helper,mwd_df,feature_df,plot_title,os.path.join(args.data_path,output_filename),global_config,ax_lim,noise_threshold,mult_pos)
         qclogplotter_depth_v2.plot(show=True)
         #qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'time_plot.png'),global_config,plot_by_depth=False)
         #qclogplotter_time.plot(show=True)
