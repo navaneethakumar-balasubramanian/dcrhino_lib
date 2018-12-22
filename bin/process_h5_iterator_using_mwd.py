@@ -194,43 +194,41 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         
 
 
-#        columns_rename = {  "mse":"mwd_mse",
-#                            "axial_multiple_peak_sample": "axial_multiple_peak_amplitude",
-#                            "axial_multiple_peak_time_sample": "axial_multiple_peak_time",
-#                            "axial_primary_peak_sample":"axial_primary_peak_amplitude",
-#                            "axial_primary_peak_time_sample":"axial_primary_peak_time",
-#                            "radial_primary_peak_sample":"radial_primary_peak_amplitude_sample",
-#                            "tangential_primary_peak_sample":"tangential_primary_peak_amplitude",
-#                            "pseudo_ucs":"c_str",
-#                            "pseudo_velocity":"a_vel",
-#                            "pseudo_density":"a_dens",
-#                            "reflection_coefficient":"a_reflection-coefficient",
-#                            "axial_delay":"a_delay",
-#                            "tangential_amplitude_ratio":"t_reflection_coef",
-#                            "tangential_delay":"t_delay",
-#                            "tangential_impedance":"t_mod",
-#                            "shear_velocity":"t_vel"}
+        columns_rename = {  "mse":"mwd_mse",
+                            "axial_multiple_peak_sample": "axial_multiple_peak_amplitude",
+                            "axial_multiple_peak_time_sample": "axial_multiple_peak_time",
+                            "axial_primary_peak_sample":"axial_primary_peak_amplitude",
+                            "axial_primary_peak_time_sample":"axial_primary_peak_time",
+                            "radial_primary_peak_sample":"radial_primary_peak_amplitude_sample",
+                            "tangential_primary_peak_sample":"tangential_primary_peak_amplitude",
+                            "pseudo_ucs":"c_str",
+                            "pseudo_velocity":"a_vel",
+                            "pseudo_density":"a_dens",
+                            "reflection_coefficient":"a_reflection-coefficient",
+                            "axial_delay":"a_delay",
+                            "tangential_amplitude_ratio":"t_reflection_coef",
+                            "tangential_delay":"t_delay",
+                            "tangential_impedance":"t_mod",
+                            "shear_velocity":"t_vel"}
 
 
-#        hole_features_extracted = hole_features_extracted.rename(index=str, columns=columns_rename)
+        hole_features_extracted = hole_features_extracted.rename(index=str, columns=columns_rename)
         hole_features_extracted.dropna(axis=1, how='all', inplace=True)
         hole_features_extracted = hole_features_extracted.drop(['datetime'],axis=1)
+
+        columns_to_bin = hole_features_extracted.columns
+        print columns_to_bin
+        binned_df = apply_bin_df(hole_features_extracted,global_config.binning_interval_in_cm/100,columns_to_bin)
+        binned_df['x'] = hole_mwd[mwdHelper.easting_column_name].values[0]
+        binned_df['y'] = hole_mwd[mwdHelper.northing_column_name].values[0]
+        binned_df["mine"] = global_config.mine_name
+        binned_df["mwd_bench"] = hole_mwd[mwdHelper.bench_column_name].values[0]
+        binned_df["mwd_area"] = hole_mwd[mwdHelper.pattern_column_name].values[0]
+        binned_df["mwd_hole"] = hole_mwd[mwdHelper.hole_column_name].values[0]
+        acceleration_values_by_second.to_csv(os.path.join(hole_output_folder,"acceleration_values_by_second.csv"),index=False)
+        hole_features_extracted.to_csv(os.path.join(hole_output_folder,"extracted_features.csv"),index=False)
+        binned_df.to_csv(os.path.join(hole_output_folder,"binned.csv"),index=False)
         holes_h5[hole]['hole_mwd_df'].to_csv(os.path.join(hole_output_folder,"hole_mwd.csv"),index=False)
-
-
-#        columns_to_bin = hole_features_extracted.columns
-#        print columns_to_bin
-#        binned_df = apply_bin_df(hole_features_extracted,global_config.binning_interval_in_cm/100,columns_to_bin)
-#        binned_df['x'] = hole_mwd[mwdHelper.easting_column_name].values[0]
-#        binned_df['y'] = hole_mwd[mwdHelper.northing_column_name].values[0]
-#        binned_df["mine"] = global_config.mine_name
-#        binned_df["mwd_bench"] = hole_mwd[mwdHelper.bench_column_name].values[0]
-#        binned_df["mwd_area"] = hole_mwd[mwdHelper.pattern_column_name].values[0]
-#        binned_df["mwd_hole"] = hole_mwd[mwdHelper.hole_column_name].values[0]
-#        acceleration_values_by_second.to_csv(os.path.join(hole_output_folder,"acceleration_values_by_second.csv"),index=False)
-#        hole_features_extracted.to_csv(os.path.join(hole_output_folder,"extracted_features.csv"),index=False)
-#        binned_df.to_csv(os.path.join(hole_output_folder,"binned.csv"),index=False)
-#        holes_h5[hole]['hole_mwd_df'].to_csv(os.path.join(hole_output_folder,"hole_mwd.csv"),index=False)
 
 
 if __name__ == "__main__":
