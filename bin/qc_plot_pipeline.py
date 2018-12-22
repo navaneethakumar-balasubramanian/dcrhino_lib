@@ -28,7 +28,7 @@ from dcrhino.analysis.unstable.feature_extraction.feature_extraction_20181211 im
 
 def get_multiples(global_config):
             expected_multiple = get_expected_multiple_times(global_config, recipe='J1')
-            pdb.set_trace()
+#            pdb.set_trace()
 # Calculate 1st and 2nd multiples for axial and tangential data. These are theoretical. Actual multiples will be different
 #            pdb.set_trace()
     
@@ -44,7 +44,7 @@ def get_multiples(global_config):
 ## Using Karl's code now.
             mult_pos = pd.DataFrame({'axial_first_multiple':[expected_multiple['axial']*1000], 'axial_second_multiple':[expected_multiple['axial_second_multiple']*1000], 
                                      'tangential_first_multiple':[expected_multiple['tangential']*1000], 'tangential_second_multiple':[expected_multiple['tangential_second_multiple']*1000]})
-            pdb.set_trace()
+#            pdb.set_trace()
             return mult_pos
             
 def get_ax_lim(extracted_features_df):
