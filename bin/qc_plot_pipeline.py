@@ -31,59 +31,59 @@ def get_multiples(global_config):
 #            pdb.set_trace()
 # Calculate 1st and 2nd multiples for axial and tangential data. These are theoretical. Actual multiples will be different
 #            pdb.set_trace()
-    
+
 #            Vaxial = global_config.ACOUSTIC_VELOCITY #m/s
 #            Vtang =  global_config.SHEAR_VELOCITY #m/s
 ##            pdb.set_trace()
-#            
+#
 #            ax_1_mult = (2*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vaxial)*1000
 #            ax_2_mult = (4*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vaxial)*1000
-#            
+#
 #            tang_1_mult = (2*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vtang)*1000
 #            tang_2_mult = (4*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vtang)*1000
 ## Using Karl's code now.
-            mult_pos = pd.DataFrame({'axial_first_multiple':[expected_multiple['axial']*1000], 'axial_second_multiple':[expected_multiple['axial_second_multiple']*1000], 
+            mult_pos = pd.DataFrame({'axial_first_multiple':[expected_multiple['axial']*1000], 'axial_second_multiple':[expected_multiple['axial_second_multiple']*1000],
                                      'tangential_first_multiple':[expected_multiple['tangential']*1000], 'tangential_second_multiple':[expected_multiple['tangential_second_multiple']*1000]})
 #            pdb.set_trace()
             return mult_pos
-            
+
 def get_ax_lim(extracted_features_df):
         min_ax_RC = min(extracted_features_df['reflection_coefficient'])
         max_ax_RC = max(extracted_features_df['reflection_coefficient'])
-        
+
         min_tang_RC = min(extracted_features_df['tangential_RC'])
         max_tang_RC = max(extracted_features_df['tangential_RC'])
-        
+
         min_peak_x = min(extracted_features_df['axial_primary_peak_sample'])
         max_peak_x = max(extracted_features_df['axial_primary_peak_sample'])
         min_delay = min(extracted_features_df['axial_velocity_delay'])
         max_delay = max(extracted_features_df['axial_velocity_delay'])
-        
+
         # 5% less than the minimum and 5% more than maximum for the entire bench
-        
+
         lower_ax_RC = (min_ax_RC - (min_ax_RC*0.05))
         upper_ax_RC = (max_ax_RC + (max_ax_RC*0.05))
-        
+
         lower_peak_x = (min_peak_x - (min_peak_x*0.05))
         upper_peak_x = (max_peak_x + (max_peak_x*0.05))
-        
+
         lower_delay = (min_delay - (min_delay*0.05))
         upper_delay = (max_delay - (max_delay*0.05))
-        
+
         lower_tang_RC = (min_tang_RC - (min_tang_RC*0.05))
         upper_tang_RC = (max_tang_RC + (max_tang_RC*0.05))
-    
+
         print(min_ax_RC,max_ax_RC, min_tang_RC,max_tang_RC,min_peak_x, max_peak_x,
               min_delay,max_delay,lower_ax_RC,upper_ax_RC, lower_peak_x, upper_peak_x,
               lower_delay,upper_delay,lower_tang_RC,upper_tang_RC)
-        
+
         ax_lim = pd.DataFrame({'lower_ax_RC':[lower_ax_RC],'upper_ax_RC':[upper_ax_RC],'lower_peak_x':[lower_peak_x],
                                'lower_delay':[lower_delay],'upper_delay':[upper_delay],'lower_tang_RC':[lower_tang_RC],
                                'upper_tang_RC':[upper_tang_RC]})
         return ax_lim
-    
+
 def get_plot_title(global_config,mwd_df):
-    
+
     if global_config.drill_type == 1:
         drill_type = "electric rotary",
     elif global_config.drill_type == 2:
@@ -96,7 +96,7 @@ def get_plot_title(global_config,mwd_df):
         drill_type="coring"
     else:
         drill_type = "unknown"
-        
+
     if global_config.bit_type == 1:
         bit_type ="tricone"
     elif global_config.bit_type ==2:
@@ -105,7 +105,7 @@ def get_plot_title(global_config,mwd_df):
         bit_type = "coring",
     else:
         bit_type ="other"
-    
+
     if global_config.sensor_installation_location == 1:
         sensor_location = "shocksub"
     elif global_config.sensor_installation_location ==2:
@@ -116,26 +116,26 @@ def get_plot_title(global_config,mwd_df):
         sensor_location ="steel breakout"
     else:
         sensor_location="unknown"
-        
-        
+
+
     title_line1 = r"$\bf{"+ "SENSOR"+"}$"+": LOCATION: {}".format(sensor_location) +", SERIAL NUMBER: {}".format(global_config.sensor_serial_number)+'\n'+"SENSITIVITY: {}, ORIENTATION: <> ".format(global_config.sensor_saturation_g)
     title_line2 = r"$\bf{"+ "RIG/BIT/DRILLSTRING"+"}$"+": RIG TYPE: <>, DRILL TYPE: {},".format(drill_type)+'\n'+"BIT SIZE: {}/".format(global_config.bit_size)+" Type:{}".format(bit_type)+"/Model:{}".format(global_config.bit_model)+"/Tooth Length:<>,"+'\n'+" DRILL STRING LENGTH:{}".format(global_config.drill_string_total_length)
     title_line3 = "DISTANCE FROM BIT TO SENSOR: {}".format(global_config.sensor_distance_to_source,global_config.rig_id)
         # FIX THIS TITLE
 #            title_line5 = "type,starting distance (relative to bit bottom),  length, outer diameter"
-    title_line4 = r"$\bf{"+"MINE"+"}$"+": {},".format(global_config.mine_name)+ r"$\bf{"+"DATE:"+"}$"+ "{},".format(pd.to_datetime(mwd_df.time_start_utc.min()).strftime("%B %d, %Y"))+'\n'+r"$\bf{"+" BENCH:"+"}$"+"{},".format(mwd_df.bench.values[0])+ r"$\bf{"+"HOLE:"+"}$"+ "{}" .format(mwd_df.hole.values[0])
-        
+    #title_line4 = r"$\bf{"+"MINE"+"}$"+": {},".format(global_config.mine_name)+ r"$\bf{"+"DATE:"+"}$"+ "{},".format(pd.to_datetime(mwd_df.time_start_utc.min()).strftime("%B %d, %Y"))+'\n'+r"$\bf{"+" BENCH:"+"}$"+"{},".format(mwd_df.bench.values[0])+ r"$\bf{"+"HOLE:"+"}$"+ "{}" .format(mwd_df.hole.values[0])
+    title_line4 = ""
     plot_title = [title_line4, title_line2+' '+title_line3, title_line1]
 #    pdb.set_trace()
-    
+
     return plot_title
-    
+
 
 def get_output_file_name(mwd_df):
     output_file_name = "{}_{}_depth_plot.png".format(mwd_df.bench.values[0], mwd_df.hole.values[0])
     return output_file_name
-    
-    
+
+
 def get_noise_threshold(global_config):
         noise_threshold = global_config.sensor_saturation_g/2000.
         return noise_threshold
@@ -200,7 +200,7 @@ def main():
     config_fullfile = os.path.join(args.data_path,config_filebase)
     accel_fullfile = os.path.join(args.data_path,accel_csv_filebase)
 
-    
+
 
     mwd_df = None
     try:
@@ -215,10 +215,10 @@ def main():
        data_conf = json.load(f)
     global_config.set_data_from_json(data_conf)
     global_config.n_samples_trimmed_trace
-    
+
     mult_pos = get_multiples(global_config)
     noise_threshold = get_noise_threshold(global_config)
-    
+
     feature_df = pd.read_csv(feature_fullfile)
     axial_file_path = os.path.join(args.data_path,'axial.npy')
     tangential_file_path = os.path.join(args.data_path,'tangential.npy')
@@ -234,9 +234,9 @@ def main():
     end_ts = ts[-1]
 
     ax_lim = get_ax_lim(feature_df)
-    
+
     plot_title = get_plot_title(global_config,mwd_df)#    pdb.set_trace()
-    
+
 
     bph_string = global_config.mine_name + "\nRig:" + global_config.rig_id + " From:" + datetime.utcfromtimestamp(start_ts).strftime('%Y-%m-%d %H:%M:%S') + " to " + datetime.utcfromtimestamp(end_ts).strftime('%Y-%m-%d %H:%M:%S')
 
@@ -252,7 +252,7 @@ def main():
 
     try:
         accel_df = pd.read_csv(accel_fullfile)
-        
+
         if output_folder_path is False:
             acceleration_plotter(accel_df,os.path.join(args.data_path,'Acceleration_histogram.png'),bph_string, show = True)
         else:
@@ -293,8 +293,12 @@ def main():
 
         qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'depth_plot.png'),global_config,mult_pos)
         qclogplotter_depth.plot(show=True)
-        
-        output_filename = get_output_file_name(mwd_df)
+
+        #output_filename = get_output_file_name(mwd_df)
+        if output_folder_path != False:
+            output_filename = os.path.join(output_folder_path,'depth_plot_v2.png')
+        else:
+            output_filename = os.path.join(args.data_path,'depth_plot_v2.png')
         qclogplotter_depth_v2 = QCLogPlotterv3(axial,tangential,radial,mwd_helper,mwd_df,feature_df,plot_title,os.path.join(args.data_path,output_filename),global_config,ax_lim,noise_threshold,mult_pos)
         qclogplotter_depth_v2.plot(show=True)
         #qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'time_plot.png'),global_config,plot_by_depth=False)
