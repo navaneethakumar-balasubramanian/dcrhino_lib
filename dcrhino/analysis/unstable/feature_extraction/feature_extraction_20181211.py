@@ -217,9 +217,9 @@ def feature_extractor_J1(global_config, trimmed_traces_dict):
     sampling_rate = global_config.output_sampling_rate; dt = 1./sampling_rate;
     #<Define intervals of data for analysis and prep containers>
 
-    expected_mulitple_periods = get_expected_mulitple_times(global_config)
+    expected_multiple_periods = get_expected_multiple_times(global_config)
     #pdb.set_trace()
-    window_boundaries_time = set_window_boundaries_in_time(expected_mulitple_periods, window_widths)
+    window_boundaries_time = set_window_boundaries_in_time(expected_multiple_periods, window_widths)
 
     window_boundaries_indices = convert_window_boundaries_to_sample_indices(window_boundaries_time, global_config)
     #</Define intervals of data for analysis and prep containers>
