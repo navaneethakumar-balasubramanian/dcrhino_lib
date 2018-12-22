@@ -105,9 +105,20 @@ def get_plot_title(global_config,mwd_df):
         bit_type = "coring",
     else:
         bit_type ="other"
+    
+    if global_config.sensor_installation_location == 1:
+        sensor_location = "shocksub"
+    elif global_config.sensor_installation_location ==2:
+        sensor_location ="saver sub"
+    elif global_config.sensor_installation_location==3:
+        sensor_location ="steel"
+    elif global_config.sensor_installation_location==4:
+        sensor_location ="steel breakout"
+    else:
+        sensor_location="unknown"
         
         
-    title_line1 = r"$\bf{"+ "SENSOR"+"}$"+": LOCATION: <>, SERIAL NUMBER: {}".format(global_config.sensor_serial_number)+'\n'+"SENSITIVITY: {}, ORIENTATION: <> ".format(global_config.sensor_saturation_g)
+    title_line1 = r"$\bf{"+ "SENSOR"+"}$"+": LOCATION: {}".format(sensor_location) +", SERIAL NUMBER: {}".format(global_config.sensor_serial_number)+'\n'+"SENSITIVITY: {}, ORIENTATION: <> ".format(global_config.sensor_saturation_g)
     title_line2 = r"$\bf{"+ "RIG/BIT/DRILLSTRING"+"}$"+": RIG TYPE: <>, DRILL TYPE: {},".format(drill_type)+'\n'+"BIT SIZE: {}/".format(global_config.bit_size)+" Type:{}".format(bit_type)+"/Model:{}".format(global_config.bit_model)+"/Tooth Length:<>,"+'\n'+" DRILL STRING LENGTH:{}".format(global_config.drill_string_total_length)
     title_line3 = "DISTANCE FROM BIT TO SENSOR: {}".format(global_config.sensor_distance_to_source,global_config.rig_id)
         # FIX THIS TITLE

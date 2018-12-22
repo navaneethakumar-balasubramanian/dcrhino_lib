@@ -60,6 +60,8 @@ class Config( object ):
         self.bit_type = " "
         self.bit_model = " "
         self.drill_string_total_length = " "
+        self.sensor_installation_location = " "
+        
         # End adding new fields. 
         
         if metadata is not None:
