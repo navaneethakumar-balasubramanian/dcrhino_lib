@@ -504,6 +504,10 @@ class QCLogPlotInput(object):
     @property
     def tangential_primary_peak_sample(self):
         return self.df['tangential_primary_peak_sample']
+    
+    @property
+    def tangential_primary_peak_time_sample(self):
+        return self.df['tangential_primary_peak_time_sample']
 
     @property
     def tangential_amplitude_ratio_sample(self):

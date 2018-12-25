@@ -290,10 +290,12 @@ class QCLogPlotterv3():
         # Panel 5
         self.legend_box(ax[4])
 
-
-        
-
-
+#        pdb.set_trace()
+        ax_1_mult = sum(self.extracted_features_df['axial_primary_peak_time_sample']+self.mult_pos.axial_first_multiple[0])/len(self.extracted_features_df['axial_primary_peak_time_sample'])
+        ax_2_mult =  sum(self.extracted_features_df['axial_primary_peak_time_sample']+self.mult_pos.axial_second_multiple[0])/len(self.extracted_features_df['axial_primary_peak_time_sample'])
+        tang_1_mult = sum(self.extracted_features_df['tangential_primary_peak_time_sample']+self.mult_pos.tangential_first_multiple[0])/len(self.extracted_features_df['axial_primary_peak_time_sample'])
+        tang_2_mult = sum(self.extracted_features_df['tangential_primary_peak_time_sample']+self.mult_pos.tangential_second_multiple[0])/len(self.extracted_features_df['axial_primary_peak_time_sample'])
+#        pdb.set_trace()
         #Now, go plot heatmaps.
 
         plt.subplots_adjust(right=10.5)
@@ -316,14 +318,14 @@ class QCLogPlotterv3():
           multiple_search_back_ms=qc_plot_input.multiple_search_back_ms,
           multiple_search_forward_ms=qc_plot_input.multiple_search_forward_ms)
 #        pdb.set_trace()
-        ax[1].axhline(y = self.mult_pos.axial_first_multiple[0],xmin = 0, xmax = X[-1], color = 'k',linestyle = '--',linewidth = 2)
+        ax[1].axhline(y = ax_1_mult,xmin = 0, xmax = X[-1], color = 'k',linestyle = '--',linewidth = 2)
 #        ax[1].axhline(y = self.mult_pos.axial_first_multiple[0],xmin = 0, xmax = X[-1], color = 'cyan',linestyle = '-',linewidth = 4)
 
-        ax[1].axhline(y = self.mult_pos.axial_second_multiple[0],xmin = 0, xmax = X[-1], color = 'k',linestyle = '--',linewidth = 2)
+        ax[1].axhline(y = ax_2_mult,xmin = 0, xmax = X[-1], color = 'k',linestyle = '--',linewidth = 2)
 #        ax[1].axhline(y = self.mult_pos.axial_second_multiple[0],xmin = 0, xmax = X[-1], color = 'cyan',linestyle = '-',linewidth = 4)
 
-        ax[1].axhline(y = self.mult_pos.tangential_first_multiple[0],xmin = 0, xmax = X[-1], color = 'k',linestyle = '-',linewidth = 2)
-        ax[1].axhline(y = self.mult_pos.tangential_second_multiple[0],xmin = 0, xmax = X[-1], color = 'k',linestyle = '-',linewidth = 2)
+        ax[1].axhline(y = tang_1_mult,xmin = 0, xmax = X[-1], color = 'k',linestyle = '-',linewidth = 2)
+        ax[1].axhline(y = tang_2_mult,xmin = 0, xmax = X[-1], color = 'k',linestyle = '-',linewidth = 2)
 #        pdb.set_trace()
 
         if colourbar_type == 'each_axis':
@@ -333,14 +335,14 @@ class QCLogPlotterv3():
         ax[3], heatmap2 = plot_hole_as_heatmap(ax[3], cbal.v_min_2, cbal.v_max_2, X, Y,
           trace_array_dict['tangential'], cmap_string, y_tick_locations)#,
         
-        ax[3].axhline(y = self.mult_pos.axial_first_multiple[0],xmin = 0, xmax = X[-1], color = 'k',linestyle = '--',linewidth = 2)
+        ax[3].axhline(y = ax_1_mult,xmin = 0, xmax = X[-1], color = 'k',linestyle = '--',linewidth = 2)
 #        ax[3].axhline(y = self.mult_pos.axial_first_multiple[0],xmin = 0, xmax = X[-1], color = 'cyan',linestyle = '-',linewidth = 4)
 
-        ax[3].axhline(y = self.mult_pos.axial_second_multiple[0],xmin = 0, xmax = X[-1], color = 'k',linestyle = '--',linewidth = 2)
+        ax[3].axhline(y = ax_2_mult,xmin = 0, xmax = X[-1], color = 'k',linestyle = '--',linewidth = 2)
 #        ax[3].axhline(y = self.mult_pos.axial_second_multiple[0],xmin = 0, xmax = X[-1], color = 'cyan',linestyle = '-',linewidth = 4)
 
-        ax[3].axhline(y = self.mult_pos.tangential_first_multiple[0],xmin = 0, xmax = X[-1], color = 'k',linestyle = '-',linewidth = 2)
-        ax[3].axhline(y = self.mult_pos.tangential_second_multiple[0],xmin = 0, xmax = X[-1], color = 'k',linestyle = '-',linewidth = 2)
+        ax[3].axhline(y = tang_1_mult,xmin = 0, xmax = X[-1], color = 'k',linestyle = '-',linewidth = 2)
+        ax[3].axhline(y = tang_2_mult,xmin = 0, xmax = X[-1], color = 'k',linestyle = '-',linewidth = 2)
         ax[3].set_xlabel('Depth (m)')
 
 
@@ -398,10 +400,10 @@ class QCLogPlotterv3():
         legend_lines3 = [Line2D([0],[0],color = 'k',linestyle = '--', linewidth = 2,label = 'Axial Multiples'),
                         Line2D([0],[0],color = 'k',linestyle = '-', linewidth = 2,label = 'Tangential Multiples')]
         
-        mult_title1 = "wax1b = {}".format(round(self.mult_pos.axial_first_multiple[0]-2),1)+"  wax1e = {}".format(round(self.mult_pos.axial_first_multiple[0]+2),1)
-        mult_title2 = "wax2b = {}".format(round(self.mult_pos.axial_second_multiple[0]-2),1)+"  wax2e = {}".format(round(self.mult_pos.axial_second_multiple[0]+2),1)
-        mult_title3 = "wtang1b = {}".format(round(self.mult_pos.tangential_first_multiple[0]-2),1)+"  wtang1e = {}".format(round(self.mult_pos.tangential_first_multiple[0]+2),1)
-        mult_title4 = "wtang2b = {}".format(round(self.mult_pos.tangential_first_multiple[0]-2),1)+"  wtang2e = {}".format(round(self.mult_pos.tangential_second_multiple[0]+2),1)
+        mult_title1 = "wax1b = {0:.1f}".format((self.mult_pos.axial_first_multiple[0]-0.5))+"  wax1e = {0:.1f}".format((self.mult_pos.axial_first_multiple[0]+3.5))
+        mult_title2 = "wax2b = {0:.1f}".format((self.mult_pos.axial_second_multiple[0]-0.5))+"  wax2e = {0:.1f}".format((self.mult_pos.axial_second_multiple[0]+3.5))
+        mult_title3 = "wtang1b = {0:.1f}".format((self.mult_pos.tangential_first_multiple[0]-0.5))+"  wtang1e = {0:.1f}".format((self.mult_pos.tangential_first_multiple[0]+3.5))
+        mult_title4 = "wtang2b = {0:.1f}".format((self.mult_pos.tangential_second_multiple[0]-0.5))+"  wtang2e = {0:.1f}".format((self.mult_pos.tangential_second_multiple[0]+3.5))
         
         mult_title = mult_title1 + '\n' + mult_title2 + '\n' + mult_title3 + '\n' + mult_title4
         
@@ -603,9 +605,9 @@ class QCLogPlotInput(object):
         return 1e6 * self.reflection_coefficient_sample / self.primary_pseudo_velocity_sample**2
     
     ## Adding tangential components from Jamie'e email:
-#    @property
-#    def tangential_primary_peak_amplitude(self):
-#        return self.df['tangential_primary_peak_amplitude']
+    @property
+    def tangential_primary_peak_amplitude(self):
+        return self.df['tangential_primary_peak_time_sample']
     @property
     def tangential_primary_peak_sample(self):
         return self.df['tangential_primary_peak_sample']

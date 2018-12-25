@@ -131,8 +131,8 @@ def get_plot_title(global_config,mwd_df):
     return plot_title
 
 
-def get_output_file_name(mwd_df):
-    output_file_name = "{}_{}_depth_plot.png".format(mwd_df.bench.values[0], mwd_df.hole.values[0])
+def get_output_file_name(mwd_df,global_config):
+    output_file_name = "{}_{}_{}depth_plot.png".format(mwd_df.bench.values[0], mwd_df.hole.values[0],global_config.sensor_serial_number,)
     return output_file_name
 
 
@@ -294,7 +294,7 @@ def main():
         qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'depth_plot.png'),global_config,mult_pos)
         qclogplotter_depth.plot(show=True)
 
-        #output_filename = get_output_file_name(mwd_df)
+        output_filename = get_output_file_name(mwd_df,global_config)
         if output_folder_path != False:
             output_filename = os.path.join(output_folder_path,'depth_plot_v2.png')
         else:

@@ -23,6 +23,7 @@ class WaveletForFeatureExtraction(object):
         self.wavelet_type = kwargs.get('wavelet_type', None)
         for k in wavelet_features[self.component]:
             setattr(self, k, np.nan)
+        
 
 class CorrelatedTracePacket():
     def __init__(self, sampling_rate,n_samples=640,min_lag=0.1):
@@ -73,7 +74,7 @@ class FeatureExtractor():
                         'area', 'pk_error', 'zx_error', 'zero_crossing_prior_sample',
                         'zero_crossing_after_sample', 'left_trough_time', 'left_trough_time_sample']
 
-        self.WAVELET_FEATURES['tangential'] = ['peak_sample',]
+        self.WAVELET_FEATURES['tangential'] = ['peak_sample','peak_time_sample']
         self.WAVELET_FEATURES['radial'] = ['peak_sample',]
 
         self.output_sampling_rate = output_sampling_rate
@@ -126,6 +127,7 @@ class FeatureExtractor():
 
         wffe.peak_sample = np.max(window_to_search_for_primary_1)
         wffe.peak_time_sample = hopefully_prim_center_time
+        
         if np.max(tr.data)==np.max(window_to_search_for_primary_1):#sanity check;
             reference_index = np.argmax(tr.data)
             try:
@@ -148,6 +150,7 @@ class FeatureExtractor():
         wffe.zero_crossing_after_sample = zx_right
         wffe.left_trough_time = left_trough_time
         wffe.left_trough_time_sample = left_trough_time_sample
+        
         return wffe
 
     def create_features_dictionary(self,data_datetime):
