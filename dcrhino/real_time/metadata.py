@@ -211,7 +211,8 @@ METADATA_HEADER_FORMAT_KEYS = {
         'packet_length':DataType.INTEGER,
         'baud_rate':DataType.INTEGER,
         'window_widths':DataType.STRING,
-        'binning_interval_in_cm':DataType.FLOAT
+        'binning_interval_in_cm':DataType.FLOAT,
+        'accelerometer_max_voltage':DataType.FLOAT
         }
 
 
@@ -269,6 +270,7 @@ class Metadata(object):
                     raise LookupError("The metadata value in the configuration file is not declared in the metadata class" , item )
         self.sensor_distance_to_source = round(self.drill_string_total_length - self.sensor_position,2)
         self.sensor_distance_to_shocksub = round(self.sensor_position - shocksub_length,2)
+        self.accelerometer_max_voltage = cfg.getfloat("PLAYBACK","accelerometer_max_voltage")
 
 
     def __str__(self):
