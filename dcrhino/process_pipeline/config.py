@@ -51,8 +51,19 @@ class Config( object ):
         self.add_noise_percent = 200.0#150.0
         #Spiking Decon (10 ms operator, 5% white noise, design window 110-170 ms)
         self.spiking_decon_filter_duration = 0.010    #10ms; parameterize in terms of trace length
-
-
+        # Added by SJ, to incorporate new qc plots"
+        self.sensor_saturation_g=" "
+        self.sensor_distance_to_shocksub = " "
+        self.sensor_serial_number = " "
+        self.drill_type = " "
+        self.bit_size = " "
+        self.bit_type = " "
+        self.bit_model = " "
+        self.drill_string_total_length = " "
+        self.sensor_installation_location = " "
+        
+        # End adding new fields. 
+        
         if metadata is not None:
             self.set_metadata(metadata)
 
@@ -75,10 +86,6 @@ class Config( object ):
         else:
             print("unknown componet requested {} DNE".format(component_id))
 
-
-    @property
-    def sampling_rate(self):
-        return float(self.output_sampling_rate)
 
     @property
     def sampling_rate(self):

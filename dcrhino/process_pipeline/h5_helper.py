@@ -19,8 +19,10 @@ class H5Helper:
         self.h5f = h5f
         self.metadata = self._extract_metadata_from_h5_file()
         self._ts = np.asarray(self.h5f.get('ts'))
+
+
         if load_xyz:
-            self.load_xyz()
+            self.data_xyz = self.load_xyz()
 
         # laptop_ts = self.h5f.get('laptop_ts')
         # if laptop_ts is not None:
@@ -50,13 +52,13 @@ class H5Helper:
         return np.asarray(self.h5f.get(axis))
 
     def load_axis_boundaries(self,axis,min_index,max_index):
-        
+
         arr = np.zeros((max_index-min_index,), dtype='float64')
         self.h5f[axis].read_direct(arr,np.s_[min_index:max_index])
         return arr
-    
+
     def load_axis_mask(self,axis,mask):
-        
+
         #arr = np.zeros((max_index-min_index,), dtype='float64')
         #self.h5f[axis].read_direct(arr,np.s_[min_index:max_index])
         return self.h5f[axis][mask]

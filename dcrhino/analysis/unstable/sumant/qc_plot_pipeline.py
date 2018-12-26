@@ -23,6 +23,23 @@ from dcrhino.process_pipeline.mwd_helper import MwdDFHelper
 from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotterv2
 from dcrhino.process_pipeline.qc_log_plotter_nomwd import QCLogPlotter_nomwd
 
+def get_multiples(global_config):
+# Calculate 1st and 2nd multiples for axial and tangential data. These are theoretical. Actual multiples will be different
+#            pdb.set_trace()
+            Vaxial = global_config.acoustic_velocity #m/s
+            Vtang =  global_config.shear_velocity #m/s
+#            pdb.set_trace()
+            
+            ax_1_mult = (2*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vaxial)*1000
+            ax_2_mult = (4*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vaxial)*1000
+            
+            tang_1_mult = (2*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vtang)*1000
+            tang_2_mult = (4*(global_config.sensor_distance_to_source+global_config.sensor_distance_to_shocksub)/Vtang)*1000
+    
+            mult_pos = pd.DataFrame({'axial_first_multiple':[ax_1_mult], 'axial_second_multiple':[ax_2_mult], 
+                                     'tangential_first_multiple':[tang_1_mult], 'tangential_second_multiple':[tang_2_mult]})
+            return mult_pos
+
 def main():
 
     ddir = '/mnt/sda1/data/datacloud/rhino_process_pipeline_output/line_creek/5208/3200/2018-11-13_00001'
@@ -87,7 +104,7 @@ def main():
     global_config.set_data_from_json(data_conf)
     global_config.n_samples_trimmed_trace
 
-
+    mult_pos = get_multiples(global_config)
 
     feature_df = pd.read_csv(feature_fullfile)
     axial_file_path = os.path.join(args.data_path,'axial.npy')
@@ -104,7 +121,7 @@ def main():
     ]
     bph_string = 'Hackathon_Demo'
 
-    qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,feature_df,bph_string,os.path.join('time_plot.png'),global_config,start_ts,end_ts)
+    qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,feature_df,bph_string,os.path.join('time_plot.png'),global_config,mult_pos,start_ts,end_ts,)
     qclogplotter_time.plot(save=False,show=True)
 
     if mwd_df is not None:
@@ -135,9 +152,9 @@ def main():
 
 
 
-        qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'depth_plot.png'),global_config)
+        qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'depth_plot.png'),global_config,mult_pos)
         qclogplotter_depth.plot()
-        qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'time_plot.png'),global_config,plot_by_depth=False)
+        qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'time_plot.png'),global_config,mult_pos,plot_by_depth=False)
         qclogplotter_time.plot()
 
 

@@ -36,7 +36,7 @@ logger = init_logging(__name__)
 #<Fundamental
 COMPONENT_WAVELET_MAP = {}
 COMPONENT_WAVELET_MAP['axial'] = ['primary', 'multiple']
-COMPONENT_WAVELET_MAP['tangential'] = ['primary',]
+COMPONENT_WAVELET_MAP['tangential'] = ['primary','multiple']
 COMPONENT_WAVELET_MAP['radial'] = ['primary',]
 
 WAVELET_FEATURES = {}
@@ -45,7 +45,7 @@ WAVELET_FEATURES['axial'] = ['peak_amplitude', 'peak_sample', 'peak_time',
                 'area', 'pk_error', 'zx_error', 'zero_crossing_prior_sample',
                 'zero_crossing_after_sample', 'left_trough_time', 'left_trough_time_sample']
 
-WAVELET_FEATURES['tangential'] = ['peak_sample',]
+WAVELET_FEATURES['tangential'] = ['peak_sample','peak_time_sample']
 
 WAVELET_FEATURES['radial'] = ['peak_sample',]
 #home = os.path.expanduser("~/")

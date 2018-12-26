@@ -6,7 +6,7 @@ from dcrhino.feature_extraction.supporting_minimal_feature_extraction import get
 from dcrhino.feature_extraction.supporting_minimal_feature_extraction import get_trough_times
 from dcrhino.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_multiple_wavelet
 #from dcrhino.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_primary_wavelet
-import pdb
+
 ACOUSTIC_VELOCITY = 4755.0
 
 class WaveletForFeatureExtraction(object):
@@ -23,7 +23,6 @@ class WaveletForFeatureExtraction(object):
         self.wavelet_type = kwargs.get('wavelet_type', None)
         for k in wavelet_features[self.component]:
             setattr(self, k, np.nan)
-        
 
 class CorrelatedTracePacket():
     def __init__(self, sampling_rate,n_samples=640,min_lag=0.1):
@@ -74,7 +73,7 @@ class FeatureExtractor():
                         'area', 'pk_error', 'zx_error', 'zero_crossing_prior_sample',
                         'zero_crossing_after_sample', 'left_trough_time', 'left_trough_time_sample']
 
-        self.WAVELET_FEATURES['tangential'] = ['peak_sample','peak_time_sample']
+        self.WAVELET_FEATURES['tangential'] = ['peak_sample',]
         self.WAVELET_FEATURES['radial'] = ['peak_sample',]
 
         self.output_sampling_rate = output_sampling_rate
@@ -127,7 +126,6 @@ class FeatureExtractor():
 
         wffe.peak_sample = np.max(window_to_search_for_primary_1)
         wffe.peak_time_sample = hopefully_prim_center_time
-        
         if np.max(tr.data)==np.max(window_to_search_for_primary_1):#sanity check;
             reference_index = np.argmax(tr.data)
             try:
@@ -150,7 +148,6 @@ class FeatureExtractor():
         wffe.zero_crossing_after_sample = zx_right
         wffe.left_trough_time = left_trough_time
         wffe.left_trough_time_sample = left_trough_time_sample
-        
         return wffe
 
     def create_features_dictionary(self,data_datetime):
@@ -170,8 +167,7 @@ class FeatureExtractor():
         return feature_dict
 
 
-    def extract_features(self, data_datetime, axial_trace, tangential_trace,
-                         radial_trace, n_samples, min_lag):
+    def extract_features(self,data_datetime,axial_trace,tangential_trace,radial_trace,n_samples,min_lag):
         """
         this be an atomic feature extractor, taking as input a single time chunk,
         1s (for now).
@@ -179,8 +175,7 @@ class FeatureExtractor():
         #data_datetime = trace.date
         df_dict = self.create_features_dictionary(data_datetime)
         if axial_trace is None:
-            df_dict['datetime'] = datetime.utcfromtimestamp(data_datetime)
-            df_dict['datetime_ts'] = data_datetime
+            df_dict['datetime'] = datetime.fromtimestamp(data_datetime)
             return df_dict
         ctr = 0
         #for i_comp, component in enumerate(self.COMPONENT_WAVELET_MAP.keys()):
@@ -240,8 +235,5 @@ class FeatureExtractor():
             print ("Couldnt find this date in database " + str(data_datetime ))
             return None
 
-        df_dict['datetime'] = datetime.utcfromtimestamp(data_datetime)
-        df_dict['datetime_ts'] = data_datetime
-        #pdb.set_trace()
-
+        df_dict['datetime'] = datetime.fromtimestamp(data_datetime)
         return df_dict

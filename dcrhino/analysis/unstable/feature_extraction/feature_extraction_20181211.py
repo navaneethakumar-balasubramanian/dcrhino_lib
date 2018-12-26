@@ -44,7 +44,7 @@ def get_window_widths():
     #</From [FEATURE_EXTRACTION] config>
     return window_widths
 
-def get_expected_mulitple_times(global_config, recipe='J1'):
+def get_expected_multiple_times(global_config, recipe='J1'):
     """
     calculates the time_intervals between resonances along the pipe for each of P and S
     waves, axial and tangential components
@@ -54,11 +54,13 @@ def get_expected_mulitple_times(global_config, recipe='J1'):
     axial_velocity_steel = global_config.ACOUSTIC_VELOCITY
     shear_velocity_steel = global_config.SHEAR_VELOCITY
     if recipe=='J1':
-        expected_mulitple_periods = {}
+        expected_multiple_periods = {}
         total_distance = sensor_distance_to_bit + distance_sensor_to_shock_sub_bottom
-        expected_mulitple_periods['axial'] = 2 * total_distance / axial_velocity_steel
-        expected_mulitple_periods['tangential'] = 2 * total_distance / shear_velocity_steel
-    return expected_mulitple_periods
+        expected_multiple_periods['axial'] = 2 * total_distance / axial_velocity_steel
+        expected_multiple_periods['tangential'] = 2 * total_distance / shear_velocity_steel
+        expected_multiple_periods['axial_second_multiple'] = 4*total_distance / axial_velocity_steel
+        expected_multiple_periods['tangential_second_multiple'] = 4*total_distance / shear_velocity_steel
+    return expected_multiple_periods
 
 
 
@@ -215,9 +217,9 @@ def feature_extractor_J1(global_config, trimmed_traces_dict):
     sampling_rate = global_config.output_sampling_rate; dt = 1./sampling_rate;
     #<Define intervals of data for analysis and prep containers>
 
-    expected_mulitple_periods = get_expected_mulitple_times(global_config)
+    expected_multiple_periods = get_expected_multiple_times(global_config)
     #pdb.set_trace()
-    window_boundaries_time = set_window_boundaries_in_time(expected_mulitple_periods, window_widths)
+    window_boundaries_time = set_window_boundaries_in_time(expected_multiple_periods, window_widths)
 
     window_boundaries_indices = convert_window_boundaries_to_sample_indices(window_boundaries_time, global_config)
     #</Define intervals of data for analysis and prep containers>
