@@ -96,7 +96,9 @@ def set_window_boundaries_in_time(expected_multiple_periods, window_widths, comp
             window_bounds = np.array([primary_shift, primary_shift + width])
         elif bool(re.match('multiple', window_label)):
             n_multiple = int(window_label[-1])
+            #print(n_multiple)
             delay = n_multiple * expected_multiple_periods[component]
+            #delay += primary_shift
             width = window_widths[component][window_label]
             window_bounds = np.array([delay, delay+width])
         elif window_label == 'noise_1':
@@ -131,23 +133,19 @@ def update_window_boundaries_in_time(component, trimmed_trace, trimmed_time_vect
     if dynamic_windows is None:
         return window_boundaries_indices
     elif 'primary' in dynamic_windows:
-        #pdb.set_trace()
-        acceptable_peak_wander = .004 #3ms - add to env_cfg
+        acceptable_peak_wander = .003 #3ms - add to env_cfg
         max_index = np.argmax(trimmed_trace)
         max_time = trimmed_time_vector[max_index]
         applicable_window_width = window_widths[component]['primary']
         if np.abs(max_time) < acceptable_peak_wander:
             primary_shift = max_time - applicable_window_width/2.0 #this 2.0 means center the window on the max
-            set_window_boundaries_in_time(expected_multiple_periods,
-                                          window_widths, component,
-                                          primary_shift=primary_shift)
-            #pdb.set_trace()
+            set_window_boundaries_in_time(expected_multiple_periods, window_widths,
+                                          component, primary_shift=primary_shift)
             window_boundaries_indices = convert_window_boundaries_to_sample_indices(component, global_config)
             return window_boundaries_indices
 
 
         else:
-            print('unexpected and possibly bad primary time ---?')
             return window_boundaries_indices
     else:
         return window_boundaries_indices
@@ -316,9 +314,9 @@ def feature_extractor_J1(global_config, trimmed_traces_dict):
 def main():
     """
     """
-    ww = get_window_widths()
-    pdb.set_trace()
-    feature_extractor_J1()
+    #ww = get_window_widths()
+    #pdb.set_trace()
+    #feature_extractor_J1()
     print("finito {}".format(datetime.datetime.now()))
 
 if __name__ == "__main__":
