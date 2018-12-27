@@ -279,10 +279,10 @@ def feature_extractor_J1(global_config, trimmed_traces_dict):
         trimmed_trace = trimmed_traces_dict[component_label]
         #<update primary window to be centered on max amplitude of trace>
         print("20181226 update the window time boundaries to be based on trace data")
-        window_boundaries_indices = update_window_boundaries(trimmed_trace,
-                                                             trimmed_time_vector,
-                                                             window_boundaries_time,
-                                                             window_boundaries_indices)
+        window_boundaries_indices = update_window_boundaries_in_time(component, trimmed_trace,
+                                                                     trimmed_time_vector, window_widths,
+                                                                     window_boundaries_indices, expected_multiple_periods,
+                                                                     global_config)
 
         #</update primary window to be centered on max amplitude>
         window_data_dict, window_time_vector_dict = populate_window_data_dict(window_boundaries_indices[component_label],
