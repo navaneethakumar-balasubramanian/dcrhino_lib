@@ -20,7 +20,7 @@ from ConfigParser import ConfigParser
 
 from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
 from dcrhino.analysis.unstable.feature_extraction.feature_extraction_tangential_bob_20181031 import get_tangential_despike_filtered_trace_features
-from dcrhino.analysis.unstable.feature_extraction.feature_extraction_20181211 import feature_extractor_J1
+from dcrhino.analysis.unstable.feature_extraction.feature_extraction_20181226 import feature_extractor_J1
 from dcrhino.process_pipeline.config import Config
 from dcrhino.process_pipeline.feature_extractor import FeatureExtractor
 from dcrhino.process_pipeline.h5_helper import H5Helper
@@ -212,10 +212,51 @@ def save_or_append_npy(file_path,data,append_mode=False):
     else:
         np.save(file_path,data)
 
+def load_processed_traces(temppath):
+    traces_dict = {}
+    _key_list = ['axial_trimmed_filtered_correlated_array',
+                     'tangential_trimmed_filtered_correlated_array',
+                     'radial_trimmed_filtered_correlated_array',
+                     'tangential_filtered_despiked_correlated']
+    for _key in _key_list:
+        if _key == 'axial_trimmed_filtered_correlated_array':
+            expected_filename = os.path.join(temppath, 'axial.npy')
+            traces_dict[_key] = np.load(expected_filename)
+        elif _key == 'tangential_trimmed_filtered_correlated_array':
+            expected_filename = os.path.join(temppath, 'tangential.npy')
+            traces_dict[_key] = np.load(expected_filename)
+        elif _key == 'radial_trimmed_filtered_correlated_array':
+            expected_filename = os.path.join(temppath, 'radial.npy')
+            traces_dict[_key] = np.load(expected_filename)
+        else:
+#            pdb.set_trace()
+            expected_filename = os.path.join(temppath,'{}.npy'.format(_key))
+            traces_dict[_key] = np.load(expected_filename)
+    return traces_dict
 
-def process_h5_file(h5py_file, output_folder, cfg_file_path=False):
+def save_processed_traces(temppath, traces_dict, append_mode):
+    # SAVE FILES
+    for _key in traces_dict.keys():
+        if _key == 'axial_trimmed_filtered_correlated_array':
+            save_or_append_npy(os.path.join(temppath, 'axial.npy'), traces_dict[_key], append_mode)
+        elif _key == 'tangential_trimmed_filtered_correlated_array':
+            save_or_append_npy(os.path.join(temppath,'tangential.npy'),traces_dict[_key],append_mode)
+        elif _key == 'radial_trimmed_filtered_correlated_array':
+            save_or_append_npy(os.path.join(temppath,'radial.npy'),traces_dict[_key],append_mode)
+        elif _key == 'ts_array':
+            save_or_append_npy(os.path.join(temppath,'ts.npy'),traces_dict[_key],append_mode)
+        else:
+            output_file_name = _key.replace('_array','.npy')
+            save_or_append_npy(os.path.join(temppath,output_file_name),traces_dict[_key],append_mode)
+    return
+
+
+
+def process_h5_file(h5py_file, output_folder, cfg_file_path=False, reprocess_signals=True):
     """
     """
+    #<SETUP, CFG, H5, etc.>
+
     print ("Config file path:" , cfg_file_path)
 
     # Read Config
@@ -251,36 +292,24 @@ def process_h5_file(h5py_file, output_folder, cfg_file_path=False):
     end_ts = int(h5_helper.max_ts)
     temppath = output_folder
     io_helper.make_dirs_if_needed(temppath)
+    #</SETUP, CFG, H5, etc.>
 
     append_mode = False
-    print("WHY IS THIS HERE? it is making processing crash when reproc - knk20181212")
-    if 'ts.npy' in os.listdir(temppath):
-        previous_ts_array = np.load(os.path.join(temppath,'ts.npy'))
-        previous_end_ts = previous_ts_array[-1]
-        print "File in folder previous_end_ts {},end_ts {}".format(previous_end_ts, end_ts)
-        if end_ts > previous_end_ts+1:
-            append_mode = True
-            print "changed start ts to ",previous_end_ts+1
-            start_ts = previous_end_ts+1
-        else:
-            print "File in the output folder have more time than the input file"
-            sys.exit(1)
 
-    traces_dict = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper, h5_helper.ts, h5_helper.sensitivity_xyz, h5_helper.is_ide_file, accelerometer_max_voltage, global_config)
+
+    if reprocess_signals:
+        traces_dict = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper, h5_helper.ts, h5_helper.sensitivity_xyz, h5_helper.is_ide_file, accelerometer_max_voltage, global_config)
+        save_processed_traces(temppath, traces_dict, append_mode)
+    else:
+        try:
+            pdb.set_trace()
+            traces_dict = load_processed_traces(temppath)
+        except:
+            print('curses!')
+            #pdb.set_trace()
+
 
     # SAVE FILES
-    for _key in traces_dict.keys():
-        if _key == 'axial_trimmed_filtered_correlated_array':
-            save_or_append_npy(os.path.join(temppath, 'axial.npy'), traces_dict[_key], append_mode)
-        elif _key == 'tangential_trimmed_filtered_correlated_array':
-            save_or_append_npy(os.path.join(temppath,'tangential.npy'),traces_dict[_key],append_mode)
-        elif _key == 'radial_trimmed_filtered_correlated_array':
-            save_or_append_npy(os.path.join(temppath,'radial.npy'),traces_dict[_key],append_mode)
-        elif _key == 'ts_array':
-            save_or_append_npy(os.path.join(temppath,'ts.npy'),traces_dict[_key],append_mode)
-        else:
-            output_file_name = _key.replace('_array','.npy')
-            save_or_append_npy(os.path.join(temppath,output_file_name),traces_dict[_key],append_mode)
 
     #<Prepare inputs for feature extraction>
     #need switches here to control which feature extraction is being used

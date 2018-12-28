@@ -7,7 +7,7 @@ from process_pipeline_new import process_h5_file
 
 import subprocess
 
-def process_master_iterator(master_iterator_df,output_path):
+def process_master_iterator(master_iterator_df, output_path, reprocess_signals):
     if 'output_path_folder' not in master_iterator_df.columns:
         output_path_folder = [None] * master_iterator_df.shape[0]
     else:
@@ -18,8 +18,8 @@ def process_master_iterator(master_iterator_df,output_path):
         if not row['processed']:
             #h5F = h5py.File(row['file_path'],'r+')
             output_folder = os.path.join(output_path,str(index))
-            subprocess.call(["python", "process_pipeline_new.py",'-h5',row['file_path'],'-o',output_folder ])
-            #process_h5_file(h5F,output_folder)
+            #subprocess.call(["python", "process_pipeline_new.py",'-h5',row['file_path'],'-o',output_folder ])
+            process_h5_file(h5F, output_folder, reprocess_signals)
 
             processed[index] = True
             output_path_folder[index] = output_folder
@@ -33,15 +33,17 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
     argparser.add_argument('-i', '--input-file', help="Master iterator csv path", required=True)
     argparser.add_argument('-o','--output-folder',help="OUTPUT FOLDER", required=True)
+    argparser.add_argument('-reproc','--reprocess_signals',help="FLAG TO REPROCESS SIGNALS", default=True)
     args = argparser.parse_args()
     #can we add an assignment layer like the two lines below?
     #that way it is easy to comment out the command line usage and
     #and directly assign args when debugging?
     input_file = args.input_file
     output_folder = args.output_folder
+    reprocess_signals = args.reprocess_signals
 #    input_file = '/home/kkappler/data/datacloud/teck/line_creek/test_line_creek_iterator_ssx.csv'
 #    output_folder = '/home/kkappler/data/datacloud/teck/line_creek/processed_data/'
     master_iterator_df = pd.read_csv(input_file)
 
-    master_iterator_df = process_master_iterator(master_iterator_df, output_folder)
+    master_iterator_df = process_master_iterator(master_iterator_df, output_folder, reprocess_signals)
     master_iterator_df.to_csv(input_file,index=False)
