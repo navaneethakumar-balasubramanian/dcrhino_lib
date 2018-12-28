@@ -357,7 +357,7 @@ if __name__ == "__main__":
     argparser.add_argument('-h5', '--h5-path', help="H5 File Path", default=None)
     argparser.add_argument('-cfg', '--cfg-path', help="CFG File Path", default=None)
     argparser.add_argument('-o','--output-folder',help="OUTPUT FOLDER",default=False)
-    argparser.add_argument('-reproc', type=str2bool, '--reprocess_signals', help="FLAG TO REPROCESS SIGNALS", default=True)
+    argparser.add_argument('-reproc', '--reprocess_signals', help="FLAG TO REPROCESS SIGNALS", default=True, type=str2bool)
     args = argparser.parse_args()
 
     f1 = h5py.File(args.h5_path,'r+')
