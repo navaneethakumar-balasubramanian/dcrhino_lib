@@ -292,11 +292,10 @@ def process_h5_file(h5py_file, output_folder, reprocess_signals, cfg_file_path=F
     end_ts = int(h5_helper.max_ts)
     temppath = output_folder
     io_helper.make_dirs_if_needed(temppath)
+    append_mode = False
     #</SETUP, CFG, H5, etc.>
 
-    append_mode = False
-
-    pdb.set_trace()
+    #pdb.set_trace()
     if reprocess_signals:
         print('reprocess_signals TRUE')
         traces_dict = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper, h5_helper.ts, h5_helper.sensitivity_xyz, h5_helper.is_ide_file, accelerometer_max_voltage, global_config)
