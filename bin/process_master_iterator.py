@@ -3,9 +3,11 @@ import pandas as pd
 import h5py
 import os
 import pdb
-from process_pipeline_new import process_h5_file
-
 import subprocess
+
+from dcrhino.process_pipeline.util import str2bool
+
+from process_pipeline_new import process_h5_file
 
 def process_master_iterator(master_iterator_df, output_path, reprocess_signals):
     """
@@ -40,7 +42,18 @@ if __name__ == "__main__":
     argparser.add_argument('-i', '--input-file', help="Master iterator csv path", required=True)
     argparser.add_argument('-o','--output-folder',help="OUTPUT FOLDER", required=True)
     argparser.add_argument('-reproc','--reprocess_signals',help="FLAG TO REPROCESS SIGNALS", default=True)
+    argparser.add_argument('-reproc', '--reprocess_signals',
+                           help="FLAG TO REPROCESS SIGNALS", default='True', type=str2bool)
+
     args = argparser.parse_args()
+    print('args.reprocess_signals', args.reprocess_signals)
+    if args.reprocess_signals:
+        print('its true')
+    elif args.reprocess_signals is False:
+        print('its false!')
+    else:
+        print('its a string .. that messed up')
+    pdb.set_trace()
     #can we add an assignment layer like the two lines below?
     #that way it is easy to comment out the command line usage and
     #and directly assign args when debugging?
