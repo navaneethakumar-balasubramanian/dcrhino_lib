@@ -296,13 +296,15 @@ def process_h5_file(h5py_file, output_folder, reprocess_signals, cfg_file_path=F
 
     append_mode = False
 
-
+    pdb.set_trace()
     if reprocess_signals:
+        print('reprocess_signals TRUE')
         traces_dict = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper, h5_helper.ts, h5_helper.sensitivity_xyz, h5_helper.is_ide_file, accelerometer_max_voltage, global_config)
         save_processed_traces(temppath, traces_dict, append_mode)
     else:
+        print('reprocess_signals FALSE')
         try:
-            pdb.set_trace()
+            #pdb.set_trace()
             traces_dict = load_processed_traces(temppath)
         except:
             print('curses!')
