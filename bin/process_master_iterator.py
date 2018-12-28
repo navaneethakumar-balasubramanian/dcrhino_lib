@@ -8,6 +8,10 @@ from process_pipeline_new import process_h5_file
 import subprocess
 
 def process_master_iterator(master_iterator_df, output_path, reprocess_signals):
+    """
+    two modes here, one uses subprocess other uses direct call to process h5
+    """
+    use_subprocess = False
     if 'output_path_folder' not in master_iterator_df.columns:
         output_path_folder = [None] * master_iterator_df.shape[0]
     else:
@@ -16,10 +20,12 @@ def process_master_iterator(master_iterator_df, output_path, reprocess_signals):
     processed = master_iterator_df['processed'].values
     for index, row in master_iterator_df.iterrows():
         if not row['processed']:
-            #h5F = h5py.File(row['file_path'],'r+')
             output_folder = os.path.join(output_path,str(index))
-            #subprocess.call(["python", "process_pipeline_new.py",'-h5',row['file_path'],'-o',output_folder ])
-            process_h5_file(h5F, output_folder, reprocess_signals)
+            if use_subprocess:
+                subprocess.call(["python", "process_pipeline_new.py",'-h5',row['file_path'],'-o',output_folder ])
+            else:
+                h5F = h5py.File(row['file_path'],'r+')
+                process_h5_file(h5F, output_folder, reprocess_signals)
 
             processed[index] = True
             output_path_folder[index] = output_folder
