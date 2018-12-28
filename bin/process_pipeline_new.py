@@ -27,6 +27,7 @@ from dcrhino.process_pipeline.h5_helper import H5Helper
 from dcrhino.process_pipeline.io_helper import IOHelper
 from dcrhino.process_pipeline.trace_processing import TraceProcessing
 from dcrhino.process_pipeline.trace_processing import trim_trace
+from dcrhino.process_pipeline.util import str2bool
 
 #from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotter,QCLogPlotInput
 #from dcrhino.process_pipeline.qc_log_plotter_nomwd import QCLogPlotter_nomwd
@@ -298,7 +299,10 @@ def process_h5_file(h5py_file, output_folder, reprocess_signals, cfg_file_path=F
     #pdb.set_trace()
     if reprocess_signals:
         print('reprocess_signals TRUE')
-        traces_dict = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper, h5_helper.ts, h5_helper.sensitivity_xyz, h5_helper.is_ide_file, accelerometer_max_voltage, global_config)
+        traces_dict = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper,
+                                                         h5_helper.ts, h5_helper.sensitivity_xyz,
+                                                         h5_helper.is_ide_file, accelerometer_max_voltage,
+                                                         global_config)
         save_processed_traces(temppath, traces_dict, append_mode)
     else:
         print('reprocess_signals FALSE')
@@ -353,7 +357,7 @@ if __name__ == "__main__":
     argparser.add_argument('-h5', '--h5-path', help="H5 File Path", default=None)
     argparser.add_argument('-cfg', '--cfg-path', help="CFG File Path", default=None)
     argparser.add_argument('-o','--output-folder',help="OUTPUT FOLDER",default=False)
-    argparser.add_argument('-reproc','--reprocess_signals',help="FLAG TO REPROCESS SIGNALS", default=True)
+    argparser.add_argument('-reproc', type=str2bool, '--reprocess_signals', help="FLAG TO REPROCESS SIGNALS", default=True)
     args = argparser.parse_args()
 
     f1 = h5py.File(args.h5_path,'r+')
