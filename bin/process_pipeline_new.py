@@ -353,12 +353,15 @@ def process_h5_file(h5py_file, output_folder, reprocess_signals, cfg_file_path=F
 
 if __name__ == "__main__":
     #<sort out args>
+    #pdb.set_trace()
     argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
     argparser.add_argument('-h5', '--h5-path', help="H5 File Path", default=None)
     argparser.add_argument('-cfg', '--cfg-path', help="CFG File Path", default=None)
     argparser.add_argument('-o','--output-folder',help="OUTPUT FOLDER",default=False)
-    argparser.add_argument('-reproc', '--reprocess_signals', help="FLAG TO REPROCESS SIGNALS", default=True, type=str2bool)
+    argparser.add_argument('-reproc', '--reprocess_signals',
+                           help="FLAG TO REPROCESS SIGNALS", default='True', type=str2bool)
+#    argparser.add_argument('-reproc', '--reprocess_signals', default='True', type=str2bool)
     args = argparser.parse_args()
-
+    args.reprocess_signals
     f1 = h5py.File(args.h5_path,'r+')
     process_h5_file(f1,args.output_folder, args.reprocess_signals, cfg_file_path=args.cfg_path)
