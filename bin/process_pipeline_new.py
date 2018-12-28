@@ -252,7 +252,7 @@ def save_processed_traces(temppath, traces_dict, append_mode):
 
 
 
-def process_h5_file(h5py_file, output_folder, cfg_file_path=False, reprocess_signals=True):
+def process_h5_file(h5py_file, output_folder, reprocess_signals, cfg_file_path=False):
     """
     """
     #<SETUP, CFG, H5, etc.>
@@ -352,7 +352,8 @@ if __name__ == "__main__":
     argparser.add_argument('-h5', '--h5-path', help="H5 File Path", default=None)
     argparser.add_argument('-cfg', '--cfg-path', help="CFG File Path", default=None)
     argparser.add_argument('-o','--output-folder',help="OUTPUT FOLDER",default=False)
+    argparser.add_argument('-reproc','--reprocess_signals',help="FLAG TO REPROCESS SIGNALS", default=True)
     args = argparser.parse_args()
 
     f1 = h5py.File(args.h5_path,'r+')
-    process_h5_file(f1,args.output_folder, args.cfg_path)
+    process_h5_file(f1,args.output_folder, args.reprocess_signals, cfg_file_path=args.cfg_path)
