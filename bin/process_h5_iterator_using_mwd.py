@@ -139,7 +139,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
             global_config = Config()
             with open(config_fullfile_path) as f:
                data_conf = json.load(f)
-            #pdb.set_trace()
+            pdb.set_trace()
             global_config.set_data_from_json(data_conf)
             with open(os.path.join(hole_output_folder,'global_config.json'), 'w') as outfile:
                 json.dump(vars(global_config), outfile,indent=4)
@@ -175,13 +175,12 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
             print('<saving>')
             for key in numpys_h5_hole_files:
                 print('key = {}'.format(key))
-
-                #if key not in holes_dict.keys() and key != 'ts':
                 if key == 'ts':
                     pass
-                    #print key,holes_dict[key].shape
+
                 numpy_shape = numpys_h5_hole_files[key].shape
                 print('numpy shape is {}'.format(numpy_shape))
+                if len(numpy_shape)
                 print(numpy_shape[1])
                 tmp_shape_to_assign = (num_timestamps, numpy_shape[1])
                 print('tmp_shape_to_assign ,{}'.format(tmp_shape_to_assign ))
