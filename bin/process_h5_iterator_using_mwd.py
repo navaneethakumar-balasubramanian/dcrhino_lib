@@ -180,7 +180,8 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
 
                 numpy_shape = numpys_h5_hole_files[key].shape
                 print('numpy shape is {}'.format(numpy_shape))
-                if len(numpy_shape)
+                if len(numpy_shape) ==1:
+                    print('trouble brewing')
                 print(numpy_shape[1])
                 tmp_shape_to_assign = (num_timestamps, numpy_shape[1])
                 print('tmp_shape_to_assign ,{}'.format(tmp_shape_to_assign ))
