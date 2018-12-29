@@ -25,7 +25,7 @@ def get_values_from_index(index_ar, values_ar):
     print('values array has shaepe {} '.format(values_ar.shape))
     print('index array has shaepe {} '.format(index_ar.shape))
     print('index array 0,-1 are {}, {}'.format(index_ar[0], index_ar[-1]))
-    pdb.set_trace()
+    #pdb.set_trace()
     return values_ar[index_ar.min():index_ar.max()]
 
 def get_numpys_from_folder_by_interval(folder_path,ts_min,ts_max):
@@ -37,8 +37,10 @@ def get_numpys_from_folder_by_interval(folder_path,ts_min,ts_max):
             matches.append(path)
     ts = np.load(os.path.join(folder_path,'ts.npy'))
     #pdb.set_trace()
-    pos_array = np.array(np.where((ts >= int(ts_min)) &  (ts <= int(ts_max)))[0])
-    pos_array = pos_array.astype('float32')
+    cond1 = ts >= int(ts_min)
+    cond2 = ts <= int(ts_max)
+    position_index_array = np.array(np.where((cond1) &  (cond2))[0])
+
     output_dict = {}
     for match in matches:
         dict_name = match.replace('.npy','').replace('/','')
@@ -49,12 +51,13 @@ def get_numpys_from_folder_by_interval(folder_path,ts_min,ts_max):
         else:
             print('oh dear')
             pdb.set_trace()
-        loaded_file = np.load(filename)
-        nparray = get_values_from_index(pos_array, loaded_file)
+        loaded_data = np.load(filename)
+        loaded_data = loaded_data.astype('float32')
+        nparray = get_values_from_index(position_index_array, loaded_data)
         print('dtype nparray = {}'.format(nparray.dtype))
 
         output_dict[dict_name] = nparray
-    output_dict['ts'] = get_values_from_index(pos_array,ts)
+    output_dict['ts'] = get_values_from_index(position_index_array, ts)
     print output_dict['ts']
     return output_dict
 
