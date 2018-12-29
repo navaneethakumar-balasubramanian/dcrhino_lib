@@ -190,7 +190,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
                 numpy_shape = numpys_h5_hole_files[key].shape
                 print('numpy shape is {}'.format(numpy_shape))
                 if len(numpy_shape)==2:
-                    tmp_shape_to_assign = (num_timestamps, samples_per_trace)
+                    tmp_shape_to_assign = (num_timestamps, numpy_shape[1])
                     print('tmp_shape_to_assign ,{}'.format(tmp_shape_to_assign ))
                     tmp = np.full( tmp_shape_to_assign, np.nan, dtype='float32')
                     tmp[first_index_to_fill:last_index_to_fill,:] = numpys_h5_hole_files[key]
