@@ -128,7 +128,6 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
                     holes_h5[temp_id]['max_ts'] = hole_end_time
                     holes_h5[temp_id]['h5s'] = []
                     holes_h5[temp_id]['hole_mwd_df'] = hole
-                hole_duration =
                 holes_h5[temp_id]['h5s'].append(h5.Index)
                 print "MATCH FOUND - {} in {}".format(temp_id, h5.file_path)
                 print hole_start_time, hole_end_time, h5.min_ts, h5.max_ts
