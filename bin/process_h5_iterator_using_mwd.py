@@ -176,6 +176,8 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
             numpys_h5_hole_files = get_numpys_from_folder_by_interval(processed_files_path,holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts'])
             print('finiished get_numpys_from_folder_by_interval')
             print('<saving>')
+            first_index_to_fill = numpys_h5_hole_files['ts'][0]-hole_ts[0]
+            last_index_to_fill = first_index_to_fill + len(numpys_h5_hole_files['ts']) -1
             for key in numpys_h5_hole_files:
                 print('key = {}'.format(key))
                 if key == 'ts':
@@ -185,8 +187,10 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
                 print('numpy shape is {}'.format(numpy_shape))
                 if len(numpy_shape)==2:
                     tmp_shape_to_assign = (num_timestamps, samples_per_trace)
+                    tmp[first_index_to_fill:last_index_to_fill,:] = numpys_h5_hole_files[key]
                 else:
                     tmp_shape_to_assign = num_timestamps
+                    tmp[first_index_to_fill:last_index_to_fill] = numpys_h5_hole_files[key]
                 print('tmp_shape_to_assign ,{}'.format(tmp_shape_to_assign ))
                 tmp = np.full( tmp_shape_to_assign, np.nan, dtype='float32')
                 print('memory allocated')
@@ -199,14 +203,14 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
                 print('and we know these values are in hole_ts')
                 print('then there are actual timestamps on the numpys_h5_hole_files[key]')
                 print("and we know these, they are numpys_h5_hole_files['ts']")
-                pdb.set_trace()
-                for i, value in enumerate(numpys_h5_hole_files[key]):
-                    print(key)
-                    print(i)
-                    ts_in_index = numpys_h5_hole_files['ts'][i]
-                    index_of_ts = np.where(hole_ts == int(ts_in_index))[0][0]
-                    tmp[index_of_ts] = value
-                    np.save(os.path.join(hole_output_folder,key+".npy"),tmp)
+#                tmp[first_index_to_fill:last_index_to_fill] =
+#                for i, value in enumerate(numpys_h5_hole_files[key]):
+#                    print(key)
+#                    print(i)
+#                    ts_in_index = numpys_h5_hole_files['ts'][i]
+#                    index_of_ts = np.where(hole_ts == int(ts_in_index))[0][0]
+#                    tmp[index_of_ts] = value
+                np.save(os.path.join(hole_output_folder,key+".npy"),tmp)
             print('</saving>')
 #        for key in holes_dict.keys():
 #            np.save(os.path.join(hole_output_folder,key+".npy"),holes_dict[key])
