@@ -99,7 +99,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         hole_output_folder = os.path.join(output_folder,hole)
         make_dirs_if_needed(hole_output_folder)
         np.save(os.path.join(hole_output_folder,"ts.npy"),hole_ts)
-        holes_dict = {}
+        #holes_dict = {}
         hole_mwd = holes_h5[hole]['hole_mwd_df']
         hole_features_dict_columns = {}
         print holes_h5[hole]['h5s'],holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts']
@@ -145,15 +145,18 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
 
             numpys_h5_hole_files = get_numpys_from_folder_by_interval(processed_files_path,holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts'])
             for key in numpys_h5_hole_files:
-                if key not in holes_dict.keys() and key != 'ts':
+                #if key not in holes_dict.keys() and key != 'ts':
+                if key == 'ts':
+                    pass
                     #print key,holes_dict[key].shape
-                    holes_dict[key] = np.full([len(hole_ts),numpys_h5_hole_files[key].shape[1]], np.nan)
-                    for i, value in enumerate(numpys_h5_hole_files[key]):
-                        ts_in_index = numpys_h5_hole_files['ts'][i]
-                        index_of_ts = np.where(hole_ts == int(ts_in_index))[0][0]
-                        holes_dict[key][index_of_ts] = value
-        for key in holes_dict.keys():
-            np.save(os.path.join(hole_output_folder,key+".npy"),holes_dict[key])
+                tmp = np.full([len(hole_ts),numpys_h5_hole_files[key].shape[1]], np.nan)
+                for i, value in enumerate(numpys_h5_hole_files[key]):
+                    ts_in_index = numpys_h5_hole_files['ts'][i]
+                    index_of_ts = np.where(hole_ts == int(ts_in_index))[0][0]
+                    tmp[index_of_ts] = value
+                    np.save(os.path.join(hole_output_folder,key+".npy"),tmp)
+#        for key in holes_dict.keys():
+#            np.save(os.path.join(hole_output_folder,key+".npy"),holes_dict[key])
         hole_features_extracted = pd.DataFrame()
         for key in hole_features_dict_columns.keys():
             hole_features_extracted[key] = hole_features_dict_columns[key]
@@ -187,11 +190,11 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         hole_features_extracted['reflection_coefficient'] = pd.Series(qc_input.reflection_coefficient_sample, index = hole_features_extracted.index)
         hole_features_extracted['axial_delay'] = hole_features_extracted['axial_multiple_peak_time_sample'] - hole_features_extracted['axial_primary_peak_time_sample']
         hole_features_extracted['axial_velocity_delay'] = 1.0/(hole_features_extracted['axial_delay'])**3
-        
+
         hole_features_extracted['tangential_RC'] = pd.Series(qc_input.tangential_reflection_coefficient_sample,index = hole_features_extracted.index) # Added variable for tangential reflection coefficient')]
         hole_features_extracted['tangential_delay'] = hole_features_extracted['tangential_multiple_peak_time_sample'] - hole_features_extracted['tangential_primary_peak_time_sample']
         hole_features_extracted['tangential_velocity_delay'] = 1.0/(hole_features_extracted['tangential_delay'])
-        
+
 
 
 #        columns_rename = {  "mse":"mwd_mse",
