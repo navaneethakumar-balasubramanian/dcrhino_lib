@@ -27,7 +27,7 @@ from dcrhino.process_pipeline.h5_helper import H5Helper
 from dcrhino.process_pipeline.io_helper import IOHelper
 from dcrhino.process_pipeline.trace_processing import TraceProcessing
 from dcrhino.process_pipeline.trace_processing import trim_trace
-#from dcrhino.process_pipeline.util import str2bool
+from dcrhino.process_pipeline.util import str2bool
 
 #from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotter,QCLogPlotInput
 #from dcrhino.process_pipeline.qc_log_plotter_nomwd import QCLogPlotter_nomwd
@@ -355,15 +355,15 @@ if __name__ == "__main__":
     #<sort out args>
     #pdb.set_trace()
     print('needs cleanup')
-#    argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
-#    argparser.add_argument('-h5', '--h5-path', help="H5 File Path", default=None)
-#    argparser.add_argument('-cfg', '--cfg-path', help="CFG File Path", default=None)
-#    argparser.add_argument('-o','--output-folder',help="OUTPUT FOLDER",default=False)
-#    argparser.add_argument('-reproc', '--reprocess_signals',
-#                           help="FLAG TO REPROCESS SIGNALS", default='True', type=str2bool)
+    argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
+    argparser.add_argument('-h5', '--h5-path', help="H5 File Path", default=None)
+    argparser.add_argument('-cfg', '--cfg-path', help="CFG File Path", default=None)
+    argparser.add_argument('-o','--output-folder',help="OUTPUT FOLDER",default=False)
+    argparser.add_argument('-reproc', '--reprocess_signals',
+                           help="FLAG TO REPROCESS SIGNALS", default='True', type=str2bool)
 #
 ##    argparser.add_argument('-reproc', '--reprocess_signals', default='True', type=str2bool)
-#    args = argparser.parse_args()
+    args = argparser.parse_args()
 #    print('args.reprocess_signals', args.reprocess_signals)
 #    if args.reprocess_signals:
 #        print('its true')
@@ -372,5 +372,5 @@ if __name__ == "__main__":
 #    else:
 #        print('its a string .. that messed up')
 #    pdb.set_trace()
-#    f1 = h5py.File(args.h5_path,'r+')
-#    process_h5_file(f1,args.output_folder, args.reprocess_signals, cfg_file_path=args.cfg_path)
+    f1 = h5py.File(args.h5_path,'r+')
+    process_h5_file(f1,args.output_folder, args.reprocess_signals, cfg_file_path=args.cfg_path)

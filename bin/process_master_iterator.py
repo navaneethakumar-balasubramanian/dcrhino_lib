@@ -41,7 +41,6 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
     argparser.add_argument('-i', '--input-file', help="Master iterator csv path", required=True)
     argparser.add_argument('-o','--output-folder',help="OUTPUT FOLDER", required=True)
-    argparser.add_argument('-reproc','--reprocess_signals',help="FLAG TO REPROCESS SIGNALS", default=True)
     argparser.add_argument('-reproc', '--reprocess_signals',
                            help="FLAG TO REPROCESS SIGNALS", default='True', type=str2bool)
 
