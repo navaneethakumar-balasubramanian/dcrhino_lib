@@ -175,10 +175,11 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
 
             numpys_h5_hole_files = get_numpys_from_folder_by_interval(processed_files_path,holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts'])
             print('finiished get_numpys_from_folder_by_interval')
+            n_observations_actual = len(numpys_h5_hole_files['ts'])
             print('<saving>')
             first_index_to_fill = numpys_h5_hole_files['ts'][0]-hole_ts[0]
             print(first_index_to_fill)
-            last_index_to_fill = first_index_to_fill + len(numpys_h5_hole_files['ts']) -1
+            last_index_to_fill = first_index_to_fill + len(numpys_h5_hole_files['ts']) #-1
             print(last_index_to_fill)
             pdb.set_trace()
             for key in numpys_h5_hole_files:
