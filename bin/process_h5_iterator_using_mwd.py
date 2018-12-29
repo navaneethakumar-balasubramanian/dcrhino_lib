@@ -29,7 +29,7 @@ def check_timestamp_continuity(timestamp_array):
     splitted_indices = np.split(timestamp_array, discontinuity_indices+1)
     reference_array = np.split(np.arange(len(timestamp_array)), discontinuity_indices+1)
 
-    return splitted_indices, reference_indices, discontinu
+    return splitted_indices, reference_array
 
 def make_dirs_if_needed(path):
     if not os.path.exists(path):
@@ -105,7 +105,10 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         print hole[mwdHelper.start_time_column_name].min()
         hole_start_time = int(calendar.timegm(hole[mwdHelper.start_time_column_name].min().timetuple()))
         hole_end_time = int(calendar.timegm(hole[mwdHelper.start_time_column_name].max().timetuple()))
-
+        hole_duration = hole_end_time - hole_start_time
+        if hole_duration > 86400:
+            print('this hole took too lon to drill, something is wrong ... skipping')
+            continue
         #bph_str = str(bench) + "," + str(pattern) + "," +str(hole_id) +','+ str(rig_id)
         bph_str = '{},{},{},{}'.format(bench, pattern, hole_id, rig_id)
         for h5 in h5_iterator_df.itertuples():
@@ -114,6 +117,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
             cond_1 = (rig_id == h5.rig_id)
             cond_2 = (int(hole_start_time) >= int(h5.min_ts) and int(hole_start_time) <= int(h5.max_ts))
             cond_3 = (int(hole_end_time) >= int(h5.min_ts) and int(hole_end_time) <= int(h5.max_ts))
+
             if cond_1 and (cond_2 or cond_3):
                 if temp_id not in holes_h5.keys():
                     holes_h5[temp_id] = {}
@@ -124,6 +128,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
                     holes_h5[temp_id]['max_ts'] = hole_end_time
                     holes_h5[temp_id]['h5s'] = []
                     holes_h5[temp_id]['hole_mwd_df'] = hole
+                hole_duration =
                 holes_h5[temp_id]['h5s'].append(h5.Index)
                 print "MATCH FOUND - {} in {}".format(temp_id, h5.file_path)
                 print hole_start_time, hole_end_time, h5.min_ts, h5.max_ts
@@ -136,9 +141,6 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         print('with timestamps ranging from : {} to {}'.format( hole_ts[0], hole_ts[-1]))
         num_timestamps = len(hole_ts)
         print('there are {} timestamps'.format(num_timestamps))
-        if num_timestamps > 86400:
-            print('this hole took too lon to drill, something is wrong ... skipping')
-            continue
 
         hole_output_folder = os.path.join(output_folder,hole)
         make_dirs_if_needed(hole_output_folder)
@@ -151,106 +153,110 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         print('if there are mulitiple h5 files per hole I would rather skip these')
         print('better you are to get all the data into a single contianer then\
               handle these issues here')
+        if len(holes_h5[hole]['h5s']) > 1:
+            print('skipping hole {} as h5 are split up'.format(hole))
+            continue
+        #for h5 in holes_h5[hole]['h5s']:
+        h5 in holes_h5[hole]['h5s'][0]
+        h5_row = h5_iterator_df.loc[[h5]]
+        processed_files_path = h5_row['output_path_folder'].values[0]
 
-        for h5 in holes_h5[hole]['h5s']:
-            h5_row = h5_iterator_df.loc[[h5]]
-            processed_files_path = h5_row['output_path_folder'].values[0]
+        ## CONFIG FILE
+        config_fullfile_path = os.path.join(processed_files_path,'global_config.json')
+        global_config = Config()
+        with open(config_fullfile_path) as f:
+           data_conf = json.load(f)
 
-            ## CONFIG FILE
-            config_fullfile_path = os.path.join(processed_files_path,'global_config.json')
-            global_config = Config()
-            with open(config_fullfile_path) as f:
-               data_conf = json.load(f)
+        global_config.set_data_from_json(data_conf)
+        with open(os.path.join(hole_output_folder,'global_config.json'), 'w') as outfile:
+            json.dump(vars(global_config), outfile,indent=4)
 
-            global_config.set_data_from_json(data_conf)
-            with open(os.path.join(hole_output_folder,'global_config.json'), 'w') as outfile:
-                json.dump(vars(global_config), outfile,indent=4)
+        samples_per_trace = int(global_config.output_sampling_rate)
+        print('warning: assuming 1s trace length -- will fail when we change this')
+        print('use metadata.samples_per_trace function when we change this')
+        acceleration_values_by_second = pd.read_csv(os.path.join(processed_files_path,'acceleration_values_by_second.csv'))
+        h5_features_extracted = pd.read_csv(os.path.join(processed_files_path,'extracted_features.csv'))
+        h5_features_extracted['datetime'] = pd.to_datetime(h5_features_extracted['datetime'])
+        h5_features_extracted['datetime_ts'] = (h5_features_extracted['datetime'].astype(int)/1000000000).astype(int)
+        print h5_features_extracted['datetime'][0] , h5_features_extracted['datetime_ts'][0]
+        h5_features_extracted = h5_features_extracted[(h5_features_extracted['datetime_ts'] >= holes_h5[hole]['min_ts']) & (h5_features_extracted['datetime_ts'] <= holes_h5[hole]['max_ts'])]
+        acceleration_values_by_second = acceleration_values_by_second[(acceleration_values_by_second['Timestamp'] >= holes_h5[hole]['min_ts']) & (acceleration_values_by_second['Timestamp'] <= holes_h5[hole]['max_ts'])]
 
-            samples_per_trace = int(global_config.output_sampling_rate)
-            print('warning: assuming 1s trace length -- will fail when we change this')
-            print('use metadata.samples_per_trace function when we change this')
-            acceleration_values_by_second = pd.read_csv(os.path.join(processed_files_path,'acceleration_values_by_second.csv'))
-            h5_features_extracted = pd.read_csv(os.path.join(processed_files_path,'extracted_features.csv'))
-            #pdb.set_trace()
-            h5_features_extracted['datetime'] = pd.to_datetime(h5_features_extracted['datetime'])
-            #pdb.set_trace()
-            h5_features_extracted['datetime_ts'] = (h5_features_extracted['datetime'].astype(int)/1000000000).astype(int)
-            print h5_features_extracted['datetime'][0] , h5_features_extracted['datetime_ts'][0]
-            #h5_features_extracted.index = h5_features_extracted['datetime_ts']
-            h5_features_extracted = h5_features_extracted[(h5_features_extracted['datetime_ts'] >= holes_h5[hole]['min_ts']) & (h5_features_extracted['datetime_ts'] <= holes_h5[hole]['max_ts'])]
-            acceleration_values_by_second = acceleration_values_by_second[(acceleration_values_by_second['Timestamp'] >= holes_h5[hole]['min_ts']) & (acceleration_values_by_second['Timestamp'] <= holes_h5[hole]['max_ts'])]
-
-            #pdb.set_trace()
-
-            for column in h5_features_extracted.columns:
-                if column not in hole_features_dict_columns.keys():
-                    hole_features_dict_columns[column] = np.full(num_timestamps, np.nan)
+        for column in h5_features_extracted.columns:
+            if column not in hole_features_dict_columns.keys():
+                hole_features_dict_columns[column] = np.full(num_timestamps, np.nan)
 
 
-            for i, ts in enumerate(hole_ts):
-                series = h5_features_extracted[h5_features_extracted['datetime_ts'] == ts]
+        for i, ts in enumerate(hole_ts):
+            series = h5_features_extracted[h5_features_extracted['datetime_ts'] == ts]
 
-                if len(series) > 0:
-                    for key in series.to_dict().keys():
-                        hole_features_dict_columns[key][i] = series[key].values[0]
-
-
-            numpys_h5_hole_files = get_numpys_from_folder_by_interval(processed_files_path,holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts'])
-            print('the above can be done by slicing and not loading the whole npy')
-            print('finiished get_numpys_from_folder_by_interval')
-
-            #continuous_timestamp_blocks = check_timestamp_continuity(numpys_h5_hole_files['ts'])
-            continuous_indices, reference_indices = check_timestamp_continuity(numpys_h5_hole_files['ts'])
-            if len(continuous_indices) > 1:
-                print("there are discontinuities in the data - will handle this soon")
-                cont
-            n_observations_actual = len(numpys_h5_hole_files['ts'])
-            num_continuous_blocks = len(continuous_indices)
-            block_indices_for_hole = []
-            block_indices_for_numpy = []
-            for i_block in range(num_continuous_blocks):
-                first_index_to_fill = continuous_indices[i_block][0] - hole_ts[0]
-                print('first_index_to_fill',first_index_to_fill)
-                last_index_to_fill = first_index_to_fill + len(continuous_indices[i_block]) #-1
-                print(last_index_to_fill)
-                block_indices_for_hole.append((first_index_to_fill, last_index_to_fill))
-                block_indices_for_hole.append((first_index_to_fill, last_index_to_fill))
-            for continuous_timestamp_block in continuous_timestamp_blocks:
-                first_index_to_fill = continuous_timestamp_block - hole_ts[0]
-                print('first_index_to_fill',first_index_to_fill)
-                last_index_to_fill = first_index_to_fill + len(continuous_timestamp_block) #-1
-                print(last_index_to_fill)
-                block_indices_for_hole.append((first_index_to_fill, last_index_to_fill))
+            if len(series) > 0:
+                for key in series.to_dict().keys():
+                    hole_features_dict_columns[key][i] = series[key].values[0]
 
 
-            for key in numpys_h5_hole_files:
-                print('key = {}'.format(key))
-                if key == 'ts':
-                    pass
+        numpys_h5_hole_files = get_numpys_from_folder_by_interval(processed_files_path,holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts'])
+        print('the above can be done by slicing and not loading the whole npy')
+        print('finiished get_numpys_from_folder_by_interval')
 
-                numpy_shape = numpys_h5_hole_files[key].shape
-                print('numpy shape is {}'.format(numpy_shape))
-                if len(numpy_shape)==2:
-                    tmp_shape_to_assign = (num_timestamps, numpy_shape[1])
-                    print('tmp_shape_to_assign ,{}'.format(tmp_shape_to_assign ))
-                    tmp = np.full( tmp_shape_to_assign, np.nan, dtype='float32')
-                    #for block_indices in block_indices_for_hole:
-                    tmp[first_index_to_fill:last_index_to_fill,:] = numpys_h5_hole_files[key]
-                else:
-                    tmp_shape_to_assign = num_timestamps
-                    print('tmp_shape_to_assign ,{}'.format(tmp_shape_to_assign ))
-                    tmp = np.full( tmp_shape_to_assign, np.nan, dtype='float32')
-                    tmp[first_index_to_fill:last_index_to_fill] = numpys_h5_hole_files[key]
-                print('memory allocated')
-                print('wait, wtf we are enumerating a fucking time series?')
-                print('you have GOT to be shtting me')
-                print('what we want to do here is assign the numpys_h5_hole_files[key]\
-                      en masse to a preallocated array')
-                print('the way to do this is NOT sample by sample, ... ')
-                print('there is a theoretical hole start and hole end ts')
-                print('and we know these values are in hole_ts')
-                print('then there are actual timestamps on the numpys_h5_hole_files[key]')
-                print("and we know these, they are numpys_h5_hole_files['ts']")
+        #continuous_timestamp_blocks = check_timestamp_continuity(numpys_h5_hole_files['ts'])
+        continuous_indices, reference_indices = check_timestamp_continuity(numpys_h5_hole_files['ts'])
+        if len(continuous_indices) > 1:
+            print("there are discontinuities in the data - will handle this soon")
+            print("this can be solved in the current version")
+            print("skipping hole {} due to discontnuous timestamps".format(hole))
+            continue
+        n_observations_actual = len(numpys_h5_hole_files['ts'])
+        num_continuous_blocks = len(continuous_indices)
+        block_indices_for_hole_list = []
+        block_indices_for_numpy_list = []
+        pdb.set_trace()
+        for i_block in range(num_continuous_blocks):
+            print('i_block', i_block)
+            first_index_to_fill = continuous_indices[i_block][0] - hole_ts[0]
+            print('first_index_to_fill',first_index_to_fill)
+            last_index_to_fill = first_index_to_fill + len(continuous_indices[i_block]) #-1
+            print('last_index_to_fill',last_index_to_fill)
+            block_indices_for_hole_list.append((first_index_to_fill, last_index_to_fill))
+            block_indices_for_numpy_list.append((reference_indices[i_block][0],
+                                            reference_indices[i_block][0]+len(continuous_indices[i_block])))
+
+        for key in numpys_h5_hole_files:
+            print('key = {}'.format(key))
+            if key == 'ts':
+                pass
+
+            numpy_shape = numpys_h5_hole_files[key].shape
+            print('numpy shape is {}'.format(numpy_shape))
+            if len(numpy_shape)==2:
+                tmp_shape_to_assign = (num_timestamps, numpy_shape[1])
+                print('tmp_shape_to_assign ,{}'.format(tmp_shape_to_assign ))
+                tmp = np.full( tmp_shape_to_assign, np.nan, dtype='float32')
+                for i_block in range(num_continuous_blocks):
+                    block_indices_for_hole = block_indices_for_hole_list[i_block]
+                    block_indices_for_numpy = block_indices_for_numpy_list[i_block]
+                    numpy_segment = numpys_h5_hole_files[key][block_indices_for_numpy[0]:block_indices_for_numpy[1]]
+                    tmp[block_indices_for_hole[0]:block_indices_for_hole[1],:] = numpy_segment
+            else:
+                tmp_shape_to_assign = num_timestamps
+                print('tmp_shape_to_assign ,{}'.format(tmp_shape_to_assign ))
+                tmp = np.full( tmp_shape_to_assign, np.nan, dtype='float32')
+                for i_block in range(num_continuous_blocks):
+                    block_indices_for_hole = block_indices_for_hole_list[i_block]
+                    block_indices_for_numpy = block_indices_for_numpy_list[i_block]
+                    numpy_segment = numpys_h5_hole_files[key][block_indices_for_numpy[0]:block_indices_for_numpy[1]]
+                    tmp[block_indices_for_hole[0]:block_indices_for_hole[1],:] = numpy_segment
+#                tmp[first_index_to_fill:last_index_to_fill] = numpys_h5_hole_files[key]
+            print('memory allocated')
+            print('wait, wtf we are enumerating a fucking time series?')
+            print('you have GOT to be shtting me')
+            print('what we want to do here is assign the numpys_h5_hole_files[key]\
+                  en masse to a preallocated array')
+            print('the way to do this is NOT sample by sample, ... ')
+            print('there is a theoretical hole start and hole end ts')
+            print('and we know these values are in hole_ts')
+            print('then there are actual timestamps on the numpys_h5_hole_files[key]')
+            print("and we know these, they are numpys_h5_hole_files['ts']")
 #                tmp[first_index_to_fill:last_index_to_fill] =
 #                for i, value in enumerate(numpys_h5_hole_files[key]):
 #                    print(key)
@@ -258,7 +264,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
 #                    ts_in_index = numpys_h5_hole_files['ts'][i]
 #                    index_of_ts = np.where(hole_ts == int(ts_in_index))[0][0]
 #                    tmp[index_of_ts] = value
-                np.save(os.path.join(hole_output_folder,key+".npy"),tmp)
+            np.save(os.path.join(hole_output_folder,key+".npy"),tmp)
             print('</saving>')
 #        for key in holes_dict.keys():
 #            np.save(os.path.join(hole_output_folder,key+".npy"),holes_dict[key])
