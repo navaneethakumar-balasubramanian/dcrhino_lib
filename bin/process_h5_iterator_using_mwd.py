@@ -106,7 +106,12 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
     for hole in holes_h5.keys():
         print('processing key = {}'.format(hole))
         hole_ts = np.arange(holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts'])
-        print('with timestamps: {}'.format( hole_ts))
+        print('with timestamps ranging from : {} to {}'.format( hole_ts[0], hole_ts[-1]))
+        num_timestamps = len(hole_ts)
+        print('there are {} timestamps'.format(num_timestamps))
+        if num_timestamps > 86400:
+            print('this hole took too lon to drill, something is wrong ... skipping')
+            continue
 
         hole_output_folder = os.path.join(output_folder,hole)
         make_dirs_if_needed(hole_output_folder)
