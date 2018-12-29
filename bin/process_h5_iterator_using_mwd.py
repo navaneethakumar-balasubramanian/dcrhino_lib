@@ -148,7 +148,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         hole_mwd = holes_h5[hole]['hole_mwd_df']
         hole_features_dict_columns = {}
         print holes_h5[hole]['h5s'],holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts']
-        pdb.set_trace()
+        #pdb.set_trace()
         print('if there are mulitiple h5 files per hole I would rather skip these')
         print('better you are to get all the data into a single contianer then\
               handle these issues here')
@@ -204,12 +204,13 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
             print("there are discontinuities in the data - will handle this soon")
             print("this can be solved in the current version")
             print("skipping hole {} due to discontnuous timestamps".format(hole))
+            pdb.set_trace()
             continue
         n_observations_actual = len(numpys_h5_hole_files['ts'])
         num_continuous_blocks = len(continuous_indices)
         block_indices_for_hole_list = []
         block_indices_for_numpy_list = []
-        pdb.set_trace()
+        #pdb.set_trace()
         for i_block in range(num_continuous_blocks):
             print('i_block', i_block)
             first_index_to_fill = continuous_indices[i_block][0] - hole_ts[0]
@@ -227,27 +228,17 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
 
             numpy_shape = numpys_h5_hole_files[key].shape
             print('numpy shape is {}'.format(numpy_shape))
-            if len(numpy_shape)==2:
-                tmp_shape_to_assign = (num_timestamps, numpy_shape[1])
-                print('tmp_shape_to_assign ,{}'.format(tmp_shape_to_assign ))
-                tmp = np.full( tmp_shape_to_assign, np.nan, dtype='float32')
-                for i_block in range(num_continuous_blocks):
-                    block_indices_for_hole = block_indices_for_hole_list[i_block]
-                    block_indices_for_numpy = block_indices_for_numpy_list[i_block]
-                    pdb.set_trace()
-                    numpy_segment = numpys_h5_hole_files[key][block_indices_for_numpy[0]:block_indices_for_numpy[1],:]
-                    tmp[block_indices_for_hole[0]:block_indices_for_hole[1],:] = numpy_segment
-            else:
-                tmp_shape_to_assign = num_timestamps
-                print('tmp_shape_to_assign ,{}'.format(tmp_shape_to_assign ))
-                tmp = np.full( tmp_shape_to_assign, np.nan, dtype='float32')
-                pdb.set_trace()
-                for i_block in range(num_continuous_blocks):
-                    block_indices_for_hole = block_indices_for_hole_list[i_block]
-                    block_indices_for_numpy = block_indices_for_numpy_list[i_block]
-                    numpy_segment = numpys_h5_hole_files[key][block_indices_for_numpy[0]:block_indices_for_numpy[1]]
-                    tmp[block_indices_for_hole[0]:block_indices_for_hole[1]] = numpy_segment
-#                tmp[first_index_to_fill:last_index_to_fill] = numpys_h5_hole_files[key]
+            if len(numpy_shape)!=2:
+                print('unexpected shape array!')
+            tmp_shape_to_assign = (num_timestamps, numpy_shape[1])
+            print('tmp_shape_to_assign ,{}'.format(tmp_shape_to_assign ))
+            tmp = np.full( tmp_shape_to_assign, np.nan, dtype='float32')
+            for i_block in range(num_continuous_blocks):
+                block_indices_for_hole = block_indices_for_hole_list[i_block]
+                block_indices_for_numpy = block_indices_for_numpy_list[i_block]
+                #pdb.set_trace()
+                numpy_segment = numpys_h5_hole_files[key][block_indices_for_numpy[0]:block_indices_for_numpy[1],:]
+                tmp[block_indices_for_hole[0]:block_indices_for_hole[1],:] = numpy_segment
             print('memory allocated')
             print('wait, wtf we are enumerating a fucking time series?')
             print('you have GOT to be shtting me')
