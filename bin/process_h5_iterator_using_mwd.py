@@ -1,3 +1,8 @@
+"""
+Note 20181229: there are two sets of timestamps running around in this module;
+hole_ts: these are by defintion continuous (Thiago is this True?)
+numpys_h5_hole_files['ts']: these maybe discontinuous, although rarely
+"""
 import argparse
 import json
 import pandas as pd
@@ -13,6 +18,18 @@ from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotInput
 import matplotlib.pyplot as plt
 from binner import apply_bin_df
 from dcrhino.process_pipeline.config import Config
+
+def check_timestamp_continuity(timestamp_array):
+    """
+    """
+
+    dt_array = np.diff(timestamp_array)
+    expected_dt = np.median(dt_array)
+    discontinuity_indices = np.where(dt_array > expected_dt)[0]
+    splitted_indices = np.split(timestamp_array, discontinuity_indices+1)
+    reference_array = np.split(np.arange(len(timestamp_array)), discontinuity_indices+1)
+
+    return splitted_indices, reference_indices, discontinu
 
 def make_dirs_if_needed(path):
     if not os.path.exists(path):
@@ -130,6 +147,11 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         hole_mwd = holes_h5[hole]['hole_mwd_df']
         hole_features_dict_columns = {}
         print holes_h5[hole]['h5s'],holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts']
+        pdb.set_trace()
+        print('if there are mulitiple h5 files per hole I would rather skip these')
+        print('better you are to get all the data into a single contianer then\
+              handle these issues here')
+
         for h5 in holes_h5[hole]['h5s']:
             h5_row = h5_iterator_df.loc[[h5]]
             processed_files_path = h5_row['output_path_folder'].values[0]
@@ -174,14 +196,33 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
 
 
             numpys_h5_hole_files = get_numpys_from_folder_by_interval(processed_files_path,holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts'])
+            print('the above can be done by slicing and not loading the whole npy')
             print('finiished get_numpys_from_folder_by_interval')
+
+            #continuous_timestamp_blocks = check_timestamp_continuity(numpys_h5_hole_files['ts'])
+            continuous_indices, reference_indices = check_timestamp_continuity(numpys_h5_hole_files['ts'])
+            if len(continuous_indices) > 1:
+                print("there are discontinuities in the data - will handle this soon")
+                cont
             n_observations_actual = len(numpys_h5_hole_files['ts'])
-            print('<saving>')
-            first_index_to_fill = numpys_h5_hole_files['ts'][0]-hole_ts[0]
-            print(first_index_to_fill)
-            last_index_to_fill = first_index_to_fill + len(numpys_h5_hole_files['ts']) #-1
-            print(last_index_to_fill)
-            pdb.set_trace()
+            num_continuous_blocks = len(continuous_indices)
+            block_indices_for_hole = []
+            block_indices_for_numpy = []
+            for i_block in range(num_continuous_blocks):
+                first_index_to_fill = continuous_indices[i_block][0] - hole_ts[0]
+                print('first_index_to_fill',first_index_to_fill)
+                last_index_to_fill = first_index_to_fill + len(continuous_indices[i_block]) #-1
+                print(last_index_to_fill)
+                block_indices_for_hole.append((first_index_to_fill, last_index_to_fill))
+                block_indices_for_hole.append((first_index_to_fill, last_index_to_fill))
+            for continuous_timestamp_block in continuous_timestamp_blocks:
+                first_index_to_fill = continuous_timestamp_block - hole_ts[0]
+                print('first_index_to_fill',first_index_to_fill)
+                last_index_to_fill = first_index_to_fill + len(continuous_timestamp_block) #-1
+                print(last_index_to_fill)
+                block_indices_for_hole.append((first_index_to_fill, last_index_to_fill))
+
+
             for key in numpys_h5_hole_files:
                 print('key = {}'.format(key))
                 if key == 'ts':
@@ -193,6 +234,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
                     tmp_shape_to_assign = (num_timestamps, numpy_shape[1])
                     print('tmp_shape_to_assign ,{}'.format(tmp_shape_to_assign ))
                     tmp = np.full( tmp_shape_to_assign, np.nan, dtype='float32')
+                    #for block_indices in block_indices_for_hole:
                     tmp[first_index_to_fill:last_index_to_fill,:] = numpys_h5_hole_files[key]
                 else:
                     tmp_shape_to_assign = num_timestamps
