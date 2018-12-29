@@ -35,7 +35,16 @@ def get_numpys_from_folder_by_interval(folder_path,ts_min,ts_max):
     output_dict = {}
     for match in matches:
         dict_name = match.replace('.npy','').replace('/','')
-        nparray = get_values_from_index(pos_array,np.load(os.path.join(folder_path,match.replace('/',''))))
+        filename = os.path.join(folder_path,match.replace('/',''))
+        print('filename', filename)
+        if os.path.isfile(filename):
+            pass
+        else:
+            print('oh dear')
+            pdb.set_trace()
+        loaded_file = np.load(filename)
+        nparray = get_values_from_index(pos_array, loaded_file)
+        print('dtype nparray = {}'.format(nparray.dtype))
 
         output_dict[dict_name] = nparray
     output_dict['ts'] = get_values_from_index(pos_array,ts)
