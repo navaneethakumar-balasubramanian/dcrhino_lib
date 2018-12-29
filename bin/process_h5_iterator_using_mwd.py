@@ -139,11 +139,14 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
             global_config = Config()
             with open(config_fullfile_path) as f:
                data_conf = json.load(f)
-            pdb.set_trace()
+
             global_config.set_data_from_json(data_conf)
             with open(os.path.join(hole_output_folder,'global_config.json'), 'w') as outfile:
                 json.dump(vars(global_config), outfile,indent=4)
 
+            samples_per_trace = int(global_config.output_sampling_rate)
+            print('warning: assuming 1s trace length -- will fail when we change this')
+            print('use metadata.samples_per_trace function when we change this')
             acceleration_values_by_second = pd.read_csv(os.path.join(processed_files_path,'acceleration_values_by_second.csv'))
             h5_features_extracted = pd.read_csv(os.path.join(processed_files_path,'extracted_features.csv'))
             #pdb.set_trace()
@@ -180,13 +183,16 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
 
                 numpy_shape = numpys_h5_hole_files[key].shape
                 print('numpy shape is {}'.format(numpy_shape))
-                if len(numpy_shape) ==1:
-                    print('trouble brewing')
-                print(numpy_shape[1])
-                tmp_shape_to_assign = (num_timestamps, numpy_shape[1])
+                if len(numpy_shape)==2:
+                    tmp_shape_to_assign = (num_timestamps, samples_per_trace)
+                else:
+                    tmp_shape_to_assign = num_timestamps
                 print('tmp_shape_to_assign ,{}'.format(tmp_shape_to_assign ))
                 tmp = np.full( tmp_shape_to_assign, np.nan, dtype='float32')
+                print('memory allocated')
                 for i, value in enumerate(numpys_h5_hole_files[key]):
+                    print(key)
+                    print(i)
                     ts_in_index = numpys_h5_hole_files['ts'][i]
                     index_of_ts = np.where(hole_ts == int(ts_in_index))[0][0]
                     tmp[index_of_ts] = value
