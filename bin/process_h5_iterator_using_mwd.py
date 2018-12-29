@@ -19,6 +19,13 @@ def make_dirs_if_needed(path):
         os.makedirs(path)
 
 def get_values_from_index(index_ar, values_ar):
+    """
+    """
+    print('get values from {} to {}'.format(index_ar.min(), index_ar.max()))
+    print('values array has shaepe {} '.format(values_ar.shape))
+    print('index array has shaepe {} '.format(index_ar.shape))
+    print('index array 0,-1 are {}, {}'.format(index_ar[0], index_ar[-1]))
+    pdb.set_trace()
     return values_ar[index_ar.min():index_ar.max()]
 
 def get_numpys_from_folder_by_interval(folder_path,ts_min,ts_max):
