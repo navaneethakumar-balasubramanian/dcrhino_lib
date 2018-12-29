@@ -156,7 +156,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
             print('skipping hole {} as h5 are split up'.format(hole))
             continue
         #for h5 in holes_h5[hole]['h5s']:
-        h5 in holes_h5[hole]['h5s'][0]
+        h5 = holes_h5[hole]['h5s'][0]
         h5_row = h5_iterator_df.loc[[h5]]
         processed_files_path = h5_row['output_path_folder'].values[0]
 
