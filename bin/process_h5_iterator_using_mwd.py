@@ -31,6 +31,7 @@ def get_numpys_from_folder_by_interval(folder_path,ts_min,ts_max):
     ts = np.load(os.path.join(folder_path,'ts.npy'))
     #pdb.set_trace()
     pos_array = np.array(np.where((ts >= int(ts_min)) &  (ts <= int(ts_max)))[0])
+    pos_array = pos_array.astype('float32')
     output_dict = {}
     for match in matches:
         dict_name = match.replace('.npy','').replace('/','')
@@ -92,9 +93,11 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
                 print hole_start_time, hole_end_time, h5.min_ts, h5.max_ts
 
     #pdb.set_trace()
+    print("finished metadata review")
     for hole in holes_h5.keys():
+        print('processing key = {}'.format(hole))
         hole_ts = np.arange(holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts'])
-        print hole_ts
+        print('with timestamps: {}'.format( hole_ts))
 
         hole_output_folder = os.path.join(output_folder,hole)
         make_dirs_if_needed(hole_output_folder)
@@ -149,7 +152,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
                 if key == 'ts':
                     pass
                     #print key,holes_dict[key].shape
-                tmp = np.full([len(hole_ts),numpys_h5_hole_files[key].shape[1]], np.nan)
+                tmp = np.full([len(hole_ts),numpys_h5_hole_files[key].shape[1]], np.nan, dtype='float32')
                 for i, value in enumerate(numpys_h5_hole_files[key]):
                     ts_in_index = numpys_h5_hole_files['ts'][i]
                     index_of_ts = np.where(hole_ts == int(ts_in_index))[0][0]
