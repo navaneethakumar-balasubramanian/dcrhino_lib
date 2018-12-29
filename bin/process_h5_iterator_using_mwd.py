@@ -223,7 +223,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         for key in numpys_h5_hole_files:
             print('key = {}'.format(key))
             if key == 'ts':
-                pass
+                continue
 
             numpy_shape = numpys_h5_hole_files[key].shape
             print('numpy shape is {}'.format(numpy_shape))
@@ -235,7 +235,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
                     block_indices_for_hole = block_indices_for_hole_list[i_block]
                     block_indices_for_numpy = block_indices_for_numpy_list[i_block]
                     pdb.set_trace()
-                    numpy_segment = numpys_h5_hole_files[key][block_indices_for_numpy[0]:block_indices_for_numpy[1]]
+                    numpy_segment = numpys_h5_hole_files[key][block_indices_for_numpy[0]:block_indices_for_numpy[1],:]
                     tmp[block_indices_for_hole[0]:block_indices_for_hole[1],:] = numpy_segment
             else:
                 tmp_shape_to_assign = num_timestamps
