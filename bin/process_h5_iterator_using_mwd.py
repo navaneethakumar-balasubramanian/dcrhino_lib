@@ -58,7 +58,7 @@ def get_numpys_from_folder_by_interval(folder_path,ts_min,ts_max):
 
         output_dict[dict_name] = nparray
     output_dict['ts'] = get_values_from_index(position_index_array, ts)
-    print output_dict['ts']
+    #print output_dict['ts']
     return output_dict
 
 def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
@@ -159,38 +159,48 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
 
             for column in h5_features_extracted.columns:
                 if column not in hole_features_dict_columns.keys():
-                    hole_features_dict_columns[column] = np.full(len(hole_ts),np.nan)
+                    hole_features_dict_columns[column] = np.full(num_timestamps, np.nan)
 
 
             for i, ts in enumerate(hole_ts):
                 series = h5_features_extracted[h5_features_extracted['datetime_ts'] == ts]
-                #print series['datetime'],series['datetime_ts']
+
                 if len(series) > 0:
                     for key in series.to_dict().keys():
                         hole_features_dict_columns[key][i] = series[key].values[0]
 
 
             numpys_h5_hole_files = get_numpys_from_folder_by_interval(processed_files_path,holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts'])
+            print('finiished get_numpys_from_folder_by_interval')
+            print('<saving>')
             for key in numpys_h5_hole_files:
+                print('key = {}'.format(key))
+
                 #if key not in holes_dict.keys() and key != 'ts':
                 if key == 'ts':
                     pass
                     #print key,holes_dict[key].shape
-                tmp = np.full([len(hole_ts),numpys_h5_hole_files[key].shape[1]], np.nan, dtype='float32')
+                numpy_shape = numpys_h5_hole_files[key].shape
+                print('numpy shape is {}'.format(numpy_shape))
+                print(numpy_shape[1])
+                tmp_shape_to_assign = (num_timestamps, numpy_shape[1])
+                print('tmp_shape_to_assign ,{}'.format(tmp_shape_to_assign ))
+                tmp = np.full( tmp_shape_to_assign, np.nan, dtype='float32')
                 for i, value in enumerate(numpys_h5_hole_files[key]):
                     ts_in_index = numpys_h5_hole_files['ts'][i]
                     index_of_ts = np.where(hole_ts == int(ts_in_index))[0][0]
                     tmp[index_of_ts] = value
                     np.save(os.path.join(hole_output_folder,key+".npy"),tmp)
+            print('</saving>')
 #        for key in holes_dict.keys():
 #            np.save(os.path.join(hole_output_folder,key+".npy"),holes_dict[key])
         hole_features_extracted = pd.DataFrame()
         for key in hole_features_dict_columns.keys():
             hole_features_extracted[key] = hole_features_dict_columns[key]
         hole_features_extracted['datetime_ts'] = hole_ts
-        datetime_list = []
-        for ts in hole_ts:
-            datetime_list.append(datetime.utcfromtimestamp(ts))
+        datetime_list = num_timestamps * [None]
+        for i, ts in enumerate(hole_ts):
+            datetime_list[i] = datetime.utcfromtimestamp(ts)
 
         hole_features_extracted['datetime'] = datetime_list
         #pdb.set_trace()
