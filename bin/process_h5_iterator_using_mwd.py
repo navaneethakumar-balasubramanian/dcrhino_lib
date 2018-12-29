@@ -190,6 +190,16 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
                 print('tmp_shape_to_assign ,{}'.format(tmp_shape_to_assign ))
                 tmp = np.full( tmp_shape_to_assign, np.nan, dtype='float32')
                 print('memory allocated')
+                print('wait, wtf we are enumerating a fucking time series?')
+                print('you have GOT to be shtting me')
+                print('what we want to do here is assign the numpys_h5_hole_files[key]\
+                      en masse to a preallocated array')
+                print('the way to do this is NOT sample by sample, ... ')
+                print('there is a theoretical hole start and hole end ts')
+                print('and we know these values are in hole_ts')
+                print('then there are actual timestamps on the numpys_h5_hole_files[key])
+                print("and we know these, they are numpys_h5_hole_files['ts']")
+                pdb.set_trace()
                 for i, value in enumerate(numpys_h5_hole_files[key]):
                     print(key)
                     print(i)
