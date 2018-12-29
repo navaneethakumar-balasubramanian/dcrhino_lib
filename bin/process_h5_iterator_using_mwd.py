@@ -234,17 +234,19 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
                 for i_block in range(num_continuous_blocks):
                     block_indices_for_hole = block_indices_for_hole_list[i_block]
                     block_indices_for_numpy = block_indices_for_numpy_list[i_block]
+                    pdb.set_trace()
                     numpy_segment = numpys_h5_hole_files[key][block_indices_for_numpy[0]:block_indices_for_numpy[1]]
                     tmp[block_indices_for_hole[0]:block_indices_for_hole[1],:] = numpy_segment
             else:
                 tmp_shape_to_assign = num_timestamps
                 print('tmp_shape_to_assign ,{}'.format(tmp_shape_to_assign ))
                 tmp = np.full( tmp_shape_to_assign, np.nan, dtype='float32')
+                pdb.set_trace()
                 for i_block in range(num_continuous_blocks):
                     block_indices_for_hole = block_indices_for_hole_list[i_block]
                     block_indices_for_numpy = block_indices_for_numpy_list[i_block]
                     numpy_segment = numpys_h5_hole_files[key][block_indices_for_numpy[0]:block_indices_for_numpy[1]]
-                    tmp[block_indices_for_hole[0]:block_indices_for_hole[1],:] = numpy_segment
+                    tmp[block_indices_for_hole[0]:block_indices_for_hole[1]] = numpy_segment
 #                tmp[first_index_to_fill:last_index_to_fill] = numpys_h5_hole_files[key]
             print('memory allocated')
             print('wait, wtf we are enumerating a fucking time series?')
