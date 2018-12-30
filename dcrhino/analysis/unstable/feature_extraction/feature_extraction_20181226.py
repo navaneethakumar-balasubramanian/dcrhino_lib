@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 
 import datetime
+import json
 import matplotlib.pyplot as plt
 import numpy as np
 import pdb
@@ -29,23 +30,32 @@ trace_window_labels_for_feature_extraction = ['primary', 'multiple_1', 'multiple
 
 #wavelet_feature_extractor_types = ['sample', 'polynomial', 'ricker',]
 
-def get_window_widths():
-    print('To be replaced by get from global config')
-    #<From [FEATURE_EXTRACTION] config>
-    window_widths = {}
-    component = 'axial'
-    window_widths[component] = {}
-    window_widths[component]['primary'] = 4.0 * 1e-3
-    window_widths[component]['multiple_1'] = 4.0 * 1e-3
-    window_widths[component]['multiple_2'] = 4.0 * 1e-3
-    window_widths[component]['multiple_3'] = 4.0 * 1e-3
-    component = 'tangential'
-    window_widths[component] = {}
-    window_widths[component]['primary'] = 4.0 * 1e-3
-    window_widths[component]['multiple_1'] = 4.0 * 1e-3
-    window_widths[component]['multiple_2'] = 4.0 * 1e-3
-    window_widths[component]['multiple_3'] = 4.0 * 1e-3
-    #</From [FEATURE_EXTRACTION] config>
+def get_window_widths(global_config):
+    """
+    @note 20181227: this method to be deprecated and replaced with simply
+    global_config.window_widths attribute;
+    @TODO: remove for PPv3;
+    """
+    try:
+        window_widths = json.loads(global_config.window_widths)
+    except AttributeError:
+        print('window widths not specified in global config')
+        return None
+        #<From [FEATURE_EXTRACTION] config>
+#        window_widths = {}
+#        component = 'axial'
+#        window_widths[component] = {}
+#        window_widths[component]['primary'] = 4.0 * 1e-3
+#        window_widths[component]['multiple_1'] = 4.0 * 1e-3
+#        window_widths[component]['multiple_2'] = 4.0 * 1e-3
+#        window_widths[component]['multiple_3'] = 4.0 * 1e-3
+#        component = 'tangential'
+#        window_widths[component] = {}
+#        window_widths[component]['primary'] = 4.0 * 1e-3
+#        window_widths[component]['multiple_1'] = 4.0 * 1e-3
+#        window_widths[component]['multiple_2'] = 4.0 * 1e-3
+#        window_widths[component]['multiple_3'] = 4.0 * 1e-3
+        #</From [FEATURE_EXTRACTION] config>
     return window_widths
 
 def get_expected_multiple_times(global_config, recipe='J1'):
@@ -80,10 +90,7 @@ def set_window_boundaries_in_time(expected_multiple_periods, window_widths, comp
     sure of a better way to do this right now;
 
     """
-
-
     for window_label in trace_window_labels_for_feature_extraction:
-        #pdb.set_trace()
         if window_label == 'primary':
             width = window_widths[component][window_label]
             window_bounds = np.array([primary_shift, primary_shift + width])
@@ -94,7 +101,6 @@ def set_window_boundaries_in_time(expected_multiple_periods, window_widths, comp
             #delay += primary_shift
             width = window_widths[component][window_label]
             window_bounds = np.array([delay, delay+width])
-            #pdb.set_trace()
         elif window_label == 'noise_1':
             start_of_window = WINDOW_BOUNDARIES_TIME[component]['multiple_1'][1]
             end_of_window = WINDOW_BOUNDARIES_TIME[component]['multiple_2'][0]
@@ -130,10 +136,11 @@ def update_window_boundaries_in_time(component, trimmed_trace, trimmed_time_vect
         acceptable_peak_wander = .003 #3ms - add to env_cfg
         max_index = np.argmax(trimmed_trace)
         max_time = trimmed_time_vector[max_index]
-        applicable_window_width = WINDOW_BOUNDARIES_TIME[component]['primary']
+        applicable_window_width = window_widths[component]['primary']
         if np.abs(max_time) < acceptable_peak_wander:
             primary_shift = max_time - applicable_window_width/2.0 #this 2.0 means center the window on the max
-            set_window_boundaries_in_time(expected_multiple_periods, window_widths, primary_shift=primary_shift)
+            set_window_boundaries_in_time(expected_multiple_periods, window_widths,
+                                          component, primary_shift=primary_shift)
             window_boundaries_indices = convert_window_boundaries_to_sample_indices(component, global_config)
             return window_boundaries_indices
 
@@ -259,7 +266,7 @@ def calculate_boolean_features(feature_dict, global_config):
 def feature_extractor_J1(global_config, trimmed_traces_dict):
     """
     """
-    window_widths = get_window_widths()
+    window_widths = get_window_widths(global_config)
 
     samples_per_trace = len(trimmed_traces_dict['axial'])
     sampling_rate = global_config.output_sampling_rate; dt = 1./sampling_rate;
@@ -307,9 +314,9 @@ def feature_extractor_J1(global_config, trimmed_traces_dict):
 def main():
     """
     """
-    ww = get_window_widths()
-    pdb.set_trace()
-    feature_extractor_J1()
+    #ww = get_window_widths()
+    #pdb.set_trace()
+    #feature_extractor_J1()
     print("finito {}".format(datetime.datetime.now()))
 
 if __name__ == "__main__":
