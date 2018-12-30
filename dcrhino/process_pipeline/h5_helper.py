@@ -53,9 +53,9 @@ class H5Helper:
 
     def load_axis_boundaries(self,axis,min_index,max_index):
 
-        arr = np.zeros((max_index-min_index,), dtype='float64')
-        self.h5f[axis].read_direct(arr,np.s_[min_index:max_index])
-        return arr
+        #arr = np.zeros((max_index-min_index,), dtype='float64')
+        #self.h5f[axis].read_direct(arr,np.s_[min_index:max_index])
+        return self.h5f[axis][min_index:max_index]
 
     def load_axis_mask(self,axis,mask):
 
