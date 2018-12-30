@@ -150,8 +150,8 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         print holes_h5[hole]['h5s'],holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts']
         #pdb.set_trace()
         print('if there are mulitiple h5 files per hole I would rather skip these')
-        print('better you are to get all the data into a single contianer then\
-              handle these issues here')
+        print('better you are to get all the data into a single contianer than\
+              handle these issues here ... this is a data api thing')
         if len(holes_h5[hole]['h5s']) > 1:
             print('skipping hole {} as h5 are split up'.format(hole))
             continue
@@ -201,10 +201,11 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         #continuous_timestamp_blocks = check_timestamp_continuity(numpys_h5_hole_files['ts'])
         continuous_indices, reference_indices = check_timestamp_continuity(numpys_h5_hole_files['ts'])
         if len(continuous_indices) > 1:
-            print("there are discontinuities in the data - will handle this soon")
-            print("this can be solved in the current version")
-            print("skipping hole {} due to discontnuous timestamps".format(hole))
-            pdb.set_trace()
+            f=open('log.log', 'a')
+            statement = "skipping hole {} due to discontnuous timestamps\n".format(hole)
+            f.write(statement)
+            f.close()
+            print(statement)
             continue
         n_observations_actual = len(numpys_h5_hole_files['ts'])
         num_continuous_blocks = len(continuous_indices)
