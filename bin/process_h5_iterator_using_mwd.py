@@ -354,3 +354,4 @@ if __name__ == "__main__":
         mmap = json.load(f)
 
     process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder_path)
+    print('finito {}'.format(datetime.now()))
