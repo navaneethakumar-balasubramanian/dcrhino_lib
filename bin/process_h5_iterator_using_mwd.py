@@ -240,23 +240,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
                 #pdb.set_trace()
                 numpy_segment = numpys_h5_hole_files[key][block_indices_for_numpy[0]:block_indices_for_numpy[1],:]
                 tmp[block_indices_for_hole[0]:block_indices_for_hole[1],:] = numpy_segment
-            print('memory allocated')
-            print('wait, wtf we are enumerating a fucking time series?')
-            print('you have GOT to be shtting me')
-            print('what we want to do here is assign the numpys_h5_hole_files[key]\
-                  en masse to a preallocated array')
-            print('the way to do this is NOT sample by sample, ... ')
-            print('there is a theoretical hole start and hole end ts')
-            print('and we know these values are in hole_ts')
-            print('then there are actual timestamps on the numpys_h5_hole_files[key]')
-            print("and we know these, they are numpys_h5_hole_files['ts']")
-#                tmp[first_index_to_fill:last_index_to_fill] =
-#                for i, value in enumerate(numpys_h5_hole_files[key]):
-#                    print(key)
-#                    print(i)
-#                    ts_in_index = numpys_h5_hole_files['ts'][i]
-#                    index_of_ts = np.where(hole_ts == int(ts_in_index))[0][0]
-#                    tmp[index_of_ts] = value
+
             np.save(os.path.join(hole_output_folder,key+".npy"),tmp)
             print('</saving>')
 #        for key in holes_dict.keys():
