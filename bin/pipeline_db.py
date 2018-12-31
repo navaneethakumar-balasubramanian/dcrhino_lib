@@ -28,6 +28,7 @@ from dcrhino.analysis.unstable.feature_extraction.feature_extraction_tangential_
 from dcrhino.analysis.unstable.feature_extraction.feature_extraction_20181226 import feature_extractor_J1
 from dcrhino.analysis.unstable.feature_extraction.feature_derivations_20181218 import extracted_features_df_to_external_features
 import time
+import argparse
 from dcrhino.process_pipeline.rhino_db_helper import RhinoDBHelper
 
 
@@ -185,7 +186,7 @@ def prepare_processed_data_to_save(global_config,processed_data,hole_mwd_interpo
 
 #client = Client('13.77.162.25',user='rhino',password='dc1234',database='test_thiago',compression='lz4')
 
-db_helper = RhinoDBHelper(host='13.77.162.25',database='test_rio_tinto')
+
 #client = Client('localhost',database='test',compression='lz4')
 #client = Client('13.77.162.25',database='test_rio_tinto',compression='lz4')
 #mwd_df = pd.read_csv('/home/thiago/data_blob/mount_milligan/mount_milligan_mwd_20181003.csv')
@@ -193,8 +194,15 @@ db_helper = RhinoDBHelper(host='13.77.162.25',database='test_rio_tinto')
 #mwd_df = pd.read_csv('/home/thiago/detour_lake_mine/DR05_19-20_Nov_combined_MWD.csv')
 #mwd_map_path = '/home/thiago/detour_lake_mine/DR05_19-20_Nov_combined_MWD_map.json'
 
-mwd_df = pd.read_csv("/home/thiago/data_blob/west_angelas/west_angelas_mwd_20181005.csv")
-mwd_map_path = '/home/thiago/data_blob/west_angelas/west_angelas_mwd_map.json'
+
+argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
+argparser.add_argument('-mwd', '--mwd-path', help="MWD File Path",required=True)
+argparser.add_argument('-mmap', '--mmap-path', help="MWD MAP File Path",required=True)
+args = argparser.parse_args()
+
+
+mwd_df = pd.read_csv(args.mwd_path)
+mwd_map_path = args.mmap_path
 
 
 with open(mwd_map_path) as f:
@@ -202,6 +210,8 @@ with open(mwd_map_path) as f:
 
 mwdHelper = MwdDFHelper(mwd_df,mwd_map=mmap)
 
+
+db_helper = RhinoDBHelper(host='13.77.162.25',database='test_rio_tinto')
 mwd_dc_format = mwdHelper.dc_format(mwd_df,mmap)
 mwd_df = mwd_dc_format
 
