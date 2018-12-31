@@ -33,9 +33,9 @@ class MwdDFHelper:
         self.df = df
         self.start_time_column_name = start_time_column
         self.end_time_column_name = end_time_column
-        self.bench_column_name = bench_column
-        self.pattern_column_name = pattern_column
-        self.hole_column_name = hole_column
+        self.bench_name_column_name = bench_column
+        self.pattern_name_column_name = pattern_column
+        self.hole_name_column_name = hole_column
         self.collar_elevation_column_name = collar_elevation_column
         self.computed_elevation_column_name = computed_elevation_column
         self.rig_id_column_name = rig_id_column
@@ -54,9 +54,9 @@ class MwdDFHelper:
 
         self.expected_columns = {'start_time' : self.start_time_column_name ,
                                  'end_time' : self.end_time_column_name,
-                                 'bench_name' : self.bench_column_name,
-                                 'pattern_name' : self.pattern_column_name,
-                                 'hole_name' : self.hole_column_name,
+                                 'bench_name' : self.bench_name_column_name,
+                                 'pattern_name' : self.pattern_name_column_name,
+                                 'hole_name' : self.hole_name_column_name,
                                  'collar_elevation' : self.collar_elevation_column_name,
                                  'computed_elevation' : self.computed_elevation_column_name,
                                  'rig_id' : self.rig_id_column_name,
@@ -131,20 +131,20 @@ class MwdDFHelper:
 
     # split df by bench/pattern/hole
     def _split_df_to_bph_df(self, df):
-        df[self.bench_column_name] = df[self.bench_column_name].astype(str)
-        df[self.pattern_column_name] = df[self.pattern_column_name].astype(str)
-        df[self.hole_column_name] = df[self.hole_column_name].astype(str)
+        df[self.bench_name_column_name] = df[self.bench_name_column_name].astype(str)
+        df[self.pattern_name_column_name] = df[self.pattern_name_column_name].astype(str)
+        df[self.hole_name_column_name] = df[self.hole_name_column_name].astype(str)
 
-        benchs = df[self.bench_column_name].unique()
+        benchs = df[self.bench_name_column_name].unique()
         holes_dfs = []
         for bench in benchs:
-            df_bench = df[df[self.bench_column_name] == bench]
-            patterns = df_bench[self.pattern_column_name].unique()
+            df_bench = df[df[self.bench_name_column_name] == bench]
+            patterns = df_bench[self.pattern_name_column_name].unique()
             for pattern in patterns:
-                df_pattern = df_bench[df_bench[self.pattern_column_name] == pattern]
-                holes = df_pattern[self.hole_column_name].unique()
+                df_pattern = df_bench[df_bench[self.pattern_name_column_name] == pattern]
+                holes = df_pattern[self.hole_name_column_name].unique()
                 for hole in holes:
-                    hole_df = df_pattern[df_pattern[self.hole_column_name] == hole]
+                    hole_df = df_pattern[df_pattern[self.hole_name_column_name] == hole]
                     hole_df = hole_df.sort_values(by=[self.start_time_column_name])
                     holes_dfs.append(hole_df)
         return holes_dfs
