@@ -61,9 +61,10 @@ class Config( object ):
         self.bit_model = " "
         self.drill_string_total_length = " "
         self.sensor_installation_location = " "
-        
-        # End adding new fields. 
-        
+        self.sensitivity = None
+
+        # End adding new fields.
+
         if metadata is not None:
             self.set_metadata(metadata)
 
@@ -73,6 +74,27 @@ class Config( object ):
         if config_parser is not None:
             self.set_config_parser(config_parser)
         return
+
+    @property
+    def is_ide_file(self):
+        if self.sensitivity == None:
+            return None
+        if len(self.sensitivity) > 1:
+            return False
+        else:
+            return True
+
+    @property
+    def sensitivity_xyz(self):
+        if len(self.sensitivity) > 1:
+            self.x_sensitivity = self.sensitivity[0]
+            self.y_sensitivity = self.sensitivity[1]
+            self.z_sensitivity = self.sensitivity[2]
+        else:
+            self.x_sensitivity = self.sensitivity[0]
+            self.y_sensitivity = self.sensitivity[0]
+            self.z_sensitivity = self.sensitivity[0]
+        return [self.x_sensitivity, self.y_sensitivity, self.z_sensitivity]
 
     def get_component_index(self, component_id):
         """

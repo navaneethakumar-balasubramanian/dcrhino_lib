@@ -12,45 +12,28 @@ from dcrhino.analysis.signal_processing.mwd_tools import get_interpolated_column
 
 class MwdDFHelper:
 
-    def __init__(self, df,
-                 start_time_column='start_time_utc',
-                 end_time_column='end_time_utc',
-                 #end_depth_column,
-                 bench_column='bench',
-                 pattern_column='pattern',
-                 hole_column='hole',
-                 collar_elevation_column='collar_elevation',
-                 computed_elevation_column='computed_elevation',
-                 rig_id_column='rig_id',
-                 mse_column='mse',
-                 rop_column='rop',
-                 wob_column='wob',
-                 tob_column='tob',
-                 easting_column='easting',
-                 northing_column='northing',
-                 mwd_map=False):
+    def __init__(self, df, mwd_map=False):
 
         self.df = df
-        self.start_time_column_name = start_time_column
-        self.end_time_column_name = end_time_column
-        self.bench_column_name = bench_column
-        self.pattern_column_name = pattern_column
-        self.hole_column_name = hole_column
-        self.collar_elevation_column_name = collar_elevation_column
-        self.computed_elevation_column_name = computed_elevation_column
-        self.rig_id_column_name = rig_id_column
-        self.mse_column_name = mse_column
-        self.rop_column_name = rop_column
-        self.wob_column_name = wob_column
-        self.tob_column_name = tob_column
-        self.easting_column_name = easting_column
-        self.northing_column_name = northing_column
+        self.start_time_column_name = 'start_time_utc'
+        self.end_time_column_name = 'end_time_utc'
+        self.bench_column_name = 'bench'
+        self.pattern_column_name = 'pattern'
+        self.hole_column_name = 'hole'
+        self.collar_elevation_column_name = 'collar_elevation'
+        self.computed_elevation_column_name = 'computed_elevation'
+        self.rig_id_column_name = 'rig_id'
+        self.mse_column_name = 'mse'
+        self.rop_column_name = 'rop'
+        self.wob_column_name = 'wob'
+        self.tob_column_name = 'tob'
+        self.easting_column_name = 'easting'
+        self.northing_column_name = 'northing'
+        self.hole_id_column_name = 'hole_id'
         self.mwd_map = mwd_map
 
         if self.mwd_map is not False:
             self.set_map_columns(self.mwd_map)
-
-
 
         self.expected_columns = {'start_time' : self.start_time_column_name ,
                                  'end_time' : self.end_time_column_name,
@@ -65,7 +48,7 @@ class MwdDFHelper:
                                  'wob' : self.wob_column_name,
                                  'tob' : self.tob_column_name,
                                  'easting' : self.easting_column_name,
-                                 'northing' : self.northing_column_name,
+                                 'northing' : self.northing_column_name
                                  }
 
         # DO VALIDATIONS ON THE COLUMNS
@@ -77,13 +60,26 @@ class MwdDFHelper:
         self.df[self.end_time_column_name] = pd.to_datetime(self.df[self.end_time_column_name])
 
 
+    def dc_format(self,df,mapping):
+        for key in mapping.keys():
+            if type(mapping[key]) == type(list()):
+                df[key] = ''
+                for cols in  mapping[key]:
+                    df[key] = df[key] + df[cols].astype(str)
+            else:
+                df = df.rename(index=str,columns={mapping[key]:key})
+        return df
+        
     def set_map_columns(self,mwd_map_obj):
-
         for _key in mwd_map_obj.keys():
-            self.__dict__[_key+"_column_name"] = mwd_map_obj[_key]
+            if type(mwd_map_obj[_key]) != type(list()):                
+                self.__dict__[_key+"_column_name"] = mwd_map_obj[_key]
 
 
     def check_existing_expected_columns(self,mwd_df):
+        if self.mwd_map is not False:
+            mwd_df = self.dc_format(mwd_df,self.mwd_map)
+        
         for key,column in self.expected_columns.iteritems():
             if column not in self.df.columns:
                 print ("Couldnt find " + str(column) + " in the mwd")
@@ -117,14 +113,11 @@ class MwdDFHelper:
 
     def get_interpolated_column(self,mwd,column_name,time_vector=None):
         if time_vector is None:
-            #pdb.set_trace()
-            min_dt = mwd[self.start_time_column_name].min()
-            max_dt = mwd[self.start_time_column_name].max()
+            min_dt = mwd['start_time'].min()
+            max_dt = mwd['start_time'].max()
             periods = (max_dt-min_dt).total_seconds()
             time_vector = pd.date_range(start=min_dt, periods=periods, freq='1S')
-        #pdb.set_trace()
-        interpolated_column = get_interpolated_column(time_vector, mwd, column_name,end_time_column_label=self.start_time_column_name)
-        #pdb.set_trace()
+        interpolated_column = get_interpolated_column(time_vector, mwd, column_name,end_time_column_label='start_time')
         return np.asarray(interpolated_column),time_vector
 
 

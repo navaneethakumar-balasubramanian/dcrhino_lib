@@ -25,11 +25,16 @@ def trim_trace(min_lag_trimmed_trace, max_lag_trimmed_trace, num_taps_in_decon_f
     return little_data
 
 class TraceProcessing:
-    def __init__(self,global_config,is_ide_file,accelerometer_max_voltage):
+    def __init__(self,global_config,is_ide_file=None,accelerometer_max_voltage=None):
         self.config = global_config
         self.is_ide_file = is_ide_file
         self.accelerometer_max_voltage = accelerometer_max_voltage
 
+        if is_ide_file == None:
+            self.is_ide_file = self.config.is_ide_file
+        if accelerometer_max_voltage == None:
+            self.accelerometer_max_voltage = self.config.accelerometer_max_voltage
+        
     def process(self, data, data_ts, component, sensitivity, debug=False):
         calibrated_actual_second = self._apply_calibration(data, sensitivity)
         max_acceleration = np.max(calibrated_actual_second)
