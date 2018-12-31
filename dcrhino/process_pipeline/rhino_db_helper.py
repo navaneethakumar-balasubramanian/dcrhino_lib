@@ -57,11 +57,11 @@ class RhinoDBHelper:
         return mapping
     
 
-    def get_grouped_ts_raw_data(self,config_uuid_str,ts_min,ts_max,ts_to_ignore=np.array([])):
-        to_return = self.get_raw_data(config_uuid_str,ts_min,ts_max).groupby(['ts'])
+    def get_grouped_ts_raw_data(self,config_uuid_str,ts_min,ts_max,ts_to_ignore=np.array([]),limit=None):
+        to_return = self.get_raw_data(config_uuid_str,ts_min,ts_max,limit=limit).groupby(['ts'])
         return to_return
 
-    def get_raw_data(self,config_uuid_str,ts_min,ts_max,ts_to_ignore=np.array([])):
+    def get_raw_data(self,config_uuid_str,ts_min,ts_max,ts_to_ignore=np.array([]),limit=None):
         ts_array = np.arange(ts_min,ts_max)
         if len(ts_to_ignore) != 0:
             ts_array = ts_array[~np.isin(ts_array,ts_to_ignore)]
@@ -71,6 +71,9 @@ class RhinoDBHelper:
             ts_max = ts_array.max()
             query = "SELECT ts,microtime,x,y,z FROM "+self.raw_data_table_name+" WHERE (UUIDStringToNum('"+config_uuid_str+"') = raw_data_file_uuid) AND (ts >= "+str(ts_min)+") and (ts <= "+str(ts_max)+")"
         cols = ['ts','microtime','x','y','z']
+        if limit != None:
+            query += " limit " +str(limit)
+        #pdb.set_trace()
         to_return = self.query_result_to_pd(query,cols)
         return to_return
         
