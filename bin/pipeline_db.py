@@ -200,9 +200,10 @@ argparser.add_argument('-mwd', '--mwd-path', help="MWD File Path",required=True)
 argparser.add_argument('-mmap', '--mmap-path', help="MWD MAP File Path",required=True)
 args = argparser.parse_args()
 
-
-mwd_df = pd.read_csv(args.mwd_path)
-mwd_map_path = args.mmap_path
+mwd_path = args.mwd_path
+mmap_path = args.mmap_path
+mwd_df = pd.read_csv(mwd_path)
+mwd_map_path = mmap_path
 
 
 with open(mwd_map_path) as f:
@@ -225,7 +226,7 @@ print "Splitting mwd by bench,pattern,hole,rig_id"
 cond_1 = mwd_dc_format['rig_id'].isin(rig_ids)
 cond_2 = mwd_dc_format['start_time'] >= min_ts_date
 cond_3 = mwd_dc_format['end_time'] <= max_ts_date
-
+#et_trace()
 print "Pre filtering mwd by configs rigs and times"
 pre_filtered_mwd = mwd_dc_format[cond_1 & cond_2 & cond_3]
 
@@ -240,6 +241,7 @@ for line in confs.itertuples():
     cond_2 = pre_filtered_mwd['start_time'].astype(int)/1000000000 >= line.min_ts
     cond_3 = pre_filtered_mwd['start_time'].astype(int)/1000000000 <= line.max_ts
     columns_sort_group = ['bench','pattern','hole','hole_id']
+    #pdb.set_trace()
     holes_mwd = pre_filtered_mwd[cond_1 & cond_2 & cond_3].copy().sort_values(by=columns_sort_group).reset_index(drop=True)
     holes_identified = np.array(list(holes_mwd.groupby(columns_sort_group).groups))
 
@@ -254,7 +256,9 @@ for line in confs.itertuples():
         holes_cfgs['----'.join(list(hole))].append([line.uuid,line.min_ts,line.max_ts])
         
 #pdb.set_trace()
+counter = 0
 for key in holes_cfgs.keys():
+    counter += 1
     splitted_key = key.split('----')
     bench = splitted_key[0]
     pattern = splitted_key[1]
@@ -269,8 +273,12 @@ for key in holes_cfgs.keys():
     min_hole_ts = hole_mwd['start_time'].astype(int).min()/1000000000
     max_hole_ts = hole_mwd['start_time'].astype(int).max()/1000000000
     
-    #max_hole_ts = min_hole_ts+10
+    if (max_hole_ts - min_hole_ts) > 3600:
+        print "Hole run bigger than an hour.Ignoring. Check mwd"
+        continue
+    
     for files in holes_cfgs[key]:
+        
         raw_file_uuid_str = files[0]
         ## GENERATE GLOBAL CONFIG FROM RAW DATA CONFIG JSON
         config_json = db_helper.get_config_json_from_raw_file_uuid(raw_file_uuid_str)
@@ -286,7 +294,7 @@ for key in holes_cfgs.keys():
         
         #VERIFY IF WE ALREADY HAVE THE SAME DATA WITH SAME CONFIG AND DATAMAPPING ON THE SERVER
         #PROCESS ONE SECOND JUST TO GET THE DATA MAPPING OF THE PROCESS
-        raw_data_grouped_by_ts = db_helper.get_grouped_ts_raw_data(raw_file_uuid_str,min_hole_ts,min_hole_ts+1)
+        raw_data_grouped_by_ts = db_helper.get_grouped_ts_raw_data(raw_file_uuid_str,min_hole_ts,max_hole_ts,limit=1)
         processed_data = process_raw_data_interval(global_config,raw_data_grouped_by_ts)
         external_features_df = extracted_features_df_to_external_features(processed_data)
         prepared_to_save_processed_data = prepare_processed_data_to_save(global_config,processed_data,hole_mwd_interpolated_by_second,external_features_df)        
