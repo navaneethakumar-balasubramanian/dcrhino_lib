@@ -99,9 +99,9 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         else:
             continue
 
-        bench = hole[mwdHelper.bench_column_name].values[0]
-        pattern = hole[mwdHelper.pattern_column_name].values[0]
-        hole_id = hole[mwdHelper.hole_column_name].values[0]
+        bench = hole[mwdHelper.bench_name_column_name].values[0]
+        pattern = hole[mwdHelper.pattern_name_column_name].values[0]
+        hole_id = hole[mwdHelper.hole_name_column_name].values[0]
         print hole[mwdHelper.start_time_column_name].min()
         hole_start_time = int(calendar.timegm(hole[mwdHelper.start_time_column_name].min().timetuple()))
         hole_end_time = int(calendar.timegm(hole[mwdHelper.start_time_column_name].max().timetuple()))
