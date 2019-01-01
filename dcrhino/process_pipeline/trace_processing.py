@@ -72,14 +72,16 @@ class TraceProcessing:
         output_dict = {}
         output_dict[component+'_max_acceleration'] = [max_acceleration]
         output_dict[component+'_min_acceleration'] = [min_acceleration]
+        output_dict[component+'_trimmed_filtered_correlated'] = trimmed_filtered_correlated_trace_actual_second
+        output_dict[component+'_filtered_despiked_correlated'] = filtered_despiked_trace_actual_second
         if debug:
             output_dict[component+'_interpolated'] = interpolated_actual_second
             output_dict[component+'_deconvolved'] = deconvolved_data_actual_second
             output_dict[component+'_correlated'] = correlated_trace_actual_second
             output_dict[component+'_filtered_correlated'] = filtered_correlated_trace_actual_second
-            output_dict[component+'_trimmed_filtered_correlated'] = trimmed_filtered_correlated_trace_actual_second
+            
             output_dict[component+'_despiked_correlated'] = despiked_trace
-            output_dict[component+'_filtered_despiked_correlated'] = filtered_despiked_trace_actual_second
+            
         return output_dict
 
     def _trim_trace(self, data):

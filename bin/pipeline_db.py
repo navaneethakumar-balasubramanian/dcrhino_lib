@@ -95,47 +95,46 @@ def get_features_extracted_v2(traces_df, global_config, recipe_list,timestamp_ar
     print ("Features extracted")
     return extracted_features_list
 
-def process_raw_data_interval(global_config,raw_data_grouped_by_ts):
-    print "Loading raw data"
     
-    seconds = raw_data_grouped_by_ts.apply(list).index.astype(int)
-    trace_processor = TraceProcessing(global_config)
-
-    feature_recipe_list = ['original', 'tangential_201810', 'J1', 'extra_crispy']
+    
+def process_trace(global_config,second_raw_data_df,ouput_columns=None):
     xyz = ['x','y','z']
+    trace_processor = TraceProcessing(global_config)
+    ts_actual_second = second_raw_data_df['microtime'].astype(float).values/10000000000
+    second_traces_df = pd.DataFrame()
+    for i in range(0,len(xyz)):
+        ## TRACE PROCESSING
+        component_sensitivity = global_config.sensitivity_xyz[i]
+        component_name = COMPONENT_LABELS[i]
+        component_trace_raw_data = second_raw_data_df[xyz[i]].values
+        debug = False
+        component_trace_dict = trace_processor.process(component_trace_raw_data,
+                                                                   ts_actual_second,
+                                                                   component_name,
+                                                                   component_sensitivity,
+                                                                  debug)
+
+        component_sec_df = pd.DataFrame([component_trace_dict])
+        second_traces_df = pd.concat([second_traces_df,component_sec_df],axis=1)
+        
+    #This should be on features ?
+    second_traces_df['axial_max_acceleration'] = second_traces_df['axial_max_acceleration'].values[0][0]
+    second_traces_df['axial_min_acceleration'] = second_traces_df['axial_min_acceleration'].values[0][0]
+    second_traces_df['radial_max_acceleration'] = second_traces_df['radial_max_acceleration'].values[0][0]
+    second_traces_df['radial_min_acceleration'] = second_traces_df['radial_min_acceleration'].values[0][0]
+    second_traces_df['tangential_max_acceleration'] = second_traces_df['tangential_max_acceleration'].values[0][0]
+    second_traces_df['tangential_min_acceleration'] = second_traces_df['tangential_min_acceleration'].values[0][0]
+    return second_traces_df
+
+def process_raw_data_interval(global_config,raw_data_grouped_by_ts,second_traces_df = None):
+    seconds = raw_data_grouped_by_ts.apply(list).index.astype(int)
+    feature_recipe_list = ['original', 'tangential_201810', 'J1', 'extra_crispy']
     extracted_features_df = pd.DataFrame()
     for second in seconds:
-        second_mwd = raw_data_grouped_by_ts.get_group(second)
-        ts_actual_second = second_mwd['microtime'].astype(float).values/10000000000
-        second_traces_df = pd.DataFrame()
-        #output_traces_dict = {}
-        for i in range(0,len(xyz)):
-            ## TRACE PROCESSING
-            component_sensitivity = global_config.sensitivity_xyz[i]
-            component_name = COMPONENT_LABELS[i]
-            #component_index = global_config.get_component_index(component_name)
-            component_trace_raw_data = second_mwd[xyz[i]].values
-            debug = True
-            #pdb.set_trace()
-            component_trace_dict = trace_processor.process(component_trace_raw_data,
-                                                                       ts_actual_second,
-                                                                       component_name,
-                                                                       component_sensitivity,
-                                                                      debug)
-
-            component_trace_dict['ts'] = second
-            component_sec_df = pd.DataFrame([component_trace_dict])
-            component_sec_df = component_sec_df.set_index("ts")
-            second_traces_df = pd.concat([second_traces_df,component_sec_df],axis=1)
-            
-        ## FEATURE EXTRACTOR
-        #pdb.set_trace()
-        second_traces_df['axial_max_acceleration'] = second_traces_df['axial_max_acceleration'].values[0][0]
-        second_traces_df['axial_min_acceleration'] = second_traces_df['axial_min_acceleration'].values[0][0]
-        second_traces_df['radial_max_acceleration'] = second_traces_df['radial_max_acceleration'].values[0][0]
-        second_traces_df['radial_min_acceleration'] = second_traces_df['radial_min_acceleration'].values[0][0]
-        second_traces_df['tangential_max_acceleration'] = second_traces_df['tangential_max_acceleration'].values[0][0]
-        second_traces_df['tangential_min_acceleration'] = second_traces_df['tangential_min_acceleration'].values[0][0]
+        second_raw_data = raw_data_grouped_by_ts.get_group(second)
+        second_traces_df = process_trace(global_config,second_raw_data)
+        second_traces_df["ts"] = second
+        second_traces_df = second_traces_df.set_index("ts")
         second_extracted_features_df = pd.DataFrame( get_features_extracted_v2(second_traces_df,global_config,feature_recipe_list,np.asarray([second])))
         second_extracted_features_df['ts'] = second
         second_extracted_features_df = second_extracted_features_df.set_index("ts")

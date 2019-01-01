@@ -41,7 +41,7 @@ class RhinoDBHelper:
         for col in cols:
             db_col_name = ""
             type_col = type(processed_data_df[col].values[0])
-            if type_col == np.float64 or type_col == np.int64:
+            if type_col == np.float64 or type_col == np.int64 or type_col == float:
                 float64_col_counter += 1
                 db_col_name = "float_prop_"+str(float64_col_counter)
             elif type_col == np.ndarray:
