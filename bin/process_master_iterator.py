@@ -52,7 +52,7 @@ if __name__ == "__main__":
         print('its false!')
     else:
         print('its a string .. that messed up')
-    pdb.set_trace()
+    #pdb.set_trace()
     #can we add an assignment layer like the two lines below?
     #that way it is easy to comment out the command line usage and
     #and directly assign args when debugging?
