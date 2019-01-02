@@ -33,6 +33,7 @@ def main():
   for hole_path in available_holes:
       mmap_path = os.path.join(hole_path,"mwd_map.json")
       os.system("python qc_plot_pipeline.py -ddir {} -mmap {}".format(hole_path,mmap_path))
+      print('Done with {}'.format(hole_path))
 
   #plot_qc_plots(array)
 
