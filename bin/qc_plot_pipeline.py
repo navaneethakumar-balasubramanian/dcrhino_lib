@@ -132,8 +132,8 @@ def get_plot_title(global_config,mwd_df):
 
 
 def get_output_file_name(mwd_df,global_config):
-    pdb.set_trace()
-    output_file_name = "{}_{}_{}depth_plot.png".format(mwd_df.bench_name.values[0], mwd_df.hole_name.values[0],global_config.sensor_serial_number,)
+    #pdb.set_trace()
+    output_file_name = "{}_{}_{}depth_plot.png".format(mwd_df.bench.values[0], mwd_df.hole_name.values[0],global_config.sensor_serial_number,)
     return output_file_name
 
 
