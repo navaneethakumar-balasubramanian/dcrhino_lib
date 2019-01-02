@@ -162,7 +162,6 @@ def get_features_extracted_v2(traces_dict, global_config, recipe_list):
     radial_traces = traces_dict['radial_trimmed_filtered_correlated_array']
     tangential_traces = traces_dict['tangential_trimmed_filtered_correlated_array']
     tangential_despiked_filtered_correlated_traces = traces_dict['tangential_filtered_despiked_correlated_array']
-    #pdb.set_trace()
     timestamp_array = traces_dict['ts_array']
     print("Extracting features")
     #initial_timestamp = timestamp_array[0]
@@ -290,6 +289,7 @@ def process_h5_file(h5py_file, output_folder, reprocess_signals, cfg_file_path=F
 
 
     start_ts = int(h5_helper.min_ts)
+    #end_ts = int(h5_helper.min_ts)+100
     end_ts = int(h5_helper.max_ts)
     temppath = output_folder
     io_helper.make_dirs_if_needed(temppath)

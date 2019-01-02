@@ -246,6 +246,43 @@ class DerivedFeatureExtractorV0(object):
         return s_velocity
 
 
+def extracted_features_df_to_external_features(extracted_features):
+    """
+
+    """
+    a_derived_features_list = ['a_delay', 'a_dens', 'a_mod', 'a_reflection_coef',
+                             'a_vel', 'a_dens']
+    c_derived_features_list = ['c_modulus', 'c_strength', 'c_velocity', 'c_density']
+    t_derived_features_list = ['t_delay', 't_mod', 't_reflection_coef',]
+    s_derived_features_list = ['s_modulus', 's_velocity', ]
+
+    #test_dir = '/media/kkappler/wd2018/data/datacloud/qc_test_dataset/milligan/output/0'
+    #input_csv = os.path.join(test_dir, 'extracted_features.csv')
+    #output_csv = os.path.join(test_dir, 'derived_features.csv')
+    output_features = pd.DataFrame()
+    df = extracted_features
+    feature_deriver = DerivedFeatureExtractorV0(df)
+    output_features['datetime'] = df['datetime']
+
+
+    for feature in a_derived_features_list:
+        print(feature)
+        output_features[feature] = feature_deriver.__getattribute__(feature)
+
+    for feature in c_derived_features_list:
+        print(feature)
+        output_features[feature] = feature_deriver.__getattribute__(feature)
+
+    for feature in t_derived_features_list:
+        print(feature)
+        output_features[feature] = feature_deriver.__getattribute__(feature)
+    for feature in s_derived_features_list:
+        print(feature)
+        output_features[feature] = feature_deriver.__getattribute__(feature)
+
+    return output_features
+
+
 def test():
     """
 

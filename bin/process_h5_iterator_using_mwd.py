@@ -18,6 +18,8 @@ from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotInput
 import matplotlib.pyplot as plt
 from binner import apply_bin_df
 from dcrhino.process_pipeline.config import Config
+from dcrhino.analysis.unstable.feature_extraction.feature_derivations_20181218 import extracted_features_df_to_external_features
+
 
 def check_timestamp_continuity(timestamp_array):
     """
@@ -170,6 +172,9 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         with open(os.path.join(hole_output_folder,'global_config.json'), 'w') as outfile:
             json.dump(vars(global_config), outfile,indent=4)
 
+        with open(os.path.join(hole_output_folder,'mwd_map.json'), 'w') as outfile:
+            json.dump(mmap, outfile,indent=4)
+
         samples_per_trace = int(global_config.output_sampling_rate)
         print('warning: assuming 1s trace length -- will fail when we change this')
         print('use metadata.samples_per_trace function when we change this')
@@ -261,6 +266,8 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         hole_features_extracted['mse'], time_vector = mwdHelper.get_interpolated_column(hole_mwd,mwdHelper.mse_column_name,time_vector)
         hole_features_extracted['depth'] = (np.asarray(hole_features_extracted['computed_elevation'].values) - hole_mwd[mwdHelper.collar_elevation_column_name].values[0]) * -1
 
+        hole_features_extracted["mine"] = global_config.mine_name
+
         for col in hole_mwd.columns:
             if col not in hole_features_extracted.columns and hole_mwd[col].values.dtype in [np.int,np.float]:
                 hole_features_extracted['mwd_'+col], time_vector = mwdHelper.get_interpolated_column(hole_mwd,col,time_vector)
@@ -271,7 +278,11 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         qc_input.observer_row = hole_mwd
         qc_input.time_stamps = hole_features_extracted['datetime']
 
+        external_features_df = extracted_features_df_to_external_features(hole_features_extracted)
+        hole_features_extracted['datetime'] = hole_features_extracted.index = hole_features_extracted['datetime']
+        external_features_df.index = external_features_df['datetime']
 
+        hole_features_extracted = pd.concat([hole_features_extracted,external_features_df ], axis=1, join_axes=[external_features_df.index])
         hole_features_extracted['pseudo_ucs'] = pd.Series(qc_input.pseudo_ucs_sample, index = hole_features_extracted.index)
         hole_features_extracted['pseudo_velocity'] = pd.Series(qc_input.primary_pseudo_velocity_sample, index = hole_features_extracted.index)
         hole_features_extracted['pseudo_density'] = pd.Series(qc_input.primary_pseudo_density_sample, index = hole_features_extracted.index)
@@ -304,8 +315,10 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
 
 
 #        hole_features_extracted = hole_features_extracted.rename(index=str, columns=columns_rename)
+
         hole_features_extracted.dropna(axis=1, how='all', inplace=True)
         hole_features_extracted.to_csv(os.path.join(hole_output_folder,"extracted_features.csv"),index=False)
+
         holes_h5[hole]['hole_mwd_df'].to_csv(os.path.join(hole_output_folder,"hole_mwd.csv"),index=False)
 
 
