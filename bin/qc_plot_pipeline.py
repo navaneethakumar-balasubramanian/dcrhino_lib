@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Nov 12 11:00:23 2018
-
 @author: sjha
 """
 from __future__ import absolute_import, division, print_function
@@ -123,8 +122,7 @@ def get_plot_title(global_config,mwd_df):
     title_line3 = "DISTANCE FROM BIT TO SENSOR: {}".format(global_config.sensor_distance_to_source,global_config.rig_id)
         # FIX THIS TITLE
 #            title_line5 = "type,starting distance (relative to bit bottom),  length, outer diameter"
-    pdb.set_trace()
-    title_line4 = r"$\bf{"+"MINE"+"}$"+": {},".format(global_config.mine_name)+ r"$\bf{"+"DATE:"+"}$"+ "{},".format(pd.to_datetime(mwd_df.time_start.min()).strftime("%B %d, %Y"))+'\n'+r"$\bf{"+" BENCH:"+"}$"+"{},".format(mwd_df.bench.values[0])+ r"$\bf{"+"HOLE:"+"}$"+ "{}" .format(mwd_df.hole.values[0])
+    title_line4 = r"$\bf{"+"MINE"+"}$"+": {},".format(global_config.mine_name)+ r"$\bf{"+"DATE:"+"}$"+ "{},".format(pd.to_datetime(mwd_df.time_start_utc.min()).strftime("%B %d, %Y"))+'\n'+r"$\bf{"+" BENCH:"+"}$"+"{},".format(mwd_df.bench.values[0])+ r"$\bf{"+"HOLE:"+"}$"+ "{}" .format(mwd_df.hole.values[0])
 #    title_line4 = ""
     plot_title = [title_line4, title_line2+' '+title_line3, title_line1]
 #    pdb.set_trace()
@@ -310,4 +308,3 @@ def main():
         print("ok, now make the qc plot")
 
 if __name__ == "__main__":
-    main()
