@@ -23,31 +23,14 @@ from binner import apply_bin_df
 from dcrhino.process_pipeline.config import Config
 from dcrhino.analysis.unstable.feature_extraction.feature_derivations_20181218 import extracted_features_df_to_external_features
 from dcrhino.analysis.data_manager.temp_paths import ensure_dir as make_dirs_if_needed
+from dcrhino.process_pipeline.util import check_timestamp_continuity
+from dcrhino.process_pipeline.util import get_values_from_index
 
-def check_timestamp_continuity(timestamp_array):
+
+
+def get_numpys_from_folder_by_interval(folder_path, ts_min, ts_max):
     """
     """
-
-    dt_array = np.diff(timestamp_array)
-    expected_dt = np.median(dt_array)
-    discontinuity_indices = np.where(dt_array > expected_dt)[0]
-    splitted_indices = np.split(timestamp_array, discontinuity_indices+1)
-    reference_array = np.split(np.arange(len(timestamp_array)), discontinuity_indices+1)
-    print("timestamps split into {} contiguous chunks".format(len(splitted_indices)))
-    return splitted_indices, reference_array
-
-
-def get_values_from_index(index_ar, values_ar):
-    """
-    """
-    print('get values from {} to {}'.format(index_ar.min(), index_ar.max()))
-    print('values array has shaepe {} '.format(values_ar.shape))
-    print('index array has shaepe {} '.format(index_ar.shape))
-    print('index array 0,-1 are {}, {}'.format(index_ar[0], index_ar[-1]))
-    #pdb.set_trace()
-    return values_ar[index_ar.min():index_ar.max()]
-
-def get_numpys_from_folder_by_interval(folder_path,ts_min,ts_max):
     matches = []
     for root, dirnames, filenames in os.walk(folder_path):
         for filename in fnmatch.filter(filenames, '*.npy'):
@@ -301,26 +284,6 @@ def process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder):
         hole_features_extracted['tangential_velocity_delay'] = 1.0/(hole_features_extracted['tangential_delay'])
 
 
-
-#        columns_rename = {  "mse":"mwd_mse",
-#                            "axial_multiple_peak_sample": "axial_multiple_peak_amplitude",
-#                            "axial_multiple_peak_time_sample": "axial_multiple_peak_time",
-#                            "axial_primary_peak_sample":"axial_primary_peak_amplitude",
-#                            "axial_primary_peak_time_sample":"axial_primary_peak_time",
-#                            "radial_primary_peak_sample":"radial_primary_peak_amplitude_sample",
-#                            "tangential_primary_peak_sample":"tangential_primary_peak_amplitude",
-#                            "pseudo_ucs":"c_str",
-#                            "pseudo_velocity":"a_vel",
-#                            "pseudo_density":"a_dens",
-#                            "reflection_coefficient":"a_reflection-coefficient",
-#                            "axial_delay":"a_delay",
-#                            "tangential_amplitude_ratio":"t_reflection_coef",
-#                            "tangential_delay":"t_delay",
-#                            "tangential_impedance":"t_mod",
-#                            "shear_velocity":"t_vel"}
-
-
-#        hole_features_extracted = hole_features_extracted.rename(index=str, columns=columns_rename)
 
         hole_features_extracted.dropna(axis=1, how='all', inplace=True)
         hole_features_extracted.to_csv(os.path.join(hole_output_folder,"extracted_features.csv"),index=False)
