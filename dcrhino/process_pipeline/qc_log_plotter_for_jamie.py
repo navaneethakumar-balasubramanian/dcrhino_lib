@@ -67,7 +67,8 @@ class QCLogPlotterv3():
 #        pdb.set_trace()
 #        ax.set_ylim(ampl_min,ampl_max)
 #        ax.set_ylim(ax_lim['lower_peak_x'][0],ax_lim['upper_peak_x'][0])
-        ax.set_ylim(0,1.5)
+#        ax.set_ylim(0,1.5)
+        ax.set_ylim(0,2.5)
 
 
         
@@ -81,7 +82,8 @@ class QCLogPlotterv3():
 #        
 #        ax1.set_ylim(RC_min,RC_max)
 #        ax1.set_ylim(ax_lim['lower_ax_RC'][0],ax_lim['upper_ax_RC'][0])
-        ax1.set_ylim(0,1)
+#        ax1.set_ylim(0,1)
+        ax1.set_ylim(0,1.75)
 
         
 #        if ax_lim['upper_ax_delay'][0]<1:
@@ -150,6 +152,7 @@ class QCLogPlotterv3():
 
         ax.axhline(y = self.noise_threshold,xmin = 0, xmax = X[-1], color = 'k')
         
+        pdb.set_trace()
 #        ax.legend()
         # SETTING AXIS LIMITS BASED ON JAMIE'S RECCOMENDATION. 5% ABOVE AND BELOW
         # THE MAX AND MIN VALUES FOR A BENCH.
@@ -164,7 +167,9 @@ class QCLogPlotterv3():
         
 #        ax.set_ylim(tang_ampl_min,tang_ampl_max)
 #        ax.set_ylim(ax_lim['lower_peak_y'][0],ax_lim['upper_peak_y'][0])
-        ax.set_ylim(-0.5,1.5)
+#        ax.set_ylim(-0.5,1.5)
+        ax.set_ylim(-0.5,2.0)
+
 
 
         
@@ -178,7 +183,9 @@ class QCLogPlotterv3():
         
 #        ax1.set_ylim(tang_RC_min,tang_RC_max)
 #        ax1.set_ylim(ax_lim['lower_tang_RC'][0],ax_lim['upper_tang_RC'][0])
-        ax1.set_ylim(0,1)
+#        ax1.set_ylim(0,1)
+        ax1.set_ylim(-0.5,1.5)
+
 
 #        if ax_lim['lower_tang_delay'][0]<1:
 #            tang_delay_base = 0.5
@@ -289,12 +296,12 @@ class QCLogPlotterv3():
         self.Panel3_plot(ax[2], X, qc_plot_input, plot_title,ax_lim)
         # Panel 5
         self.legend_box(ax[4])
-
 #        pdb.set_trace()
-        ax_1_mult = sum(self.extracted_features_df['axial_primary_peak_time_sample']+self.mult_pos.axial_first_multiple[0])/len(self.extracted_features_df['axial_primary_peak_time_sample'])
-        ax_2_mult =  sum(self.extracted_features_df['axial_primary_peak_time_sample']+self.mult_pos.axial_second_multiple[0])/len(self.extracted_features_df['axial_primary_peak_time_sample'])
-        tang_1_mult = sum(self.extracted_features_df['tangential_primary_peak_time_sample']+self.mult_pos.tangential_first_multiple[0])/len(self.extracted_features_df['axial_primary_peak_time_sample'])
-        tang_2_mult = sum(self.extracted_features_df['tangential_primary_peak_time_sample']+self.mult_pos.tangential_second_multiple[0])/len(self.extracted_features_df['axial_primary_peak_time_sample'])
+        ax_1_mult = np.mean(self.extracted_features_df['axial_primary_peak_time_sample'])+self.mult_pos.axial_first_multiple[0]
+        ax_2_mult =  np.mean(self.extracted_features_df['axial_primary_peak_time_sample'])+self.mult_pos.axial_second_multiple[0]
+        pdb.set_trace()
+        tang_1_mult = np.mean(self.extracted_features_df['tangential_primary_peak_time_sample'])+self.mult_pos.tangential_first_multiple[0]
+        tang_2_mult = np.mean(self.extracted_features_df['tangential_primary_peak_time_sample'])+self.mult_pos.tangential_second_multiple[0]
 #        pdb.set_trace()
         #Now, go plot heatmaps.
 
