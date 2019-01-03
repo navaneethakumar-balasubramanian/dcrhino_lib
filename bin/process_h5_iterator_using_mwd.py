@@ -2,6 +2,9 @@
 Note 20181229: there are two sets of timestamps running around in this module;
 hole_ts: these are by defintion continuous (Thiago is this True?)
 numpys_h5_hole_files['ts']: these maybe discontinuous, although rarely
+@note 20190103: after discussion with team, it sounds like the discontinuous
+h5 files are RHINO only, never on SSX;
+
 """
 import argparse
 import json
@@ -19,7 +22,7 @@ import matplotlib.pyplot as plt
 from binner import apply_bin_df
 from dcrhino.process_pipeline.config import Config
 from dcrhino.analysis.unstable.feature_extraction.feature_derivations_20181218 import extracted_features_df_to_external_features
-
+from dcrhino.analysis.data_manager.temp_paths import ensure_dir as make_dirs_if_needed
 
 def check_timestamp_continuity(timestamp_array):
     """
@@ -30,12 +33,9 @@ def check_timestamp_continuity(timestamp_array):
     discontinuity_indices = np.where(dt_array > expected_dt)[0]
     splitted_indices = np.split(timestamp_array, discontinuity_indices+1)
     reference_array = np.split(np.arange(len(timestamp_array)), discontinuity_indices+1)
-
+    print("timestamps split into {} contiguous chunks".format(len(splitted_indices)))
     return splitted_indices, reference_array
 
-def make_dirs_if_needed(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
 
 def get_values_from_index(index_ar, values_ar):
     """
@@ -80,10 +80,16 @@ def get_numpys_from_folder_by_interval(folder_path,ts_min,ts_max):
     #print output_dict['ts']
     return output_dict
 
-def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
-    output_folder = output_folder_path
+def process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder):
+    """
+    ::h5_iterator_df:: what is this?  Who are it's parents?
 
-    mwdHelper = MwdDFHelper(mwd_df,mwd_map=mmap)
+    Flow of this function
+    1. Reduce mwd dataframe to only include the drill rig associated with h5 file
+
+    """
+
+    mwdHelper = MwdDFHelper(mwd_df, mwd_map=mmap)
     print h5_iterator_df['rig_id'].unique()
     temp = mwd_df[mwd_df[mwdHelper.rig_id_column_name].isin(h5_iterator_df['rig_id'].values)].copy()
     mwd_df = temp
@@ -92,7 +98,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
     print "Found {} holes in this mwd".format(len(holes))
     holes_h5 = {}
 
-    #Loop over holes, for each one create a
+    #Loop over holes, for each one <???>
     for hole in holes:
 
         hole_rig_ids = hole[mwdHelper.rig_id_column_name].unique()
@@ -117,8 +123,8 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
             #pdb.set_trace()
             temp_id = '{},{}'.format(bph_str, h5.sensor_serial_number)
             cond_1 = (rig_id == h5.rig_id)
-            cond_2 = (int(hole_start_time) >= int(h5.min_ts) and int(hole_start_time) <= int(h5.max_ts))
-            cond_3 = (int(hole_end_time) >= int(h5.min_ts) and int(hole_end_time) <= int(h5.max_ts))
+            cond_2 = (hole_start_time >= int(h5.min_ts) and hole_start_time <= int(h5.max_ts))
+            cond_3 = (hole_end_time >= int(h5.min_ts) and   hole_end_time <= int(h5.max_ts))
 
             if cond_1 and (cond_2 or cond_3):
                 if temp_id not in holes_h5.keys():
@@ -143,7 +149,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
         num_timestamps = len(hole_ts)
         print('there are {} timestamps'.format(num_timestamps))
 
-        hole_output_folder = os.path.join(output_folder,hole)
+        hole_output_folder = os.path.join(output_folder, hole)
         make_dirs_if_needed(hole_output_folder)
         np.save(os.path.join(hole_output_folder,"ts.npy"),hole_ts)
         #holes_dict = {}
