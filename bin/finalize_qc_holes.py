@@ -11,8 +11,11 @@ from datetime import datetime
 import os
 import numpy as np
 import pandas as pd
+import shutil
 
 base_path = "/data_sdd/qc_test_dataset"
+output_path = os.path.join(base_path,"final_files")
+files_to_copy = ["depth_plot_v2.png","extracted_features.csv"]
 
 def load_holes_csv():
     return pd.read_csv(os.path.join(base_path,"qc_blastholes.csv"),dtype=str)
@@ -24,15 +27,19 @@ def generate_hole_directory_names(df):
     for root, dirs, files in os.walk(holes_path, topdown=True):
         for dir in dirs:
             if dir in arr:
-                found.append(os.path.join(root,dir))
+                found.append([root,dir])
     return found
 
 def main():
   df = load_holes_csv()
   available_holes = generate_hole_directory_names(df)
-  for hole_path in available_holes:
+  for hole in available_holes:
+      pdb.set_trace()
+      hole_path = os.path.join(hole[0],hole[1])
       mmap_path = os.path.join(hole_path,"mwd_map.json")
-      os.system("python qc_plot_pipeline.py -ddir {} -mmap {}".format(hole_path,mmap_path))
+      #os.system("python qc_plot_pipeline.py -ddir {} -mmap {}".format(hole_path,mmap_path))
+      for file in files_to_copy:
+          copyfile(os.path.join(hole_path,file),os.path.join(output_path,"{}_{}").format(hole[1],file))
       print('Done with {}'.format(hole_path))
 
   #plot_qc_plots(array)
