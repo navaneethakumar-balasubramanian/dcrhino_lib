@@ -28,9 +28,10 @@ def generate_hole_directory_names(df):
     for root, dirs, files in os.walk(holes_path, topdown=True):
         for dir in dirs:
             if dir in arr:
-                for name in exclude:
-                    if name not in root:
-                        found.append([root,dir])
+                found.append([root,dir])
+
+    for dir in found:
+        pdb.set_trace()
     return found
 
 def main():
