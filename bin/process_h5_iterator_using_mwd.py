@@ -292,6 +292,7 @@ def process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder):
 
 
         hole_features_extracted_to_bin  = hole_features_extracted.dropna(axis=1, how='any')
+        pdb.set_trace()
         hole_features_extracted_to_bin.drop(columns=['datetime','mine'], inplace=True)
         columns_to_bin = hole_features_extracted_to_bin.columns
 
@@ -326,8 +327,9 @@ if __name__ == "__main__":
         mwd_map_path = args.mwd_map_path
         output_folder_path = args.output_folder_path
     else:
-        mine_path = '/home/kkappler/data/datacloud/teck/line_creek/'
-        h5_iterator_path = os.path.join(mine_path, 'test_line_creek_iterator_ssx.csv')
+        mine_path = '/home/kkappler/data/datacloud/teck/pet_line_creek/'
+        #h5_iterator_path = os.path.join(mine_path, 'test_line_creek_iterator_ssx.csv')
+        h5_iterator_path = os.path.join(mine_path, 'x_line_creek_iterator.csv')
         output_folder_path = os.path.join(mine_path, 'processed_data')
         mwd_path = os.path.join(mine_path, 'mwd/line_creek_mwd_20180924.csv')
         mwd_map_path = os.path.join(mine_path, 'mwd/mmap.json')
