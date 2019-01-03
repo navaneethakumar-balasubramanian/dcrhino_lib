@@ -15,7 +15,7 @@ from shutil import copyfile
 
 base_path = "/data_sdd/qc_test_dataset"
 output_path = os.path.join(base_path,"final_files")
-files_to_copy = ["depth_plot_v2.png","extracted_features.csv","binned.csv"]
+files_to_copy = ["depth_plot_v2.png","extracted_features.csv","binned.csv","global_config.json"]
 exclude =["lco","rio"]
 
 def load_holes_csv():
