@@ -112,6 +112,8 @@ def apply_bin_df(df_features,bin_width,columns_to_bin=[]):
     #df_features = pd.read_csv(features_filename)
 
     max_depth = df_features['depth'].max()
+    columns_to_bin = np.append(columns_to_bin,'depth')
+
 
     #<Do global trace rejection here>
     print("we may wish to split the df into features from mwd vs features\
