@@ -308,3 +308,4 @@ def main():
         print("ok, now make the qc plot")
 
 if __name__ == "__main__":
+    main()
