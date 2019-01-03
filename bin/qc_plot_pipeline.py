@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Nov 12 11:00:23 2018
-
 @author: sjha
 """
 from __future__ import absolute_import, division, print_function
@@ -82,7 +81,7 @@ def get_ax_lim(extracted_features_df):
                                'upper_tang_RC':[upper_tang_RC]})
         return ax_lim
 
-def get_plot_title(global_config,mwd_df):
+def get_plot_title(global_config,mwd_df,mwd_helper):
 
     if global_config.drill_type == 1:
         drill_type = "electric rotary",
@@ -123,7 +122,8 @@ def get_plot_title(global_config,mwd_df):
     title_line3 = "DISTANCE FROM BIT TO SENSOR: {}".format(global_config.sensor_distance_to_source,global_config.rig_id)
         # FIX THIS TITLE
 #            title_line5 = "type,starting distance (relative to bit bottom),  length, outer diameter"
-    title_line4 = r"$\bf{"+"MINE"+"}$"+": {},".format(global_config.mine_name)+ r"$\bf{"+"DATE:"+"}$"+ "{},".format(pd.to_datetime(mwd_df.time_start_utc.min()).strftime("%B %d, %Y"))+'\n'+r"$\bf{"+" BENCH:"+"}$"+"{},".format(mwd_df.bench.values[0])+ r"$\bf{"+"HOLE:"+"}$"+ "{}" .format(mwd_df.hole.values[0])
+#    pdb.set_trace()
+    title_line4 = r"$\bf{"+"MINE"+"}$"+": {},".format(global_config.mine_name)+ r"$\bf{"+"DATE:"+"}$"+ "{},".format( mwd_df[mwd_helper.start_time_column_name].iloc[0].strftime("%B %d, %Y"))+'\n'+r"$\bf{"+" BENCH:"+"}$"+"{},".format(mwd_df[mwd_helper.bench_name_column_name].iloc[0])+ r"$\bf{"+"HOLE:"+"}$"+ "{}" .format(mwd_df[mwd_helper.hole_name_column_name].iloc[0])
 #    title_line4 = ""
     plot_title = [title_line4, title_line2+' '+title_line3, title_line1]
 #    pdb.set_trace()
@@ -131,9 +131,9 @@ def get_plot_title(global_config,mwd_df):
     return plot_title
 
 
-def get_output_file_name(mwd_df,global_config):
-    pdb.set_trace()
-    output_file_name = "{}_{}_{}depth_plot.png".format(mwd_df.bench.values[0], mwd_df.hole_name.values[0],global_config.sensor_serial_number,)
+def get_output_file_name(mwd_df,global_config,mwd_helper):
+    
+    output_file_name = "{}_{}_{}depth_plot.png".format(mwd_df[mwd_helper.bench_name_column_name].iloc[0], mwd_df[mwd_helper.hole_name_column_name].iloc[0],global_config.sensor_serial_number,)
     return output_file_name
 
 
@@ -143,8 +143,8 @@ def get_noise_threshold(global_config):
 
 def main():
 
-    ddir = '/mnt/sda1/data/data_blob/qc_test_dataset/milligan/output_milligan/output_milligan/holes/965,106,614,3,5208'
-    mmap = '/mnt/sda1/data/data_blob/qc_test_dataset/milligan/mount_milligan_mwd_map.json'
+    ddir = '/mnt/sda1/data/data_blob/qc_test_dataset/965,106,614,3,5208'
+    mmap = '/mnt/sda1/data/data_blob/qc_test_dataset/965,106,614,3,5208/mwd_map.json'
 #    ofp = ddir
 #    ofp = False
 
@@ -236,7 +236,6 @@ def main():
 
     ax_lim = get_ax_lim(feature_df)
 
-    plot_title = get_plot_title(global_config,mwd_df)#    pdb.set_trace()
 
 
     bph_string = global_config.mine_name + "\nRig:" + global_config.rig_id + " From:" + datetime.utcfromtimestamp(start_ts).strftime('%Y-%m-%d %H:%M:%S') + " to " + datetime.utcfromtimestamp(end_ts).strftime('%Y-%m-%d %H:%M:%S')
@@ -291,11 +290,12 @@ def main():
         mwd_df[mwd_helper.end_time_column_name] = pd.to_datetime(mwd_df[mwd_helper.end_time_column_name])
         #mwd_df.parse_dates=[mwd_helper.start_time_column_name, mwd_helper.end_time_column_name]
 
+        plot_title = get_plot_title(global_config,mwd_df,mwd_helper)#    pdb.set_trace()
 
         qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'depth_plot.png'),global_config,mult_pos)
         qclogplotter_depth.plot(show=True)
 
-        output_filename = get_output_file_name(mwd_df,global_config)
+        output_filename = get_output_file_name(mwd_df,global_config,mwd_helper)
         if output_folder_path != False:
             output_filename = os.path.join(output_folder_path,'depth_plot_v2.png')
         else:

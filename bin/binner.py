@@ -110,7 +110,10 @@ def apply_bin_df(df_features,bin_width,columns_to_bin=[]):
     #features_filename = os.path.join(folder_path, 'extracted_features.csv')
     #df_mwd = pd.read_csv(hole_mwd_filename)
     #df_features = pd.read_csv(features_filename)
+
     max_depth = df_features['depth'].max()
+    columns_to_bin = np.append(columns_to_bin,'depth')
+
 
     #<Do global trace rejection here>
     print("we may wish to split the df into features from mwd vs features\
@@ -146,6 +149,7 @@ def apply_bin_df(df_features,bin_width,columns_to_bin=[]):
             print("averaging scheme {} not yet supported".format(averaging_scheme))
             raise Exception
         for column_name in matched_columns_to_bin:
+            print (column_name)
             binned_df_dict[column_name][i_bin] = median_over_bin[column_name]
 
     binned_df = pd.DataFrame.from_dict(data=binned_df_dict)
@@ -167,7 +171,7 @@ def main():
 
 
     hole_folder = args.hole_folder
-    features_filename = os.path.join(folder_path, 'extracted_features.csv')
+    features_filename = os.path.join(hole_folder, 'extracted_features.csv')
     df_features = pd.read_csv(features_filename)
     bin_width = float(args.bin_width)
     binned_df = apply_bin_df(df_features,bin_width)

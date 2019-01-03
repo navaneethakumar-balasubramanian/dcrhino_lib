@@ -328,19 +328,24 @@ def process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder):
         holes_h5[hole]['hole_mwd_df'].to_csv(os.path.join(hole_output_folder,"hole_mwd.csv"),index=False)
 
 
-#        columns_to_bin = hole_features_extracted.columns
-#        print columns_to_bin
-#        binned_df = apply_bin_df(hole_features_extracted,global_config.binning_interval_in_cm/100,columns_to_bin)
-#        binned_df['x'] = hole_mwd[mwdHelper.easting_column_name].values[0]
-#        binned_df['y'] = hole_mwd[mwdHelper.northing_column_name].values[0]
-#        binned_df["mine"] = global_config.mine_name
-#        binned_df["mwd_bench"] = hole_mwd[mwdHelper.bench_column_name].values[0]
-#        binned_df["mwd_area"] = hole_mwd[mwdHelper.pattern_column_name].values[0]
-#        binned_df["mwd_hole"] = hole_mwd[mwdHelper.hole_column_name].values[0]
-#        acceleration_values_by_second.to_csv(os.path.join(hole_output_folder,"acceleration_values_by_second.csv"),index=False)
-#        hole_features_extracted.to_csv(os.path.join(hole_output_folder,"extracted_features.csv"),index=False)
-#        binned_df.to_csv(os.path.join(hole_output_folder,"binned.csv"),index=False)
-#        holes_h5[hole]['hole_mwd_df'].to_csv(os.path.join(hole_output_folder,"hole_mwd.csv"),index=False)
+        hole_features_extracted_to_bin  = hole_features_extracted.dropna(axis=1, how='any')
+        hole_features_extracted_to_bin.drop(columns=['datetime','mine'], inplace=True)
+        columns_to_bin = hole_features_extracted_to_bin.columns
+
+
+        #global_config.binning_interval_in_cm = 5.0
+        binned_df = apply_bin_df(hole_features_extracted,float(global_config.binning_interval_in_cm)/100,columns_to_bin)
+        #pdb.set_trace()
+        binned_df['x'] = hole_mwd[mwdHelper.easting_column_name].values[0]
+        binned_df['y'] = hole_mwd[mwdHelper.northing_column_name].values[0]
+        binned_df["mine"] = global_config.mine_name
+        binned_df["mwd_bench"] = hole_mwd[mwdHelper.bench_name_column_name].values[0]
+        binned_df["mwd_area"] = hole_mwd[mwdHelper.pattern_name_column_name].values[0]
+        binned_df["mwd_hole"] = hole_mwd[mwdHelper.hole_name_column_name].values[0]
+        acceleration_values_by_second.to_csv(os.path.join(hole_output_folder,"acceleration_values_by_second.csv"),index=False)
+        #hole_features_extracted.to_csv(os.path.join(hole_output_folder,"extracted_features.csv"),index=False)
+        binned_df.to_csv(os.path.join(hole_output_folder,"binned.csv"),index=False)
+        #holes_h5[hole]['hole_mwd_df'].to_csv(os.path.join(hole_output_folder,"hole_mwd.csv"),index=False)
 
 
 if __name__ == "__main__":

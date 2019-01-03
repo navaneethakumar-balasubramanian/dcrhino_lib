@@ -212,7 +212,13 @@ METADATA_HEADER_FORMAT_KEYS = {
         'baud_rate':DataType.INTEGER,
         'window_widths':DataType.STRING,
         'binning_interval_in_cm':DataType.FLOAT,
-        'accelerometer_max_voltage':DataType.FLOAT
+        'accelerometer_max_voltage':DataType.FLOAT,
+        'peak_amplitude_axial_y_limit':DataType.STRING,
+        'rc_axial_y_limit':DataType.STRING,
+        'peak_amplitude_tangential_y_limit':DataType.STRING,
+        'rc_tangential_y_limit':DataType.STRING,
+        'plot_a_vel':DataType.BOOLEAN,
+        'plot_t_vel':DataType.BOOLEAN
         }
 
 
