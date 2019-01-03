@@ -31,16 +31,19 @@ def generate_hole_directory_names(df):
     return found
 
 def main():
-  df = load_holes_csv()
-  available_holes = generate_hole_directory_names(df)
-  for hole in available_holes:
-      pdb.set_trace()
-      hole_path = os.path.join(hole[0],hole[1])
-      mmap_path = os.path.join(hole_path,"mwd_map.json")
-      #os.system("python qc_plot_pipeline.py -ddir {} -mmap {}".format(hole_path,mmap_path))
-      for file in files_to_copy:
-          copyfile(os.path.join(hole_path,file),os.path.join(output_path,"{}_{}").format(hole[1],file))
-      print('Done with {}'.format(hole_path))
+    df = load_holes_csv()
+    available_holes = generate_hole_directory_names(df)
+    for hole in available_holes:
+        try:
+            hole_path = os.path.join(hole[0],hole[1])
+            mmap_path = os.path.join(hole_path,"mwd_map.json")
+            #os.system("python qc_plot_pipeline.py -ddir {} -mmap {}".format(hole_path,mmap_path))
+            for file in files_to_copy:
+                copyfile(os.path.join(hole_path,file),os.path.join(output_path,"{}_{}").format(hole[1],file))
+            print('Done with {}'.format(hole_path))
+        except:
+            pass
+
 
   #plot_qc_plots(array)
 
