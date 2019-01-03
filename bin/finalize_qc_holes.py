@@ -11,7 +11,7 @@ from datetime import datetime
 import os
 import numpy as np
 import pandas as pd
-import shutil
+from shutil import copyfile
 
 base_path = "/data_sdd/qc_test_dataset"
 output_path = os.path.join(base_path,"final_files")
