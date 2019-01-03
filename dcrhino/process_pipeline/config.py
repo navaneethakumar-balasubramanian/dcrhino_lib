@@ -61,7 +61,6 @@ class Config( object ):
         self.bit_model = " "
         self.drill_string_total_length = " "
         self.sensor_installation_location = " "
-
         # SET DEFAULT WINDOW WIDTHS
         #self.window_widths = "{\"axial\": {\"multiple_3\": 0.004, \"multiple_2\": 0.004, \"multiple_1\": 0.004, \"primary\": 0.004}, \"tangential\": {\"multiple_3\": 0.004, \"multiple_2\": 0.004, \"multiple_1\": 0.004, \"primary\": 0.004}}"
 

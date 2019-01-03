@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Nov 12 11:00:23 2018
-
 @author: sjha
 """
 from __future__ import absolute_import, division, print_function
