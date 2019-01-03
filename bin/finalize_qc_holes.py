@@ -16,6 +16,7 @@ from shutil import copyfile
 base_path = "/data_sdd/qc_test_dataset"
 output_path = os.path.join(base_path,"final_files")
 files_to_copy = ["depth_plot_v2.png","extracted_features.csv","binned.csv"]
+exclude =["lco","rio"]
 
 def load_holes_csv():
     return pd.read_csv(os.path.join(base_path,"qc_blastholes.csv"),dtype=str)
@@ -27,7 +28,9 @@ def generate_hole_directory_names(df):
     for root, dirs, files in os.walk(holes_path, topdown=True):
         for dir in dirs:
             if dir in arr:
-                found.append([root,dir])
+                for name in exclude:
+                    if name not in root:
+                        found.append([root,dir])
     return found
 
 def main():
