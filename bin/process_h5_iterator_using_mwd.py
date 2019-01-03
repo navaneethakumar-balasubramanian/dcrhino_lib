@@ -292,7 +292,7 @@ def process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder):
 
 
         hole_features_extracted_to_bin  = hole_features_extracted.dropna(axis=1, how='any')
-        pdb.set_trace()
+        #pdb.set_trace()
         hole_features_extracted_to_bin.drop(columns=['datetime','mine'], inplace=True)
         columns_to_bin = hole_features_extracted_to_bin.columns
 
