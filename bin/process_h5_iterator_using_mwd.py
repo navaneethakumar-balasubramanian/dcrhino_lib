@@ -328,7 +328,7 @@ def process_h5_using_mwd(h5_iterator_df,mwd_df,mmap,output_folder_path):
 
 
         #global_config.binning_interval_in_cm = 5.0
-        binned_df = apply_bin_df(hole_features_extracted,global_config.binning_interval_in_cm/100,columns_to_bin)
+        binned_df = apply_bin_df(hole_features_extracted,float(global_config.binning_interval_in_cm)/100,columns_to_bin)
         #pdb.set_trace()
         binned_df['x'] = hole_mwd[mwdHelper.easting_column_name].values[0]
         binned_df['y'] = hole_mwd[mwdHelper.northing_column_name].values[0]
