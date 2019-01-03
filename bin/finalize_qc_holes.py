@@ -37,7 +37,7 @@ def main():
         try:
             hole_path = os.path.join(hole[0],hole[1])
             mmap_path = os.path.join(hole_path,"mwd_map.json")
-            #os.system("python qc_plot_pipeline.py -ddir {} -mmap {}".format(hole_path,mmap_path))
+            os.system("python qc_plot_pipeline.py -ddir {} -mmap {}".format(hole_path,mmap_path))
             for file in files_to_copy:
                 copyfile(os.path.join(hole_path,file),os.path.join(output_path,"{}_{}").format(hole[1],file))
             print('Done with {}'.format(hole_path))
