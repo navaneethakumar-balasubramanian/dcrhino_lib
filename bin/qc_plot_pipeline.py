@@ -131,9 +131,9 @@ def get_plot_title(global_config,mwd_df,mwd_helper):
     return plot_title
 
 
-def get_output_file_name(mwd_df,global_config):
-    pdb.set_trace()
-    output_file_name = "{}_{}_{}depth_plot.png".format(mwd_df.bench.values[0], mwd_df.hole_name.values[0],global_config.sensor_serial_number,)
+def get_output_file_name(mwd_df,global_config,mwd_helper):
+    
+    output_file_name = "{}_{}_{}depth_plot.png".format(mwd_df[mwd_helper.bench_name_column_name].iloc[0], mwd_df[mwd_helper.hole_name_column_name].iloc[0],global_config.sensor_serial_number,)
     return output_file_name
 
 
@@ -143,8 +143,8 @@ def get_noise_threshold(global_config):
 
 def main():
 
-    ddir = '/mnt/sda1/data/data_blob/qc_test_dataset/793,77,23531,31,5208'
-    mmap = '/mnt/sda1/data/data_blob/qc_test_dataset/793,77,23531,31,5208/mwd_map.json'
+    ddir = '/mnt/sda1/data/data_blob/qc_test_dataset/965,106,614,3,5208'
+    mmap = '/mnt/sda1/data/data_blob/qc_test_dataset/965,106,614,3,5208/mwd_map.json'
 #    ofp = ddir
 #    ofp = False
 
@@ -295,7 +295,7 @@ def main():
         qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'depth_plot.png'),global_config,mult_pos)
         qclogplotter_depth.plot(show=True)
 
-        output_filename = get_output_file_name(mwd_df,global_config)
+        output_filename = get_output_file_name(mwd_df,global_config,mwd_helper)
         if output_folder_path != False:
             output_filename = os.path.join(output_folder_path,'depth_plot_v2.png')
         else:
