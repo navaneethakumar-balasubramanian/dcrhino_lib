@@ -31,7 +31,10 @@ def generate_hole_directory_names(df):
                 found.append([root,dir])
 
     for dir in found:
-        pdb.set_trace()
+        for name in exclude:
+            if name in dir[0]:
+                found.remove(dir)
+    pdb.set_trace()            
     return found
 
 def main():
