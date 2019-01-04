@@ -3,3 +3,4 @@
 dcrhino.egg-info/*
 bin/*.cfg
 dcrhino/analysis/unstable/karl/*npy
+dcrhino/analysis/unstable/tests_and_examples/random_data*npy

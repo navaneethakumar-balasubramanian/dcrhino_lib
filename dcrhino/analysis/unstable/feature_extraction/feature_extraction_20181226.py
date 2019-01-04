@@ -245,7 +245,8 @@ def calculate_boolean_features(feature_dict, global_config):
     Create Boolean
     1:Min = sensitivity (g) /2000
     2: S/N 1st Multiple > 1
-    add it as a dict
+
+    @rtype: dictionary, keyed by the boolean feature labels
     """
     sensor_saturation_g = global_config.sensor_saturation_g
     system_noise_level = sensor_saturation_g / 2000.0

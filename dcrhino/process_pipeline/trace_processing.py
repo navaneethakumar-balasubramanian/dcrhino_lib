@@ -113,10 +113,10 @@ class TraceProcessing:
         TODO: calculate fir_taps once per header and leave fixed ...
         """
         sampling_rate = float(output_sampling_rate)
-        corners = [trapezoidal_bpf_corner_1,
-                   trapezoidal_bpf_corner_2,
-                   trapezoidal_bpf_corner_3,
-                   trapezoidal_bpf_corner_4,]
+        corners = [float(trapezoidal_bpf_corner_1),
+                   float(trapezoidal_bpf_corner_2),
+                   float(trapezoidal_bpf_corner_3),
+                   float(trapezoidal_bpf_corner_4),]
         fir_duration = trapezoidal_bpf_duration# = 0.02
 
         firls = FIRLSFilter(corners, fir_duration)
