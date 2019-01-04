@@ -5,6 +5,9 @@ numpys_h5_hole_files['ts']: these maybe discontinuous, although rarely
 @note 20190103: after discussion with team, it sounds like the discontinuous
 h5 files are RHINO only, never on SSX;
 
+@TODO: let's make a 'supporting_h5_iterator_using_mwd.py' module where we put
+all the supporting functions, that will make this a lot more readable
+
 """
 import argparse
 import json
@@ -106,8 +109,8 @@ def get_numpys_from_folder_by_interval(folder_path, ts_min, ts_max):
     cond1 = ts >= int(ts_min)
     cond2 = ts <= int(ts_max)
     position_index_array = np.array(np.where((cond1) &  (cond2))[0])
-    dx_position_index_array = np.diff(position_index_array)
-    contiguous_data = np.all(dx_position_index_array==1) #
+#    dx_position_index_array = np.diff(position_index_array)
+#    contiguous_data = np.all(dx_position_index_array==1) #
     print('warning - another hard coded assumption that delta-t between traces==1s')
     #pdb.set_trace()
     output_dict = {}
@@ -116,15 +119,15 @@ def get_numpys_from_folder_by_interval(folder_path, ts_min, ts_max):
         filename = os.path.join(folder_path,match.replace('/',''))
         print('filename', filename)
 
-        if contiguous_data:
-            num_rows = position_index_array[-1] - position_index_array[0]
-            nparray = read_npy_chunk(filename, position_index_array[0], num_rows)
-            nparray = nparray.astype('float32')
-        else:
-            print("THIS SHOULD NOT HAPPEN - these should be contiguous")
-            loaded_data = np.load(filename)
-            loaded_data = loaded_data.astype('float32')
-            nparray = get_values_from_index(position_index_array, loaded_data)
+#        if contiguous_data:
+        num_rows = position_index_array[-1] - position_index_array[0]
+        nparray = read_npy_chunk(filename, position_index_array[0], num_rows)
+        nparray = nparray.astype('float32')
+#        else:
+#            print("THIS SHOULD NOT HAPPEN - these should be contiguous")
+#            loaded_data = np.load(filename)
+#            loaded_data = loaded_data.astype('float32')
+#            nparray = get_values_from_index(position_index_array, loaded_data)
         print('dtype nparray = {}'.format(nparray.dtype))
 
         output_dict[dict_name] = nparray
@@ -152,6 +155,10 @@ def process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder,config_pars
     @var holes: list; Each element of the list is a dataframe, as subset
     of the MWD, associated with ideally a single hole.
 
+    @var hole_ts: this is by definition continuous at sampling rate 'delta t',
+    currently 1 second ...
+
+
 
     Flow of this function
     1. Reduce mwd dataframe to only include the drill rig associated with h5 file
@@ -175,7 +182,7 @@ def process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder,config_pars
     print("finished metadata review")
     for hole in holes_h5.keys():
         print('processing key = {}'.format(hole))
-        hole_ts = np.arange(holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts'])
+        hole_ts = np.arange(holes_h5[hole]['min_ts'], holes_h5[hole]['max_ts'])
         print('with timestamps ranging from : {} to {}'.format( hole_ts[0], hole_ts[-1]))
         num_timestamps = len(hole_ts)
         print('there are {} timestamps'.format(num_timestamps))
@@ -241,7 +248,9 @@ def process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder,config_pars
                     hole_features_dict_columns[key][i] = series[key].values[0]
         #</ANOTHER BRUTAL ITERATOR - Need to use slicing here>
 
-        numpys_h5_hole_files = get_numpys_from_folder_by_interval(processed_files_path,holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts'])
+        numpys_h5_hole_files = get_numpys_from_folder_by_interval(processed_files_path,
+                                                                  holes_h5[hole]['min_ts'],
+                                                                  holes_h5[hole]['max_ts'])
         print('the above can be done by slicing and not loading the whole npy')
         print('finiished get_numpys_from_folder_by_interval')
 
@@ -314,28 +323,29 @@ def process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder,config_pars
             if col not in hole_features_extracted.columns and hole_mwd[col].values.dtype in [np.int,np.float]:
                 hole_features_extracted['mwd_'+col], time_vector = mwdHelper.get_interpolated_column(hole_mwd,col,time_vector)
 
+        #<TODO: Karl: either remove this or put it into feature extractor ...>
         qc_input = QCLogPlotInput()
         qc_input.df = hole_features_extracted
         qc_input.hole_start_time = hole_features_extracted['datetime'].iloc[0].to_pydatetime()
         qc_input.observer_row = hole_mwd
         qc_input.time_stamps = hole_features_extracted['datetime']
-
+        #pdb.set_trace()
         external_features_df = extracted_features_df_to_external_features(hole_features_extracted)
         hole_features_extracted['datetime'] = hole_features_extracted.index = hole_features_extracted['datetime']
         external_features_df.index = external_features_df['datetime']
 
         hole_features_extracted = pd.concat([hole_features_extracted,external_features_df ], axis=1, join_axes=[external_features_df.index])
-        hole_features_extracted['pseudo_ucs'] = pd.Series(qc_input.pseudo_ucs_sample, index = hole_features_extracted.index)
-        hole_features_extracted['pseudo_velocity'] = pd.Series(qc_input.primary_pseudo_velocity_sample, index = hole_features_extracted.index)
-        hole_features_extracted['pseudo_density'] = pd.Series(qc_input.primary_pseudo_density_sample, index = hole_features_extracted.index)
-        hole_features_extracted['reflection_coefficient'] = pd.Series(qc_input.reflection_coefficient_sample, index = hole_features_extracted.index)
-        hole_features_extracted['axial_delay'] = hole_features_extracted['axial_multiple_peak_time_sample'] - hole_features_extracted['axial_primary_peak_time_sample']
-        hole_features_extracted['axial_velocity_delay'] = 1.0/(hole_features_extracted['axial_delay'])**3
+        #hole_features_extracted['pseudo_ucs'] = pd.Series(qc_input.pseudo_ucs_sample, index = hole_features_extracted.index)
+        #hole_features_extracted['pseudo_velocity'] = pd.Series(qc_input.primary_pseudo_velocity_sample, index = hole_features_extracted.index)
+        #hole_features_extracted['pseudo_density'] = pd.Series(qc_input.primary_pseudo_density_sample, index = hole_features_extracted.index)
+        #hole_features_extracted['reflection_coefficient'] = pd.Series(qc_input.reflection_coefficient_sample, index = hole_features_extracted.index)
+        #hole_features_extracted['axial_delay'] = hole_features_extracted['J0_axial_multiple_peak_time_sample'] - hole_features_extracted['J0_axial_primary_peak_time_sample']
+        #hole_features_extracted['axial_velocity_delay'] = 1.0/(hole_features_extracted['axial_delay'])**3
 
-        hole_features_extracted['tangential_RC'] = pd.Series(qc_input.tangential_reflection_coefficient_sample,index = hole_features_extracted.index) # Added variable for tangential reflection coefficient')]
-        hole_features_extracted['tangential_delay'] = hole_features_extracted['tangential_multiple_peak_time_sample'] - hole_features_extracted['tangential_primary_peak_time_sample']
-        hole_features_extracted['tangential_velocity_delay'] = 1.0/(hole_features_extracted['tangential_delay'])
-
+        #hole_features_extracted['tangential_RC'] = pd.Series(qc_input.tangential_reflection_coefficient_sample,index = hole_features_extracted.index) # Added variable for tangential reflection coefficient')]
+        #hole_features_extracted['tangential_delay'] = hole_features_extracted['tangential_multiple_peak_time_sample'] - hole_features_extracted['tangential_primary_peak_time_sample']
+        #hole_features_extracted['tangential_velocity_delay'] = 1.0/(hole_features_extracted['tangential_delay'])
+        #</TODO: Karl: either remove this or put it into feature extractor ...>
 
 
         hole_features_extracted.dropna(axis=1, how='all', inplace=True)
@@ -390,6 +400,7 @@ if __name__ == "__main__":
         output_folder_path = os.path.join(mine_path, 'processed_data')
         mwd_path = os.path.join(mine_path, 'mwd/line_creek_mwd_20180924.csv')
         mwd_map_path = os.path.join(mine_path, 'mwd/mmap.json')
+        config_path = False
 
     print("Loading h5 iterator {}".format(h5_iterator_path))
     h5_iterator_df = pd.read_csv(h5_iterator_path)

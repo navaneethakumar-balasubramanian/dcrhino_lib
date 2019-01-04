@@ -1,8 +1,8 @@
 """
 Example usage for time plot
-python process_pipeline_sucks.py -h5 ~/data/datacloud/debug/run_1542066345/20181112_RTR85545_S1021.h5 -o /tmp/ -t True
+python process_pipeline_new.py -h5 ~/data/datacloud/debug/run_1542066345/20181112_RTR85545_S1021.h5 -o /tmp/ -t True
 Example usage for mwd plot
-python process_pipeline_sucks.py -h5 20180504_SSX55470_5306_4000.h5 -mwd mount_milligan_raw.csv  -icl weight_on_bit,rop,torque,vibration,rpm,air_pressure -ric machine_id -sc time_start_utc -ec time_end_utc -mc MSE -tobc torque -wobc weight_on_bit
+python process_pipeline_new.py -h5 20180504_SSX55470_5306_4000.h5 -mwd mount_milligan_raw.csv  -icl weight_on_bit,rop,torque,vibration,rpm,air_pressure -ric machine_id -sc time_start_utc -ec time_end_utc -mc MSE -tobc torque -wobc weight_on_bit
 """
 import argparse
 import calendar
@@ -28,26 +28,12 @@ from dcrhino.process_pipeline.io_helper import IOHelper
 from dcrhino.process_pipeline.trace_processing import TraceProcessing
 from dcrhino.process_pipeline.trace_processing import trim_trace
 from dcrhino.process_pipeline.util import str2bool
-
-#from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotter,QCLogPlotInput
-#from dcrhino.process_pipeline.qc_log_plotter_nomwd import QCLogPlotter_nomwd
-#from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotterv2
-
+from dcrhino.process_pipeline.util import get_ts_array_indexes, get_values_from_index
 
 warnings.filterwarnings("ignore")
 
 
-#from dcrhino.analysis.graphical.unbinned_qc_log_plots_v3_west_angelas import pseudodensity_panel,primary_pseudovelocity_panel,reflection_coefficient_panel
-
 BIN_PATH = os.path.dirname(os.path.abspath(__file__))
-
-#<Put these in dcrhino.process_pipeline.util>
-def get_ts_array_indexes(ts,arr):
-    return np.array(np.where(arr == int(ts)))
-
-def get_values_from_index(index_ar, values_ar, dtype):
-    return values_ar[index_ar.min():index_ar.max()]
-#</Put these in dcrhino.process_pipeline.util>
 
 
 def get_df_acceleration_stats(traces_dict):
@@ -108,7 +94,7 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, h5_helper,
             actual_ts += 1
             continue
 
-        ts_actual_second = get_values_from_index(indexes_array_of_actual_second,entire_ts,np.float64)
+        ts_actual_second = get_values_from_index(indexes_array_of_actual_second, entire_ts)
         ts_actual_second = ts_actual_second-int(ts_actual_second[0])
 
         for i in range(0,len(xyz)):
@@ -154,6 +140,7 @@ def get_features_extracted_v2(traces_dict, global_config, recipe_list):
     #pdb.set_trace()
     shear_modulus = tangential_feature_df['tangential_impedance']
     """
+    #<OLD J0 FEATURES>
     extractor = FeatureExtractor(global_config.output_sampling_rate,
                                  global_config.primary_window_halfwidth_ms,
                                  global_config.multiple_window_search_width_ms,
@@ -178,6 +165,7 @@ def get_features_extracted_v2(traces_dict, global_config, recipe_list):
             original_features = extractor.extract_features(actual_timestamp, axial_trace, tangential_trace,
                                                        radial_trace, global_config.n_samples_trimmed_trace,
                                                        -global_config.min_lag_trimmed_trace)
+            #pdb.set_trace()
             all_features_great_and_small.update(original_features)
         if 'tangential_201810' in recipe_list:
             trim_tang_dspk = trim_trace(global_config.min_lag_trimmed_trace, global_config.max_lag_trimmed_trace,
@@ -251,14 +239,12 @@ def save_processed_traces(temppath, traces_dict, append_mode):
     return
 
 
-
-def process_h5_file(h5py_file, output_folder, reprocess_signals, cfg_file_path=False):
+def sort_out_cfg_metadata_and_all_that(h5py_file, cfg_file_path):
     """
+    usage:
+        global_config, h5_helper = sort_out_cfg_metadata_and_all_that(h5py_file, cfg_file_path)
     """
-    #<SETUP, CFG, H5, etc.>
-
     print ("Config file path:" , cfg_file_path)
-
     # Read Config
     config_parser = ConfigParser()
     if cfg_file_path:
@@ -277,26 +263,30 @@ def process_h5_file(h5py_file, output_folder, reprocess_signals, cfg_file_path=F
     global_config = Config(metadata,env_config_parser,config_parser)
     #TODO: put the 1.25 as 'upsample_factor' into PROCESSING config
     global_config.output_sampling_rate = global_config.output_sampling_rate * 1.25
-    io_helper = IOHelper(global_config)
-    #print (io_helper.get_mine_path())
 
-    accelerometer_max_voltage = float(h5py_file.attrs['PLAYBACK/accelerometer_max_voltage'])
 
     print ("Mine name = " + global_config.mine_name)
     print ("Rig id = " + global_config.rig_id)
     print ("sensor_serial_number = " + global_config.sensor_serial_number)
     print ("H5 data from " + str(h5_helper.min_dtime) + " to " + str(h5_helper.max_dtime))
 
-
-    start_ts = int(h5_helper.min_ts)
-    #end_ts = int(h5_helper.min_ts)+100
-    end_ts = int(h5_helper.max_ts)
-    temppath = output_folder
-    io_helper.make_dirs_if_needed(temppath)
-    append_mode = False
     #</SETUP, CFG, H5, etc.>
 
-    #pdb.set_trace()
+    return global_config, h5_helper
+
+def process_h5_file(h5py_file, output_folder, reprocess_signals, cfg_file_path=False):
+    """
+    """
+    append_mode = False
+
+    global_config,  h5_helper = sort_out_cfg_metadata_and_all_that(h5py_file, cfg_file_path)
+    accelerometer_max_voltage = float(h5_helper.h5f.attrs['PLAYBACK/accelerometer_max_voltage'])
+    temppath = output_folder
+    io_helper = IOHelper(global_config)
+    io_helper.make_dirs_if_needed(temppath)
+    start_ts = int(h5_helper.min_ts)
+    end_ts = int(h5_helper.max_ts)
+
     if reprocess_signals:
         print('reprocess_signals TRUE')
         traces_dict = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper,
