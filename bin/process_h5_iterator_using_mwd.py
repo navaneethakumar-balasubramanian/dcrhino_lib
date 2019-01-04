@@ -26,6 +26,7 @@ from dcrhino.analysis.data_manager.temp_paths import ensure_dir as make_dirs_if_
 from dcrhino.process_pipeline.util import check_timestamp_continuity
 from dcrhino.process_pipeline.util import get_values_from_index
 from dcrhino.analysis.unstable.tests_and_examples.test_chunk_read import read_npy_chunk
+from ConfigParser import ConfigParser
 
 def generate_dictionary_of_holes_h5_information(holes, mwdHelper):
     """
@@ -144,7 +145,7 @@ def restrict_mwd_to_relevant_drill_rig_ids(mwd_df, rig_ids, column_name):
     return temp
 
 
-def process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder):
+def process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder,config_parser):
     """
     ::h5_iterator_df:: what is this?  Who are it's parents?
 
@@ -208,6 +209,8 @@ def process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder):
            data_conf = json.load(f)
 
         global_config.set_data_from_json(data_conf)
+        global_config.set_config_parser(config_parser)
+
         with open(os.path.join(hole_output_folder,'global_config.json'), 'w') as outfile:
             json.dump(vars(global_config), outfile,indent=4)
 
@@ -370,11 +373,13 @@ if __name__ == "__main__":
         argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
         argparser.add_argument('-i', '--h5-iterator-path', help="H5 Iterator File Path", required=True)
         argparser.add_argument('-m', '--mwd-path', help="MWD File Path", required=True)
+        argparser.add_argument('-cfg', '--config-path', help="Config File Path", required=False,default=None)
         argparser.add_argument('-mmap','--mwd-map-path',help="MWD Map File Path", required=True)
         argparser.add_argument('-o','--output-folder-path',help="Output Folder Path", required=True)
         args = argparser.parse_args()
 
         h5_iterator_path = args.h5_iterator_path
+        config_path = args.config_path
         mwd_path = args.mwd_path
         mwd_map_path = args.mwd_map_path
         output_folder_path = args.output_folder_path
@@ -394,5 +399,13 @@ if __name__ == "__main__":
     with open(mwd_map_path) as f:
         mmap = json.load(f)
 
-    process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder_path)
+
+
+    # Read Config
+    config_parser = ConfigParser()
+    if config_path:
+        print ("Config file path:" , config_path)
+        config_parser.read(config_path)
+
+    process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder_path,config_parser)
     print('finito {}'.format(datetime.now()))
