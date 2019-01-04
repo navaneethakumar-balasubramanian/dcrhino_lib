@@ -227,8 +227,8 @@ METADATA_HEADER_FORMAT_KEYS = {
         'tangential_rc':DataType.BOOLEAN,
         'tangential_vel_del':DataType.BOOLEAN,
         'radial_amp':DataType.BOOLEAN,
-        'multiple_positive_window':DataType.FLOAT,
-        'multiple_negative_window':DataType.FLOAT
+        'mult_pos_win':DataType.FLOAT,
+        'mult_neg_win':DataType.FLOAT
 
         }
 
