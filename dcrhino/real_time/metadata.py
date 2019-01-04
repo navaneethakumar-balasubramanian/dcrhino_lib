@@ -218,7 +218,16 @@ METADATA_HEADER_FORMAT_KEYS = {
         'peak_amplitude_tangential_y_limit':DataType.STRING,
         'rc_tangential_y_limit':DataType.STRING,
         'plot_a_vel':DataType.BOOLEAN,
-        'plot_t_vel':DataType.BOOLEAN
+        'plot_t_vel':DataType.BOOLEAN,
+        'axial_amp':DataType.BOOLEAN,
+        'axial_rc':DataType.BOOLEAN,
+        'axial_vel_del':DataType.BOOLEAN,
+        'noise_threshold':DataType.BOOLEAN,
+        'tangential_amp':DataType.BOOLEAN,
+        'tangential_rc':DataType.BOOLEAN,
+        'tangential_vel_del':DataType.BOOLEAN,
+        'radial_amp':DataType.BOOLEAN
+
         }
 
 
