@@ -109,8 +109,8 @@ def get_numpys_from_folder_by_interval(folder_path, ts_min, ts_max):
     cond1 = ts >= int(ts_min)
     cond2 = ts <= int(ts_max)
     position_index_array = np.array(np.where((cond1) &  (cond2))[0])
-    dx_position_index_array = np.diff(position_index_array)
-    contiguous_data = np.all(dx_position_index_array==1) #
+#    dx_position_index_array = np.diff(position_index_array)
+#    contiguous_data = np.all(dx_position_index_array==1) #
     print('warning - another hard coded assumption that delta-t between traces==1s')
     #pdb.set_trace()
     output_dict = {}
@@ -119,15 +119,15 @@ def get_numpys_from_folder_by_interval(folder_path, ts_min, ts_max):
         filename = os.path.join(folder_path,match.replace('/',''))
         print('filename', filename)
 
-        if contiguous_data:
-            num_rows = position_index_array[-1] - position_index_array[0]
-            nparray = read_npy_chunk(filename, position_index_array[0], num_rows)
-            nparray = nparray.astype('float32')
-        else:
-            print("THIS SHOULD NOT HAPPEN - these should be contiguous")
-            loaded_data = np.load(filename)
-            loaded_data = loaded_data.astype('float32')
-            nparray = get_values_from_index(position_index_array, loaded_data)
+#        if contiguous_data:
+        num_rows = position_index_array[-1] - position_index_array[0]
+        nparray = read_npy_chunk(filename, position_index_array[0], num_rows)
+        nparray = nparray.astype('float32')
+#        else:
+#            print("THIS SHOULD NOT HAPPEN - these should be contiguous")
+#            loaded_data = np.load(filename)
+#            loaded_data = loaded_data.astype('float32')
+#            nparray = get_values_from_index(position_index_array, loaded_data)
         print('dtype nparray = {}'.format(nparray.dtype))
 
         output_dict[dict_name] = nparray
@@ -155,7 +155,7 @@ def process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder,config_pars
     @var holes: list; Each element of the list is a dataframe, as subset
     of the MWD, associated with ideally a single hole.
 
-    @var hole_ts: this is by definition continuos at sampling rate 'delta t',
+    @var hole_ts: this is by definition continuous at sampling rate 'delta t',
     currently 1 second ...
 
 
@@ -248,7 +248,9 @@ def process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder,config_pars
                     hole_features_dict_columns[key][i] = series[key].values[0]
         #</ANOTHER BRUTAL ITERATOR - Need to use slicing here>
 
-        numpys_h5_hole_files = get_numpys_from_folder_by_interval(processed_files_path,holes_h5[hole]['min_ts'],holes_h5[hole]['max_ts'])
+        numpys_h5_hole_files = get_numpys_from_folder_by_interval(processed_files_path,
+                                                                  holes_h5[hole]['min_ts'],
+                                                                  holes_h5[hole]['max_ts'])
         print('the above can be done by slicing and not loading the whole npy')
         print('finiished get_numpys_from_folder_by_interval')
 
