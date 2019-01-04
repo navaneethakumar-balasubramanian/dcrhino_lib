@@ -1,8 +1,8 @@
 """
 Example usage for time plot
-python process_pipeline_sucks.py -h5 ~/data/datacloud/debug/run_1542066345/20181112_RTR85545_S1021.h5 -o /tmp/ -t True
+python process_pipeline_new.py -h5 ~/data/datacloud/debug/run_1542066345/20181112_RTR85545_S1021.h5 -o /tmp/ -t True
 Example usage for mwd plot
-python process_pipeline_sucks.py -h5 20180504_SSX55470_5306_4000.h5 -mwd mount_milligan_raw.csv  -icl weight_on_bit,rop,torque,vibration,rpm,air_pressure -ric machine_id -sc time_start_utc -ec time_end_utc -mc MSE -tobc torque -wobc weight_on_bit
+python process_pipeline_new.py -h5 20180504_SSX55470_5306_4000.h5 -mwd mount_milligan_raw.csv  -icl weight_on_bit,rop,torque,vibration,rpm,air_pressure -ric machine_id -sc time_start_utc -ec time_end_utc -mc MSE -tobc torque -wobc weight_on_bit
 """
 import argparse
 import calendar
@@ -28,26 +28,12 @@ from dcrhino.process_pipeline.io_helper import IOHelper
 from dcrhino.process_pipeline.trace_processing import TraceProcessing
 from dcrhino.process_pipeline.trace_processing import trim_trace
 from dcrhino.process_pipeline.util import str2bool
-
-#from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotter,QCLogPlotInput
-#from dcrhino.process_pipeline.qc_log_plotter_nomwd import QCLogPlotter_nomwd
-#from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotterv2
-
+from dcrhino.process_pipeline.util import get_ts_array_indexes, get_values_from_index
 
 warnings.filterwarnings("ignore")
 
 
-#from dcrhino.analysis.graphical.unbinned_qc_log_plots_v3_west_angelas import pseudodensity_panel,primary_pseudovelocity_panel,reflection_coefficient_panel
-
 BIN_PATH = os.path.dirname(os.path.abspath(__file__))
-
-#<Put these in dcrhino.process_pipeline.util>
-def get_ts_array_indexes(ts,arr):
-    return np.array(np.where(arr == int(ts)))
-
-def get_values_from_index(index_ar, values_ar, dtype):
-    return values_ar[index_ar.min():index_ar.max()]
-#</Put these in dcrhino.process_pipeline.util>
 
 
 def get_df_acceleration_stats(traces_dict):
@@ -108,7 +94,7 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, h5_helper,
             actual_ts += 1
             continue
 
-        ts_actual_second = get_values_from_index(indexes_array_of_actual_second,entire_ts,np.float64)
+        ts_actual_second = get_values_from_index(indexes_array_of_actual_second, entire_ts)
         ts_actual_second = ts_actual_second-int(ts_actual_second[0])
 
         for i in range(0,len(xyz)):

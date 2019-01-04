@@ -42,19 +42,26 @@ def check_timestamp_continuity(timestamp_array):
     print("timestamps split into {} contiguous chunks".format(len(splitted_indices)))
     return splitted_indices, reference_array
 
-def get_values_from_index(index_ar, values_ar):
+def get_values_from_index(index_array, values_array, dtype=np.float64):
     """
     @TODO: remove print statements from here .. these were only here for debugging
+    @TODO: Lets stop using unsorted arrays when dealing with indices ...its
+    sloppy, hard to debug  and gets expensive when data gets big ...
+    there should be no reason to call index_array.min():index_array.max(), it should
+    be index_array[0] and index_array[-1]
     """
-    print('get values from {} to {}'.format(index_ar.min(), index_ar.max()))
-    print('values array has shaepe {} '.format(values_ar.shape))
-    print('index array has shaepe {} '.format(index_ar.shape))
-    print('index array 0,-1 are {}, {}'.format(index_ar[0], index_ar[-1]))
+#    print('get values from {} to {}'.format(index_array.min(), index_array.max()))
+#    print('values array has shaepe {} '.format(values_array.shape))
+#    print('index array has shaepe {} '.format(index_array.shape))
+#    print('index array 0,-1 are {}, {}'.format(index_array[0], index_array[-1]))
     #pdb.set_trace()
-    return values_ar[index_ar.min():index_ar.max()]
+    return values_array[index_array.min():index_array.max()]
 
+#<From process_pipeline_new>
+def get_ts_array_indexes(ts,arr):
+    return np.array(np.where(arr == int(ts)))
 
-
+#</From process_pipeline_new>
 def main():
     """
     """
