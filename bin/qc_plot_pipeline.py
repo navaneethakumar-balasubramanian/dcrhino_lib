@@ -22,7 +22,7 @@ from dcrhino.process_pipeline.mwd_helper import MwdDFHelper
 from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotterv2
 from dcrhino.process_pipeline.qc_log_plotter_nomwd import QCLogPlotter_nomwd
 from dcrhino.process_pipeline.acceleration_plotter import acceleration_plotter
-from dcrhino.process_pipeline.qc_log_plotter_for_jamie import QCLogPlotterv3
+from dcrhino.process_pipeline.qc_log_plotter_for_jamie_v2 import QCLogPlotterv3
 from dcrhino.analysis.unstable.feature_extraction.feature_extraction_20181211 import get_expected_multiple_times
 
 def get_multiples(global_config):
@@ -143,8 +143,8 @@ def get_noise_threshold(global_config):
 
 def main():
 
-    ddir = '/mnt/sda1/data/data_blob/qc_test_dataset/965,106,614,3,5208'
-    mmap = '/mnt/sda1/data/data_blob/qc_test_dataset/965,106,614,3,5208/mwd_map.json'
+    ddir = '/mnt/sda1/data/data_blob/qc_test_dataset/milligan_2/output_milligan/holes_0104/995,108,118,3,2235'
+    mmap = '/mnt/sda1/data/data_blob/qc_test_dataset/milligan_2/output_milligan/holes_0104/995,108,118,3,2235/mwd_map.json'
 #    ofp = ddir
 #    ofp = False
 
@@ -235,7 +235,6 @@ def main():
     end_ts = ts[-1]
 
     ax_lim = get_ax_lim(feature_df)
-
 
 
     bph_string = global_config.mine_name + "\nRig:" + global_config.rig_id + " From:" + datetime.utcfromtimestamp(start_ts).strftime('%Y-%m-%d %H:%M:%S') + " to " + datetime.utcfromtimestamp(end_ts).strftime('%Y-%m-%d %H:%M:%S')
