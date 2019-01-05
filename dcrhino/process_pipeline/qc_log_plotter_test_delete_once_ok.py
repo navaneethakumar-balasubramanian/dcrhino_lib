@@ -4,6 +4,9 @@
 Created on Thu Jan  3 14:25:33 2019
 
 @author: sjha
+
+@TODO: Need to fix all "string True" instances back to logical boolean,
+after global_config is populated with correct types (bools not strings)
 """
 
 #!/usr/bin/env python2
@@ -22,6 +25,11 @@ from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots import plot_
 from dcrhino.analysis.instrumentation.rhino import COMPONENT_LABELS
 from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots09192018 import QCBlastholePlotInputs
 from matplotlib.lines import Line2D
+
+def hack_split_ylimits(y_limit_string):
+    tmp = y_limit_string.split(',')
+    tmp = [float(x) for x in tmp]
+    return tmp
 
 class QCLogPlotterv3():
 
@@ -46,38 +54,41 @@ class QCLogPlotterv3():
     def Panel1_plot(self,ax, X, qc_plot_input, plot_title,ax_lim):
         """
         	#Peak axial, radial, tangential and multiple plots
-        
+
         """
         minor_locator = AutoMinorLocator(8)
 
-        
+
         ax1 = ax.twinx()
         ax2 = ax.twinx()
-        
+
         ax.set_title(self.plot_title_id[0],loc = 'center')
         ax1.set_title(self.plot_title_id[1],loc = 'left')
         ax2.set_title(self.plot_title_id[2],loc = 'right')
-        
-        
-        if self.global_config.metadata.axial_amp == True:
+
+        #pdb.set_trace()
+        if self.global_config.axial_amp == 'True':
+            y_limits = hack_split_ylimits(self.global_config.peak_amplitude_axial_y_limit)
             ax.plot(X, qc_plot_input.peak_ampl_x, label='peak_x', color = 'red')
-            ax.set_ylim(self.global_config.peak_amplitude_axial_y_limit)
+            ax.set_ylim(y_limits)
             ax.spines['left'].set_color('red')
             ax.set_ylabel('Ax. Amp').set_color('red')
             ax.spines['left'].set_linewidth(2)
-            
-        
-        if self.global_config.metadata.axial_RC == True:
+
+
+        if self.global_config.axial_rc == 'True':
+            y_limits = hack_split_ylimits(self.global_config.rc_axial_y_limit)
             ax1.plot(X,qc_plot_input.reflection_coefficient, label = 'Axial RC', color = 'blue')
-            ax1.set_ylim(self.global_config.rc_axial_y_limit)
+            ax1.set_ylim(y_limits)
             ax1.spines['right'].set_color('blue')
             ax1.set_ylabel('Ax. RC').set_color('blue')
             ax1.spines['right'].set_linewidth(2)
 
-        
-        if self.global_config.metadata.plot_a_vel == True:
+
+        if self.global_config.plot_a_vel == 'True':
+            y_limits = hack_split_ylimits(self.global_config.axial_vel_delay_y_limit)
             ax2.plot(X,qc_plot_input.ax_vel_del/10000,label = 'axial 1/delay', color = 'green')
-            ax2.set_ylim(self.global_config.ax_vel_delay_y_limit)
+            ax2.set_ylim(y_limits)
             ax2.spines['right'].set_color('greenyellow')
             ax2.set_ylabel('Ax. Delay').set_color('greenyellow')
             ax2.spines['right'].set_linewidth(2)
@@ -86,28 +97,28 @@ class QCLogPlotterv3():
 
 
 
-        
-        if self.global_config.noise_threshold == True:
-            ax.axhline(y = self.noise_threshold,xmin = 0, xmax = X[-1], color = 'k')
-        
 
-        
+        if self.global_config.noise_threshold == 'True':
+            ax.axhline(y = self.noise_threshold,xmin = 0, xmax = X[-1], color = 'k')
+
+
+
         ax.set_xlim(X[0], X[-1])
-        
+
         # SET GRID LINES AT POSITIONS ASKED FOR BY JAMIE
         x_maj_tick = (np.arange(X[0],X[-1])-X[0])
         x_min_tick = (np.arange(X[0],X[-1],0.5)-X[0])
-        
+
         x_maj_tick = (np.arange(X[0],X[-1])-X[0])
         x_min_tick = (np.arange(X[0],X[-1],0.5)-X[0])
 
-        
+
         for x_maj_tick in x_maj_tick:
             ax.axvline(x = x_maj_tick, ymin = 0, ymax = 1.5, color = 'k')
-            
+
         for x_min_tick in x_min_tick:
             ax.axvline(x = x_min_tick, ymin = 0, ymax = 1.5, color = 'k', linestyle = ':')
-            
+
         ax.xaxis.set_minor_locator(minor_locator)
         # gRID LINE WORK DONE.
 
@@ -118,30 +129,33 @@ class QCLogPlotterv3():
         """
         minor_locator = AutoMinorLocator(8)
 #        pdb.set_trace()
-        
+
         ax1 = ax.twinx()
         ax2 = ax.twinx()
-        
-        if self.global_config.metadata.tangential_amp == True:
+
+        if self.global_config.tangential_amp == 'True':
+            y_limits = hack_split_ylimits(self.global_config.peak_amplitude_tangential_y_limit)
             ax.plot(X, qc_plot_input.peak_ampl_y, label='peak_y',color = 'magenta')
-            ax.set_ylim(self.global_config.metadata.peak_amplitude_tangential_y_limit)
+            ax.set_ylim(y_limits)
             ax.spines['left'].set_color('magenta')
             ax.spines['left'].set_linewidth(2)
             ax.set_ylabel('Tang. Amp').set_color('magenta')
-        
-      
-        
-        if self.global_config.metadata.tangential_RC == True:
-            ax1.plot(X,qc_plot_input.tangential_RC, label = 'Tangential RC',color = 'cyan')
-            ax1.set_ylim(self.global_config.metadata.rc_tangential_y_limit)
+
+
+
+        if self.global_config.tangential_rc == 'True':
+            y_limits = hack_split_ylimits(self.global_config.rc_tangential_y_limit)
+            ax1.plot(X, qc_plot_input.tangential_RC, label = 'Tangential RC',color = 'cyan')
+            ax1.set_ylim(y_limits)
             ax1.spines['right'].set_color('cyan')
             ax1.spines['right'].set_linewidth(2)
             ax2.set_ylabel('Tang. Delay').set_color('lime')
 
-            
-        if self.global_config.metadata.plot_t_vel == True:
+
+        if self.global_config.plot_t_vel == 'True':
+            y_limits = hack_split_ylimits(self.global_config.tangential_vel_delay_y_limit)
             ax2.plot(X,qc_plot_input.tang_vel_del,label = 'Tangential 1/delay',color = 'lime')
-            ax2.set_ylim(self.global_config.metadata.tang_vel_delay_y_limit) # for tangential delay
+            ax2.set_ylim(y_limits) # for tangential delay
             ax2.spines['right'].set_color('lime')
             ax2.spines['right'].set_linewidth(2)
             ax2.set_ylabel('Tang. Delay').set_color('lime')
@@ -149,9 +163,9 @@ class QCLogPlotterv3():
 
 
 
-        if self.global_config.metadata.radial_amp == True:
+        if self.global_config.radial_amp == 'True':
             ax2.plot(X,qc_plot_input.peak_ampl_z,label = 'peak_z',color = 'lime')
-            ax2.set_ylim(self.global_config.metadata.peak_amplitude_radial_y_limit) # for tangential delay
+            ax2.set_ylim(self.global_config.peak_amplitude_radial_y_limit) # for tangential delay
             ax2.spines['right'].set_color('lime')
             ax2.spines['right'].set_linewidth(2)
             ax2.set_ylabel('Radial Amplitude').set_color('lime')
@@ -159,27 +173,27 @@ class QCLogPlotterv3():
 
 
 
-        if self.global_config.metadata.noise_threshold == True:
+        if self.global_config.noise_threshold == 'True':
             ax.axhline(y = self.noise_threshold,xmin = 0, xmax = X[-1], color = 'k')
-        
+
         ax.set_xlim(X[0], X[-1])
-        
+
 
 #       SET TICKS AND GRID LINES PER JAMIE
         ax.minorticks_on()
-        
+
         x_maj_tick = (np.arange(X[0],X[-1])-X[0])
         x_min_tick = (np.arange(X[0],X[-1],0.5)-X[0])
 
-        
+
         for x_maj_tick in x_maj_tick:
             ax.axvline(x = x_maj_tick, ymin = -0.5, ymax = 1.5, color = 'k')
-            
+
         for x_min_tick in x_min_tick:
             ax.axvline(x = x_min_tick, ymin = -0.5, ymax = 1.5, color = 'k', linestyle = ':')
-            
+
         ax.xaxis.set_minor_locator(minor_locator)
-        
+
         # TICKS SET
 
 
@@ -214,7 +228,7 @@ class QCLogPlotterv3():
         num_traces_per_component, num_samples = trace_array_dict[label].T.shape
 
         time_vector = pd.date_range(start=qc_plot_input.sub_mwd_time.iloc[0], periods=num_traces_per_component, freq='1S')
-        
+
         #<choose X - time>
 
         if depth is not False:
@@ -245,11 +259,19 @@ class QCLogPlotterv3():
         # Panel 5
         self.legend_box(ax[4])
 #        pdb.set_trace()
-        ax_1_mult = self.extracted_features_df['axial_primary_peak_time_sample']*1000+self.mult_pos.axial_first_multiple[0]
-        ax_2_mult =  self.extracted_features_df['axial_primary_peak_time_sample']*1000+self.mult_pos.axial_second_multiple[0]
-        
-        tang_1_mult = self.extracted_features_df['tangential_primary_peak_time_sample']*1000+self.mult_pos.tangential_first_multiple[0]
-        tang_2_mult = self.extracted_features_df['tangential_primary_peak_time_sample']*1000+self.mult_pos.tangential_second_multiple[0]
+        try:
+            ax_1_mult = self.extracted_features_df['J0_axial_primary_peak_time_sample'] * 1000 + self.mult_pos.axial_first_multiple[0]
+            ax_2_mult =  self.extracted_features_df['J0_axial_primary_peak_time_sample'] * 1000 + self.mult_pos.axial_second_multiple[0]
+
+            tang_1_mult = self.extracted_features_df['J0_tangential_primary_peak_time_sample'] * 1000 + self.mult_pos.tangential_first_multiple[0]
+            tang_2_mult = self.extracted_features_df['J0_tangential_primary_peak_time_sample'] * 1000 + self.mult_pos.tangential_second_multiple[0]
+        except KeyError:
+            ax_1_mult = self.extracted_features_df['axial_primary_peak_time_sample']*1000 + self.mult_pos.axial_first_multiple[0]
+            ax_2_mult =  self.extracted_features_df['axial_primary_peak_time_sample']*1000 + self.mult_pos.axial_second_multiple[0]
+
+            tang_1_mult = self.extracted_features_df['tangential_primary_peak_time_sample']*1000 + self.mult_pos.tangential_first_multiple[0]
+            tang_2_mult = self.extracted_features_df['tangential_primary_peak_time_sample']*1000 + self.mult_pos.tangential_second_multiple[0]
+
 #        pdb.set_trace()
         #Now, go plot heatmaps.
 
@@ -285,13 +307,13 @@ class QCLogPlotterv3():
             plt.colorbar(heatmap1, cax = cbaxes)
         ax[3], heatmap2 = plot_hole_as_heatmap(ax[3], cbal.v_min_2, cbal.v_max_2, X, Y,
           trace_array_dict['tangential'], cmap_string, y_tick_locations)#,
-        
+
         # PLOT MULTIPLES
         ax[3].plot(X,ax_1_mult,color = 'k',linestyle = '--',linewidth = 2)
         ax[3].plot(X,ax_2_mult,color = 'k',linestyle = '--',linewidth = 2)
         ax[3].plot(X,tang_1_mult, color = 'k',linestyle = '-',linewidth = 2)
         ax[3].plot(X,tang_2_mult,color = 'k',linestyle = '-',linewidth = 2)
-        
+
         ax[3].set_xlabel('Depth (m)')
 
 
@@ -301,16 +323,16 @@ class QCLogPlotterv3():
         x_maj_tick = (np.arange(X[0],X[-1])-X[0])
         x_min_tick = (np.arange(X[0],X[-1],0.5)-X[0])
 
-        
+
         for x_maj_tick in x_maj_tick:
             ax[1].axvline(x = x_maj_tick, ymin = lowest_y_tick, ymax = greatest_y_tick, color = 'k')
             ax[3].axvline(x = x_maj_tick, ymin = lowest_y_tick, ymax = greatest_y_tick, color = 'k')
 
-            
+
         for x_min_tick in x_min_tick:
             ax[1].axvline(x = x_min_tick, ymin = lowest_y_tick, ymax = greatest_y_tick, color = 'k', linestyle = ':')
             ax[3].axvline(x = x_min_tick, ymin = lowest_y_tick, ymax = greatest_y_tick, color = 'k',linestyle = ':')
-            
+
 
 #        plt.tight_layout()
         if colourbar_type=='all_one':
@@ -332,103 +354,107 @@ class QCLogPlotterv3():
         if show:
             plt.show()
         print("saving {}".format(out_filename))
-    
-    def legend_box(self,ax):
+
+    def legend_box(self, ax):
         ax1 = ax.twinx()
         ax2 = ax.twinx()
-        
+
         # PANEL 1
-        if self.global_config.metadata.axial_amp == True:
+        if self.global_config.axial_amp == 'True':
             sub_line1 = Line2D([0],[0], color = 'r',label = 'Axial_amplitude')
         else:
-            sub_line1 = " "
-            
-        if self.global_config.metadata.axial_RC == True:
+            sub_line1 = None
+
+        if self.global_config.axial_rc == 'True':
             sub_line2 = Line2D([0],[0], color = 'b',label = 'Axial RC')
         else:
-            sub_line2 = " "
+            sub_line2 = None
 
-        if self.global_config.metadata.axial_vel_del == True:
+        if self.global_config.plot_a_vel == 'True':
             sub_line3 = Line2D([0],[0], color = 'g',label = 'Axial 1/delay')
         else:
-            sub_line3 = " "
-            
-        if self.global_config.noise_threshold == True:
-            sub_line4 = Line2D([0],[0],color = 'k',label = 'Noise Threshold')
-        else: 
-            sub_line4 = " "
+            sub_line3 = None
 
-            
+        if self.global_config.noise_threshold == 'True':
+            sub_line4 = Line2D([0],[0],color = 'k',label = 'Noise Threshold')
+        else:
+            sub_line4 = None
+
+
         legend_lines1 = [sub_line1,sub_line2,sub_line3,sub_line4]
-        
-        
+        legend_lines1 = [x for x in legend_lines1 if x is not None]
+
         #PANEL 2
-        if self.global_config.metadata.tangential_amp == True:
+        if self.global_config.tangential_amp == 'True':
             sub_line5 = Line2D([0],[0],color = 'magenta',label = 'Tangential_amplitude' )
         else:
-            sub_line5 = " "
-            
-            
-        if self.global_config.metadata.tangential_RC == True:
+            sub_line5 = None
+
+
+        if self.global_config.tangential_rc == 'True':
             sub_line6 = Line2D([0],[0],color = 'cyan',label = 'Tangential RC')
         else:
-            sub_line6 = " "
+            sub_line6 = None
 
-        if self.global_config.metadata.tang_vel_del == True:
+        if self.global_config.plot_t_vel == 'True':
             sub_line7 = Line2D([0],[0],color = 'lime',label = 'Tangential 1/delay')
-        else: 
-            sub_line7 = " "
-        
-        
-        if self.global_config.metadata.radial_amp == True:
+        else:
+            sub_line7 = None
+
+
+        if self.global_config.radial_amp == 'True':
             sub_line8 = Line2D([0],[0],color = 'lime',label = 'Radial Amplitude')
-        else: 
-            sub_line8 = " "
+        else:
+            sub_line8 = None
 
 
-                        
+
         legend_lines2 = [sub_line5,sub_line6,sub_line7, sub_line8]
-        
+        legend_lines2 = [x for x in legend_lines2 if x is not None]
+
         # NOT PUTTING CONDITIONS HERE YET
 
         legend_lines3 = [Line2D([0],[0],color = 'k',linestyle = '--', linewidth = 2,label = 'Axial Multiples'),
                         Line2D([0],[0],color = 'k',linestyle = '-', linewidth = 2,label = 'Tangential Multiples')]
-        
+
         # These are multiple window width that Jamie asks to change. Earlier width were -0.5 and +3.5
 #        mutl_pos_win = 2.0
 #        mult_neg_win = -2.0
-        
-        mult_title1 = "wax1b = {0:.1f}".format((self.mult_pos.axial_first_multiple[0]-self.global_config.metadata.mult_neg_win))+"  wax1e = {0:.1f}".format((self.mult_pos.axial_first_multiple[0]+self.global_config.metadata.mutl_pos_win))
-        mult_title2 = "wax2b = {0:.1f}".format((self.mult_pos.axial_second_multiple[0]-self.global_config.metadata.mult_neg_win))+"  wax2e = {0:.1f}".format((self.mult_pos.axial_second_multiple[0]+self.global_config.metadata.mutl_pos_win))
-        mult_title3 = "wtang1b = {0:.1f}".format((self.mult_pos.tangential_first_multiple[0]-self.global_config.metadata.mult_neg_win))+"  wtang1e = {0:.1f}".format((self.mult_pos.tangential_first_multiple[0]+self.global_config.metadata.mutl_pos_win))
-        mult_title4 = "wtang2b = {0:.1f}".format((self.mult_pos.tangential_second_multiple[0]-self.global_config.metadata.mult_neg_win))+"  wtang2e = {0:.1f}".format((self.mult_pos.tangential_second_multiple[0]+self.global_config.metadata.mutl_pos_win))
-        
+        mult_neg_win = float(self.global_config.mult_neg_win)
+        mult_pos_win = float(self.global_config.mult_pos_win)
+        m1_window_top = self.mult_pos.axial_first_multiple[0] - mult_neg_win
+        m1_window_bottom = self.mult_pos.axial_first_multiple[0] + mult_pos_win
+        mult_title1 = "wax1b = {0:.1f}".format((m1_window_top))+"  wax1e = {0:.1f}".format((m1_window_bottom))
+        mult_title2 = "wax2b = {0:.1f}".format((self.mult_pos.axial_second_multiple[0] - mult_neg_win))+"  wax2e = {0:.1f}".format((self.mult_pos.axial_second_multiple[0] + mult_pos_win))
+        mult_title3 = "wtang1b = {0:.1f}".format((self.mult_pos.tangential_first_multiple[0] - mult_neg_win))+"  wtang1e = {0:.1f}".format((self.mult_pos.tangential_first_multiple[0] + mult_pos_win))
+        mult_title4 = "wtang2b = {0:.1f}".format((self.mult_pos.tangential_second_multiple[0] - mult_neg_win))+"  wtang2e = {0:.1f}".format((self.mult_pos.tangential_second_multiple[0] + mult_pos_win))
+
         mult_title = mult_title1 + '\n' + mult_title2 + '\n' + mult_title3 + '\n' + mult_title4
-        
+
 #        pdb.set_trace()
-        
+
         ax1.annotate(mult_title, xy=(10, 10), xycoords='axes points',
                      size=10, ha='left', va='center',
                      bbox=dict(boxstyle='square', fc='w'))
-        
-        ax.legend(handles = legend_lines1, loc = 2)
-        ax1.legend(handles = legend_lines2,loc = 9)
-        ax2.legend(handles = legend_lines3, loc = 1)
-        
+
+        ax.legend(handles=legend_lines1, loc=2)
+        ax1.legend(handles=legend_lines2, loc=9)
+        ax2.legend(handles=legend_lines3, loc=1)
+
         ax.spines['top'].set_visible(False)
         ax.spines['bottom'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_visible(False)
         ax.set_xticks([])
         ax.set_yticks([])
-        
+
         ax1.spines['top'].set_visible(False)
         ax1.spines['bottom'].set_visible(False)
         ax1.spines['right'].set_visible(False)
         ax1.spines['left'].set_visible(False)
         ax1.set_xticks([])
         ax1.set_yticks([])
-        
+
         ax2.spines['top'].set_visible(False)
         ax2.spines['bottom'].set_visible(False)
         ax2.spines['right'].set_visible(False)
@@ -485,7 +511,23 @@ class QCLogPlotterv3():
         mwd_depth = self.mwd_helper.get_depth_column(self.mwd_df)
 
 #        data_for_log = QCLogPlotInput()
-
+        #<Get features for plotter>
+        try:
+            peak_ampl_x=self.extracted_features_df['J0_axial_primary_peak_sample']
+            peak_ampl_y=self.extracted_features_df['J0_tangential_primary_peak_sample']
+            peak_ampl_z=self.extracted_features_df['J0_radial_primary_peak_sample']
+            tangential_RC = self.extracted_features_df['J0_tangential_RC']
+            ax_vel_del = self.extracted_features_df['J0_axial_velocity_delay']
+            tang_vel_del = self.extracted_features_df['J0_tangential_velocity_delay']
+            reflection_coefficient = self.extracted_features_df['J0_reflection_coefficient']
+        except KeyError:
+            peak_ampl_x=self.extracted_features_df['axial_primary_peak_sample']
+            peak_ampl_y=self.extracted_features_df['tangential_primary_peak_sample']
+            peak_ampl_z=self.extracted_features_df['radial_primary_peak_sample']
+            tangential_RC = self.extracted_features_df['tangential_RC']
+            ax_vel_del = self.extracted_features_df['axial_velocity_delay']
+            tang_vel_del = self.extracted_features_df['tangential_velocity_delay']
+            reflection_coefficient = self.extracted_features_df['reflection_coefficient']
         qc_plot_input = QCBlastholePlotInputs(trace_array_dict=trace_array_dict,
                                                   sub_mwd_time = self.mwd_df[self.mwd_helper.start_time_column_name],
                                                   sub_mwd_depth_interp = depth,
@@ -494,9 +536,9 @@ class QCLogPlotterv3():
                                                   sub_mwd_wob = self.mwd_df[self.mwd_helper.wob_column_name]/1000.0,
                                                   sub_mwd_tob = self.mwd_df[self.mwd_helper.tob_column_name],
                                                   sub_mwd_mse = self.mwd_df[self.mwd_helper.mse_column_name],
-                                                  peak_ampl_x=self.extracted_features_df['axial_primary_peak_sample'],
-                                                  peak_ampl_y=self.extracted_features_df['tangential_primary_peak_sample'],
-                                                  peak_ampl_z=self.extracted_features_df['radial_primary_peak_sample'],
+                                                  peak_ampl_x=peak_ampl_x,
+                                                  peak_ampl_y=peak_ampl_y,
+                                                  peak_ampl_z=peak_ampl_z,
 
                                                   lower_number_ms=lower_num_ms,
                                                   upper_number_ms=upper_num_ms,
@@ -505,15 +547,18 @@ class QCLogPlotterv3():
                                                   mwd_start_depth = depth[0],
                                                   mwd_end_depth = depth[-1],
                                                   collar_elevation = self.mwd_df[self.mwd_helper.collar_elevation_column_name].iloc[0],
-                                                  reflection_coefficient = self.extracted_features_df['reflection_coefficient'],
-                                                  tangential_RC = self.extracted_features_df['tangential_RC'],
-                                                  ax_vel_del = self.extracted_features_df['axial_velocity_delay'],
-                                                  tang_vel_del = self.extracted_features_df['tangential_velocity_delay'],
+                                                  reflection_coefficient = reflection_coefficient,
+                                                  tangential_RC = tangential_RC,
+                                                  ax_vel_del = ax_vel_del,
+                                                  tang_vel_del = tang_vel_del,
                                                   log_depth = self.extracted_features_df['depth'])
 
         ax_lim = self.ax_lim
         print('Passing values to plot code- supporting qc blasthole plots')
-        self.qc_plot(self.mwd_df,qc_plot_input, self.output_file_path,plot_title, data_date, '',ax_lim, show=show,depth=self.plot_by_depth)
+        #pdb.set_trace()
+        self.qc_plot(self.mwd_df, qc_plot_input, self.output_file_path,
+                     plot_title, data_date, '', ax_lim, show=show,
+                     depth=self.plot_by_depth)
 
 #        pdb.set_trace()
 
@@ -591,7 +636,7 @@ class QCLogPlotInput(object):
     @property
     def primary_pseudo_density_sample(self):
         return 1e6 * self.reflection_coefficient_sample / self.primary_pseudo_velocity_sample**2
-    
+
     ## Adding tangential components from Jamie'e email:
     @property
     def tangential_primary_peak_amplitude(self):
@@ -613,9 +658,8 @@ class QCLogPlotInput(object):
     @property
     def tangential_reflection_coefficient_sample(self):
         return (1.0 - self.tangential_amplitude_ratio_sample) / (1.0 + self.tangential_amplitude_ratio_sample)
-    
+
     @property
     def tangential_velocity_delay(self):
         return self.df['tangential_velocity_delay']
-    
-    
+
