@@ -25,6 +25,7 @@ from dcrhino.analysis.unstable.feature_extraction.feature_derivations_20181218 i
 from dcrhino.analysis.data_manager.temp_paths import ensure_dir as make_dirs_if_needed
 from dcrhino.process_pipeline.util import check_timestamp_continuity
 from dcrhino.process_pipeline.util import get_values_from_index
+from dcrhino.process_pipeline.segy_generator import generate_segy_from_hole_data,extract_component_data_from_data_dictionary,get_mwd_from_extracted_features_df
 from dcrhino.analysis.unstable.tests_and_examples.test_chunk_read import read_npy_chunk
 from ConfigParser import ConfigParser
 
@@ -365,6 +366,14 @@ def process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder,config_pars
         #hole_features_extracted.to_csv(os.path.join(hole_output_folder,"extracted_features.csv"),index=False)
         binned_df.to_csv(os.path.join(hole_output_folder,"binned.csv"),index=False)
         #holes_h5[hole]['hole_mwd_df'].to_csv(os.path.join(hole_output_folder,"hole_mwd.csv"),index=False)
+
+        # pdb.set_trace()
+        segy_component_data = extract_component_data_from_data_dictionary(numpys_h5_hole_files)
+        segy_mwd_components = get_mwd_from_extracted_features_df(hole_features_extracted)
+        hole_id = int(hole_mwd[mwdHelper.hole_name_column_name].values[0])
+        output_path = os.path.join(hole_output_folder,"hole_segy_despiked_correlated.sgy")
+        generate_segy_from_hole_data(segy_component_data,segy_mwd_components,global_config,hole_id,output_path)
+        # pdb.set_trace()
 
 
 if __name__ == "__main__":
