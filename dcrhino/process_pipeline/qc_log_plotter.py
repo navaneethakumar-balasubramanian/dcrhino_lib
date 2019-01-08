@@ -389,7 +389,25 @@ class QCLogPlotterv2():
         mwd_depth = self.mwd_helper.get_depth_column(self.mwd_df)
 
 #        data_for_log = QCLogPlotInput()
-
+        #<Get features for plotter>
+        try:
+            peak_ampl_x=self.extracted_features_df['J0_axial_primary_peak_sample']
+            peak_ampl_y=self.extracted_features_df['J0_tangential_primary_peak_sample']
+            peak_ampl_z=self.extracted_features_df['J0_radial_primary_peak_sample']
+            peak_mult_x=self.extracted_features_df['J0_axial_multiple_peak_sample']
+            pseudo_ucs = self.extracted_features_df['J0_pseudo_ucs']
+            pseudo_velocity = self.extracted_features_df['J0_pseudo_velocity']
+            reflection_coefficient = self.extracted_features_df['J0_reflection_coefficient']
+        except KeyError:
+            peak_ampl_x=self.extracted_features_df['axial_primary_peak_sample']
+            peak_ampl_y=self.extracted_features_df['tangential_primary_peak_sample']
+            peak_ampl_z=self.extracted_features_df['radial_primary_peak_sample']
+            peak_mult_x=self.extracted_features_df['axial_multiple_peak_sample']
+            pseudo_ucs = self.extracted_features_df['pseudo_ucs']
+            pseudo_velocity = self.extracted_features_df['pseudo_velocity']
+            reflection_coefficient = self.extracted_features_df['reflection_coefficient']
+        log_depth = self.extracted_features_df['depth']
+        #</Get features for plotter>
         qc_plot_input = QCBlastholePlotInputs(trace_array_dict=trace_array_dict,
                                                   sub_mwd_time = self.mwd_df[self.mwd_helper.start_time_column_name],
                                                   sub_mwd_depth_interp = depth,
@@ -398,10 +416,10 @@ class QCLogPlotterv2():
                                                   sub_mwd_wob = self.mwd_df[self.mwd_helper.wob_column_name]/1000.0,
                                                   sub_mwd_tob = self.mwd_df[self.mwd_helper.tob_column_name],
                                                   sub_mwd_mse = self.mwd_df[self.mwd_helper.mse_column_name],
-                                                  peak_ampl_x=self.extracted_features_df['axial_primary_peak_sample'],
-                                                  peak_ampl_y=self.extracted_features_df['tangential_primary_peak_sample'],
-                                                  peak_ampl_z=self.extracted_features_df['radial_primary_peak_sample'],
-                                                  peak_mult_x=self.extracted_features_df['axial_multiple_peak_sample'],
+                                                  peak_ampl_x=peak_ampl_x,
+                                                  peak_ampl_y=peak_ampl_y,
+                                                  peak_ampl_z=peak_ampl_z,
+                                                  peak_mult_x=peak_mult_x,
                                                   lower_number_ms=lower_num_ms,
                                                   upper_number_ms=upper_num_ms,
                                                   mwd_tstart = self.mwd_df[self.mwd_helper.start_time_column_name].iloc[0],
@@ -410,10 +428,10 @@ class QCLogPlotterv2():
                                                   mwd_end_depth = depth[-1],
                                                   collar_elevation = self.mwd_df[self.mwd_helper.collar_elevation_column_name].iloc[0],
     											  rock_type = '',
-                                                  pseudo_ucs = self.extracted_features_df['pseudo_ucs'],
-                                                  pseudo_velocity = self.extracted_features_df['pseudo_velocity'],
-                                                  reflection_coefficient = self.extracted_features_df['reflection_coefficient'],
-                                                  log_depth = self.extracted_features_df['depth'])
+                                                  pseudo_ucs = pseudo_ucs,
+                                                  pseudo_velocity = pseudo_velocity,
+                                                  reflection_coefficient = reflection_coefficient,
+                                                  log_depth = log_depth)
 
 
 
@@ -500,11 +518,11 @@ class QCLogPlotInput(object):
     @property
     def primary_pseudo_density_sample(self):
         return 1e6 * self.reflection_coefficient_sample / self.primary_pseudo_velocity_sample**2
-    
+
     @property
     def tangential_primary_peak_sample(self):
         return self.df['tangential_primary_peak_sample']
-    
+
     @property
     def tangential_primary_peak_time_sample(self):
         return self.df['tangential_primary_peak_time_sample']
@@ -516,7 +534,7 @@ class QCLogPlotInput(object):
     @property
     def tangential_reflection_coefficient_sample(self):
         return (1.0 - self.tangential_amplitude_ratio_sample) / (1.0 + self.tangential_amplitude_ratio_sample)
-    
+
     @property
     def tangential_velocity_delay(self):
         return self.df['tangential_velocity_delay']

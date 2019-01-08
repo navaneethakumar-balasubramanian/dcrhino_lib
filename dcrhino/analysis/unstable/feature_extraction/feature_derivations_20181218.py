@@ -111,16 +111,38 @@ class DerivedFeatureExtractorV0(object):
         extracted_features_df['axial_delay'] = extracted_features_df['axial_multiple_peak_time_sample'] - extracted_features_df['axial_primary_peak_time_sample']
         Now we calc as a derived feature;
         """
-        a_delay = self.df['axial_multiple_peak_time_sample'] - self.df['axial_primary_peak_time_sample']
+        feature_version = 'J0'
+        try:
+            primary_time = self.df['{}_axial_primary_peak_time_sample'.format(feature_version)]
+            mulitple_time = self.df['{}_axial_multiple_peak_time_sample'.format(feature_version)]
+        except KeyError:
+            primary_time = self.df['axial_primary_peak_time_sample']
+            mulitple_time = self.df['axial_multiple_peak_time_sample']
+        a_delay = mulitple_time - primary_time
         return a_delay
 
     @property
     def a_amplitude_ratio(self):
-        return self.df['axial_multiple_peak_sample'] / self.df['axial_primary_peak_sample']
+        feature_version = 'J0'
+        try:
+            primary_amplitude = self.df['{}_axial_primary_peak_sample'.format(feature_version)]
+            mulitple_amplitude = self.df['{}_axial_multiple_peak_sample'.format(feature_version)]
+        except KeyError:
+            primary_amplitude = self.df['axial_primary_peak_sample']
+            mulitple_amplitude = self.df['axial_multiple_peak_sample']
+
+        a_amplitude_ratio = mulitple_amplitude / primary_amplitude
+        return a_amplitude_ratio
+
 
     @property
     def a_str(self):
-        a_str = np.sqrt(self.df['axial_primary_peak_sample'])
+        feature_version = 'J0'
+        try:
+            primary_amplitude = self.df['{}_axial_primary_peak_sample'.format(feature_version)]
+        except KeyError:
+            primary_amplitude = self.df['axial_primary_peak_sample']
+        a_str = np.sqrt(primary_amplitude)
         return a_str
 
     @property

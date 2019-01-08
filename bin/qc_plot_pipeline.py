@@ -22,7 +22,8 @@ from dcrhino.process_pipeline.mwd_helper import MwdDFHelper
 from dcrhino.process_pipeline.qc_log_plotter import QCLogPlotterv2
 from dcrhino.process_pipeline.qc_log_plotter_nomwd import QCLogPlotter_nomwd
 from dcrhino.process_pipeline.acceleration_plotter import acceleration_plotter
-from dcrhino.process_pipeline.qc_log_plotter_for_jamie import QCLogPlotterv3
+#from dcrhino.process_pipeline.qc_log_plotter_for_jamie_v2 import QCLogPlotterv3
+from dcrhino.process_pipeline.qc_log_plotter_test_delete_once_ok import QCLogPlotterv3
 from dcrhino.analysis.unstable.feature_extraction.feature_extraction_20181211 import get_expected_multiple_times
 
 def get_multiples(global_config):
@@ -47,6 +48,20 @@ def get_multiples(global_config):
             return mult_pos
 
 def get_ax_lim(extracted_features_df):
+    """
+    """
+    try:
+        min_ax_RC = min(extracted_features_df['J0_reflection_coefficient'])
+        max_ax_RC = max(extracted_features_df['J0_reflection_coefficient'])
+
+        min_tang_RC = min(extracted_features_df['J0_tangential_RC'])
+        max_tang_RC = max(extracted_features_df['J0_tangential_RC'])
+
+        min_peak_x = min(extracted_features_df['J0_axial_primary_peak_sample'])
+        max_peak_x = max(extracted_features_df['J0_axial_primary_peak_sample'])
+        min_delay = min(extracted_features_df['J0_axial_velocity_delay'])
+        max_delay = max(extracted_features_df['J0_axial_velocity_delay'])
+    except KeyError:
         min_ax_RC = min(extracted_features_df['reflection_coefficient'])
         max_ax_RC = max(extracted_features_df['reflection_coefficient'])
 
@@ -58,28 +73,28 @@ def get_ax_lim(extracted_features_df):
         min_delay = min(extracted_features_df['axial_velocity_delay'])
         max_delay = max(extracted_features_df['axial_velocity_delay'])
 
-        # 5% less than the minimum and 5% more than maximum for the entire bench
+    # 5% less than the minimum and 5% more than maximum for the entire bench
 
-        lower_ax_RC = (min_ax_RC - (min_ax_RC*0.05))
-        upper_ax_RC = (max_ax_RC + (max_ax_RC*0.05))
+    lower_ax_RC = (min_ax_RC - (min_ax_RC*0.05))
+    upper_ax_RC = (max_ax_RC + (max_ax_RC*0.05))
 
-        lower_peak_x = (min_peak_x - (min_peak_x*0.05))
-        upper_peak_x = (max_peak_x + (max_peak_x*0.05))
+    lower_peak_x = (min_peak_x - (min_peak_x*0.05))
+    upper_peak_x = (max_peak_x + (max_peak_x*0.05))
 
-        lower_delay = (min_delay - (min_delay*0.05))
-        upper_delay = (max_delay - (max_delay*0.05))
+    lower_delay = (min_delay - (min_delay*0.05))
+    upper_delay = (max_delay - (max_delay*0.05))
 
-        lower_tang_RC = (min_tang_RC - (min_tang_RC*0.05))
-        upper_tang_RC = (max_tang_RC + (max_tang_RC*0.05))
+    lower_tang_RC = (min_tang_RC - (min_tang_RC*0.05))
+    upper_tang_RC = (max_tang_RC + (max_tang_RC*0.05))
 
-        print(min_ax_RC,max_ax_RC, min_tang_RC,max_tang_RC,min_peak_x, max_peak_x,
-              min_delay,max_delay,lower_ax_RC,upper_ax_RC, lower_peak_x, upper_peak_x,
-              lower_delay,upper_delay,lower_tang_RC,upper_tang_RC)
+    print(min_ax_RC,max_ax_RC, min_tang_RC,max_tang_RC,min_peak_x, max_peak_x,
+          min_delay,max_delay,lower_ax_RC,upper_ax_RC, lower_peak_x, upper_peak_x,
+          lower_delay,upper_delay,lower_tang_RC,upper_tang_RC)
 
-        ax_lim = pd.DataFrame({'lower_ax_RC':[lower_ax_RC],'upper_ax_RC':[upper_ax_RC],'lower_peak_x':[lower_peak_x],
-                               'lower_delay':[lower_delay],'upper_delay':[upper_delay],'lower_tang_RC':[lower_tang_RC],
-                               'upper_tang_RC':[upper_tang_RC]})
-        return ax_lim
+    ax_lim = pd.DataFrame({'lower_ax_RC':[lower_ax_RC],'upper_ax_RC':[upper_ax_RC],'lower_peak_x':[lower_peak_x],
+                           'lower_delay':[lower_delay],'upper_delay':[upper_delay],'lower_tang_RC':[lower_tang_RC],
+                           'upper_tang_RC':[upper_tang_RC]})
+    return ax_lim
 
 def get_plot_title(global_config,mwd_df,mwd_helper):
 
@@ -132,7 +147,7 @@ def get_plot_title(global_config,mwd_df,mwd_helper):
 
 
 def get_output_file_name(mwd_df,global_config,mwd_helper):
-    
+
     output_file_name = "{}_{}_{}depth_plot.png".format(mwd_df[mwd_helper.bench_name_column_name].iloc[0], mwd_df[mwd_helper.hole_name_column_name].iloc[0],global_config.sensor_serial_number,)
     return output_file_name
 
@@ -142,9 +157,11 @@ def get_noise_threshold(global_config):
         return noise_threshold
 
 def main():
+    ddir = '/home/kkappler/data/datacloud/teck/pet_line_creek/holes/793,MR_77,23831,31,5208'
+    mmap = os.path.join(ddir, 'mwd_map.json')
+    #ddir = '/mnt/sda1/data/data_blob/qc_test_dataset/milligan_2/output_milligan/holes_0104/995,108,118,3,2235'
+    #mmap = '/mnt/sda1/data/data_blob/qc_test_dataset/milligan_2/output_milligan/holes_0104/995,108,118,3,2235/mwd_map.json'
 
-    ddir = '/mnt/sda1/data/data_blob/qc_test_dataset/965,106,614,3,5208'
-    mmap = '/mnt/sda1/data/data_blob/qc_test_dataset/965,106,614,3,5208/mwd_map.json'
 #    ofp = ddir
 #    ofp = False
 
@@ -167,6 +184,13 @@ def main():
     argparser.add_argument('-compec', '--computed-elevation-column', help="COMPUTED ELEVATION COLUMN", default='computed_elevation')
     argparser.add_argument('-o', '--output-folder-path', help="OUTPUT FILES TO FOLDER", default=False)
     args = argparser.parse_args()
+
+
+    show_time_plot = True
+    show_depth_plot = True
+    show_depth_plot_v2 = True
+    show_acceleration = True
+
 
     start_time_column = args.start_time_column
     end_time_column = args.end_time_column
@@ -214,9 +238,11 @@ def main():
     global_config = Config()
     with open(config_fullfile) as f:
        data_conf = json.load(f)
+
     global_config.set_data_from_json(data_conf)
     global_config.n_samples_trimmed_trace
-
+    #pdb.set_trace()
+    print('metadata into gc')
     mult_pos = get_multiples(global_config)
     noise_threshold = get_noise_threshold(global_config)
 
@@ -237,7 +263,6 @@ def main():
     ax_lim = get_ax_lim(feature_df)
 
 
-
     bph_string = global_config.mine_name + "\nRig:" + global_config.rig_id + " From:" + datetime.utcfromtimestamp(start_ts).strftime('%Y-%m-%d %H:%M:%S') + " to " + datetime.utcfromtimestamp(end_ts).strftime('%Y-%m-%d %H:%M:%S')
 
 
@@ -247,20 +272,20 @@ def main():
         qclogplot_output_path = os.path.join(args.data_path,'time_plot.png')
 
     qclogplotter_time = QCLogPlotter_nomwd(axial,tangential,radial,feature_df,bph_string,qclogplot_output_path,global_config,mult_pos,start_ts,end_ts)
-    qclogplotter_time.plot(save=True,show=True)
+    qclogplotter_time.plot(save=True, show=show_time_plot)
 
 
     try:
         accel_df = pd.read_csv(accel_fullfile)
 
         if output_folder_path is False:
-            acceleration_plotter(accel_df,os.path.join(args.data_path,'Acceleration_histogram.png'),bph_string, show = True)
+            acceleration_plotter(accel_df,os.path.join(args.data_path,'Acceleration_histogram.png'),bph_string, show=show_acceleration)
         else:
             output_name = os.path.join(output_folder_path,'Acceleration_histogram.png')
             acceleration_plotter(accel_df,output_name,bph_string, show = False)
     except IOError:
         print ("No accel_df found on this folder")
-
+    #pdb.set_trace()
     if mwd_df is not None:
         print(feature_df)
         print('*********')
@@ -289,19 +314,22 @@ def main():
         mwd_df[mwd_helper.start_time_column_name] = pd.to_datetime(mwd_df[mwd_helper.start_time_column_name])
         mwd_df[mwd_helper.end_time_column_name] = pd.to_datetime(mwd_df[mwd_helper.end_time_column_name])
         #mwd_df.parse_dates=[mwd_helper.start_time_column_name, mwd_helper.end_time_column_name]
-
+        #pdb.set_trace()
         plot_title = get_plot_title(global_config,mwd_df,mwd_helper)#    pdb.set_trace()
 
         qclogplotter_depth = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'depth_plot.png'),global_config,mult_pos)
-        qclogplotter_depth.plot(show=True)
+        qclogplotter_depth.plot(show=show_depth_plot)
 
         output_filename = get_output_file_name(mwd_df,global_config,mwd_helper)
         if output_folder_path != False:
             output_filename = os.path.join(output_folder_path,'depth_plot_v2.png')
         else:
             output_filename = os.path.join(args.data_path,'depth_plot_v2.png')
-        qclogplotter_depth_v2 = QCLogPlotterv3(axial,tangential,radial,mwd_helper,mwd_df,feature_df,plot_title,os.path.join(args.data_path,output_filename),global_config,ax_lim,noise_threshold,mult_pos)
-        qclogplotter_depth_v2.plot(show=True)
+        qclogplotter_depth_v2 = QCLogPlotterv3(axial, tangential, radial, mwd_helper,
+                                               mwd_df, feature_df, plot_title,
+                                               os.path.join(args.data_path,output_filename),
+                                               global_config, ax_lim, noise_threshold, mult_pos)
+        qclogplotter_depth_v2.plot(show=show_depth_plot_v2)
         #qclogplotter_time = QCLogPlotterv2(axial,tangential,radial,mwd_helper,mwd_df,feature_df,bph_string,os.path.join(args.data_path,'time_plot.png'),global_config,plot_by_depth=False)
         #qclogplotter_time.plot(show=True)
 
