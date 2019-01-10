@@ -103,7 +103,7 @@ def add_traces_to_stream(components,mwd,global_config,hole_id):
             trace.stats.segy.trace_header.number_of_samples_in_this_trace = output_sampling_rate #This assumes that the trace length is always one second
             trace.stats.segy.trace_header.sample_interval_duration_in_seconds = float(1.0/output_sampling_rate)
 
-            pdb.set_trace()
+            # pdb.set_trace()
             trace.stats.segy.trace_header.year_data_recorded = trace_time.year
             trace.stats.segy.trace_header.day_of_year = trace_time.day
             trace.stats.segy.trace_header.hour_of_day = trace_time.hour
