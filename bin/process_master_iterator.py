@@ -77,10 +77,10 @@ if __name__ == "__main__":
         input_file = '/home/kkappler/data/datacloud/teck/pet_line_creek/x_line_creek_iterator.csv'
         output_folder = '/home/kkappler/data/datacloud/teck/pet_line_creek/processed_data/'
         reprocess_signals = True
-
+        config_path = False
     master_iterator_df = pd.read_csv(input_file)
 
 
-    master_iterator_df = process_master_iterator(master_iterator_df, output_folder, reprocess_signals,config_path)
+    master_iterator_df = process_master_iterator(master_iterator_df, output_folder, reprocess_signals, config_path)
     master_iterator_df.to_csv(input_file,index=False)
     print("Finished")

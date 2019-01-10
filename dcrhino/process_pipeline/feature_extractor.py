@@ -5,6 +5,8 @@ from datetime import datetime
 from dcrhino.feature_extraction.supporting_minimal_feature_extraction import get_zero_crossing_samples
 from dcrhino.feature_extraction.supporting_minimal_feature_extraction import get_trough_times
 from dcrhino.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_multiple_wavelet
+from dcrhino.process_pipeline.j0_derived_features import J0FeatureDeriver
+
 #from dcrhino.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_primary_wavelet
 import pdb
 ACOUSTIC_VELOCITY = 4755.0
@@ -23,7 +25,7 @@ class WaveletForFeatureExtraction(object):
         self.wavelet_type = kwargs.get('wavelet_type', None)
         for k in wavelet_features[self.component]:
             setattr(self, k, np.nan)
-        
+
 
 class CorrelatedTracePacket():
     def __init__(self, sampling_rate,n_samples=640,min_lag=0.1):
@@ -127,7 +129,7 @@ class FeatureExtractor():
 
         wffe.peak_sample = np.max(window_to_search_for_primary_1)
         wffe.peak_time_sample = hopefully_prim_center_time
-        
+
         if np.max(tr.data)==np.max(window_to_search_for_primary_1):#sanity check;
             reference_index = np.argmax(tr.data)
             try:
@@ -150,7 +152,7 @@ class FeatureExtractor():
         wffe.zero_crossing_after_sample = zx_right
         wffe.left_trough_time = left_trough_time
         wffe.left_trough_time_sample = left_trough_time_sample
-        
+
         return wffe
 
     def create_features_dictionary(self,data_datetime):
@@ -218,7 +220,7 @@ class FeatureExtractor():
                         latest_multiple_time =  earliest_multiple_time + self.multiple_window_search_width_ms*1e-3
                         wffe = extract_features_from_multiple_wavelet(packet, time_vector, earliest_multiple_time,
                                                                       latest_multiple_time, component, wavelet_type)
-                    else: 
+                    else:
                         raise Exception
 
                 else :
@@ -239,6 +241,22 @@ class FeatureExtractor():
         if ctr == 0:
             print ("Couldnt find this date in database " + str(data_datetime ))
             return None
+        #NOTE THIS IS NOT a very desirable way to do these extracted features,
+        #because array math will do once its in a dataframe ... but for now, lets leave it...
+        j0_deriver = J0FeatureDeriver()
+        j0_deriver.df_dict = df_dict
+        df_dict['pseudo_ucs'] = j0_deriver.pseudo_ucs_sample
+        df_dict['pseudo_velocity'] = j0_deriver.primary_pseudo_velocity_sample
+        df_dict['pseudo_density'] = j0_deriver.primary_pseudo_density_sample
+        df_dict['reflection_coefficient'] = j0_deriver.reflection_coefficient_sample
+        df_dict['axial_delay'] = df_dict['axial_multiple_peak_time_sample'] - df_dict['axial_primary_peak_time_sample']
+        df_dict['axial_velocity_delay'] = 1.0/(df_dict['axial_delay'])**3
+        df_dict['tangential_RC'] = j0_deriver.tangential_reflection_coefficient_sample
+        df_dict['tangential_delay'] = df_dict['tangential_multiple_peak_time_sample'] - df_dict['tangential_primary_peak_time_sample']
+        df_dict['tangential_velocity_delay'] = 1.0/(df_dict['tangential_delay'])
+
+        for key in df_dict.keys():
+            df_dict['J0_{}'.format(key)] = df_dict.pop('{}'.format(key))
 
         df_dict['datetime'] = datetime.utcfromtimestamp(data_datetime)
         df_dict['datetime_ts'] = data_datetime

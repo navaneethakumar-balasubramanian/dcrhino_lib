@@ -108,7 +108,7 @@ def acceleration_plotter(accel_df,output_name,title,show = False):
     x_limits = []
     y_limits =[]
     data_stats={}
-
+    plt.clf()
     fig = plt.figure("Accelerometer Data",figsize=(24,12))
     axs = fig.subplots(1, 3, sharey=True, sharex=True)
     fig.suptitle(title,va="top",ha="center",size=20)

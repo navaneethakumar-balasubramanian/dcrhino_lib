@@ -5,7 +5,8 @@ from datetime import datetime
 from string import zfill
 
 class IOHelper:
-
+    """
+    """
     def __init__ (self, config ):
         self.config = config
 
@@ -25,9 +26,12 @@ class IOHelper:
     def get_output_base_path(self,hole_uid,output_path=None):
         path_date = datetime.now().strftime("%Y-%m-%d")
         if output_path is None:
-            path = os.path.join(self.config.base_output_path,self.config.mine_name,str(self.config.sensor_serial_number),str(self.config.output_sampling_rate),hole_uid)
+            path = os.path.join(self.config.base_output_path, self.config.mine_name,
+                                str(self.config.sensor_serial_number),
+                                str(self.config.output_sampling_rate), hole_uid)
         else:
-            path = os.path.join(output_path,str(self.config.sensor_serial_number),str(self.config.output_sampling_rate),hole_uid)
+            path = os.path.join(output_path, str(self.config.sensor_serial_number),
+                                str(self.config.output_sampling_rate), hole_uid)
         counter = 1
         if not os.path.exists(path):
             os.makedirs(path)

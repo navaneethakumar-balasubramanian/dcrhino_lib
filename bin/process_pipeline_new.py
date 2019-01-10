@@ -140,6 +140,7 @@ def get_features_extracted_v2(traces_dict, global_config, recipe_list):
     #pdb.set_trace()
     shear_modulus = tangential_feature_df['tangential_impedance']
     """
+    #<OLD J0 FEATURES>
     extractor = FeatureExtractor(global_config.output_sampling_rate,
                                  global_config.primary_window_halfwidth_ms,
                                  global_config.multiple_window_search_width_ms,
@@ -164,6 +165,7 @@ def get_features_extracted_v2(traces_dict, global_config, recipe_list):
             original_features = extractor.extract_features(actual_timestamp, axial_trace, tangential_trace,
                                                        radial_trace, global_config.n_samples_trimmed_trace,
                                                        -global_config.min_lag_trimmed_trace)
+            #pdb.set_trace()
             all_features_great_and_small.update(original_features)
         if 'tangential_201810' in recipe_list:
             trim_tang_dspk = trim_trace(global_config.min_lag_trimmed_trace, global_config.max_lag_trimmed_trace,
@@ -237,14 +239,12 @@ def save_processed_traces(temppath, traces_dict, append_mode):
     return
 
 
-
-def process_h5_file(h5py_file, output_folder, reprocess_signals, cfg_file_path=False):
+def sort_out_cfg_metadata_and_all_that(h5py_file, cfg_file_path):
     """
+    usage:
+        global_config, h5_helper = sort_out_cfg_metadata_and_all_that(h5py_file, cfg_file_path)
     """
-    #<SETUP, CFG, H5, etc.>
-
     print ("Config file path:" , cfg_file_path)
-
     # Read Config
     config_parser = ConfigParser()
     if cfg_file_path:
@@ -263,26 +263,30 @@ def process_h5_file(h5py_file, output_folder, reprocess_signals, cfg_file_path=F
     global_config = Config(metadata,env_config_parser,config_parser)
     #TODO: put the 1.25 as 'upsample_factor' into PROCESSING config
     global_config.output_sampling_rate = global_config.output_sampling_rate * 1.25
-    io_helper = IOHelper(global_config)
-    #print (io_helper.get_mine_path())
 
-    accelerometer_max_voltage = float(h5py_file.attrs['PLAYBACK/accelerometer_max_voltage'])
 
     print ("Mine name = " + global_config.mine_name)
     print ("Rig id = " + global_config.rig_id)
     print ("sensor_serial_number = " + global_config.sensor_serial_number)
     print ("H5 data from " + str(h5_helper.min_dtime) + " to " + str(h5_helper.max_dtime))
 
-
-    start_ts = int(h5_helper.min_ts)
-    #end_ts = int(h5_helper.min_ts)+100
-    end_ts = int(h5_helper.max_ts)
-    temppath = output_folder
-    io_helper.make_dirs_if_needed(temppath)
-    append_mode = False
     #</SETUP, CFG, H5, etc.>
 
-    #pdb.set_trace()
+    return global_config, h5_helper
+
+def process_h5_file(h5py_file, output_folder, reprocess_signals, cfg_file_path=False):
+    """
+    """
+    append_mode = False
+
+    global_config,  h5_helper = sort_out_cfg_metadata_and_all_that(h5py_file, cfg_file_path)
+    accelerometer_max_voltage = float(h5_helper.h5f.attrs['PLAYBACK/accelerometer_max_voltage'])
+    temppath = output_folder
+    io_helper = IOHelper(global_config)
+    io_helper.make_dirs_if_needed(temppath)
+    start_ts = int(h5_helper.min_ts)
+    end_ts = int(h5_helper.max_ts)
+
     if reprocess_signals:
         print('reprocess_signals TRUE')
         traces_dict = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper,
