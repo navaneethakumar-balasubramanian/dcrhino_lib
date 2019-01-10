@@ -53,7 +53,10 @@ def get_mwd_from_extracted_features_df(hole_features_extracted,mwdHelper):
     output_df['mwd_collar_northing'] = hole_features_extracted['mwd_' + mwdHelper.northing_column_name]
     output_df['mwd_collar_elevation'] = hole_features_extracted['mwd_' + mwdHelper.collar_elevation_column_name]
     output_df['mwd_weight_on_bit'] = hole_features_extracted['mwd_' + mwdHelper.wob_column_name]
-    output_df['mwd_torque'] = hole_features_extracted['mwd_' + mwdHelper.rop_column_name]
+    if 'mwd_' + mwdHelper.rop_column_name in hole_features_extracted.columns:
+        output_df['mwd_torque'] = hole_features_extracted['mwd_' + mwdHelper.rop_column_name]
+    else:
+        output_df['mwd_torque'] = 0.0
     if 'mwd_' + mwdHelper.rpm_column_name in hole_features_extracted.columns:
         output_df['mwd_rpm'] = hole_features_extracted['mwd_' + mwdHelper.rpm_column_name]
     else :
