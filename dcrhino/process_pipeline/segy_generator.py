@@ -18,12 +18,16 @@ from obspy.io.segy.segy import SEGYTraceHeader, SEGYBinaryFileHeader
 from dcrhino.process_pipeline.segy_trace_header import define_obspy_trace_header #This module needs to remain here in order to redefine the trace headers
 from dcrhino.process_pipeline.config import Config
 define_obspy_trace_header()
+components = ["axial","tangential","radial"]
+suffix = "deconvolved"
+
+traces_to_load = ["{}_{}".format(x,suffix) for x in components]
 
 def load_existing_data_files(path):
     components={}
-    components["axial"] = np.load(os.path.join(path,"axial_interpolated.npy"))
-    components["tangential"] = np.load(os.path.join(path,"tangential_interpolated.npy"))
-    components["radial"] = np.load(os.path.join(path,"radial_interpolated.npy"))
+    components["axial"] = np.load(os.path.join(path,"{}.npy".format(traces_to_load[0])))
+    components["tangential"] = np.load(os.path.join(path,"{}.npy".format(traces_to_load[1])))
+    components["radial"] = np.load(os.path.join(path,"{}.npy".format(traces_to_load[2])))
     components["ts"] = np.load(os.path.join(path,"ts.npy"))
     return components
 
