@@ -347,10 +347,10 @@ def process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder,config_pars
         #hole_features_extracted['tangential_delay'] = hole_features_extracted['tangential_multiple_peak_time_sample'] - hole_features_extracted['tangential_primary_peak_time_sample']
         #hole_features_extracted['tangential_velocity_delay'] = 1.0/(hole_features_extracted['tangential_delay'])
         #</TODO: Karl: either remove this or put it into feature extractor ...>
-        
-        
 
-        segy_component_data = extract_component_data_from_data_dictionary(numpys_h5_hole_files)
+
+
+        segy_component_data = extract_component_data_from_data_dictionary(numpys_h5_hole_files,global_config)
         segy_mwd_components = get_mwd_from_extracted_features_df(hole_features_extracted,mwdHelper)
         hole_id = int(hole_mwd[mwdHelper.hole_name_column_name].values[0])
         output_path = os.path.join(hole_output_folder,"hole_segy_despiked_correlated.sgy")
