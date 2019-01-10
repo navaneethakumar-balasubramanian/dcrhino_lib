@@ -353,7 +353,7 @@ def process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder,config_pars
         segy_component_data = extract_component_data_from_data_dictionary(numpys_h5_hole_files,global_config)
         segy_mwd_components = get_mwd_from_extracted_features_df(hole_features_extracted,mwdHelper)
         hole_id = int(hole_mwd[mwdHelper.hole_name_column_name].values[0])
-        output_path = os.path.join(hole_output_folder,"hole_segy_despiked_correlated.sgy")
+        output_path = os.path.join(hole_output_folder,"{}_traces.sgy".format(global_config.segy_output_step))
         generate_segy_from_hole_data(segy_component_data,segy_mwd_components,global_config,hole_id,output_path)
 
 
