@@ -221,14 +221,16 @@ METADATA_HEADER_FORMAT_KEYS = {
         'plot_t_vel':DataType.BOOLEAN,
         'axial_amp':DataType.BOOLEAN,
         'axial_rc':DataType.BOOLEAN,
-        'axial_vel_del':DataType.BOOLEAN,
+        'axial_vel_delay_y_limit':DataType.STRING,
         'noise_threshold':DataType.BOOLEAN,
         'tangential_amp':DataType.BOOLEAN,
         'tangential_rc':DataType.BOOLEAN,
-        'tangential_vel_del':DataType.BOOLEAN,
+        'tangential_vel_delay_y_limit':DataType.STRING,
+        'peak_amplitude_radial_y_limit':DataType.STRING,
         'radial_amp':DataType.BOOLEAN,
         'mult_pos_win':DataType.FLOAT,
-        'mult_neg_win':DataType.FLOAT
+        'mult_neg_win':DataType.FLOAT,
+        'rhino_version':DataType.FLOAT
 
         }
 
