@@ -45,6 +45,8 @@ class MwdDFHelper:
         self.tob_column_name = tob_column
         self.easting_column_name = easting_column
         self.northing_column_name = northing_column
+        self.rpm_column_name = 'rpm'
+        self.air_pressure_column_name = 'air_pressure'
         self.mwd_map = mwd_map
 
         if self.mwd_map is not False:

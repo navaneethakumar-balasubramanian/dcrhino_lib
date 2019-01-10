@@ -44,12 +44,27 @@ def get_mwd_from_extracted_features_csv(path):
     #df["datetime_ts"] = pd.to_datetime(df["datetime_ts"])
     return df
 
-def get_mwd_from_extracted_features_df(hole_features_extracted):
-    columns=["datetime_ts","mse","depth","mwd_collar_easting","mwd_collar_northing","mwd_collar_elevation","mwd_weight_on_bit","mwd_rop","mwd_torque",
-            "mwd_rpm","mwd_air_pressure"]
-    df = hole_features_extracted[columns]
+def get_mwd_from_extracted_features_df(hole_features_extracted,mwdHelper):
+    output_df = pd.DataFrame()
+    output_df['datetime_ts'] = hole_features_extracted['datetime_ts']
+    output_df['mse'] = hole_features_extracted['mse']
+    output_df['depth'] = hole_features_extracted['depth']
+    output_df['mwd_collar_easting'] = hole_features_extracted['mwd_' + mwdHelper.easting_column_name]
+    output_df['mwd_collar_northing'] = hole_features_extracted['mwd_' + mwdHelper.northing_column_name]
+    output_df['mwd_collar_elevation'] = hole_features_extracted['mwd_' + mwdHelper.collar_elevation_column_name]
+    output_df['mwd_weight_on_bit'] = hole_features_extracted['mwd_' + mwdHelper.wob_column_name]
+    output_df['mwd_torque'] = hole_features_extracted['mwd_' + mwdHelper.rop_column_name]
+    if 'mwd_' + mwdHelper.rpm_column_name in hole_features_extracted.columns:
+        output_df['mwd_rpm'] = hole_features_extracted['mwd_' + mwdHelper.rpm_column_name]
+    else :
+        output_df['mwd_rpm'] = 0.0
+    if 'mwd_' + mwdHelper.air_pressure_column_name in hole_features_extracted.columns:
+        output_df['mwd_air_pressure'] = hole_features_extracted['mwd_' + mwdHelper.air_pressure_column_name]
+    else:
+        output_df['mwd_air_pressure'] = 0.0
+    #df = hole_features_extracted[columns]
     #df["datetime_ts"] = pd.to_datetime(df["datetime_ts"])
-    return df
+    return output_df
 
 
 def add_traces_to_stream(components,mwd,global_config,hole_id):
