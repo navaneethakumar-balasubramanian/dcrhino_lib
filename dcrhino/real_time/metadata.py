@@ -230,7 +230,8 @@ METADATA_HEADER_FORMAT_KEYS = {
         'radial_amp':DataType.BOOLEAN,
         'mult_pos_win':DataType.FLOAT,
         'mult_neg_win':DataType.FLOAT,
-        'rhino_version':DataType.FLOAT
+        'rhino_version':DataType.FLOAT,
+        'segy_output_step':DataType.STRING
 
         }
 

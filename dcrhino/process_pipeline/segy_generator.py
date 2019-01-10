@@ -18,12 +18,15 @@ from obspy.io.segy.segy import SEGYTraceHeader, SEGYBinaryFileHeader
 from dcrhino.process_pipeline.segy_trace_header import define_obspy_trace_header #This module needs to remain here in order to redefine the trace headers
 from dcrhino.process_pipeline.config import Config
 define_obspy_trace_header()
-components = ["axial","tangential","radial"]
-suffix = "deconvolved"
 
-traces_to_load = ["{}_{}".format(x,suffix) for x in components]
+def get_name_of_traces_to_get(suffix):
+    components = ["axial","tangential","radial"]
+    traces_to_load = ["{}_{}".format(x,suffix) for x in components]
+    return traces_to_load
 
-def load_existing_data_files(path):
+
+def load_existing_data_files(path,global_config):
+    traces_to_load = get_name_of_traces_to_get(global_config.segy_output_step)
     components={}
     components["axial"] = np.load(os.path.join(path,"{}.npy".format(traces_to_load[0])))
     components["tangential"] = np.load(os.path.join(path,"{}.npy".format(traces_to_load[1])))
@@ -32,11 +35,12 @@ def load_existing_data_files(path):
     return components
 
 
-def extract_component_data_from_data_dictionary(numpys_h5_hole_files):
+def extract_component_data_from_data_dictionary(numpys_h5_hole_files,global_config):
+    traces_to_load = get_name_of_traces_to_get(global_config.segy_output_step)
     components={}
-    components["axial"] = numpys_h5_hole_files["axial_despiked_correlated"]
-    components["tangential"] = numpys_h5_hole_files["tangential_despiked_correlated"]
-    components["radial"] = numpys_h5_hole_files["radial_despiked_correlated"]
+    components["axial"] = numpys_h5_hole_files[traces_to_load[0]]
+    components["tangential"] = numpys_h5_hole_files[traces_to_load[1]]
+    components["radial"] = numpys_h5_hole_files[traces_to_load[2]]
     components["ts"] = numpys_h5_hole_files["ts"]
     return components
 
@@ -158,7 +162,7 @@ if __name__ == "__main__":
     path = "/home/natal/toconvert/test_hole"
     output_path = os.path.join(path,"test.sgy")
     hole_id = 999
-    components=load_existing_data_files(path)
-    mwd = get_mwd_from_extracted_features_csv(path)
     global_config = load_global_config(path)
+    components=load_existing_data_files(path,global_config)
+    mwd = get_mwd_from_extracted_features_csv(path)
     generate_segy_from_hole_data(components,mwd,global_config,hole_id,output_path)
