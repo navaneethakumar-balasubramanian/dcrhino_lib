@@ -17,7 +17,7 @@ base_path = "/data_sdd/qc_test_dataset"
 output_path = os.path.join(base_path,"final_files","final_files_lco_rhino")
 if not os.path.exists(output_path):
     os.makedirs(output_path)
-files_to_copy = ["depth_plot_v2.png","extracted_features.csv","binned.csv","global_config.json","Acceleration_histogram.png"]
+files_to_copy = ["depth_plot_v2.png","extracted_features.csv","binned.csv","global_config.json","Acceleration_histogram.png","deconvolved_traces.sgy"]
 
 def load_holes_csv():
     return pd.read_csv(os.path.join(base_path,"qc_blastholes.csv"),dtype=str)
