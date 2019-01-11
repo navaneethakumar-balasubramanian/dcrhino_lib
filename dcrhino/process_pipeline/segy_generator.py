@@ -100,6 +100,7 @@ def add_traces_to_stream(components,mwd,global_config,hole_id):
             trace = Trace(data=data[t])
             trace.stats.segy = {}
             trace.stats.sampling_rate = output_sampling_rate
+            trace.stats.starttime = trace_time
             trace.stats.segy.trace_header = SEGYTraceHeader()
 
             trace.stats.channel = t+1 #1 for X, 2 for Y, 3 for Z
@@ -112,11 +113,11 @@ def add_traces_to_stream(components,mwd,global_config,hole_id):
             trace.stats.segy.trace_header.sample_interval_duration_in_seconds = float(1.0/output_sampling_rate)
 
             # pdb.set_trace()
-            trace.stats.segy.trace_header.year_data_recorded = trace_time.year
-            trace.stats.segy.trace_header.day_of_year = trace_time.day
-            trace.stats.segy.trace_header.hour_of_day = trace_time.hour
-            trace.stats.segy.trace_header.minute_of_hour = trace_time.minute
-            trace.stats.segy.trace_header.second_of_minute = trace_time.second
+            # trace.stats.segy.trace_header.year_data_recorded = trace_time.year
+            # trace.stats.segy.trace_header.day_of_year = trace_time.day
+            # trace.stats.segy.trace_header.hour_of_day = trace_time.hour
+            # trace.stats.segy.trace_header.minute_of_hour = trace_time.minute
+            # trace.stats.segy.trace_header.second_of_minute = trace_time.second
 
             trace.stats.segy.trace_header.sensor_sampling_rate = output_sampling_rate
             trace.stats.segy.trace_header.sensor_distance_to_source = global_config.output_sampling_rate #Calculated from the top of the Top Sub
