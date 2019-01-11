@@ -131,7 +131,7 @@ def add_traces_to_stream(components,mwd,global_config,hole_id):
             trace.stats.segy.trace_header.drill_string_total_length = global_config.drill_string_total_length
             trace.stats.segy.trace_header.drill_string_steel_od = global_config.drill_string_steel_od
 
-            trace.stats.segy.trace_header.mwd_hole_id = hole_id
+            trace.stats.segy.trace_header.mwd_hole_id = int(hole_id)
             trace.stats.segy.trace_header.mwd_collar_easting = mwd["mwd_collar_easting"][i]
             trace.stats.segy.trace_header.mwd_collar_northing = mwd["mwd_collar_northing"][i]
             trace.stats.segy.trace_header.mwd_collar_elevation = mwd["mwd_collar_elevation"][i]
@@ -146,14 +146,15 @@ def add_traces_to_stream(components,mwd,global_config,hole_id):
     return stream
 
 def load_global_config(path):
-    global_config - Config()
+    global_config = Config()
     json_data=open(os.path.join(path,"global_config.json")).read()
-    global_config.set_data_from_json(json_data)
+    global_config.set_data_from_json(json.loads(json_data))
     return global_config
 
 def generate_segy_from_hole_data(components,mwd,global_config,hole_id,output_path):
     try:
         stream = add_traces_to_stream(components,mwd,global_config,hole_id)
+        pdb.set_trace()
         stream.write(output_path, format="SEGY", data_encoding=1,byteorder=">",textual_header_encoding="ASCII")
     except:
         print(sys.exc_info())
@@ -323,6 +324,7 @@ def generate_textual_header(global_config):
     return header
 
 if __name__ == "__main__":
+    pdb.set_trace()
     path = "/home/natal/toconvert/test_hole"
     output_path = os.path.join(path,"test.sgy")
     hole_id = 999
