@@ -160,7 +160,6 @@ def generate_segy_from_hole_data(components,mwd,global_config,hole_id,output_pat
 
 def generate_textual_header(global_config):
     #ALL THIS IS SO THAT THE TEXTUA HEADER CAN BE PROPERLY READ IN THIRD PARTY PROGRAMS.  EACH LINE HAS 80 CHARACTERS
-    cfile = self.sensor.Files[self.Rhino.Current_File]
     row = 1
 
     header = "C%s RECORDING_DATE: %s" % (row,global_config.sensor_installation_date)
@@ -303,7 +302,7 @@ def generate_textual_header(global_config):
         header += line + b' ' * (80 - length)
     row += 1
 
-    line = "C%s COMMENTS: %s" % (row, cfile.Comment.upper())
+    line = "C%s COMMENTS: %s" % (row, global_config.comments.upper())
     line = line.encode(encoding="ASCII")
     length = len(line)
     if length < 80:
