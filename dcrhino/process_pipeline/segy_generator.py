@@ -132,7 +132,7 @@ def add_traces_to_stream(components,mwd,global_config,hole_id):
             trace.stats.segy.trace_header.drill_string_total_length = global_config.drill_string_total_length
             trace.stats.segy.trace_header.drill_string_steel_od = global_config.drill_string_steel_od
 
-            trace.stats.segy.trace_header.mwd_hole_id = int(hole_id)
+            trace.stats.segy.trace_header.mwd_hole_id = float(hole_id)
             trace.stats.segy.trace_header.mwd_collar_easting = mwd["mwd_collar_easting"][i]
             trace.stats.segy.trace_header.mwd_collar_northing = mwd["mwd_collar_northing"][i]
             trace.stats.segy.trace_header.mwd_collar_elevation = mwd["mwd_collar_elevation"][i]
