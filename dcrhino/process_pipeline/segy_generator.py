@@ -155,7 +155,7 @@ def load_global_config(path):
 def generate_segy_from_hole_data(components,mwd,global_config,hole_id,output_path):
     try:
         stream = add_traces_to_stream(components,mwd,global_config,hole_id)
-        pdb.set_trace()
+        # pdb.set_trace()
         stream.write(output_path, format="SEGY", data_encoding=1,byteorder=">",textual_header_encoding="ASCII")
     except:
         pdb.set_trace()
