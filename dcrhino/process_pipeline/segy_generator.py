@@ -81,7 +81,7 @@ def add_traces_to_stream(components,mwd,global_config,hole_id):
     output_sampling_rate = global_config.output_sampling_rate
     stream = Stream()
     stream.stats = AttribDict()
-    stream.stats.textual_file_header = "Textual Header"
+    stream.stats.textual_file_header = generate_textual_header(global_config)
     stream.stats.binary_file_header = SEGYBinaryFileHeader()
     for i,ts in enumerate(components["ts"]):
         axial = components["axial"][i]
@@ -157,6 +157,171 @@ def generate_segy_from_hole_data(components,mwd,global_config,hole_id,output_pat
         stream.write(output_path, format="SEGY", data_encoding=1,byteorder=">",textual_header_encoding="ASCII")
     except:
         print(sys.exc_info())
+
+def generate_textual_header(global_config):
+    #ALL THIS IS SO THAT THE TEXTUA HEADER CAN BE PROPERLY READ IN THIRD PARTY PROGRAMS.  EACH LINE HAS 80 CHARACTERS
+    cfile = self.sensor.Files[self.Rhino.Current_File]
+    row = 1
+
+    header = "C%s RECORDING_DATE: %s" % (row,global_config.sensor_installation_date)
+    header = header.encode(encoding="ASCII")
+    length = len(header)
+    if length < 80:
+        header = header + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s COUNTRY: %s" % (row, global_config.country)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s COMPANY: %s" % (row, global_config.company)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s MINE_NAME: %s" % (row, global_config.mine_name)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s RECORDING_ENGINEER: %s" % (row, global_config.recording_engineer)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s RIG_MODEL: %s" % (row, global_config.rig_model)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s RIG_MANUFACTURER: %s" % (row, global_config.rig_manufacturer)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s RIG_ID: %s" % (row, global_config.rig_id)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s DRILL_TYPE: %s" % (row, global_config.drill_type)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s MWD_TYPE: %s" % (row, global_config.mwd_type)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s BIT_TYPE: %s" % (row, global_config.bit_type)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s BIT_MODEL: %s" % (row, global_config.bit_model)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s BIT_SIZE: %s in" % (row, global_config.bit_size)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s SENSOR_TYPE: %s" % (row, global_config.sensor_type)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s DIGITIZER_SERIAL_NUMBER: %s" % (row, global_config.digitizer_serial_number)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s SENSOR_SERIAL_NUMBER: %s" % (row, global_config.sensor_serial_number)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s SENSOR_NATIVE_SAMPLING_RATE: %s" % (row, global_config.sensor_ideal_sampling_rate)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s DATA_OUTPUT_SAMPLING_RATE: %s" % (row, global_config.output_sampling_rate)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s SENSOR_MAX_G: %s" % (row, global_config.sensor_saturation_g)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s SENSOR_ACCELEROMETER_DATA_TYPE: %s" % (row, global_config.accelerometer_type)
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    row += 1
+
+    line = "C%s COMMENTS: %s" % (row, cfile.Comment.upper())
+    line = line.encode(encoding="ASCII")
+    length = len(line)
+    if length < 80:
+        header += line + b' ' * (80 - length)
+    elif length > 80:
+        loops = int(length/80)
+        extra_chars = 4 * (loops-1) #Need to account for the CXX_ at the beginning of each line
+        fraction_loop = length % 80
+        extra_loops = int((extra_chars + fraction_loop)/80)
+        loops += extra_loops
+        header += line[0:80]
+        for l in range(loops-1):
+            header += "C" +str(row+l+1)+ " " + line[80*(l+1)-(l*4):76*(l+2)+4]
+        if fraction_loop != 0:
+            last_line = line[-(fraction_loop+extra_chars):]
+            header += "C" +str(row+loops)+ " " + last_line + b' ' * (80 - len(last_line))
+
+    return header
 
 if __name__ == "__main__":
     path = "/home/natal/toconvert/test_hole"
