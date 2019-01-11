@@ -283,8 +283,8 @@ def feature_extractor_J1(global_config, trimmed_traces_dict):
     #Allocate space for feature arrays
 
     new_features_dict = {}
-    for component_label in window_boundaries_indices.keys():
-        trimmed_trace = trimmed_traces_dict[component_label]
+    for component in window_boundaries_indices.keys():
+        trimmed_trace = trimmed_traces_dict[component]
         #<update primary window to be centered on max amplitude of trace>
         print("20181226 update the window time boundaries to be based on trace data")
         window_boundaries_indices = update_window_boundaries_in_time(component, trimmed_trace,
@@ -293,7 +293,7 @@ def feature_extractor_J1(global_config, trimmed_traces_dict):
                                                                      global_config)
 
         #</update primary window to be centered on max amplitude>
-        window_data_dict, window_time_vector_dict = populate_window_data_dict(window_boundaries_indices[component_label],
+        window_data_dict, window_time_vector_dict = populate_window_data_dict(window_boundaries_indices[component],
                                                                           trimmed_trace,
                                                                           trimmed_time_vector)
         #test_populate_window_data_dict(window_data_dict, window_time_vector_dict,
@@ -303,7 +303,7 @@ def feature_extractor_J1(global_config, trimmed_traces_dict):
 
         boolean_features_dict = calculate_boolean_features(extracted_features_dict, global_config)
         extracted_features_dict['boolean'] = boolean_features_dict
-        new_features_dict[component_label] = extracted_features_dict
+        new_features_dict[component] = extracted_features_dict
         #pdb.set_trace()
     #pdb.set_trace()
     unnested_dictionary = flatten(new_features_dict)#print('now dump out with dict keys concatenated')
