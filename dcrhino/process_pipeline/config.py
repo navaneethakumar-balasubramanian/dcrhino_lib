@@ -61,6 +61,23 @@ class Config( object ):
         self.bit_model = " "
         self.drill_string_total_length = " "
         self.sensor_installation_location = " "
+        
+        #QC PLOT PARAMS
+        self.peak_amplitude_axial_y_limit=0,1.5
+        self.rc_axial_y_limit=0,1.0
+        self.ax_vel_delay_y_limit = 60,250
+        self.peak_amplitude_tangential_y_limit=0,1.5
+        self.rc_tangential_y_limit=0,1.5
+        self.plot_a_vel=True
+        self.plot_t_vel=True
+        self.axial_amp=True
+        self.axial_RC=True
+        self.axial_vel_del=True
+        self.noise_threshold=True
+        self.tangential_amp=True
+        self.tangential_RC=True
+        self.tang_vel_del=True
+        self.radial_amp=False
         # SET DEFAULT WINDOW WIDTHS
         #self.window_widths = "{\"axial\": {\"multiple_3\": 0.004, \"multiple_2\": 0.004, \"multiple_1\": 0.004, \"primary\": 0.004}, \"tangential\": {\"multiple_3\": 0.004, \"multiple_2\": 0.004, \"multiple_1\": 0.004, \"primary\": 0.004}}"
 

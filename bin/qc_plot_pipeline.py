@@ -157,10 +157,10 @@ def get_noise_threshold(global_config):
         return noise_threshold
 
 def main():
-    ddir = '/home/kkappler/data/datacloud/teck/pet_line_creek/holes/793,MR_77,23831,31,5208'
+#    ddir = '/home/kkappler/data/datacloud/teck/pet_line_creek/holes/793,MR_77,23831,31,5208'
+#    mmap = os.path.join(ddir, 'mwd_map.json')
+    ddir = '/mnt/sda1/data/data_blob/qc_test_dataset/milligan_3/output_milligan/holes_0107_2/995,108,118,3,2235'
     mmap = os.path.join(ddir, 'mwd_map.json')
-    #ddir = '/mnt/sda1/data/data_blob/qc_test_dataset/milligan_2/output_milligan/holes_0104/995,108,118,3,2235'
-    #mmap = '/mnt/sda1/data/data_blob/qc_test_dataset/milligan_2/output_milligan/holes_0104/995,108,118,3,2235/mwd_map.json'
 
 #    ofp = ddir
 #    ofp = False

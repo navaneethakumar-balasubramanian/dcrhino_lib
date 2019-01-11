@@ -27,6 +27,7 @@ from dcrhino.analysis.unstable.sumant.supporting_qc_blasthole_plots09192018 impo
 from matplotlib.lines import Line2D
 
 def hack_split_ylimits(y_limit_string):
+#    pdb.set_trace()
     tmp = y_limit_string.split(',')
     tmp = [float(x) for x in tmp]
     return tmp
@@ -69,7 +70,7 @@ class QCLogPlotterv3():
         #pdb.set_trace()
         if self.global_config.axial_amp == 'True':
             y_limits = hack_split_ylimits(self.global_config.peak_amplitude_axial_y_limit)
-            ax.plot(X, qc_plot_input.peak_ampl_x, label='peak_x', color = 'red')
+            ax.plot(X, qc_plot_input.peak_ampl_x, color = 'red')
             ax.set_ylim(y_limits)
             ax.spines['left'].set_color('red')
             ax.set_ylabel('Ax. Amp').set_color('red')
@@ -78,7 +79,7 @@ class QCLogPlotterv3():
 
         if self.global_config.axial_rc == 'True':
             y_limits = hack_split_ylimits(self.global_config.rc_axial_y_limit)
-            ax1.plot(X,qc_plot_input.reflection_coefficient, label = 'Axial RC', color = 'blue')
+            ax1.plot(X,qc_plot_input.reflection_coefficient, color = 'blue')
             ax1.set_ylim(y_limits)
             ax1.spines['right'].set_color('blue')
             ax1.set_ylabel('Ax. RC').set_color('blue')
@@ -86,8 +87,9 @@ class QCLogPlotterv3():
 
 
         if self.global_config.plot_a_vel == 'True':
+#            pdb.set_trace()
             y_limits = hack_split_ylimits(self.global_config.axial_vel_delay_y_limit)
-            ax2.plot(X,qc_plot_input.ax_vel_del/10000,label = 'axial 1/delay', color = 'green')
+            ax2.plot(X,qc_plot_input.ax_vel_del/10000, color = 'greenyellow')
             ax2.set_ylim(y_limits)
             ax2.spines['right'].set_color('greenyellow')
             ax2.set_ylabel('Ax. Delay').set_color('greenyellow')
@@ -135,7 +137,7 @@ class QCLogPlotterv3():
 
         if self.global_config.tangential_amp == 'True':
             y_limits = hack_split_ylimits(self.global_config.peak_amplitude_tangential_y_limit)
-            ax.plot(X, qc_plot_input.peak_ampl_y, label='peak_y',color = 'magenta')
+            ax.plot(X, qc_plot_input.peak_ampl_y, color = 'magenta')
             ax.set_ylim(y_limits)
             ax.spines['left'].set_color('magenta')
             ax.spines['left'].set_linewidth(2)
@@ -145,16 +147,16 @@ class QCLogPlotterv3():
 
         if self.global_config.tangential_rc == 'True':
             y_limits = hack_split_ylimits(self.global_config.rc_tangential_y_limit)
-            ax1.plot(X, qc_plot_input.tangential_RC, label = 'Tangential RC',color = 'cyan')
+            ax1.plot(X, qc_plot_input.tangential_RC,color = 'cyan')
             ax1.set_ylim(y_limits)
             ax1.spines['right'].set_color('cyan')
             ax1.spines['right'].set_linewidth(2)
-            ax2.set_ylabel('Tang. Delay').set_color('lime')
+            ax1.set_ylabel('Tang. RC').set_color('cyan')
 
 
         if self.global_config.plot_t_vel == 'True':
             y_limits = hack_split_ylimits(self.global_config.tangential_vel_delay_y_limit)
-            ax2.plot(X,qc_plot_input.tang_vel_del,label = 'Tangential 1/delay',color = 'lime')
+            ax2.plot(X,qc_plot_input.tang_vel_del,color = 'lime')
             ax2.set_ylim(y_limits) # for tangential delay
             ax2.spines['right'].set_color('lime')
             ax2.spines['right'].set_linewidth(2)
@@ -164,8 +166,8 @@ class QCLogPlotterv3():
 
 
         if self.global_config.radial_amp == 'True':
-            ax2.plot(X,qc_plot_input.peak_ampl_z,label = 'peak_z',color = 'lime')
-            ax2.set_ylim(self.global_config.peak_amplitude_radial_y_limit) # for tangential delay
+            ax2.plot(X,qc_plot_input.peak_ampl_z,color = 'lime')
+            ax2.set_ylim(self.global_config.peak_amplitude_radial_y_limit) 
             ax2.spines['right'].set_color('lime')
             ax2.spines['right'].set_linewidth(2)
             ax2.set_ylabel('Radial Amplitude').set_color('lime')
@@ -422,14 +424,17 @@ class QCLogPlotterv3():
 #        mult_neg_win = -2.0
         mult_neg_win = float(self.global_config.mult_neg_win)
         mult_pos_win = float(self.global_config.mult_pos_win)
-        m1_window_top = self.mult_pos.axial_first_multiple[0] - mult_neg_win
-        m1_window_bottom = self.mult_pos.axial_first_multiple[0] + mult_pos_win
-        mult_title1 = "wax1b = {0:.1f}".format((m1_window_top))+"  wax1e = {0:.1f}".format((m1_window_bottom))
-        mult_title2 = "wax2b = {0:.1f}".format((self.mult_pos.axial_second_multiple[0] - mult_neg_win))+"  wax2e = {0:.1f}".format((self.mult_pos.axial_second_multiple[0] + mult_pos_win))
-        mult_title3 = "wtang1b = {0:.1f}".format((self.mult_pos.tangential_first_multiple[0] - mult_neg_win))+"  wtang1e = {0:.1f}".format((self.mult_pos.tangential_first_multiple[0] + mult_pos_win))
-        mult_title4 = "wtang2b = {0:.1f}".format((self.mult_pos.tangential_second_multiple[0] - mult_neg_win))+"  wtang2e = {0:.1f}".format((self.mult_pos.tangential_second_multiple[0] + mult_pos_win))
+#        m1_window_top = self.mult_pos.axial_first_multiple[0] - mult_neg_win
+#        m1_window_bottom = self.mult_pos.axial_first_multiple[0] + mult_pos_win
+#        mult_title1 = "wax1b = {0:.1f}".format((m1_window_top))+"  wax1e = {0:.1f}".format((m1_window_bottom))
+#        mult_title2 = "wax2b = {0:.1f}".format((self.mult_pos.axial_second_multiple[0] - mult_neg_win))+"  wax2e = {0:.1f}".format((self.mult_pos.axial_second_multiple[0] + mult_pos_win))
+#        mult_title3 = "wtang1b = {0:.1f}".format((self.mult_pos.tangential_first_multiple[0] - mult_neg_win))+"  wtang1e = {0:.1f}".format((self.mult_pos.tangential_first_multiple[0] + mult_pos_win))
+#        mult_title4 = "wtang2b = {0:.1f}".format((self.mult_pos.tangential_second_multiple[0] - mult_neg_win))+"  wtang2e = {0:.1f}".format((self.mult_pos.tangential_second_multiple[0] + mult_pos_win))
+        mult_title1 = "axial window = {}/{}".format(mult_neg_win,mult_pos_win)
+        mult_title2 = "tangential_window = {}/{}".format(mult_neg_win,mult_pos_win)
 
-        mult_title = mult_title1 + '\n' + mult_title2 + '\n' + mult_title3 + '\n' + mult_title4
+#        mult_title = mult_title1 + '\n' + mult_title2 + '\n' + mult_title3 + '\n' + mult_title4
+        mult_title = mult_title1 + '\n' + mult_title2 
 
 #        pdb.set_trace()
 
