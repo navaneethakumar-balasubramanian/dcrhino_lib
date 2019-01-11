@@ -295,7 +295,7 @@ def generate_textual_header(global_config):
         header += line + b' ' * (80 - length)
     row += 1
 
-    line = "C%s SENSOR_ACCELEROMETER_DATA_TYPE: %s" % (row, global_config.accelerometer_type)
+    line = "C%s SENSOR_ACCELEROMETER_DATA_TYPE: %s" % (row, global_config.sensor_accelerometer_type)
     line = line.encode(encoding="ASCII")
     length = len(line)
     if length < 80:
