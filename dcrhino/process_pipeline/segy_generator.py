@@ -127,6 +127,7 @@ def add_traces_to_stream(components,mwd,global_config,hole_id):
             trace.stats.segy.trace_header.sensor_type =global_config.sensor_type
             trace.stats.segy.trace_header.sensor_accelerometer_type=global_config.sensor_accelerometer_type
             trace.stats.segy.trace_header.sensor_saturation_g=global_config.sensor_saturation_g
+            pdb.set_trace()
             trace.stats.segy.trace_header.trace_length_in_seconds=global_config.trace_length
 
             trace.stats.segy.trace_header.drill_string_total_length = global_config.drill_string_total_length
