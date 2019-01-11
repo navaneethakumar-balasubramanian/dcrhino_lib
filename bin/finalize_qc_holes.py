@@ -14,27 +14,24 @@ import pandas as pd
 from shutil import copyfile
 
 base_path = "/data_sdd/qc_test_dataset"
-output_path = os.path.join(base_path,"final_files")
-files_to_copy = ["depth_plot_v2.png","extracted_features.csv","binned.csv","global_config.json"]
-exclude =["lco","rio"]
+output_path = os.path.join(base_path,"final_files","final_files_lco_rhino")
+if not os.path.exists(output_path):
+    os.makedirs(output_path)
+files_to_copy = ["depth_plot_v2.png","extracted_features.csv","binned.csv","global_config.json","Acceleration_histogram.png","deconvolved_traces.sgy"]
 
 def load_holes_csv():
     return pd.read_csv(os.path.join(base_path,"qc_blastholes.csv"),dtype=str)
 
 def generate_hole_directory_names(df):
     found = []
+    client = "lco_rhino"
     arr =  np.asarray(df[['bench', 'pattern','hole','rig_id','serial_number']].apply(lambda x: ','.join(x), axis=1))
-    holes_path = os.path.join(base_path,"holes")
+    holes_path = os.path.join(base_path,"holes",client)
     for root, dirs, files in os.walk(holes_path, topdown=True):
         for dir in dirs:
             if dir in arr:
                 found.append([root,dir])
 
-    for dir in found:
-        for name in exclude:
-            if name in dir[0]:
-                found.remove(dir)
-    pdb.set_trace()            
     return found
 
 def main():
