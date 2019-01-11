@@ -12,9 +12,9 @@ from dcrhino.process_pipeline.config import Config
 from clickhouse_driver import Client
 import numpy as np
 import pandas as pd
-#import uuid
-import os
 import pdb
+#import uuid
+#import logger
 from dcrhino.process_pipeline.mwd_helper import MwdDFHelper
 import json
 import calendar
@@ -144,7 +144,7 @@ def process_raw_data_interval(global_config,raw_data_grouped_by_ts,second_traces
 
 
 
-def get_mwd_interpolated_by_second(hole_mwd):
+def get_mwd_interpolated_by_second(hole_mwd,mwdHelper):
     interpolated_mwd = pd.DataFrame()
 
     interpolated_mwd['computed_elevation'], time_vector = mwdHelper.get_interpolated_column(hole_mwd,'computed_elevation')
@@ -182,6 +182,132 @@ def prepare_processed_data_to_save(global_config,processed_data,hole_mwd_interpo
 
 
 
+def process_mwd(mwd_df,mmap):
+    mwdHelper = MwdDFHelper(mwd_df,mwd_map=mmap)
+    
+    
+    db_helper = RhinoDBHelper(host='13.66.189.94',database='test_rio_tinto')
+    mwd_dc_format = mwdHelper.dc_format(mwd_df,mmap)
+    mwd_df = mwd_dc_format
+    
+    print "Getting all configs"
+    confs = db_helper.get_configs()
+    min_ts_date = datetime.utcfromtimestamp(confs['min_ts'].min())
+    max_ts_date = datetime.utcfromtimestamp(confs['max_ts'].max())
+    rig_ids = confs['rig_id'].unique()
+    print "Splitting mwd by bench,pattern,hole,rig_id"
+    #holes = mwdHelper._split_df_to_bph_df(mwd_df)
+    cond_1 = mwd_dc_format['rig_id'].isin(rig_ids)
+    cond_2 = mwd_dc_format['start_time'] >= min_ts_date
+    cond_3 = mwd_dc_format['end_time'] <= max_ts_date
+    #et_trace()
+    print "Pre filtering mwd by configs rigs and times"
+    pre_filtered_mwd = mwd_dc_format[cond_1 & cond_2 & cond_3]
+    
+    #holes_h5 = {}
+    
+    holes_cfgs = dict()
+    
+    for line in confs.itertuples():
+        #pdb.set_trace()
+        print "Analysing file"
+        cond_1 = pre_filtered_mwd['rig_id'].astype(str) == line.rig_id
+        cond_2 = pre_filtered_mwd['start_time'].astype(int)/1000000000 >= line.min_ts
+        cond_3 = pre_filtered_mwd['start_time'].astype(int)/1000000000 <= line.max_ts
+        columns_sort_group = ['bench','pattern','hole','hole_id']
+        #pdb.set_trace()
+        holes_mwd = pre_filtered_mwd[cond_1 & cond_2 & cond_3].copy().sort_values(by=columns_sort_group).reset_index(drop=True)
+        holes_identified = np.array(list(holes_mwd.groupby(columns_sort_group).groups))
+    
+        rig_id_ar = np.full([holes_identified.shape[0],1],str(line.rig_id))
+        sensor_id_ar = np.full([holes_identified.shape[0],1],str(line.sensor_id))
+        holes_identified = np.hstack((holes_identified,rig_id_ar,sensor_id_ar))
+        holes_identified = np.unique(holes_identified, axis=0)
+    
+        for hole in holes_identified:
+            if '----'.join(list(hole)) not in holes_cfgs:
+                holes_cfgs['----'.join(list(hole))] = []
+            holes_cfgs['----'.join(list(hole))].append([line.uuid,line.min_ts,line.max_ts])
+            
+    #pdb.set_trace()
+    counter = 0
+    for key in holes_cfgs.keys():
+        counter += 1
+        splitted_key = key.split('----')
+        bench = splitted_key[0]
+        pattern = splitted_key[1]
+        hole = splitted_key[2]
+        hole_id = splitted_key[3]
+        rig_id = splitted_key[4]
+        sensor_id = splitted_key[5]
+        hole_mwd = mwd_dc_format[(mwd_dc_format['bench'].astype(str)==bench) & (mwd_dc_format['pattern'].astype(str)==pattern) & (mwd_dc_format['hole'].astype(str)==hole) & (mwd_dc_format['hole_id'].astype(str)== hole_id) & (mwd_dc_format['rig_id'].astype(str) == rig_id)]
+        hole_mwd_interpolated_by_second = get_mwd_interpolated_by_second(hole_mwd,mwdHelper)
+    
+        min_hole_ts = hole_mwd['start_time'].astype(int).min()/1000000000
+        max_hole_ts = hole_mwd['start_time'].astype(int).max()/1000000000
+        
+        if (max_hole_ts - min_hole_ts) > 3600:
+            print "Hole run bigger than an hour.Ignoring. Check mwd"
+            continue
+        
+        for files in holes_cfgs[key]:
+            
+            raw_file_uuid_str = files[0]
+            ## GENERATE GLOBAL CONFIG FROM RAW DATA CONFIG JSON
+            config_json = db_helper.get_config_json_from_raw_file_uuid(raw_file_uuid_str)
+            global_config = Config(None)
+            global_config.set_data_from_json(config_json)
+            global_config_str = str(vars(global_config))
+        
+            # PROCESS BATCHES
+            batch_size = 1000
+            processed_ts_count = 0
+            ts_to_process = max_hole_ts - min_hole_ts
+            hole_run_uuid = None
+            
+            #VERIFY IF WE ALREADY HAVE THE SAME DATA WITH SAME CONFIG AND DATAMAPPING ON THE SERVER
+            #PROCESS ONE SECOND JUST TO GET THE DATA MAPPING OF THE PROCESS
+            raw_data_grouped_by_ts = db_helper.get_grouped_ts_raw_data(raw_file_uuid_str,min_hole_ts,max_hole_ts,limit=1)
+            processed_data = process_raw_data_interval(global_config,raw_data_grouped_by_ts)
+            external_features_df = extracted_features_df_to_external_features(processed_data)
+            prepared_to_save_processed_data = prepare_processed_data_to_save(global_config,processed_data,hole_mwd_interpolated_by_second,external_features_df)        
+            processed_data_mapping = db_helper.get_processed_data_mapping(prepared_to_save_processed_data)
+            processed_data_mapping_str = str(processed_data_mapping)        
+            hole_run_uuid = db_helper.get_hole_run_uuid(bench,pattern,hole,hole_id,rig_id,sensor_id,global_config_str,raw_file_uuid_str,processed_data_mapping_str)
+            ts_on_db = db_helper.get_ts_processed_data_of_hole_run(hole_run_uuid,min_hole_ts,max_hole_ts)
+            
+            while(processed_ts_count<ts_to_process):
+                process_from = min_hole_ts + processed_ts_count
+                process_to = process_from + batch_size
+                if process_to > max_hole_ts:
+                    process_to = max_hole_ts
+                processed_ts_count += process_to - process_from
+                #print process_from,process_to,processed_ts_count,process_to-process_from
+                raw_data_grouped_by_ts = db_helper.get_grouped_ts_raw_data(raw_file_uuid_str,process_from,process_to,ts_on_db)
+                processed_data = process_raw_data_interval(global_config,raw_data_grouped_by_ts)
+                external_features_df = extracted_features_df_to_external_features(processed_data)
+                prepared_to_save_processed_data = prepare_processed_data_to_save(global_config,processed_data,hole_mwd_interpolated_by_second,external_features_df)
+                db_helper.save_processed_data(hole_run_uuid,prepared_to_save_processed_data)
+                #pdb.set_trace()
+            #pdb.set_trace()
+
+    
+if __name__ == "__main__":
+    argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
+    argparser.add_argument('-mwd', '--mwd-path', help="MWD File Path",required=True)
+    argparser.add_argument('-mmap', '--mmap-path', help="MWD MAP File Path",required=True)
+    args = argparser.parse_args()
+    
+    mwd_path = args.mwd_path
+    mmap_path = args.mmap_path
+    mwd_df = pd.read_csv(mwd_path)
+    mwd_map_path = mmap_path
+    
+    with open(mwd_map_path) as f:
+        mmap = json.load(f)
+    
+    process_mwd(mwd_df,mmap)
+
 
 #client = Client('13.77.162.25',user='rhino',password='dc1234',database='test_thiago',compression='lz4')
 
@@ -194,125 +320,8 @@ def prepare_processed_data_to_save(global_config,processed_data,hole_mwd_interpo
 #mwd_map_path = '/home/thiago/detour_lake_mine/DR05_19-20_Nov_combined_MWD_map.json'
 
 
-argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
-argparser.add_argument('-mwd', '--mwd-path', help="MWD File Path",required=True)
-argparser.add_argument('-mmap', '--mmap-path', help="MWD MAP File Path",required=True)
-args = argparser.parse_args()
-
-mwd_path = args.mwd_path
-mmap_path = args.mmap_path
-mwd_df = pd.read_csv(mwd_path)
-mwd_map_path = mmap_path
 
 
-with open(mwd_map_path) as f:
-    mmap = json.load(f)
-
-mwdHelper = MwdDFHelper(mwd_df,mwd_map=mmap)
 
 
-db_helper = RhinoDBHelper(host='13.77.162.25',database='test_rio_tinto')
-mwd_dc_format = mwdHelper.dc_format(mwd_df,mmap)
-mwd_df = mwd_dc_format
-
-print "Getting all configs"
-confs = db_helper.get_configs()
-min_ts_date = datetime.utcfromtimestamp(confs['min_ts'].min())
-max_ts_date = datetime.utcfromtimestamp(confs['max_ts'].max())
-rig_ids = confs['rig_id'].unique()
-print "Splitting mwd by bench,pattern,hole,rig_id"
-#holes = mwdHelper._split_df_to_bph_df(mwd_df)
-cond_1 = mwd_dc_format['rig_id'].isin(rig_ids)
-cond_2 = mwd_dc_format['start_time'] >= min_ts_date
-cond_3 = mwd_dc_format['end_time'] <= max_ts_date
-#et_trace()
-print "Pre filtering mwd by configs rigs and times"
-pre_filtered_mwd = mwd_dc_format[cond_1 & cond_2 & cond_3]
-
-holes_h5 = {}
-
-holes_cfgs = dict()
-
-for line in confs.itertuples():
-    #pdb.set_trace()
-    print "Analysing file"
-    cond_1 = pre_filtered_mwd['rig_id'].astype(str) == line.rig_id
-    cond_2 = pre_filtered_mwd['start_time'].astype(int)/1000000000 >= line.min_ts
-    cond_3 = pre_filtered_mwd['start_time'].astype(int)/1000000000 <= line.max_ts
-    columns_sort_group = ['bench','pattern','hole','hole_id']
-    #pdb.set_trace()
-    holes_mwd = pre_filtered_mwd[cond_1 & cond_2 & cond_3].copy().sort_values(by=columns_sort_group).reset_index(drop=True)
-    holes_identified = np.array(list(holes_mwd.groupby(columns_sort_group).groups))
-
-    rig_id_ar = np.full([holes_identified.shape[0],1],str(line.rig_id))
-    sensor_id_ar = np.full([holes_identified.shape[0],1],str(line.sensor_id))
-    holes_identified = np.hstack((holes_identified,rig_id_ar,sensor_id_ar))
-    holes_identified = np.unique(holes_identified, axis=0)
-
-    for hole in holes_identified:
-        if '----'.join(list(hole)) not in holes_cfgs:
-            holes_cfgs['----'.join(list(hole))] = []
-        holes_cfgs['----'.join(list(hole))].append([line.uuid,line.min_ts,line.max_ts])
-        
-#pdb.set_trace()
-counter = 0
-for key in holes_cfgs.keys():
-    counter += 1
-    splitted_key = key.split('----')
-    bench = splitted_key[0]
-    pattern = splitted_key[1]
-    hole = splitted_key[2]
-    hole_id = splitted_key[3]
-    rig_id = splitted_key[4]
-    sensor_id = splitted_key[5]
-    #pdb.set_trace()
-    hole_mwd = mwd_dc_format[(mwd_dc_format['bench'].astype(str)==bench) & (mwd_dc_format['pattern'].astype(str)==pattern) & (mwd_dc_format['hole'].astype(str)==hole) & (mwd_dc_format['hole_id'].astype(str)== hole_id) & (mwd_dc_format['rig_id'].astype(str) == rig_id)]
-    hole_mwd_interpolated_by_second = get_mwd_interpolated_by_second(hole_mwd)
-
-    min_hole_ts = hole_mwd['start_time'].astype(int).min()/1000000000
-    max_hole_ts = hole_mwd['start_time'].astype(int).max()/1000000000
-    
-    if (max_hole_ts - min_hole_ts) > 3600:
-        print "Hole run bigger than an hour.Ignoring. Check mwd"
-        continue
-    
-    for files in holes_cfgs[key]:
-        
-        raw_file_uuid_str = files[0]
-        ## GENERATE GLOBAL CONFIG FROM RAW DATA CONFIG JSON
-        config_json = db_helper.get_config_json_from_raw_file_uuid(raw_file_uuid_str)
-        global_config = Config(None)
-        global_config.set_data_from_json(config_json)
-        global_config_str = str(vars(global_config))
-    
-        # PROCESS BATCHES
-        batch_size = 1000
-        processed_ts_count = 0
-        ts_to_process = max_hole_ts - min_hole_ts
-        hole_run_uuid = None
-        
-        #VERIFY IF WE ALREADY HAVE THE SAME DATA WITH SAME CONFIG AND DATAMAPPING ON THE SERVER
-        #PROCESS ONE SECOND JUST TO GET THE DATA MAPPING OF THE PROCESS
-        raw_data_grouped_by_ts = db_helper.get_grouped_ts_raw_data(raw_file_uuid_str,min_hole_ts,max_hole_ts,limit=1)
-        processed_data = process_raw_data_interval(global_config,raw_data_grouped_by_ts)
-        external_features_df = extracted_features_df_to_external_features(processed_data)
-        prepared_to_save_processed_data = prepare_processed_data_to_save(global_config,processed_data,hole_mwd_interpolated_by_second,external_features_df)        
-        processed_data_mapping = db_helper.get_processed_data_mapping(prepared_to_save_processed_data)
-        processed_data_mapping_str = str(processed_data_mapping)        
-        hole_run_uuid = db_helper.get_hole_run_uuid(bench,pattern,hole,hole_id,rig_id,sensor_id,global_config_str,raw_file_uuid_str,processed_data_mapping_str)
-        ts_on_db = db_helper.get_ts_processed_data_of_hole_run(hole_run_uuid,min_hole_ts,max_hole_ts)
-
-        while(processed_ts_count<ts_to_process):
-            process_from = min_hole_ts + processed_ts_count
-            process_to = process_from + batch_size
-            if process_to > max_hole_ts:
-                process_to = max_hole_ts
-            processed_ts_count += process_to - process_from
-            #print process_from,process_to,processed_ts_count,process_to-process_from
-            raw_data_grouped_by_ts = db_helper.get_grouped_ts_raw_data(raw_file_uuid_str,process_from,process_to,ts_on_db)
-            processed_data = process_raw_data_interval(global_config,raw_data_grouped_by_ts)
-            prepared_to_save_processed_data = prepare_processed_data_to_save(global_config,processed_data,hole_mwd_interpolated_by_second,external_features_df)
-            db_helper.save_processed_data(hole_run_uuid,prepared_to_save_processed_data)
-            #pdb.set_trace()
-        #pdb.set_trace()
 
