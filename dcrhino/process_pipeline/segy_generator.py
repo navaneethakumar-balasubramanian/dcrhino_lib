@@ -120,7 +120,7 @@ def add_traces_to_stream(components,mwd,global_config,hole_id):
             # trace.stats.segy.trace_header.second_of_minute = trace_time.second
 
             trace.stats.segy.trace_header.sensor_sampling_rate = output_sampling_rate
-            trace.stats.segy.trace_header.sensor_distance_to_source = global_config.output_sampling_rate #Calculated from the top of the Top Sub
+            trace.stats.segy.trace_header.sensor_distance_to_source = global_config.sensor_distance_to_source #Calculated from the top of the Top Sub
             trace.stats.segy.trace_header.sensor_position = global_config.sensor_position #Distance from the sensor to the top of the shocksub
             trace.stats.segy.trace_header.sensor_distance_to_shocksub =  global_config.sensor_distance_to_shocksub
             trace.stats.segy.trace_header.sensor_axial_axis = global_config.sensor_axial_axis
