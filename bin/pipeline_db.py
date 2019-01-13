@@ -283,9 +283,13 @@ def process_mwd(mwd_df,mmap):
                     process_to = max_hole_ts
                 processed_ts_count += process_to - process_from
                 #print process_from,process_to,processed_ts_count,process_to-process_from
+                
                 raw_data_grouped_by_ts = db_helper.get_grouped_ts_raw_data(raw_file_uuid_str,process_from,process_to,ts_on_db)
-                if raw_data_grouped_by_ts is not False:    
+                if raw_data_grouped_by_ts is not False and len(raw_data_grouped_by_ts.groups.values()) > 0:    
+                    
                     processed_data = process_raw_data_interval(global_config,raw_data_grouped_by_ts)
+                    if 'datetime' not in processed_data.columns:
+                        pdb.set_trace()
                     external_features_df = extracted_features_df_to_external_features(processed_data)
                     prepared_to_save_processed_data = prepare_processed_data_to_save(global_config,processed_data,hole_mwd_interpolated_by_second,external_features_df)
                     db_helper.save_processed_data(hole_run_uuid,prepared_to_save_processed_data)
