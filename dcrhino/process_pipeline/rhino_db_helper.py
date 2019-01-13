@@ -6,6 +6,7 @@ import uuid
 import pdb
 import time
 import os
+import base64
 
 class RhinoDBHelper:
     def __init__(self,host='localhost',user='default',password='',database='test',compression='lz4'):
@@ -24,7 +25,7 @@ class RhinoDBHelper:
         query = 'Insert into processed_data ('+','.join(renamed_filtered.columns)+') values '
         self.client.execute( query,renamed_filtered.values.tolist())
         
-    def get_ts_processed_data_of_hole_run(self,hole_run_uuid,max_ts,min_ts):
+    def get_ts_processed_data_of_hole_run(self,hole_run_uuid,min_ts,max_ts):
         to_return = self.client.execute("select distinct(ts) from processed_data where UUIDStringToNum('"+hole_run_uuid+"') == hole_run_uuid and ts >= "+str(min_ts)+ " and ts <= "+str(max_ts)+ " order by ts")
         #pdb.set_trace()
         if len(to_return) == 0:
@@ -58,14 +59,19 @@ class RhinoDBHelper:
     
 
     def get_grouped_ts_raw_data(self,config_uuid_str,ts_min,ts_max,ts_to_ignore=np.array([]),limit=None):
-        to_return = self.get_raw_data(config_uuid_str,ts_min,ts_max,limit=limit).groupby(['ts'])
-        return to_return
+        raw_data_df = self.get_raw_data(config_uuid_str,ts_min,ts_max,ts_to_ignore,limit=limit)
+        if raw_data_df is not False:
+            return raw_data_df.groupby(['ts'])
+        return False
 
     def get_raw_data(self,config_uuid_str,ts_min,ts_max,ts_to_ignore=np.array([]),limit=None):
         ts_array = np.arange(ts_min,ts_max)
         if len(ts_to_ignore) != 0:
             ts_array = ts_array[~np.isin(ts_array,ts_to_ignore)]
-            query = "SELECT ts,microtime,x,y,z FROM "+self.raw_data_table_name+" WHERE (UUIDStringToNum('"+config_uuid_str+"') = raw_data_file_uuid) AND (ts in (%s))" %  ','.join(ts_array.astype(str))
+            if len(ts_array) > 0:
+                query = "SELECT ts,microtime,x,y,z FROM "+self.raw_data_table_name+" WHERE (UUIDStringToNum('"+config_uuid_str+"') = raw_data_file_uuid) AND (ts in (%s))" %  ','.join(ts_array.astype(str))
+            else :
+                return False
         else:
             ts_min = ts_array.min()
             ts_max = ts_array.max()
@@ -91,12 +97,12 @@ class RhinoDBHelper:
                       'hole_id':hole_id,
                       'rig_id':rig_id,
                       'sensor_id':sensor_id,
-                      'global_config_json_str':global_config_json_str,
+                      'global_config_json': base64.b64encode(global_config_json_str),
                       'raw_file_uuid_str':raw_file_uuid_str,
                       'processed_data_map_json':processed_data_map_json
                       }
         print query_vars
-        answer = self.client.execute('select UUIDNumToString(uuid) from '+self.hole_runs_table_name+' where sensor_id=%(sensor_id)s and rig_id=%(rig_id)s and hole_id=%(hole_id)s and hole_name=%(hole_name)s and pattern=%(pattern)s and bench=%(bench)s and global_config_json=%(global_config_json_str)s and UUIDNumToString(raw_data_file_uuid)=%(raw_file_uuid_str)s and processed_data_map_json=%(processed_data_map_json)s',query_vars)
+        answer = self.client.execute('select UUIDNumToString(uuid) from '+self.hole_runs_table_name+' where sensor_id=%(sensor_id)s and rig_id=%(rig_id)s and hole_id=%(hole_id)s and hole_name=%(hole_name)s and pattern=%(pattern)s and bench=%(bench)s and global_config_json=%(global_config_json)s and UUIDNumToString(raw_data_file_uuid)=%(raw_file_uuid_str)s and processed_data_map_json=%(processed_data_map_json)s',query_vars)
         if len(answer)>0:
             print "Found previous hole_runs in db"
             return answer[0][0]
@@ -110,7 +116,7 @@ class RhinoDBHelper:
                         'uuid':self.uuid_string_to_num(uuid_hole_run),
                         'created_at_ts':int(time.time()),
                         'raw_data_file_uuid':self.uuid_string_to_num(raw_file_uuid_str),
-                        'global_config_json':global_config_json_str,
+                        'global_config_json':base64.b64encode(global_config_json_str),
                         'bench':bench,
                         'pattern':pattern,
                         'hole_name':hole_name,

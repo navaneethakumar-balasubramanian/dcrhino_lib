@@ -229,7 +229,6 @@ def process_mwd(mwd_df,mmap):
                 holes_cfgs['----'.join(list(hole))] = []
             holes_cfgs['----'.join(list(hole))].append([line.uuid,line.min_ts,line.max_ts])
             
-    #pdb.set_trace()
     counter = 0
     for key in holes_cfgs.keys():
         counter += 1
@@ -253,6 +252,7 @@ def process_mwd(mwd_df,mmap):
         for files in holes_cfgs[key]:
             
             raw_file_uuid_str = files[0]
+            
             ## GENERATE GLOBAL CONFIG FROM RAW DATA CONFIG JSON
             config_json = db_helper.get_config_json_from_raw_file_uuid(raw_file_uuid_str)
             global_config = Config(None)
@@ -284,10 +284,11 @@ def process_mwd(mwd_df,mmap):
                 processed_ts_count += process_to - process_from
                 #print process_from,process_to,processed_ts_count,process_to-process_from
                 raw_data_grouped_by_ts = db_helper.get_grouped_ts_raw_data(raw_file_uuid_str,process_from,process_to,ts_on_db)
-                processed_data = process_raw_data_interval(global_config,raw_data_grouped_by_ts)
-                external_features_df = extracted_features_df_to_external_features(processed_data)
-                prepared_to_save_processed_data = prepare_processed_data_to_save(global_config,processed_data,hole_mwd_interpolated_by_second,external_features_df)
-                db_helper.save_processed_data(hole_run_uuid,prepared_to_save_processed_data)
+                if raw_data_grouped_by_ts is not False:    
+                    processed_data = process_raw_data_interval(global_config,raw_data_grouped_by_ts)
+                    external_features_df = extracted_features_df_to_external_features(processed_data)
+                    prepared_to_save_processed_data = prepare_processed_data_to_save(global_config,processed_data,hole_mwd_interpolated_by_second,external_features_df)
+                    db_helper.save_processed_data(hole_run_uuid,prepared_to_save_processed_data)
                 #pdb.set_trace()
             #pdb.set_trace()
 
