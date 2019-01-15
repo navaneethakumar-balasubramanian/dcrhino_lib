@@ -142,7 +142,8 @@ def autocorrelate_l1h5(df, global_config):
     speed this up slightly by only calculating lads we want ... but for now is OK
 
     Key is to choose the number of points we will keep
-    auto_correlation_duration
+    auto_correlation_duration, the 'clipping' or 'trimming' of the acorr
+    vector will take place in the autocorrelate_trace method
     """
     try:
         print(global_config.autocorrelation_duration)
@@ -165,32 +166,32 @@ def autocorrelate_l1h5(df, global_config):
 
         for i_trace in range(num_traces):
             acorr_trace = autocorrelate_trace(df[component_id].iloc[i_trace], samples_per_trace)
-            output_dict[component_id][i_trace, :] = acorr_trace
+            output_dict[component_id][i_trace, :] = acorr_trace#[0:samples_per_trace]
         output_dict[component_id] = list(output_dict[component_id])
         df[component_id] = output_dict[component_id]
     print(time.time() - t0)
     return df
 
 
-h5_catalog_file = '/home/kkappler/data/datacloud/teck/pet_line_creek/pet_line_creek_h5_catalog.csv'
-h5_catalog = pd.read_csv(h5_catalog_file)
-h5_list = h5_catalog.file_path
-for h5_filename in h5_list:
-    l1h5_dataframe, global_config = cast_h5_to_dataframe(h5_filename)
-    pdb.set_trace()
-    resampled_dataframe = resample_l1h5(l1h5_dataframe, global_config)
-    autcorrelated_dataframe = autocorrelate_l1h5(l1h5_dataframe, global_config)
-    pdb.set_trace()
 
-def my_function():
+
+def test():
     """
     """
+    h5_catalog_file = '/home/kkappler/data/datacloud/teck/pet_line_creek/pet_line_creek_h5_catalog.csv'
+    h5_catalog = pd.read_csv(h5_catalog_file)
+    h5_list = h5_catalog.file_path
+    for h5_filename in h5_list:
+        l1h5_dataframe, global_config = cast_h5_to_dataframe(h5_filename)
+        resampled_dataframe = resample_l1h5(l1h5_dataframe, global_config)
+        autcorrelated_dataframe = autocorrelate_l1h5(resampled_dataframe, global_config)
+    #pdb.set_trace()
     pass
 
 def main():
     """
     """
-    my_function()
+    test()
     print("finito {}".format(datetime.datetime.now()))
 
 if __name__ == "__main__":
