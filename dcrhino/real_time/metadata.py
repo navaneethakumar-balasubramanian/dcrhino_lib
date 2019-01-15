@@ -239,8 +239,9 @@ METADATA_HEADER_FORMAT_KEYS = {
         'mult_pos_win':DataType.FLOAT,
         'mult_neg_win':DataType.FLOAT,
         'rhino_version':DataType.FLOAT,
-        'segy_output_step':DataType.STRING
-
+        'segy_output_step':DataType.STRING,
+        'data_message_identifier':DataType.STRING,
+        'info_message_identifier':DataType.STRING
         }
 
 
