@@ -64,6 +64,17 @@ def get_rhino_channel_map(drill_string_axis_ch, tangential_axis_ch):
             logger.info("90 degree rotated channel mapping detected")
             return RHINO_CHANNEL_MAP['rotate_90']
 
+def get_rhino_channel_map_v2(sensor_axial_axis):
+    """
+    """
+    if sensor_axial_axis == 1:
+        logger.info("normal channel mapping detected")
+        return RHINO_CHANNEL_MAP['normal']
+    elif sensor_axial_axis == 2:
+        logger.info("90 degree rotated channel mapping detected")
+        return RHINO_CHANNEL_MAP['rotate_90']
+
+
 def orientation_channel_remap(self, tr=None):
     """
     TODO: if no trace is passed, go load one from the segy using iread
