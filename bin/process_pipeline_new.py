@@ -129,6 +129,10 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, h5_helper,
 
 def get_features_extracted_v2(traces_dict, global_config, recipe_list):
     """
+    @type recipe_list: list
+    @param recipe list: this is a list of keywords which dictate the feature
+    extraction macro steps
+
     #can we get a definition of 'actual timestamp'... otherwise maybe we can give
     it a better name - "signed" actual_karl
 

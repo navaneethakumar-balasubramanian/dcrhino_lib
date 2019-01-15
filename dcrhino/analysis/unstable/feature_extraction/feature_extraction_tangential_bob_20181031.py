@@ -90,6 +90,9 @@ def get_tangential_despike_filtered_trace_features(trace_data, global_config,
 
     features['{}_multiple1_amplitude_poly'.format(component)] = max_poly_amplitude_mult1
     features['{}_multiple1_time_poly'.format(component)] = t_max_mult1
+    #</MULTIPLE>
+
+
     features['tangential_amplitude_ratio'] =  np.sqrt( features['tangential_multiple1_amplitude_poly'] / features['tangential_primary_amplitude_poly'])
     features['tangential_impedance']  = (1 - features['tangential_amplitude_ratio'] ) / (1 + features['tangential_amplitude_ratio'] )
     features['tangential_delay']  = features['tangential_multiple1_time_poly'] - features['tangential_primary_time_poly']
