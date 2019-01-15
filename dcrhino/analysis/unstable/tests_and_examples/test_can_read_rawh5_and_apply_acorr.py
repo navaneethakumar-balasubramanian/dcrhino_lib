@@ -40,15 +40,66 @@ from dcrhino.real_time.metadata import Metadata
 from dcrhino.process_pipeline.h5_helper import H5Helper
 from dcrhino.analysis.util.general_helper_functions import init_logging
 
-from
+
 logger = init_logging(__name__)
 
 def cast_h5_to_dataframe(h5_filename):
+    """
+
+    @property
+    """
+    column_labels = ['timestamp', 'timestamps', 'axial_data', 'tangential_data', 'radial_data' ]
+
+    dictionary_to_cast_as_df = {}
+
+    f1 = h5py.File(h5_filename,'r+')
+    h5_helper = H5Helper(f1)
+    global_config = Config(h5_helper.metadata)
+    pdb.set_trace()
+    trace_duration = global_config.trace_length_in_seconds
+    samples_per_trace = global_config.samples_per_trace
+    resampled_dt = 1./global_config.output_sampling_rate
+    #int(trace_duration * global_config.output_sampling_rate)
+
+    timestamp_offset = np.floor(h5_helper.min_ts)
+    relative_timestamps = h5_helper.ts - timestamp_offset
+    #typical_dt = np.median(np.diff(relative_timestamps))
+    integer_trace_sorted_timestamps = np.floor(relative_timestamps / trace_duration).astype(np.int32)
+    dtrace_array = np.diff(integer_trace_sorted_timestamps)
+    discontinuity_indices = np.where(dtrace_array > 0)[0]
+    num_traces = len(discontinuity_indices) #maybe off by one
+    print("there are {} traces".format(num_traces))
+    final_timestamps = resampled_dt * np.arange(samples_per_trace * num_traces)
+    final_timestamps = final_timestamps.reshape((num_traces, samples_per_trace))
+    timestamp_indices = final_timestamps[:,0] #select first timestamp from each trace as the timestamp for the trace
+    reference_array = np.split(np.arange(len(relative_timestamps)), discontinuity_indices+1)
+
+    data = np.asarray(h5_helper.data_xyz)
+    logger.info("data shape = {}".format(data.shape))
+
+    #t0 = time.time()
+    components_to_process = global_config.components_to_process
+    pdb.set_trace()
+    output_dict['timestamps'] = timestamp_indices + timestamp_offset
+    for component in components_to_process:
+        output_dict[component] = np.full(final_timestamps.shape, np.nan)
+    for component in components_to_process:
+        component_index = rhino_channel_map[component]
+        for i_trace in range(num_traces):
+
+            non_uniform_time_stamps = relative_timestamps[reference_array[i_trace]]
+            non_uniform_time_series = data[component_index, reference_array[i_trace]]
+            interp_function = interp1d(non_uniform_time_stamps, non_uniform_time_series,
+                                       kind='linear', bounds_error=False, fill_value=[0,])#'extrapolate')
+            output_dict[component][i_trace, :] = interp_function(final_timestamps[i_trace])
+
+
     return
 
 
 def convert_l1h5_to_resampled(h5_filename):
     """
+    @ToDo: Modify
     #<alternative method>
     for component in components_to_process:
         component_index = rhino_channel_map[component]
@@ -65,7 +116,7 @@ def convert_l1h5_to_resampled(h5_filename):
     output_dict = {}
     f1 = h5py.File(h5_filename,'r+')
     h5 = H5Helper(f1)
-    metadata = h5._extract_metadata_from_h5_file()
+    metadata = h5.metadata;#_extract_metadata_from_h5_file()
     components_to_process = metadata.components_to_collect.split(',')
 
     #pdb.set_trace()
@@ -127,7 +178,7 @@ def convert_l1h5_to_resampled(h5_filename):
     return output_df
 
 
-def
+#def
 #components_to_process = [0, 1, 2]
 #n_components =
 #def trim_data(data, expected_dimension):
@@ -146,6 +197,7 @@ h5_catalog_file = '/home/kkappler/data/datacloud/teck/pet_line_creek/pet_line_cr
 h5_catalog = pd.read_csv(h5_catalog_file)
 h5_list = h5_catalog.file_path
 for h5_filename in h5_list:
+    #l1h5_dataframe = cast_h5_to_dataframe(h5_filename)
     resampled_dataframe = convert_l1h5_to_resampled(h5_filename)
     pdb.set_trace()
 
