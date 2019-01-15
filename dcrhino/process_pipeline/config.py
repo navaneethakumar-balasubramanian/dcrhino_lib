@@ -7,8 +7,15 @@ Created on Thu Sep 27 21:14:10 2018
 """
 import numpy as np
 import pdb
+
+#from dcrhino.analysis.instrumentation.rhino import get_rhino_channel_map_v2
+from dcrhino.analysis.util.general_helper_functions import init_logging
 from dcrhino.real_time.metadata import METADATA_HEADER_FORMAT_KEYS
 from dcrhino.real_time.metadata import DataType
+
+
+logger = init_logging(__name__)
+
 
 class Config( object ):
     def __init__(self, metadata = None, env_config_parser=None, config_parser = None):
@@ -61,7 +68,7 @@ class Config( object ):
         self.bit_model = " "
         self.drill_string_total_length = " "
         self.sensor_installation_location = " "
-        
+
         #QC PLOT PARAMS
         self.peak_amplitude_axial_y_limit=0,1.5
         self.rc_axial_y_limit=0,1.0
@@ -93,9 +100,18 @@ class Config( object ):
             self.set_config_parser(config_parser)
         return
 
+    def component_index(self, component_id):
+        return self.get_component_index(component_id)
+
     def get_component_index(self, component_id):
         """
+
+        returns type integer
+        ::rparam:: this is the index assocaited with the component label
         """
+#        rhino_channel_map = get_rhino_channel_map_v2(self.sensor_axial_axis)
+#        component_index = rhino_channel_map[component]
+#        return component_index
         if component_id == 'axial':
             return self.sensor_axial_axis - 1
         elif component_id == 'tangential':
@@ -103,9 +119,13 @@ class Config( object ):
         elif component_id == 'radial':
             return 2
         else:
-            print("unknown componet requested {} DNE".format(component_id))
+            logger.critical("unknown componet requested {} DNE".format(component_id))
 
 
+    @property
+    def components_to_process(self):
+
+        return self.components_to_collect.split(',')
     @property
     def sampling_rate(self):
         return float(self.output_sampling_rate)
@@ -123,6 +143,14 @@ class Config( object ):
         deconvolution_filter_duration = float(self.deconvolution_filter_duration)
         number_of_taps_in_decon_filter = self._get_num_decon_taps(deconvolution_filter_duration, self.sampling_rate)
         return number_of_taps_in_decon_filter
+
+    @property
+    def samples_per_trace(self):
+#        if self.trace_length_in_seconds is None:
+#            logger.warning("trace_duration is None - Fix this condition in Global Config")
+#            logger.critical("trace duration should be a float")
+#            #self.trace_length_in_seconds
+        return int(self.trace_length_in_seconds * self.output_sampling_rate)
 
     @property
     def n_spiking_decon_filter_taps(self):
