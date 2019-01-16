@@ -241,7 +241,8 @@ METADATA_HEADER_FORMAT_KEYS = {
         'rhino_version':DataType.FLOAT,
         'segy_output_step':DataType.STRING,
         'data_message_identifier':DataType.STRING,
-        'info_message_identifier':DataType.STRING
+        'info_message_identifier':DataType.STRING,
+        'auto_correlation_trace_duration':DataType.FLOAT
         }
 
 
