@@ -3,6 +3,10 @@ import pdb
 from dcrhino.analysis.unstable.tests_and_examples.test_can_read_rawh5_and_apply_acorr_v2 import cast_h5_to_dataframe,resample_l1h5,autocorrelate_l1h5
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
 
+import logging
+
+logging.basicConfig(filename='h5_to_db.log', level=logging.INFO)
+
 
 h5_catalog_file = 'global_master_iterator.csv'
 #h5_catalog_file = '/home/thiago/example_for_muthu/iterator.csv'
