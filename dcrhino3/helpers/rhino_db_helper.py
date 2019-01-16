@@ -74,7 +74,7 @@ class RhinoDBHelper:
             self.client.execute('insert into '+self.acorr_configs_table_name+' values',[vars_to_save])
             return config_id
 	
-        def save_autocorr_traces(self,rig_id,sensor_id,config_id,file_id,timestamps,axial,tangential,radial):
+        def save_autocorr_traces(self,rig_id,sensor_id,digitizer_id,config_id,file_id,timestamps,axial,tangential,radial):
             dups = self.check_for_pre_saved_acorr_traces(timestamps,sensor_id)
             
             df = pd.DataFrame()
@@ -82,6 +82,7 @@ class RhinoDBHelper:
             df['microtime'] = 0
             df['rig_id'] = rig_id
             df['sensor_id'] = sensor_id
+            df['digitizer_id'] = digitizer_id 
             df['axial'] = axial.tolist()
             df['tangential'] = tangential.tolist()
             df['radial'] = radial.tolist()
