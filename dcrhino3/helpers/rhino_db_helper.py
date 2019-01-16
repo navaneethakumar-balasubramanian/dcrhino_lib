@@ -13,6 +13,7 @@ import numpy as np
 import pdb
 import pandas as pd
 import logging
+import blaze as bz
 
 class RhinoDBHelper:
         def __init__(self,host='localhost',user='default',password='',database='test',compression='lz4'):
@@ -20,6 +21,7 @@ class RhinoDBHelper:
             self.acorr_traces_table_name = 'acorr_traces'
             self.acorr_files_table_name = 'acorr_files'
             self.acorr_configs_table_name = 'acorr_configs'
+            self.max_batch_to_query = 10000
             
         def get_file_id_from_file_path(self,file_path):
             query_vars={
@@ -49,9 +51,9 @@ class RhinoDBHelper:
             file_id = str(uuid.uuid4())
             vars_to_save = {
                         'id':self.uuid_string_to_num(file_id),
-                        'file_path':file_path
-                }
-            self.client.execute("insert into "+self.acorr_files_table_name+" values",[vars_to_save])
+                        'file_path' : file_path
+            }
+            self.client.execute("insert into "+ self.acorr_files_table_name +" values",[vars_to_save])
             return file_id
 
         def get_autocorr_config_id(self,config_str):
@@ -82,22 +84,32 @@ class RhinoDBHelper:
             df['microtime'] = 0
             df['rig_id'] = rig_id
             df['sensor_id'] = sensor_id
-            df['digitizer_id'] = digitizer_id 
+            df['digitizer_id'] = digitizer_id
             df['axial'] = axial.tolist()
             df['tangential'] = tangential.tolist()
             df['radial'] = radial.tolist()
             df['acorr_file_id'] = self.uuid_string_to_num(file_id)
             df['acorr_config_id'] = self.uuid_string_to_num(config_id)
             
+            
             if len(dups)>0:
                 df = df[~df['timestamps'].isin(dups)]
                 logging.warning("PREVENTING DUPLICATES TIMESTAMPS ON THIS SENSOR_ID:" + sensor_id + " FILE_ID:" +file_id) 
                 #raise ValueError('There is already data for this sensor id and these timestamps on the DB',sensor_id,dups)
-            self.client.execute('insert into '+self.acorr_traces_table_name+' values',df.values.tolist())
+            
+            n = self.max_batch_to_query
+            list_df = [df[i:i+n] for i in range(0,df.shape[0],n)]
+            for chunk in list_df:   
+                #pdb.set_trace()
+                self.client.execute('insert into '+self.acorr_traces_table_name+' values',chunk.values.tolist())
 
         def check_for_pre_saved_acorr_traces(self,timestamps,sensor_id):
             timestamps = np.unique(timestamps)
-            duplicate = self.client.execute('select distinct(timestamp) from ' + self.acorr_traces_table_name + " where timestamp IN (%s) order by timestamp" % ','.join(timestamps.astype(str)))
+            duplicate = []
+            splitted =  np.array_split(timestamps, int(len(timestamps)/self.max_batch_to_query)+1)
+            
+            for times_batch in splitted:
+                duplicate += self.client.execute('select distinct(timestamp) from ' + self.acorr_traces_table_name + " where timestamp IN (%s) order by timestamp" % ','.join(timestamps.astype(str)))
             return duplicate
         
         def get_autocor_traces_from_sensor_id(self,sensor_id,timestamps):
