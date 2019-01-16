@@ -89,7 +89,7 @@ class RhinoDBHelper:
             df['acorr_config_id'] = self.uuid_string_to_num(config_id)
             
             if len(dups)>0:
-                df = df[~df['timestamp'].isin(dups)]
+                df = df[~df['timestamps'].isin(dups)]
                 logging.CRITICAL("PREVENTING DUPLICATES TIMESTAMPS ON THIS SENSOR",sensor_id,file_id) 
                 #raise ValueError('There is already data for this sensor id and these timestamps on the DB',sensor_id,dups)
             self.client.execute('insert into '+self.acorr_traces_table_name+' values',df.values.tolist())
