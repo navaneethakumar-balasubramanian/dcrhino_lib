@@ -12,6 +12,7 @@ import time
 import numpy as np
 import pdb
 import pandas as pd
+import logging
 
 class RhinoDBHelper:
         def __init__(self,host='localhost',user='default',password='',database='test',compression='lz4'):
@@ -75,8 +76,7 @@ class RhinoDBHelper:
 	
         def save_autocorr_traces(self,rig_id,sensor_id,config_id,file_id,timestamps,axial,tangential,radial):
             dups = self.check_for_pre_saved_acorr_traces(timestamps,sensor_id)
-            if len(dups)>0:
-                raise ValueError('There is already data for this sensor id and these timestamps on the DB',sensor_id,dups)
+            
             df = pd.DataFrame()
             df['timestamps'] = timestamps
             df['microtime'] = 0
@@ -86,7 +86,12 @@ class RhinoDBHelper:
             df['tangential'] = tangential.tolist()
             df['radial'] = radial.tolist()
             df['acorr_file_id'] = self.uuid_string_to_num(file_id)
-            df['acorr_config_id'] = self.uuid_string_to_num(file_id)
+            df['acorr_config_id'] = self.uuid_string_to_num(config_id)
+            
+            if len(dups)>0:
+                df = df[~df['timestamp'].isin(dups)]
+                logging.CRITICAL("PREVENTING DUPLICATES TIMESTAMPS ON THIS SENSOR",sensor_id,file_id)
+                #raise ValueError('There is already data for this sensor id and these timestamps on the DB',sensor_id,dups)
             self.client.execute('insert into '+self.acorr_traces_table_name+' values',df.values.tolist())
 
         def check_for_pre_saved_acorr_traces(self,timestamps,sensor_id):
