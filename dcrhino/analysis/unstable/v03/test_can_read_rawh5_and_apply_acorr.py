@@ -31,6 +31,7 @@ import os
 import pdb
 import pandas as pd
 from scipy.interpolate import interp1d
+import scipy.linalg
 import time
 
 
@@ -165,14 +166,21 @@ def autocorrelate_l1h5(df, global_config):
         output_dict[component_id] = np.full((num_traces, samples_per_trace), np.nan) #Allocate Memory
 
         for i_trace in range(num_traces):
-            acorr_trace = autocorrelate_trace(df[component_id].iloc[i_trace], samples_per_trace)
+            #pdb.set_trace()
+            input_trace = df[component_id].iloc[i_trace]
+            acorr_trace = autocorrelate_trace(input_trace, samples_per_trace)
             output_dict[component_id][i_trace, :] = acorr_trace#[0:samples_per_trace]
         output_dict[component_id] = list(output_dict[component_id])
-        df[component_id] = output_dict[component_id]
+
+        #df[component_id] = output_dict[component_id]
+    output_dict['timestamp'] = df['timestamp']
+    dff = pd.DataFrame(output_dict, index=df.index)
     print(time.time() - t0)
-    return df
+    return dff
 
 
+def lead_channel_decon():
+    pass
 
 
 def test():
@@ -185,7 +193,8 @@ def test():
         l1h5_dataframe, global_config = cast_h5_to_dataframe(h5_filename)
         resampled_dataframe = resample_l1h5(l1h5_dataframe, global_config)
         autcorrelated_dataframe = autocorrelate_l1h5(resampled_dataframe, global_config)
-    #pdb.set_trace()
+        #pdb.set_trace()
+        print('Oi!')
     pass
 
 def main():
