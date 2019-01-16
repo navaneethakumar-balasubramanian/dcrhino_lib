@@ -19,5 +19,4 @@ for h5_filename in h5_list:
     #
     resampled_dataframe = resample_l1h5(l1h5_dataframe, global_config)
     autcorrelated_dataframe = autocorrelate_l1h5(resampled_dataframe, global_config)
-    dbhelper.save_autocorr_traces(global_config.rig_id,global_config.sensor_serial_number+str(global_config.digitizer_serial_number),config_id,file_id,autcorrelated_dataframe['timestamp'],autcorrelated_dataframe['axial'],autcorrelated_dataframe['radial'],autcorrelated_dataframe['tangential'])
-
+    dbhelper.save_autocorr_traces(global_config.rig_id,global_config.sensor_serial_number,str(global_config.digitizer_serial_number),config_id,file_id,autcorrelated_dataframe['timestamp'],autcorrelated_dataframe['axial'],autcorrelated_dataframe['radial'],autcorrelated_dataframe['tangential'])
