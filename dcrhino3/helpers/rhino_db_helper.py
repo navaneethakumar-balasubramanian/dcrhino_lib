@@ -20,7 +20,7 @@ class RhinoDBHelper:
             self.client = Client(host,user=user,password=password,database=database,compression=compression)
             self.acorr_traces_table_name = 'acorr_traces'
             self.acorr_files_table_name = 'acorr_files'
-            self.acorr_configs_table_name = 'acorr_configs'
+            self.acorr_configs_table_name = 'acorr_files_configs'
             self.max_batch_to_query = 5000
             
         def get_file_id_from_file_path(self,file_path):
@@ -29,95 +29,102 @@ class RhinoDBHelper:
                         }
             q = self.client.execute('select UUIDNumToString(id) from '+self.acorr_files_table_name+' where file_path=%(file_path)s',query_vars)
             if len(q) == 0:
-                return self.create_acorr_file(file_path)
+                return False
             return q[0][0]
         
-
-        
-        def create_acorr_conf(self,file_id,config_str,version=1):
+        def create_acorr_file(self,file_path,rig_id,sensor_id,digitizer_id):
+            file_id = str(uuid.uuid4())
             vars_to_save = {
                         'id':self.uuid_string_to_num(file_id),
-                        'version':version,
-                        'json_str':config_str,
-                        'created_at_ts':int(time.time())
+                        'file_path' : file_path,
+                        'rig_id':rig_id,
+                        'sensor_id':sensor_id,
+                        'digitizer_id':digitizer_id
+            }
+            self.client.execute("insert into "+ self.acorr_files_table_name +" values",[vars_to_save])
+            return file_id
+        
+        def create_new_acorr_file_conf(self,file_id,config_str):
+            version = self.get_last_version_file_config(file_id)
+            last_version_config = self.get_file_config(file_id,version)
+            if last_version_config == config_str:
+                return version
+            vars_to_save = {
+                        'acorr_file_id':self.uuid_string_to_num(file_id),
+                        'version':version+1,
+                        'created_at_ts':int(time.time()),
+                        'json_str':config_str
+                        
                 }
             self.client.execute("insert into "+self.acorr_configs_table_name+" values",[vars_to_save])
-            return file_id
+            return version+1
+        
+        def get_file_config(self,file_id,version):
+            query_vars = { 'version':version}
+            q = self.client.execute('select json_str from '+self.acorr_configs_table_name+" where UUIDNumToString(acorr_file_id) = '"+str(file_id)+"' and version= " + str(version) )
+            if len(q) > 0:
+                return q[0][0]
+            return False
+        
+        def get_last_version_file_config(self,file_id):
+            return int(self.client.execute('select max(version) from '+self.acorr_configs_table_name+" where UUIDNumToString(acorr_file_id) = '"+str(file_id)+"'")[0][0])
+
             
         def uuid_string_to_num(self,uuid_string):
             return self.client.execute("select UUIDStringToNum('"+uuid_string+"')")[0][0]
     
-        def create_acorr_file(self,file_path):
-            file_id = str(uuid.uuid4())
-            vars_to_save = {
-                        'id':self.uuid_string_to_num(file_id),
-                        'file_path' : file_path
-            }
-            self.client.execute("insert into "+ self.acorr_files_table_name +" values",[vars_to_save])
-            return file_id
-
-        def get_autocorr_config_id(self,config_str):
-            query_vars={
-                        'config':config_str
-                        }
-            q = self.client.execute('select UUIDNumToString(id) from '+self.acorr_configs_table_name+' where json_str=%(config)s',query_vars)
-            if len(q) == 0:
-                return self.save_config(config_str)
-            return q[0][0]
-        
-        def save_config(self,config_str,version=0):
-            config_id = str(uuid.uuid4())
-            vars_to_save = {
-        			'id':self.uuid_string_to_num(config_id),
-        			'version':version,
-        			'created_at_ts':int(time.time()),
-                'json_str':config_str
-                                }
-            self.client.execute('insert into '+self.acorr_configs_table_name+' values',[vars_to_save])
-            return config_id
-	
-        def save_autocorr_traces(self,rig_id,sensor_id,digitizer_id,config_id,file_id,timestamps,axial,tangential,radial):
-            dups = self.check_for_pre_saved_acorr_traces(timestamps,sensor_id)
-            
+    
+        def save_autocorr_traces(self,file_id,timestamps,axial,tangential,radial):
             df = pd.DataFrame()
             df['timestamps'] = np.array(timestamps).astype(int)
             df['microtime'] = 0
-            df['rig_id'] = rig_id
-            df['sensor_id'] = sensor_id
-            df['digitizer_id'] = digitizer_id
             df['axial'] = axial.tolist()
             df['tangential'] = tangential.tolist()
             df['radial'] = radial.tolist()
             df['acorr_file_id'] = self.uuid_string_to_num(file_id)
-            df['acorr_config_id'] = self.uuid_string_to_num(config_id)
+        
             
             
-            if len(dups)>0:
-                df = df[~df['timestamps'].isin(dups)]
-                logging.warning("PREVENTING DUPLICATES TIMESTAMPS ON THIS SENSOR_ID:" + sensor_id + " FILE_ID:" +file_id) 
-                #raise ValueError('There is already data for this sensor id and these timestamps on the DB',sensor_id,dups)
             
             n = self.max_batch_to_query
             list_df = [df[i:i+n] for i in range(0,df.shape[0],n)]
             for chunk in list_df:   
-                #pdb.set_trace()
                 self.client.execute('insert into '+self.acorr_traces_table_name+' values',chunk.values.tolist())
 
         def check_for_pre_saved_acorr_traces(self,timestamps,sensor_id):
             if len(timestamps) == 0 :
                 return np.array([])
+            files_ids = self.get_files_id_from_sensor_id(sensor_id)
+            if len(files_ids) == 0 :
+                return np.array([])
+
+            
+
             timestamps = np.unique(timestamps).astype(int)
             duplicate = []
             splitted =  np.array_split(timestamps, int(len(timestamps)/self.max_batch_to_query)+1)
             
+            
             for times_batch in splitted:
-                duplicate += self.client.execute('select distinct(timestamp) from ' + self.acorr_traces_table_name + " where timestamp IN (%s) and sensor_id = '%s' order by timestamp" % (','.join(times_batch.astype(str)),str(sensor_id)))
+                duplicate += self.client.execute('select distinct(timestamp) from ' + self.acorr_traces_table_name + " where timestamp IN (%s) and UUIDNumToString(acorr_file_id) IN (%s) order by timestamp" % (','.join(times_batch.astype(str)),','.join(files_ids.astype(str))))
             return np.unique(np.array(duplicate).flatten())
         
-        def get_autocor_traces_from_sensor_id(self,sensor_id,timestamps):
-            timestamps = np.unique(timestamps)
-            result = self.client.execute('select timestamp,microtime,rig_id,UUIDNumToString(acorr_files_id) as acorr_files_id,axial_trace,tangential_trace,radial_trace from ' + self.acorr_traces_table_name + " where timestamp IN (%s) order by timestamp" % ','.join(timestamps.astype(str)))
-            return self.query_result_to_pd(result,['timestamp','microtime','rig_id','accor_files_id','axial_trace','tangential_trace','radial_trace'])
+        def get_files_id_from_sensor_id(self,sensor_id):
+            files_ids = self.client.execute('select distinct(UUIDNumToString(id)) from ' + self.acorr_files_table_name + " where sensor_id = '%s'" % (str(sensor_id)))[0]
+            files_ids = ["'" + x + "'" for x in files_ids]
+            return np.array(files_ids)
+        
+        def get_autocor_traces_from_sensor_id(self,sensor_id,min_ts = 0, max_ts = 9999999999):
+            result = self.client.execute('select timestamp,microtime,rig_id,axial_trace,tangential_trace,radial_trace from ' + self.acorr_traces_table_name + " where sensor_id = '"+str(sensor_id)+ "' and timestamp > "+str(min_ts)+" and timestamp < " +str(max_ts)+" order by timestamp" )
+            df = self.query_result_to_pd(result,['timestamp','microtime','rig_id','axial_trace','tangential_trace','radial_trace'])
+            df = self.timestamp_microtime_to_float(df)
+            df['sensor_id'] = sensor_id
+            return df
+        
+        def timestamp_microtime_to_float(self,df):
+            df = df.copy()
+            df['timestamp'] = (df['timestamp'].astype(str) + "." + df['microtime'].astype(str)).astype(float)
+            return df.drop(columns=['microtime'])
         
         def query_result_to_pd(self,result,columns):
             return pd.DataFrame(result,columns=columns)
