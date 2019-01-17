@@ -21,7 +21,7 @@ class RhinoDBHelper:
             self.acorr_traces_table_name = 'acorr_traces'
             self.acorr_files_table_name = 'acorr_files'
             self.acorr_configs_table_name = 'acorr_configs'
-            self.max_batch_to_query = 10000
+            self.max_batch_to_query = 5000
             
         def get_file_id_from_file_path(self,file_path):
             query_vars={
@@ -80,7 +80,7 @@ class RhinoDBHelper:
             dups = self.check_for_pre_saved_acorr_traces(timestamps,sensor_id)
             
             df = pd.DataFrame()
-            df['timestamps'] = timestamps
+            df['timestamps'] = np.array(timestamps).astype(int)
             df['microtime'] = 0
             df['rig_id'] = rig_id
             df['sensor_id'] = sensor_id
@@ -104,13 +104,15 @@ class RhinoDBHelper:
                 self.client.execute('insert into '+self.acorr_traces_table_name+' values',chunk.values.tolist())
 
         def check_for_pre_saved_acorr_traces(self,timestamps,sensor_id):
-            timestamps = np.unique(timestamps)
+            if len(timestamps) == 0 :
+                return np.array([])
+            timestamps = np.unique(timestamps).astype(int)
             duplicate = []
             splitted =  np.array_split(timestamps, int(len(timestamps)/self.max_batch_to_query)+1)
             
             for times_batch in splitted:
-                duplicate += self.client.execute('select distinct(timestamp) from ' + self.acorr_traces_table_name + " where timestamp IN (%s) order by timestamp" % ','.join(timestamps.astype(str)))
-            return duplicate
+                duplicate += self.client.execute('select distinct(timestamp) from ' + self.acorr_traces_table_name + " where timestamp IN (%s) and sensor_id = '%s' order by timestamp" % (','.join(times_batch.astype(str)),str(sensor_id)))
+            return np.unique(np.array(duplicate).flatten())
         
         def get_autocor_traces_from_sensor_id(self,sensor_id,timestamps):
             timestamps = np.unique(timestamps)
