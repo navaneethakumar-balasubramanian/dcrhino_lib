@@ -110,7 +110,9 @@ class RhinoDBHelper:
             return np.unique(np.array(duplicate).flatten())
         
         def get_files_id_from_sensor_id(self,sensor_id):
-            files_ids = self.client.execute('select distinct(UUIDNumToString(id)) from ' + self.acorr_files_table_name + " where sensor_id = '%s'" % (str(sensor_id)))[0]
+            files_ids = self.client.execute('select distinct(UUIDNumToString(id)) from ' + self.acorr_files_table_name + " where sensor_id = '%s'" % (str(sensor_id)))
+            if len(files_ids) > 0 :
+                files_ids = files_ids[0]
             files_ids = ["'" + x + "'" for x in files_ids]
             return np.array(files_ids)
         
