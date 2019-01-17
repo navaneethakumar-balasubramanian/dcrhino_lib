@@ -25,7 +25,9 @@ for h5_filename in h5_list:
     
     file_id = dbhelper.get_file_id_from_file_path(h5_filename)
     if file_id is False:
-        file_id = dbhelper.create_acorr_file(h5_filename,global_config.rig_id,global_config.sensor_serial_number,str(global_config.digitizer_serial_number))
+        min_ts = l1h5_dataframe['timestamp'].min()
+        max_ts = l1h5_dataframe['timestamp'].max()
+        file_id = dbhelper.create_acorr_file(h5_filename,global_config.rig_id,global_config.sensor_serial_number,str(global_config.digitizer_serial_number),min_ts,max_ts)
     config = dbhelper.create_new_acorr_file_conf(file_id,str(vars(global_config)))
     resampled_dataframe = resample_l1h5(l1h5_dataframe, global_config)
     autcorrelated_dataframe = autocorrelate_l1h5(resampled_dataframe, global_config)
