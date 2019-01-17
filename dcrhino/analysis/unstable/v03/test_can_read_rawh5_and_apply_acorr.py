@@ -193,6 +193,9 @@ def test():
         l1h5_dataframe, global_config = cast_h5_to_dataframe(h5_filename)
         resampled_dataframe = resample_l1h5(l1h5_dataframe, global_config)
         autcorrelated_dataframe = autocorrelate_l1h5(resampled_dataframe, global_config)
+#        i_trace = 13
+#        plt.plot(resampled_dataframe['axial'].iloc[i_trace]);plt.show()
+#        plt.plot(autcorrelated_dataframe['axial'].iloc[i_trace]);plt.show()
         #pdb.set_trace()
         print('Oi!')
     pass

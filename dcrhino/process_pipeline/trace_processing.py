@@ -25,10 +25,11 @@ def trim_trace(min_lag_trimmed_trace, max_lag_trimmed_trace, num_taps_in_decon_f
     return little_data
 
 class TraceProcessing:
-    def __init__(self,global_config,is_ide_file,accelerometer_max_voltage):
+    def __init__(self,global_config,is_ide_file,accelerometer_max_voltage,rhino_version):
         self.config = global_config
         self.is_ide_file = is_ide_file
         self.accelerometer_max_voltage = accelerometer_max_voltage
+        self.rhino_version = rhino_version
 
     def process(self, data, data_ts, component, sensitivity, debug=False):
         calibrated_actual_second = self._apply_calibration(data, sensitivity)
@@ -156,8 +157,8 @@ class TraceProcessing:
         try:
             ATAinv = scipy.linalg.inv(ATA)
         except np.linalg.linalg.LinAlgError:
-            #logger.error('matrix inversion failed')
-            print('matrix inversion failed')
+            logger.error('matrix inversion failed')
+            # print('matrix inversion failed')
             return data, R_xx[0]
         x_filter = nominal_scale_factor*ATAinv[0,:]
         deconv_trace = np.convolve(x_filter, data, 'same')
@@ -166,6 +167,7 @@ class TraceProcessing:
     def _interpolate_data(self, digitizer_timestamps, data):
             interp_data = np.interp(self.config.ideal_timestamps, digitizer_timestamps,data)
             return interp_data
+            # return data
 
     def _apply_calibration(self,values_arr,sensitivity):
         output = values_arr
@@ -175,7 +177,20 @@ class TraceProcessing:
             # NATAL SAID ITS CORRECT!
             return output / sensitivity
         else:
-            output = (output * 5.0) / 65535
-            output = (self.accelerometer_max_voltage/2.0) - output
-            output = output / (sensitivity/1000.0)
+            if self.rhino_version == '1.0':
+                output = (output * 5.0) / 65535 #Covert to Voltage
+                output = (self.accelerometer_max_voltage/2.0) - output #Calculate difference from reference voltage
+                output = output / (sensitivity/1000.0) #Convert to G's
+            elif self.rhino_version == '1.1':
+                #<Convert to Voltage>
+                pow_of_2 = pow(2.0,32)
+                volt_per_bit = 5.0/pow(2.0,31)
+                indices = output & 0x80000000 == 0x80000000
+                output[indices] = output[indices] - pow_of_2
+                output = np.round(output/2.0,0) * volt_per_bit
+                #</Convert to Voltage>
+                #<Calculate difference from reference voltage>
+                #</Calculate difference from reference voltage>
+                #<Convert to G's>
+                #</Convert to G's>
             return output
