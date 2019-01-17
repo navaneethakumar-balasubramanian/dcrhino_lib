@@ -81,7 +81,7 @@ def deconvolve_trace(trace, filter_length, **kwargs):#plot=False):
     try:
         ATAinv = scipy.linalg.inv(ATA)
     except np.linalg.linalg.LinAlgError:
-        logger.warning('matrix inversion failed')
+        # logger.warning('matrix inversion failed')
         return trace, R_xx[0]
     x_filter = nominal_scale_factor*ATAinv[0,:]
     deconv_trace = np.convolve(x_filter, trace.data, 'same')
