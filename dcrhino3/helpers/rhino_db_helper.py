@@ -32,14 +32,16 @@ class RhinoDBHelper:
                 return False
             return q[0][0]
         
-        def create_acorr_file(self,file_path,rig_id,sensor_id,digitizer_id):
+        def create_acorr_file(self,file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts):
             file_id = str(uuid.uuid4())
             vars_to_save = {
                         'id':self.uuid_string_to_num(file_id),
                         'file_path' : file_path,
                         'rig_id':rig_id,
                         'sensor_id':sensor_id,
-                        'digitizer_id':digitizer_id
+                        'digitizer_id':digitizer_id,
+                        'min_ts':int(min_ts),
+                        'max_ts':int(max_ts)
             }
             self.client.execute("insert into "+ self.acorr_files_table_name +" values",[vars_to_save])
             return file_id
