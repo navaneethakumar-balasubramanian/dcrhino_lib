@@ -74,6 +74,13 @@ logger = init_logging(__name__)
 
 def lead_channel_decon(df, global_config):
     """
+    @TODO: need to add a control here for "clipping" or "trimming" these
+    traces down.  The way this was handled is with min_lag_trimmed_trace
+    and max_lag_trimmed_trace; These were set to -0.1 (min) and +0.1 (max).
+    We need to make sure that the traces have enough 'slop' on the
+    edges that the filtering edge effects do not create artefacts in the data.
+
+    The trimming should happen after the
     """
 #
     t0 = time.time()
