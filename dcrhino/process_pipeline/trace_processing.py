@@ -1,9 +1,9 @@
 import numpy as np
-from rhino_acquisition.real_time.filters import FIRLSFilter
+from dcrhino.realtime.process_pipeline.filters import FIRLSFilter
 import scipy
 import scipy.signal as ssig
 import pdb
-from rhino_acquisition.real_time.seismic_processing import calculate_spiking_decon_filter
+from dcrhino.analysis.signal_processing.seismic_processing import calculate_spiking_decon_filter
 
 def trim_trace(min_lag_trimmed_trace, max_lag_trimmed_trace, num_taps_in_decon_filter,
                output_sampling_rate, data):
