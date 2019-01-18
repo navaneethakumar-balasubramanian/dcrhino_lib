@@ -1,9 +1,9 @@
 import numpy as np
-from dcrhino.process_pipeline.filters import FIRLSFilter
+from rhino_acquisition.real_time.filters import FIRLSFilter
 import scipy
 import scipy.signal as ssig
 import pdb
-from dcrhino.analysis.signal_processing.seismic_processing import calculate_spiking_decon_filter
+from rhino_acquisition.real_time.seismic_processing import calculate_spiking_decon_filter
 
 def trim_trace(min_lag_trimmed_trace, max_lag_trimmed_trace, num_taps_in_decon_filter,
                output_sampling_rate, data):
@@ -32,6 +32,7 @@ class TraceProcessing:
         self.rhino_version = rhino_version
 
     def process(self, data, data_ts, component, sensitivity, debug=False):
+        # pdb.set_trace()
         calibrated_actual_second = self._apply_calibration(data, sensitivity)
         max_acceleration = np.max(calibrated_actual_second)
         min_acceleration = np.min(calibrated_actual_second)
@@ -157,7 +158,7 @@ class TraceProcessing:
         try:
             ATAinv = scipy.linalg.inv(ATA)
         except np.linalg.linalg.LinAlgError:
-            logger.error('matrix inversion failed')
+            # logger.error('matrix inversion failed')
             # print('matrix inversion failed')
             return data, R_xx[0]
         x_filter = nominal_scale_factor*ATAinv[0,:]
@@ -170,23 +171,26 @@ class TraceProcessing:
             # return data
 
     def _apply_calibration(self,values_arr,sensitivity):
-        output = values_arr
 
+        output = values_arr
         if self.is_ide_file:
             # TODO CHECK THAT
             # NATAL SAID ITS CORRECT!
             return output / sensitivity
         else:
-            if self.rhino_version == '1.0':
+            if float(self.rhino_version) == 1.0:
                 output = (output * 5.0) / 65535 #Covert to Voltage
                 output = (self.accelerometer_max_voltage/2.0) - output #Calculate difference from reference voltage
                 output = output / (sensitivity/1000.0) #Convert to G's
-            elif self.rhino_version == '1.1':
+            elif float(self.rhino_version) == 1.1:
                 #<Convert to Voltage>
-                pow_of_2 = pow(2.0,32)
+                tmp = output
+                output = output.astype(np.int32)#need to change the type so that the operation - pow_of_2 works
+                pow_of_2 = pow(2,32)
                 volt_per_bit = 5.0/pow(2.0,31)
-                indices = output & 0x80000000 == 0x80000000
-                output[indices] = output[indices] - pow_of_2
+                # output = np.asarray([x - pow_of_2 if x& 0x80000000 == 0x80000000 else x for x in output])
+                mask_true_or_false = tmp&0x80000000==0x80000000
+                output[mask_true_or_false] = tmp[mask_true_or_false]-pow_of_2
                 output = np.round(output/2.0,0) * volt_per_bit
                 #</Convert to Voltage>
                 #<Calculate difference from reference voltage>
