@@ -104,11 +104,13 @@ def cast_h5_to_dataframe(h5_filename):
 
 def resample_l1h5(df, global_config, upsample_factor=1.25):
     """
-    @TODO: need to get the upsample factor from
+    @TODO: need to get the upsample factor from global config
+    @note: time handling: first sample is df['timestamp'], and dt is global_config.output_sampling_rate
     """
     data_processing_stage_designator = 'resampled'
     try:
         print(global_config.upsample_factor)
+        global_config.output_sampling_rate *= global_config.upsample_factor
     except AttributeError:
         logger.warning("this warning will be removed once the \
                    upsample factor is coming from the global cfg")
@@ -145,9 +147,14 @@ def autocorrelate_l1h5(df, global_config):
     Key is to choose the number of points we will keep
     auto_correlation_duration, the 'clipping' or 'trimming' of the acorr
     vector will take place in the autocorrelate_trace method
+
+    @note: time handling: dt is global_config.output_sampling_rate, first sample
+    is not at a well defined time.  We can use  df['timestamp'] as a placeholder
+
     """
     try:
         print(global_config.autocorrelation_duration)
+        autocorrelation_duration = global_config.autocorrelation_duration
     except AttributeError:
         logger.warning("this warning will be removed once the \
                    upsample factor is coming from the global cfg")
@@ -160,7 +167,6 @@ def autocorrelate_l1h5(df, global_config):
     samples_per_trace = int(autocorrelation_duration / global_config.dt)
 
     num_traces = len(df['timestamp'])
-
 
     for component_id in global_config.components_to_process:
         output_dict[component_id] = np.full((num_traces, samples_per_trace), np.nan) #Allocate Memory
