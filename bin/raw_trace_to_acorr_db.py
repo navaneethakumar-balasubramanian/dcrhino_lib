@@ -1,0 +1,65 @@
+# -*- coding: utf-8 -*-
+
+import argparse
+import pdb
+
+import glob
+import os
+import logging
+
+from dcrhino3.models.traces.raw_trace import RawTraceData
+from dcrhino3.models.env_config import EnvConfig
+from dcrhino3.helpers.general_helper_functions import init_logging,splitDataFrameIntoSmaller
+
+from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
+
+logger = init_logging(__name__)
+
+def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
+    raw_trace_data = RawTraceData()
+    raw_trace_data.load_from_h5(h5_file_path)
+    l1h5_dataframe = raw_trace_data.dataframe
+    global_config = raw_trace_data.global_config_by_index(0)
+    db_helper = RhinoDBHelper('13.66.189.94',database='test_for_karl_2')
+    dupes = db_helper.check_for_pre_saved_acorr_traces(l1h5_dataframe['timestamp'],global_config.sensor_serial_number)
+
+    if len(dupes)>0:
+        l1h5_dataframe = l1h5_dataframe[~l1h5_dataframe['timestamp'].isin(dupes)]
+        logger.warning("PREVENTING DUPLICATES TIMESTAMPS ON THIS SENSOR_ID:" + global_config.sensor_serial_number + " FILE_ID:" +h5_file_path)
+
+    file_id = db_helper.get_file_id_from_file_path(h5_file_path)
+
+    if file_id is False:
+        min_ts = l1h5_dataframe['timestamp'].min()
+        max_ts = l1h5_dataframe['timestamp'].max()
+        file_id = db_helper.create_acorr_file(h5_file_path,global_config.rig_id,global_config.sensor_serial_number,str(global_config.digitizer_serial_number),min_ts,max_ts)
+
+    config = db_helper.create_new_acorr_file_conf(file_id,str(vars(global_config)))
+
+
+    list_df = splitDataFrameIntoSmaller(l1h5_dataframe.reset_index(drop=True),chunk_size)
+
+    for chunk in list_df:
+        resampled_dataframe = raw_trace_data.resample_l1h5(chunk, global_config)
+        autcorrelated_dataframe = raw_trace_data.autocorrelate_l1h5(resampled_dataframe, global_config)
+        db_helper.save_autocorr_traces(file_id,autcorrelated_dataframe['timestamp'],axial=autcorrelated_dataframe['axial'],radial=autcorrelated_dataframe['radial'],tangential=autcorrelated_dataframe['tangential'])
+
+
+if __name__ == '__main__':
+    clickhouse_logger = logging.getLogger('clickhouse_driver.connection')
+    clickhouse_logger.setLevel(50)
+    argparser = argparse.ArgumentParser(description="Copyright (c) 2018 DataCloud")
+    argparser.add_argument('-env', '--env-file', help="ENV File Path", default=False)
+    argparser.add_argument("src_path", metavar="path", type=str,
+    help="Path to files to be merged; enclose in quotes, accepts * as wildcard for directories or filenames")
+    args = argparser.parse_args()
+
+    env_config = EnvConfig(args.env_file)
+    files = glob.glob(args.src_path)
+
+    if not files:
+        print  'File does not exist: ' + args.src_path
+    for file in files:
+        if '.h5' in os.path.splitext(file)[1]:
+            logger.info("PROCESSING FILE:" + str( file))
+            raw_trace_h5_to_acorr_db(file,env_config)

@@ -12,10 +12,14 @@ import time
 import numpy as np
 import pdb
 import pandas as pd
-import logging
+
+from dcrhino3.helpers.general_helper_functions import init_logging
+
+logger = init_logging(__name__)
 
 class RhinoDBHelper:
         def __init__(self,host='localhost',user='default',password='',database='test',compression='lz4'):
+            logger.info('Using database '+str(database)+' on '+str(host))
             self.client = Client(host,user=user,password=password,database=database,compression=compression)
             self.acorr_traces_table_name = 'acorr_traces'
             self.acorr_files_table_name = 'acorr_files'
@@ -26,15 +30,18 @@ class RhinoDBHelper:
             query_vars={
                         'file_path':file_path
                         }
-            q = self.client.execute('select UUIDNumToString(id) from '+self.acorr_files_table_name+' where file_path=%(file_path)s',query_vars)
+            q = self.client.execute('select id from '+self.acorr_files_table_name+' where file_path=%(file_path)s',query_vars)
             if len(q) == 0:
                 return False
             return q[0][0]
         
+        def get_next_file_id(self):
+            return self.client.execute("SELECT max(id) + 1 FROM "+ self.acorr_files_table_name )[0][0]
+        
         def create_acorr_file(self,file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts):
-            file_id = str(uuid.uuid4())
+            file_id = self.get_next_file_id()
             vars_to_save = {
-                        'id':self.uuid_string_to_num(file_id),
+                        'id':file_id,
                         'file_path' : file_path,
                         'rig_id':rig_id,
                         'sensor_id':sensor_id,
@@ -42,6 +49,7 @@ class RhinoDBHelper:
                         'min_ts':int(min_ts),
                         'max_ts':int(max_ts)
             }
+            logger.info('Saving '+str(file_path)+' to'+str(self.acorr_files_table_name)+ ' with id:' + str(file_id))
             self.client.execute("insert into "+ self.acorr_files_table_name +" values",[vars_to_save])
             return file_id
         
@@ -51,7 +59,7 @@ class RhinoDBHelper:
             if last_version_config == config_str:
                 return version
             vars_to_save = {
-                        'acorr_file_id':self.uuid_string_to_num(file_id),
+                        'acorr_file_id':file_id,
                         'version':version+1,
                         'created_at_ts':int(time.time()),
                         'json_str':config_str
@@ -62,13 +70,13 @@ class RhinoDBHelper:
         
         def get_file_config(self,file_id,version):
             query_vars = { 'version':version}
-            q = self.client.execute('select json_str from '+self.acorr_configs_table_name+" where UUIDNumToString(acorr_file_id) = '"+str(file_id)+"' and version= " + str(version) )
+            q = self.client.execute('select json_str from '+self.acorr_configs_table_name+" where acorr_file_id = "+str(file_id)+" and version= " + str(version) )
             if len(q) > 0:
                 return q[0][0]
             return False
         
         def get_last_version_file_config(self,file_id):
-            return int(self.client.execute('select max(version) from '+self.acorr_configs_table_name+" where UUIDNumToString(acorr_file_id) = '"+str(file_id)+"'")[0][0])
+            return int(self.client.execute('select max(version) from '+self.acorr_configs_table_name+" where acorr_file_id = "+str(file_id))[0][0])
 
             
         def uuid_string_to_num(self,uuid_string):
@@ -82,7 +90,7 @@ class RhinoDBHelper:
             df['axial'] = axial.tolist()
             df['tangential'] = tangential.tolist()
             df['radial'] = radial.tolist()
-            df['acorr_file_id'] = self.uuid_string_to_num(file_id)
+            df['acorr_file_id'] = file_id
         
             
             
@@ -107,16 +115,15 @@ class RhinoDBHelper:
             
             
             for times_batch in splitted:
-                duplicate += self.client.execute('select distinct(timestamp) from ' + self.acorr_traces_table_name + " where timestamp IN (%s) and UUIDNumToString(acorr_file_id) IN (%s) order by timestamp" % (','.join(times_batch.astype(str)),','.join(files_ids.astype(str))))
+                duplicate += self.client.execute('select distinct(timestamp) from ' + self.acorr_traces_table_name + " where timestamp IN (%s) and acorr_file_id IN (%s) order by timestamp" % (','.join(times_batch.astype(str)),','.join(files_ids.astype(str))))
             return np.unique(np.array(duplicate).flatten())
         
         def get_files_id_from_sensor_id(self,sensor_id):
-            query = "select distinct(UUIDNumToString(id)) from %s where sensor_id = '%s'" % (self.acorr_files_table_name,str(sensor_id))
+            query = "select distinct(id) from %s where sensor_id = '%s'" % (self.acorr_files_table_name,str(sensor_id))
             
             files_ids = self.client.execute(query)
-            files_ids = np.array(files_ids).flatten().astype(str)
-            files_ids = ["'" + x + "'" for x in files_ids]
-            return np.array(files_ids)
+            files_ids = np.array(files_ids).flatten().astype(int)
+            return files_ids
         
         def get_autocor_traces_from_sensor_id(self,sensor_id,min_ts = 0, max_ts = 9999999999):
             files_ids = self.get_files_id_from_sensor_id(sensor_id)

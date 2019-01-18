@@ -1,2 +1,4 @@
 *pyc
 dcrhino.egg-info/*
+
+*.json
