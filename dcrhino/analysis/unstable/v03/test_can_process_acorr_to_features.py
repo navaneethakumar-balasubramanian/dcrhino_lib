@@ -79,8 +79,6 @@ def lead_channel_decon(df, global_config):
     and max_lag_trimmed_trace; These were set to -0.1 (min) and +0.1 (max).
     We need to make sure that the traces have enough 'slop' on the
     edges that the filtering edge effects do not create artefacts in the data.
-
-    The trimming should happen after the
     """
 #
     t0 = time.time()
@@ -90,7 +88,6 @@ def lead_channel_decon(df, global_config):
     samples_per_trace = 2*n_samples_in_input_traces - 1
     #pdb.set_trace()
 
-#    samples_per_trace = int(autocorrelation_duration / global_config.dt)
 
     num_traces = len(df['timestamp'])
 
@@ -183,6 +180,13 @@ def band_pass_filter_dataframe(df, global_config):
     print(time.time() - t0)
     return dff
 
+
+def align_and_trim_dataframe():
+    """
+    here we do the accounting for the shifts in time introduced by trace processing ...
+
+    """
+    pass
 def test():
     """
     """
@@ -198,7 +202,7 @@ def test():
         lag_decon_dataframe = lag_channel_decon(lead_decon_dataframe, global_config)
         filtered_lag_decon_dataframe = band_pass_filter_dataframe(lag_decon_dataframe, global_config)
         print('done {}'.format(h5_filename))
-#        pdb.set_trace()
+        pdb.set_trace()
 #        f, ax = plt.subplots(nrows=2, shareax=True)
 #        ax[0].plot()
 #        fir_taps = get_band_pass_filter_taps(global_config)
