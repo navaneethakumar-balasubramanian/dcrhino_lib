@@ -1,5 +1,5 @@
 import numpy as np
-from dcrhino.real_time.process_pipeline.filters import FIRLSFilter
+from dcrhino.process_pipeline.filters import FIRLSFilter
 import scipy
 import scipy.signal as ssig
 import pdb
