@@ -13,7 +13,6 @@ import numpy as np
 import pdb
 import pandas as pd
 import logging
-import blaze as bz
 
 class RhinoDBHelper:
         def __init__(self,host='localhost',user='default',password='',database='test',compression='lz4'):
@@ -112,15 +111,21 @@ class RhinoDBHelper:
             return np.unique(np.array(duplicate).flatten())
         
         def get_files_id_from_sensor_id(self,sensor_id):
-            files_ids = self.client.execute('select distinct(UUIDNumToString(id)) from ' + self.acorr_files_table_name + " where sensor_id = '%s'" % (str(sensor_id)))
-            if len(files_ids) > 0 :
-                files_ids = files_ids[0]
+            query = "select distinct(UUIDNumToString(id)) from %s where sensor_id = '%s'" % (self.acorr_files_table_name,str(sensor_id))
+            
+            files_ids = self.client.execute(query)
+            files_ids = np.array(files_ids).flatten().astype(str)
             files_ids = ["'" + x + "'" for x in files_ids]
             return np.array(files_ids)
         
         def get_autocor_traces_from_sensor_id(self,sensor_id,min_ts = 0, max_ts = 9999999999):
-            result = self.client.execute('select timestamp,microtime,rig_id,axial_trace,tangential_trace,radial_trace from ' + self.acorr_traces_table_name + " where sensor_id = '"+str(sensor_id)+ "' and timestamp > "+str(min_ts)+" and timestamp < " +str(max_ts)+" order by timestamp" )
-            df = self.query_result_to_pd(result,['timestamp','microtime','rig_id','axial_trace','tangential_trace','radial_trace'])
+            files_ids = self.get_files_id_from_sensor_id(sensor_id)
+            if len(files_ids) == 0 :
+                return np.array([])
+            
+            query_str = "select timestamp,microtime,axial_trace,tangential_trace,radial_trace from %s where UUIDNumToString(acorr_file_id) IN (%s) and timestamp > %s and timestamp < %s order by timestamp" % (self.acorr_traces_table_name,','.join(files_ids.astype(str)),min_ts,max_ts)
+            result = self.client.execute(query_str)
+            df = self.query_result_to_pd(result,['timestamp','microtime','axial_trace','tangential_trace','radial_trace'])
             df = self.timestamp_microtime_to_float(df)
             df['sensor_id'] = sensor_id
             return df
@@ -135,7 +140,7 @@ class RhinoDBHelper:
 
             
 #a = RhinoDBHelper().save_autocorr_traces("1",'1','f7d468bb-19a2-4a95-aaf3-9c98ed5c5bdd',np.arange(1,3601),np.full([3600,3600],0),np.full([3600,3600],0),np.full([3600,3600],0))
-#a = RhinoDBHelper().get_autocor_traces_from_sensor_id('1',np.arange(1,3601))
+#a = RhinoDBHelper().get_autocor_traces_from_sensor_id('1',1,1000)
 #rhino_db_helper = RhinoDBHelper()
 
 #for i in range(0,100):
