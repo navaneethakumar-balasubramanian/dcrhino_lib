@@ -52,6 +52,7 @@ import scipy.signal as ssig
 from test_can_read_rawh5_and_apply_acorr import cast_h5_to_dataframe
 from test_can_read_rawh5_and_apply_acorr import resample_l1h5
 from test_can_read_rawh5_and_apply_acorr import autocorrelate_l1h5
+from feature_extraction import get_features_extracted_v3
 
 def get_band_pass_filter_taps(global_config):
     """
@@ -181,12 +182,59 @@ def band_pass_filter_dataframe(df, global_config):
     return dff
 
 
-def align_and_trim_dataframe():
+def align_and_trim_dataframe(df, global_config):
     """
     here we do the accounting for the shifts in time introduced by trace processing ...
+    The peak is advanced by half the duration of the lead-channel-decon-filter
+    The advance is relative to the center of the trace, which is 2N-1 where N is the
+    number of samples in the autocorr.
 
+    This will be upgraded in v3.1, or at least once this module is on the 3.0
+    branch and can talk to the global_config and metadata classes in dcrhino_lib
+
+    @TODO: The way to slice here is NOT trace by trace, but instead, cast the
+    column as a 2D array and slice ... will fix at or before v3.1
     """
-    pass
+    logger.warning("this method needs to be modified to use a different minlag, \
+                   maxlag for each component")
+    sampling_rate = global_config.sampling_rate
+    dt = global_config.dt
+    min_lag = global_config.min_lag_trimmed_trace
+    max_lag = global_config.max_lag_trimmed_trace
+    n_samples_output_traces = int(np.abs(min_lag)/dt) + int(max_lag/dt) + 1
+    samples_per_trace = n_samples_output_traces
+    output_dict = {}
+    num_traces = len(df['timestamp'])
+    try:
+        print(global_config.autocorrelation_duration)
+        autocorrelation_duration = global_config.autocorrelation_duration
+    except AttributeError:
+        logger.warning("this warning will be removed once the \
+                   upsample factor is coming from the global cfg")
+        autocorrelation_duration = 0.4
+    t0 = time.time()
+    n_samples_in_input_traces = len(df['axial'].iloc[0])
+    N = (n_samples_in_input_traces + 1) // 2
+    t0_index = N-1;
+    t0_index += global_config.num_taps_in_decon_filter // 2
+    n_samples_back = int(sampling_rate * np.abs(min_lag))
+    n_samples_fwd = int(sampling_rate * max_lag) + 1
+    back_ndx = t0_index - n_samples_back
+    fin_ndx = t0_index + n_samples_fwd
+    #pdb.set_trace()
+    for component_id in global_config.components_to_process:
+        output_dict[component_id] = np.full((num_traces, samples_per_trace), np.nan) #Allocate Memory
+        for i_trace in range(num_traces):
+            trace_data = df[component_id].iloc[i_trace]
+            output_dict[component_id][i_trace,:] = trace_data[back_ndx:fin_ndx]
+        output_dict[component_id] = list(output_dict[component_id])
+
+    output_dict['timestamp'] = df['timestamp']
+    dff = pd.DataFrame(output_dict, index=df.index)
+    print(time.time() - t0)
+    return dff
+
+
 def test():
     """
     """
@@ -199,6 +247,8 @@ def test():
         autcorrelated_dataframe = autocorrelate_l1h5(resampled_dataframe, global_config)
         lead_decon_dataframe = lead_channel_decon(autcorrelated_dataframe, global_config)
         filtered_lead_decon_dataframe = band_pass_filter_dataframe(lead_decon_dataframe, global_config)
+        trimmed_filtered_lead_decon_dataframe = align_and_trim_dataframe(filtered_lead_decon_dataframe, global_config)
+        features_df = get_features_extracted_v3(trimmed_filtered_lead_decon_dataframe, global_config)
         lag_decon_dataframe = lag_channel_decon(lead_decon_dataframe, global_config)
         filtered_lag_decon_dataframe = band_pass_filter_dataframe(lag_decon_dataframe, global_config)
         print('done {}'.format(h5_filename))
