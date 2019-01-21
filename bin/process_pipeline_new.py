@@ -61,7 +61,7 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, h5_helper,
     @note: interval_seconds = (int(end_time_ts) - int(start_time_ts))
     this line could better be int(floor(end_time_ts)) - int(ceil(start_time_ts))
     """
-    trace_processor = TraceProcessing(global_config, is_ide_file, accelerometer_max_voltage)
+    trace_processor = TraceProcessing(global_config, is_ide_file, accelerometer_max_voltage,global_config.rhino_version)
     entire_ts = ts_data
     entire_ts_int = entire_ts.astype(int)
 
