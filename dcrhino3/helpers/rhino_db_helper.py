@@ -125,6 +125,14 @@ class RhinoDBHelper:
             files_ids = np.array(files_ids).flatten().astype(int)
             return files_ids
         
+        def get_files_list(self):
+            query_str = "select id,file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts from %s order by id" % (self.acorr_files_table_name)
+            result = self.client.execute(query_str)
+            df = self.query_result_to_pd(result,columns=['id','file_path','rig_id','sensor_id','digitizer_id','min_ts','max_ts'])
+            
+            return df
+        
+        
         def get_autocor_traces_from_sensor_id(self,sensor_id,min_ts = 0, max_ts = 9999999999):
             files_ids = self.get_files_id_from_sensor_id(sensor_id)
             if len(files_ids) == 0 :
