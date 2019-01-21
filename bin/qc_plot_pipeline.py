@@ -25,6 +25,8 @@ from dcrhino.process_pipeline.acceleration_plotter import acceleration_plotter
 #from dcrhino.process_pipeline.qc_log_plotter_for_jamie_v2 import QCLogPlotterv3
 from dcrhino.process_pipeline.qc_log_plotter_test_delete_once_ok import QCLogPlotterv3
 from dcrhino.analysis.unstable.feature_extraction.feature_extraction_20181211 import get_expected_multiple_times
+from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
+
 
 def get_multiples(global_config):
             expected_multiple = get_expected_multiple_times(global_config, recipe='J1')
@@ -159,11 +161,14 @@ def get_noise_threshold(global_config):
 def main():
 #    ddir = '/home/kkappler/data/datacloud/teck/pet_line_creek/holes/793,MR_77,23831,31,5208'
 #    mmap = os.path.join(ddir, 'mwd_map.json')
-    ddir = '/mnt/sda1/data/data_blob/qc_test_dataset/milligan_3/output_milligan/holes_0107_2/995,108,118,3,2235'
-    mmap = os.path.join(ddir, 'mwd_map.json')
+#    ddir = '/mnt/sda1/data/data_blob/qc_test_dataset/milligan_3/output_milligan/holes_0107_2/995,108,118,3,2235'
+#    mmap = os.path.join(ddir, 'mwd_map.json')
 
 #    ofp = ddir
 #    ofp = False
+    db_helper = RhinoDBHelper('13.66.189.94',database='milligan_v3')
+    db_helper.get_autocor_traces_from_sensor_id(sensor_id,min_ts = 0, max_ts = 9999999999)
+    pdb.set_trace()
 
     argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
     argparser.add_argument('-ddir', '--data-path', help="Extracted Data Directory Path", default=ddir)
