@@ -15,6 +15,7 @@ import numpy as np
 import os
 from string import zfill
 import subprocess
+import pdb
 
 #<temporary logging>
 import logging
@@ -30,11 +31,16 @@ def init_logging(name):
 logger = init_logging(__name__)
 home = os.path.expanduser('~/')
 
-def splitDataFrameIntoSmaller(df, chunkSize = 10000): 
+def splitDataFrameIntoSmaller(df, chunk_size = 10000):
     listOfDf = list()
-    numberChunks = len(df) // chunkSize + 1
-    for i in range(numberChunks):
-        listOfDf.append(df[i*chunkSize:(i+1)*chunkSize])
+    number_of_chunks = len(df) // chunk_size + 1
+    listOfDf = number_of_chunks * [None]
+    for i in range(number_of_chunks):
+        df_to_add_to_list = df[i*chunk_size:(i+1) * chunk_size]
+        df_to_add_to_list = df_to_add_to_list.reset_index()
+        #pdb.set_trace()
+        #df_to_add_to_list = df_to_add_to_list.copy()
+        listOfDf[i] = df_to_add_to_list
     return listOfDf
 
 def count_lines(fileName):

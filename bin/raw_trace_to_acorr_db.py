@@ -3,7 +3,7 @@
 import argparse
 import pdb
 
-import glob
+import glob2
 import os
 import logging
 
@@ -19,7 +19,18 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
     raw_trace_data = RawTraceData()
     raw_trace_data.load_from_h5(h5_file_path)
     l1h5_dataframe = raw_trace_data.dataframe
+
     global_config = raw_trace_data.global_config_by_index(0)
+
+    upsample_factor = 1.25
+    try:
+        print(global_config.upsample_factor)
+    except AttributeError:
+        logger.warning("this warning will be removed once the \
+                   upsample factor is coming from the global cfg")
+        global_config.output_sampling_rate *= upsample_factor
+
+
     db_helper = RhinoDBHelper('13.66.189.94',database='test_for_karl_2')
     dupes = db_helper.check_for_pre_saved_acorr_traces(l1h5_dataframe['timestamp'],global_config.sensor_serial_number)
 
@@ -55,7 +66,7 @@ if __name__ == '__main__':
     args = argparser.parse_args()
 
     env_config = EnvConfig(args.env_file)
-    files = glob.glob(args.src_path)
+    files = glob2.glob(args.src_path)
 
     if not files:
         print  'File does not exist: ' + args.src_path
