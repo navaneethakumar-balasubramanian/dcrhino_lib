@@ -18,9 +18,12 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 logger = init_logging(__name__)
 
 class RhinoDBHelper:
-        def __init__(self,host='localhost',user='default',password='',database='test',compression='lz4'):
+        def __init__(self,host='localhost',user='default',password='',database='test',compression='lz4',conn=False):
             logger.info('Using database '+str(database)+' on '+str(host))
-            self.client = Client(host,user=user,password=password,database=database,compression=compression)
+            if conn is False:
+                self.client = Client(host,user=user,password=password,database=database,compression=compression)
+            else:
+                self.client = Client(conn['host'],user=conn['user'],password=conn['password'],database=conn['database'],compression=compression)
             self.acorr_traces_table_name = 'acorr_traces'
             self.acorr_files_table_name = 'acorr_files'
             self.acorr_configs_table_name = 'acorr_files_configs'
@@ -138,7 +141,8 @@ class RhinoDBHelper:
             if len(files_ids) == 0 :
                 return np.array([])
             
-            query_str = "select timestamp,microtime,axial_trace,tangential_trace,radial_trace from %s where UUIDNumToString(acorr_file_id) IN (%s) and timestamp > %s and timestamp < %s order by timestamp" % (self.acorr_traces_table_name,','.join(files_ids.astype(str)),min_ts,max_ts)
+            query_str = "select timestamp,microtime,axial_trace,tangential_trace,radial_trace from %s where acorr_file_id IN (%s) and timestamp > %s and timestamp < %s order by timestamp" % (self.acorr_traces_table_name,','.join(files_ids.astype(str)),min_ts,max_ts)
+            print query_str
             result = self.client.execute(query_str)
             df = self.query_result_to_pd(result,['timestamp','microtime','axial_trace','tangential_trace','radial_trace'])
             df = self.timestamp_microtime_to_float(df)
