@@ -12,8 +12,9 @@ class EnvConfig(object):
         if env_conf_json_path is False:
             env_conf_json_path = 'env_config.json'
         
+        self.blacklist_files = []
         self.parse_json(env_conf_json_path)
-        self.black_list_files = []
+        
         
     def parse_json(self,env_conf_json_path):
         with open(env_conf_json_path, 'r') as f:
@@ -21,7 +22,7 @@ class EnvConfig(object):
             
             
     def is_file_blacklisted(self,file_path):
-        for black_list_file_path in self.black_list_files:
+        for black_list_file_path in self.blacklist_files:
             if black_list_file_path == file_path:
                 return True
         return False
