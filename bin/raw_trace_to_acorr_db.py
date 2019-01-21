@@ -30,7 +30,6 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
                    upsample factor is coming from the global cfg")
         global_config.output_sampling_rate *= upsample_factor
 
-
     db_helper = RhinoDBHelper('13.66.189.94',database='test_for_karl_2')
     dupes = db_helper.check_for_pre_saved_acorr_traces(l1h5_dataframe['timestamp'],global_config.sensor_serial_number)
 
@@ -73,4 +72,5 @@ if __name__ == '__main__':
     for file in files:
         if '.h5' in os.path.splitext(file)[1]:
             logger.info("PROCESSING FILE:" + str( file))
-            raw_trace_h5_to_acorr_db(file,env_config)
+            if env_config.is_file_blacklisted(file) is False:
+                raw_trace_h5_to_acorr_db(file,env_config)
