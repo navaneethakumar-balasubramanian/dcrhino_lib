@@ -37,24 +37,26 @@ def get_window_widths(global_config):
     @TODO: remove for PPv3;
     """
     try:
+        #pdb.set_trace()
         window_widths = json.loads(global_config.window_widths)
     except AttributeError:
         print('window widths not specified in global config')
         return None
+    except TypeError:
         #<From [FEATURE_EXTRACTION] config>
-#        window_widths = {}
-#        component = 'axial'
-#        window_widths[component] = {}
-#        window_widths[component]['primary'] = 4.0 * 1e-3
-#        window_widths[component]['multiple_1'] = 4.0 * 1e-3
-#        window_widths[component]['multiple_2'] = 4.0 * 1e-3
-#        window_widths[component]['multiple_3'] = 4.0 * 1e-3
-#        component = 'tangential'
-#        window_widths[component] = {}
-#        window_widths[component]['primary'] = 4.0 * 1e-3
-#        window_widths[component]['multiple_1'] = 4.0 * 1e-3
-#        window_widths[component]['multiple_2'] = 4.0 * 1e-3
-#        window_widths[component]['multiple_3'] = 4.0 * 1e-3
+        window_widths = {}
+        component = 'axial'
+        window_widths[component] = {}
+        window_widths[component]['primary'] = 4.0 * 1e-3
+        window_widths[component]['multiple_1'] = 4.0 * 1e-3
+        window_widths[component]['multiple_2'] = 4.0 * 1e-3
+        window_widths[component]['multiple_3'] = 4.0 * 1e-3
+        component = 'tangential'
+        window_widths[component] = {}
+        window_widths[component]['primary'] = 4.0 * 1e-3
+        window_widths[component]['multiple_1'] = 4.0 * 1e-3
+        window_widths[component]['multiple_2'] = 4.0 * 1e-3
+        window_widths[component]['multiple_3'] = 4.0 * 1e-3
         #</From [FEATURE_EXTRACTION] config>
     return window_widths
 
