@@ -6,6 +6,7 @@ import pdb
 import glob2
 import os
 import logging
+import json
 
 from dcrhino3.models.traces.raw_trace import RawTraceData
 from dcrhino3.models.env_config import EnvConfig
@@ -44,7 +45,8 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
         max_ts = l1h5_dataframe['timestamp'].max()
         file_id = db_helper.create_acorr_file(h5_file_path,global_config.rig_id,global_config.sensor_serial_number,str(global_config.digitizer_serial_number),min_ts,max_ts)
 
-    config = db_helper.create_new_acorr_file_conf(file_id,str(vars(global_config)))
+    json_str = json.dumps(vars(global_config), indent=4)
+    config = db_helper.create_new_acorr_file_conf(file_id,json_str)
 
 
     list_df = splitDataFrameIntoSmaller(l1h5_dataframe.reset_index(drop=True),chunk_size)
