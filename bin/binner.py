@@ -40,9 +40,9 @@ from dcrhino.analysis.supporting_datetime import GMT
 from dcrhino.analysis.util.interval import TimeInterval
 from dcrhino.analysis.signal_processing.mwd_tools import get_interpolated_column
 
-
+threshold_level=0.001
 #<Functions belong in a supporting_qc module>
-def reject_traces_with_small_rop(df, threshold=0.006):
+def reject_traces_with_small_rop(df, threshold=threshold_level):
     """
 
     """
@@ -121,7 +121,7 @@ def apply_bin_df(df_features,bin_width,columns_to_bin=[]):
           from mwd columns")
     #df_ignored = df_features[ignore_cols]
     #df_features = df_features.drop(ignore_cols,axis=1)
-    df_features = reject_traces_with_small_rop(df_features, threshold=0.005)
+    df_features = reject_traces_with_small_rop(df_features, threshold=threshold_level)
     matched_columns_to_bin = (list(set(columns_to_bin) & set(df_features.columns)))
     #matched_columns_to_bin = matched_columns_to_bin + list(df_ignored.columns)
     sub_df_for_binning = df_features[matched_columns_to_bin]

@@ -222,7 +222,7 @@ def calculate_spiking_decon_filter(trace_data, filter_length,  dt, start_ms,
     try:
         ATAinv = scipy.linalg.inv(ATA)
     except np.linalg.linalg.LinAlgError:
-        print('matrix inversion failed')  #
+        # print('matrix inversion failed')  #
         return trace_data, R_xx[0]
     x_filter = nominal_scale_factor*ATAinv[0,:]
 
