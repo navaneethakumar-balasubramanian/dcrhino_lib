@@ -14,7 +14,7 @@ import pandas as pd
 import pdb
 from enum import Enum
 from dcrhino3.models.config import Config
-
+import json
 
 class ModuleType(Enum):
     RAW=1
@@ -33,7 +33,7 @@ class TraceData(object):
         print('howdoyoudo')
         self.dataframe = kwargs.get('df', pd.DataFrame())
         self.applied_modules = []
-        self._global_configs = []
+        self._global_configs = dict()
 
     def apply_module(self,module_type,arguments):
         self.applied_modules.append({module_type:arguments})
@@ -42,10 +42,11 @@ class TraceData(object):
     
     def load_from_db(self,db_helper,files_ids,min_ts,max_ts):
         self.dataframe = db_helper.get_autocor_traces_from_files_ids(files_ids,min_ts,max_ts)
-        configs = db_helper.get_configs_from_files_ids(files_ids)
-        for conf in configs:
+        for file_id in files_ids:
+            file_config = db_helper.get_last_file_config_from_file_id(file_id)
             global_config = Config()
-            global_config.set_data_from_json(conf)
+            global_config.set_data_from_json(json.loads(file_config))
+            self._global_configs[file_id] = global_config
         
             
             
@@ -60,7 +61,7 @@ class TraceData(object):
         @Natal:
         """
         df_as_dict = dict(self.dataframe)
-        h5f = h5py.File('data.h5', 'w')
+        h5f = h5py.File(path, 'w')
         for k, v in df_as_dict.iteritems():
             h5f.create_dataset(k, data=v, dtype=float)
         h5f.close()
@@ -72,10 +73,9 @@ class TraceData(object):
     def append_to_h5(self,path):
         pass
 
-    def add_global_config(self,global_config):
-        self._global_configs.append(global_config)
-        #return the index where it was appended
-        return len(self._global_configs)-1
+    def add_global_config(self,global_config,file_id):
+        self._global_configs[file_id] = global_config
+        return file_id
 
     def remove_global_config(self,index):
         pass
