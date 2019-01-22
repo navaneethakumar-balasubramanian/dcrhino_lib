@@ -6,12 +6,14 @@
 """
 
 from __future__ import absolute_import, division, print_function
-import pdb
 from datetime import datetime
-import os
+import h5py
+#import os
 import numpy as np
 import pandas as pd
+import pdb
 from enum import Enum
+
 
 class ModuleType(Enum):
     RAW=1
@@ -26,10 +28,11 @@ class ModuleType(Enum):
 
 
 class TraceData(object):
-    def __init__(self):
-        self.dataframe = pd.DataFrame()
+    def __init__(self, **kwargs):
+        print('howdoyoudo')
+        self.dataframe = kwargs.get('df', pd.DataFrame())
         self.applied_modules = []
-        self._global_configs =[]
+        self._global_configs = []
 
     def apply_module(self,module_type,arguments):
         self.applied_modules.append({module_type:arguments})
@@ -37,7 +40,20 @@ class TraceData(object):
         return len(self.applied_modules)-1
 
     def save_to_h5(self,path):
-        pass
+        """
+        @note: when porting to python3 replace iteritems with items see Keith's answer in
+        https://stackoverflow.com/questions/10458437/what-is-the-difference-between-dict-items-and-dict-iteritems
+        @warning: this requires dtypes to be float, will need to use a mapping of
+        dtypes for df columns ... where will we get this? @Thiago: will this
+        be maintained in database models?
+        @Natal:
+        """
+        df_as_dict = dict(self.dataframe)
+        h5f = h5py.File('data.h5', 'w')
+        for k, v in df_as_dict.iteritems():
+            h5f.create_dataset(k, data=v, dtype=float)
+        h5f.close()
+        return
 
     def load_from_h5(self,path):
         pass
@@ -46,15 +62,22 @@ class TraceData(object):
         pass
 
     def add_global_config(self,global_config):
-        self._global_config.append(global_config)
+        self._global_configs.append(global_config)
         #return the index where it was appended
-        return len(self._global_config)-1
+        return len(self._global_configs)-1
 
     def remove_global_config(self,index):
         pass
 
     def global_config_by_index(self,index):
         return self._global_configs[index]
+
+    def component_as_array(self, component_id):
+        """
+        returns the data form component as a 2d numpy array with trace index
+        running along rows (zero-index).  Useful for slicing data and linalg.
+        """
+        return np.atleast_2d(list(self.dataframe[component_id]))
 
 
 
