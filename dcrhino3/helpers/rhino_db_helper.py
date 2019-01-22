@@ -120,7 +120,18 @@ class RhinoDBHelper:
             for times_batch in splitted:
                 duplicate += self.client.execute('select distinct(timestamp) from ' + self.acorr_traces_table_name + " where timestamp IN (%s) and acorr_file_id IN (%s) order by timestamp" % (','.join(times_batch.astype(str)),','.join(files_ids.astype(str))))
             return np.unique(np.array(duplicate).flatten())
+        
+        def get_configs_from_files_ids(self,files_ids):
+            if type(files_ids) == int:
+              files_ids = np.array([files_ids])
+            if len(files_ids) == 0:
+               return np.array([])
+            query = "select * from %s where acorr_file_id in (%s)" % (self.acorr_traces_table_name, ','.join(files_ids.astype(str)))
+            result = self.client.execute(query)
+            df = self.query_result_to_pd(result, ['acorr_file_id','version','created_at_ts','json_str'])
+            return df
 
+            
         def get_files_id_from_sensor_id(self,sensor_id):
             query = "select distinct(id) from %s where sensor_id = '%s'" % (self.acorr_files_table_name,str(sensor_id))
 
@@ -186,8 +197,9 @@ class RhinoDBHelper:
             #</fix array casts>
             df = self.timestamp_microtime_to_float(df)
             return df
-
-        def timestamp_microtime_to_float(self, df):
+        
+        
+        def timestamp_microtime_to_float(self,df):
             df = df.copy()
             df['timestamp'] = (df['timestamp'].astype(str) + "." + df['microtime'].astype(str)).astype(float)
             df.drop(['microtime', ], axis=1, inplace=True)
@@ -203,6 +215,6 @@ class RhinoDBHelper:
 
 #for i in range(0,100):
 #    if rhino_db_helper.get_file_uuid_from_file_path(str(i)) is False:
-#        a = rhino_db_helper.create_acorr_file(str(i),'aa')
-
+#        a = rhino_db_helper.create_acorr_file(sttrr(i),'aa')
+        
 #pdb.set_trace()

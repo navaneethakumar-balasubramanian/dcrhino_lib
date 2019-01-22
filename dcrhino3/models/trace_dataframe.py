@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import pdb
 from enum import Enum
+from dcrhino3.models.config import Config
 
 
 class ModuleType(Enum):
@@ -38,6 +39,16 @@ class TraceData(object):
         self.applied_modules.append({module_type:arguments})
         #return the index where it was appended
         return len(self.applied_modules)-1
+    
+    def load_from_db(self,db_helper,files_ids,min_ts,max_ts):
+        self.dataframe = db_helper.get_autocor_traces_from_files_ids(files_ids,min_ts,max_ts)
+        configs = db_helper.get_configs_from_files_ids(files_ids)
+        for conf in configs:
+            global_config = Config()
+            global_config.set_data_from_json(conf)
+        
+            
+            
 
     def save_to_h5(self,path):
         """
