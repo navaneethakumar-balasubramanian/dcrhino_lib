@@ -25,7 +25,7 @@ def trim_trace(min_lag_trimmed_trace, max_lag_trimmed_trace, num_taps_in_decon_f
     return little_data
 
 class TraceProcessing:
-    def __init__(self,global_config,is_ide_file,accelerometer_max_voltage,rhino_version):
+    def __init__(self,global_config,is_ide_file,accelerometer_max_voltage,rhino_version=2):
         self.config = global_config
         self.is_ide_file = is_ide_file
         self.accelerometer_max_voltage = accelerometer_max_voltage
