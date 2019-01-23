@@ -38,8 +38,9 @@ if conn is not False:
 
     acor_trace.load_from_db(db_helper,files_ids,min_ts,max_ts)
     #pdb.set_trace()
-    acor_trace.save_to_h5('test.h5')
+    
     #pdb.set_trace()
-    merger.merge_mwd_with_trace(hole_mwd,acor_trace)
+    acor_trace.dataframe = merger.merge_mwd_with_trace(hole_mwd,acor_trace.dataframe)
+    acor_trace.save_to_h5('test3.h5')
 
 pdb.set_trace()

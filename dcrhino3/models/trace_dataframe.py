@@ -69,6 +69,7 @@ class TraceData(object):
         components specified in global_config
         """
         #df_as_dict = dict(self.dataframe)
+
         all_columns = list(self.dataframe.columns)
         h5f = h5py.File(path, 'w')
         #<save traces>
@@ -84,17 +85,18 @@ class TraceData(object):
         #<save traces>
 
         #<mwd columns>
-        pdb.set_trace()
         mwd_columns = all_columns#traces removed
-        for column_label in mwd_columns:
-
+        for column_label in mwd_columns:            
             dtype = type(self.dataframe[column_label].iloc[0])
+            print (column_label, dtype)
             column_data = np.asarray(self.dataframe[column_label])
-            if dtype == str:
-                h5f.create_dataset(column_label, data=column_data, dtype='S10')
+            if dtype == str or dtype == unicode:
+                dt = h5py.special_dtype(vlen=unicode)
+                h5f.create_dataset(column_label, data=column_data, dtype=dt)
             elif dtype == np.int64:
                 h5f.create_dataset(column_label, data=column_data, dtype='i8')
             else:
+                column_data = column_data.astype(float)
                 h5f.create_dataset(column_label, data=column_data, dtype=float)
 
 #        for k, v in df_as_dict.iteritems():

@@ -18,8 +18,8 @@ class MWDHelper():
     def __init__ (self,env_config):
         self.env_config = env_config
 
-        self.required_columns = ['easting','northing','elevation','hole_id','hole_name','pattern_name','bench_name','start_time','collar_elevation']
-        self.optional_columns = ['tob','rop','wob','mse','air_pressure']
+        self.required_columns = ['easting','northing','elevation','hole_id','hole_name','pattern_name','bench_name','start_time','collar_elevation','rig_id']
+        self.optional_columns = ['tob','rop','wob','mse','air_pressure','rpm']
 
 
 
@@ -74,6 +74,16 @@ class MWDHelper():
             if col not in mwd_df.columns:
                 mwd_df[col] = 0
         return mwd_df
+    
+    def _post_process(self,df):    
+        df['start_time'] = pd.to_datetime(df['start_time'])
+        df['bench_name'] = df['bench_name'].astype(str)
+        df['pattern_name'] = df['pattern_name'].astype(str)
+        df['hole_name'] = df['hole_name'].astype(str)
+        df['hole_id'] = df['hole_id'].astype(str)
+        df['rig_id'] = df['rig_id'].astype(str)
+        df['depth'] = (df['elevation'] - df['collar_elevation']).astype(float)
+        return df
 
     def get_rhino_mwd_from_mine_name(self,mine_name):
         mine_type = self.env_config.get_mwd_type(mine_name)
@@ -86,7 +96,7 @@ class MWDHelper():
         remaped = self.remap_mwd_df(original_mwd_df,cfg['mapping'])
         if self._have_required_columns(remaped):
             remaped_with_optionals = self._create_optional_columns(remaped)
-            remaped_with_optionals['start_time'] = pd.to_datetime(remaped_with_optionals['start_time'])
+            remaped_with_optionals = self._post_process(remaped_with_optionals)
             return remaped_with_optionals
         else:
             return False

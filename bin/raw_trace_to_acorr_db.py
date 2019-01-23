@@ -46,6 +46,7 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
         file_id = db_helper.create_acorr_file(h5_file_path,global_config.rig_id,global_config.sensor_serial_number,str(global_config.digitizer_serial_number),min_ts,max_ts)
 
     json_str = json.dumps(vars(global_config), indent=4)
+
     config = db_helper.create_new_acorr_file_conf(file_id,json_str)
 
 

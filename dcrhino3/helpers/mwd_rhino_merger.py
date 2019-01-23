@@ -10,6 +10,8 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from dcrhino3.helpers.general_helper_functions import init_logging
+from scipy.interpolate import interp1d
+
 
 logger = init_logging(__name__)
 
@@ -78,6 +80,53 @@ class MWDRhinoMerger():
         files_holes_df = pd.DataFrame(dict_list)
         return files_holes_df
     
+    def merge_mwd_with_trace(self,hole_mwd,rhino_traces_df):
+        time_vector = (rhino_traces_df['timestamp'].values*1000000000).astype(np.int64)
+        
+        interpolated_hole_mwd = self.get_mwd_interpolated_by_second(hole_mwd,time_vector)
+        merged = pd.concat([rhino_traces_df,interpolated_hole_mwd],axis=1)
+        #pdb.set_trace()
+        return merged
+        
+            
+        
+    
+    def get_mwd_interpolated_by_second(self,hole_mwd,time_vector):
+        interpolated_mwd = pd.DataFrame()
+        for col in hole_mwd.columns:
+            if len(np.unique(hole_mwd[col])) == 1:
+                interpolated_mwd[col] = hole_mwd[col].values[0]
+            elif hole_mwd[col].values.dtype in [np.int,np.float,np.datetime64]:
+                interpolated_mwd[col] = self.get_interpolated_column(time_vector,hole_mwd,col)    
+            elif hole_mwd[col].values.dtype == np.dtype('datetime64[ns]'):
+                interpolated_mwd[col] = pd.to_datetime(self.get_interpolated_column(time_vector,hole_mwd,col))
+            else:
+                logger.warn("FAILED TO INTERPOLATE " + str(col) + " type: " + str(hole_mwd[col].values.dtype))
+        
+        #interpolated_mwd['timestamp'] = time_vector/1000000000
+        return interpolated_mwd
+    
+    def get_interpolated_column(self,time_vector, mwd_hole_df, column_label,
+                            end_time_column_label='start_time'):
+        """
+        time_vector is actually a pandas date_range, for example:
+        time_vector = pd.date_range(start=row.time_start, periods=num_traces_in_blasthole, freq='1S')
+    
+        column_label: what to interp ... for example 'computed_elevation'
+    
+        @returns interped data, for example the depths of the traces
+        """
+        t_mwd = pd.DatetimeIndex(mwd_hole_df[end_time_column_label])
+        t_mwd = t_mwd.astype(np.int64)
+    
+        interp_function = interp1d(t_mwd, mwd_hole_df[column_label], kind='linear',
+                                   bounds_error=False, fill_value='extrapolate')
+    
+        time_vector = pd.DatetimeIndex(time_vector).astype(np.int64)
+        interped_data = interp_function(time_vector)
+        return interped_data
+
+        
     def _pre_filter_mwd(self):
         min_ts_date = datetime.utcfromtimestamp(self.file_list['min_ts'].min())
         max_ts_date = datetime.utcfromtimestamp(self.file_list['max_ts'].max())
