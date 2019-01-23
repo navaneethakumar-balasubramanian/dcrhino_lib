@@ -6,15 +6,19 @@
 """
 
 from __future__ import absolute_import, division, print_function
+
 from datetime import datetime
+from enum import Enum
 import h5py
-#import os
+import json
 import numpy as np
 import pandas as pd
 import pdb
-from enum import Enum
+
+from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.models.config import Config
-import json
+
+logger = init_logging(__name__)
 
 class ModuleType(Enum):
     RAW=1
@@ -30,7 +34,6 @@ class ModuleType(Enum):
 
 class TraceData(object):
     def __init__(self, **kwargs):
-        print('howdoyoudo')
         self.dataframe = kwargs.get('df', pd.DataFrame())
         self.applied_modules = []
         self._global_configs = dict()
@@ -39,7 +42,7 @@ class TraceData(object):
         self.applied_modules.append({module_type:arguments})
         #return the index where it was appended
         return len(self.applied_modules)-1
-    
+
     def load_from_db(self,db_helper,files_ids,min_ts,max_ts):
         self.dataframe = db_helper.get_autocor_traces_from_files_ids(files_ids,min_ts,max_ts)
         for file_id in files_ids:
@@ -47,21 +50,57 @@ class TraceData(object):
             global_config = Config()
             global_config.set_data_from_json(json.loads(file_config))
             self._global_configs[file_id] = global_config
-        
 
-    def save_to_h5(self,path):
+
+    def save_to_h5(self, path):
         """
         @note: when porting to python3 replace iteritems with items see Keith's answer in
         https://stackoverflow.com/questions/10458437/what-is-the-difference-between-dict-items-and-dict-iteritems
         @warning: this requires dtypes to be float, will need to use a mapping of
         dtypes for df columns ... where will we get this? @Thiago: will this
         be maintained in database models?
-        @Natal:
+
+        @note 20190122: This needs to handle three forms of 'saving'
+        1. Save the traces (as float32, today they will store as float, will check 32 or 64 later)
+        2. Save any columns from the mwd
+        3. Save the global_config (as json dumps?)
+
+        @ToDo: clean up iteration over trace labels to use only the
+        components specified in global_config
         """
-        df_as_dict = dict(self.dataframe)
+        #df_as_dict = dict(self.dataframe)
+        all_columns = list(self.dataframe.columns)
         h5f = h5py.File(path, 'w')
-        for k, v in df_as_dict.iteritems():
-            h5f.create_dataset(k, data=v, dtype=float)
+        #<save traces>
+        component_ids = ['axial', 'tangential', 'radial']
+        for component_id in component_ids:
+            try:
+                trace_label = '{}_trace'.format(component_id)
+                trace_data = self.component_as_array(component_id)
+                h5f.create_dataset(trace_label, data=trace_data, dtype=float)
+                all_columns.remove(trace_label)
+            except KeyError:
+                logger.info('Skipping saving {} as it DNE'.format(trace_label))
+        #<save traces>
+
+        #<mwd columns>
+        pdb.set_trace()
+        mwd_columns = all_columns#traces removed
+        for column_label in mwd_columns:
+
+            dtype = type(self.dataframe[column_label].iloc[0])
+            column_data = np.asarray(self.dataframe[column_label])
+            if dtype == str:
+                h5f.create_dataset(column_label, data=column_data, dtype='S10')
+            elif dtype == np.int64:
+                h5f.create_dataset(column_label, data=column_data, dtype='i8')
+            else:
+                h5f.create_dataset(column_label, data=column_data, dtype=float)
+
+#        for k, v in df_as_dict.iteritems():
+#            if isinstance(v[0], float):
+#                h5f.create_dataset(k, data=v, dtype=float)
+#            elif isinstance(v[0], float):
         h5f.close()
         return
 
@@ -86,9 +125,12 @@ class TraceData(object):
         returns the data form component as a 2d numpy array with trace index
         running along rows (zero-index).  Useful for slicing data and linalg.
         """
-        return np.atleast_2d(list(self.dataframe[component_id]))
+        column_name = '{}_trace'.format(component_id)
+        data_array = np.atleast_2d(list(self.dataframe[column_name]))
+        return data_array
 
-
+def main():
+    pass
 
 if __name__ == "__main__":
   main()

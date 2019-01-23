@@ -172,7 +172,7 @@ class RhinoDBHelper:
 
             query_str = "select {} from %s where acorr_file_id IN (%s) and timestamp > %s and timestamp < %s order by timestamp".format(all_columns_requested_string) \
             % (self.acorr_traces_table_name, ','.join(files_ids.astype(str)), min_ts, max_ts)
-            print query_str
+            print(query_str)
             result = self.client.execute(query_str)
             df = self.query_result_to_pd(result, all_columns)
             #<fix array casts>
