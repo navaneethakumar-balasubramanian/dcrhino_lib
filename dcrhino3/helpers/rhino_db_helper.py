@@ -77,6 +77,10 @@ class RhinoDBHelper:
             if len(q) > 0:
                 return q[0][0]
             return False
+        
+        def get_last_file_config_from_file_id(self,file_id):
+            version = self.get_last_version_file_config(file_id)
+            return self.get_file_config(file_id,version)
 
         def get_last_version_file_config(self,file_id):
             return int(self.client.execute('select max(version) from '+self.acorr_configs_table_name+" where acorr_file_id = "+str(file_id))[0][0])
@@ -94,9 +98,6 @@ class RhinoDBHelper:
             df['tangential'] = tangential.tolist()
             df['radial'] = radial.tolist()
             df['acorr_file_id'] = file_id
-
-
-
 
             n = self.max_batch_to_query
             list_df = [df[i:i+n] for i in range(0,df.shape[0],n)]
@@ -120,17 +121,6 @@ class RhinoDBHelper:
             for times_batch in splitted:
                 duplicate += self.client.execute('select distinct(timestamp) from ' + self.acorr_traces_table_name + " where timestamp IN (%s) and acorr_file_id IN (%s) order by timestamp" % (','.join(times_batch.astype(str)),','.join(files_ids.astype(str))))
             return np.unique(np.array(duplicate).flatten())
-        
-        def get_configs_from_files_ids(self,files_ids):
-            if type(files_ids) == int:
-              files_ids = np.array([files_ids])
-            if len(files_ids) == 0:
-               return np.array([])
-            query = "select * from %s where acorr_file_id in (%s)" % (self.acorr_traces_table_name, ','.join(files_ids.astype(str)))
-            result = self.client.execute(query)
-            df = self.query_result_to_pd(result, ['acorr_file_id','version','created_at_ts','json_str'])
-            return df
-
             
         def get_files_id_from_sensor_id(self,sensor_id):
             query = "select distinct(id) from %s where sensor_id = '%s'" % (self.acorr_files_table_name,str(sensor_id))
@@ -168,21 +158,21 @@ class RhinoDBHelper:
             my_2darray = np.atleast_2d(list(df[column_label])) where column label
             is for example 'axial_trace'
             """
+            
             if type(files_ids) == int:
               files_ids = np.array([files_ids])
             if len(files_ids) == 0:
                return np.array([])
-
-            time_columns = ['timestamp', 'microtime']
+           
+            time_columns = ['timestamp', 'microtime','acorr_file_id']
             trace_components_to_fetch = ['axial', 'tangential', 'radial']
             trace_labels_for_db_call = ['{}_trace'.format(x) for x in trace_components_to_fetch]
             all_columns = time_columns + trace_labels_for_db_call
             all_columns_requested_string = ','.join(all_columns)
 
-            query_str = "select {} from %s where acorr_file_id IN (%s) and timestamp > %s \
-            and timestamp < %s order by timestamp".format(all_columns_requested_string) \
+            query_str = "select {} from %s where acorr_file_id IN (%s) and timestamp > %s and timestamp < %s order by timestamp".format(all_columns_requested_string) \
             % (self.acorr_traces_table_name, ','.join(files_ids.astype(str)), min_ts, max_ts)
-
+            print query_str
             result = self.client.execute(query_str)
             df = self.query_result_to_pd(result, all_columns)
             #<fix array casts>

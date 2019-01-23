@@ -48,8 +48,6 @@ class TraceData(object):
             global_config.set_data_from_json(json.loads(file_config))
             self._global_configs[file_id] = global_config
         
-            
-            
 
     def save_to_h5(self,path):
         """

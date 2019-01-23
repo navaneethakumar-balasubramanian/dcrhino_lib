@@ -37,10 +37,13 @@ class MWDRhinoMerger():
         
         columns_sort_group = ['bench_name','pattern_name','hole_name','hole_id']
         holes_cfgs = dict()
+        
         for line in file_list.itertuples():
+            
             cond_1 = pre_filtered_mwd['rig_id'].astype(str) == line.rig_id
             cond_2 = pre_filtered_mwd['start_time'].astype(int)/1000000000 >= line.min_ts
             cond_3 = pre_filtered_mwd['start_time'].astype(int)/1000000000 <= line.max_ts
+            
             holes_mwd = pre_filtered_mwd[cond_1 & cond_2 & cond_3].copy().sort_values(by=columns_sort_group).reset_index(drop=True)
             holes_identified = np.array(list(holes_mwd.groupby(columns_sort_group).groups))
             rig_id_ar = np.full([holes_identified.shape[0],1],str(line.rig_id))
@@ -53,20 +56,20 @@ class MWDRhinoMerger():
                 if '----'.join(list(hole)) not in holes_cfgs:
                     holes_cfgs['----'.join(list(hole))] = []
                 holes_cfgs['----'.join(list(hole))].append([line.id,line.min_ts,line.max_ts])
-
+        
         ## TRANSFORM TO DATAFRAME ONE HOLE PER LINE WITH MULTIPLE FILES                
         dict_list  = [dict()] * len(holes_cfgs.keys())
         for idx , unique_hole in enumerate(holes_cfgs.keys()):
             splitted = unique_hole.split('----')
             line = dict()
-            line['bench_name'] = splitted[0]
-            line['pattern_name'] = splitted[1]
-            line['hole_name'] = splitted[2]
-            line['hole_id'] = splitted[3]
-            line['rig_id'] = splitted[4]
-            line['sensor_id'] = splitted[5]
-            line['digitizer_id'] = splitted[6]
-            files_ids = np.empty(len(holes_cfgs[unique_hole]))
+            line['bench_name'] = str(splitted[0])
+            line['pattern_name'] = str(splitted[1])
+            line['hole_name'] = str(splitted[2])
+            line['hole_id'] = str(splitted[3])
+            line['rig_id'] = str(splitted[4])
+            line['sensor_id'] = str(splitted[5])
+            line['digitizer_id'] = str(splitted[6])
+            files_ids = np.empty(len(holes_cfgs[unique_hole])).astype(int)
             for i, file in enumerate(holes_cfgs[unique_hole]):
                 files_ids[i] = int(file[0])
             line['files_ids'] = ','.join(files_ids.astype(str))
