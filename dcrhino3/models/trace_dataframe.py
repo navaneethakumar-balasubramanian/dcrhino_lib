@@ -18,6 +18,7 @@ import pdb
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.models.config import Config
 
+COMPONENT_IDS = ['axial', 'tangential', 'radial']
 logger = init_logging(__name__)
 
 class ModuleType(Enum):
@@ -73,8 +74,7 @@ class TraceData(object):
         all_columns = list(self.dataframe.columns)
         h5f = h5py.File(path, 'w')
         #<save traces>
-        component_ids = ['axial', 'tangential', 'radial']
-        for component_id in component_ids:
+        for component_id in COMPONENT_IDS:
             try:
                 trace_label = '{}_trace'.format(component_id)
                 trace_data = self.component_as_array(component_id)
@@ -86,7 +86,7 @@ class TraceData(object):
 
         #<mwd columns>
         mwd_columns = all_columns#traces removed
-        for column_label in mwd_columns:            
+        for column_label in mwd_columns:
             dtype = type(self.dataframe[column_label].iloc[0])
             print (column_label, dtype)
             column_data = np.asarray(self.dataframe[column_label])
@@ -107,12 +107,40 @@ class TraceData(object):
         return
 
     def load_from_h5(self,path):
+        """
+        inverse of save_to_h5; Handle traces, then other columns, then json cfg
+        """
+        h5f = h5py.File(path, 'r')
+        dict_for_df = {}
+        #<load traces>
+        for component_id in COMPONENT_IDS:
+            try:
+                trace_label = '{}_trace'.format(component_id)
+                trace_data = h5f.get(trace_label)
+                trace_data = np.asarray(trace_data)
+                trace_data = list(trace_data)
+                dict_for_df[trace_label] = trace_data
+            except KeyError:
+                logger.info('Skipping loading {} as it DNE'.format(trace_label))
+        #</load traces>
+
+        for key in h5f.keys():
+            if key[-9:]=='ial_trace':#skip traces
+                continue
+            data = h5f.get(key)
+            dict_for_df[key] = data
+
+        df = pd.DataFrame(dict_for_df)
+        self.dataframe = df
+        return
+
+
         pass
 
     def append_to_h5(self,path):
         pass
 
-    def add_global_config(self,global_config,file_id):
+    def add_global_config(self,global_config, file_id):
         self._global_configs[file_id] = global_config
         return file_id
 
