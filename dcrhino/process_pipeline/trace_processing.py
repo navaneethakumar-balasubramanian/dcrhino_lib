@@ -191,7 +191,7 @@ class TraceProcessing:
                 output[mask_true_or_false] = tmp[mask_true_or_false]-pow_of_2
                 output = np.round(output/2.0,0) * volt_per_bit
                 #</Convert to Voltage>
-            output = output / (sensitivity/1000.0) #Convert to G's
             else:
                 raise ValueError("The Rhino Hardware version should be 1.0 or 1.1")
+            output = output / (sensitivity/1000.0) #Convert to G's
             return output
