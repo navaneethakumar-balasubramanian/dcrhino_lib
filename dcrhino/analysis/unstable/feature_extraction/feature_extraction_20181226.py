@@ -4,6 +4,21 @@ Created on Tue Dec 11 in Houston at #206 - 300 St. Joseph's Parkway
 Based on earlier versions from Dec 5, Dec 6
 @author: kkappler
 
+@note 20190122: oh dear, there appear to not be axial J1 features.  Previously a bug
+fix was committed to rectify this which had to do with looping over component_id and
+component, but now it is something different.  The issue is sourced in window_boundaries_indices
+specifically how it is being assigned per component as opposed to being
+treated as a dictionary.  I am going to make this a global variable here ...
+maybe not the best solution, probably there should be a window class, but this is
+a forerunner to the window class.
+In any case, to fix the current issue I need to fix window_boundaries_indices.
+This variable is referencesd in these four functions: {update_window_boundaries_in_time,
+convert_window_boundaries_to_sample_indices, populate_window_data_dict,
+feature_extractor_J1}
+Where feature_extractor_J1 is the initial call;
+FLow:
+feature_extractor_J1
+
 """
 
 from __future__ import absolute_import, division, print_function
@@ -23,6 +38,10 @@ PRIMARY_SHIFT_TANGENTIAL = 0.0
 WINDOW_BOUNDARIES_TIME = {}
 WINDOW_BOUNDARIES_TIME['axial'] = {}
 WINDOW_BOUNDARIES_TIME['tangential'] = {}
+WINDOW_BOUNDARIES_INDICES = {}
+WINDOW_BOUNDARIES_INDICES['axial'] = {}
+WINDOW_BOUNDARIES_INDICES['tangential'] = {}
+
 
 processing_scheme_list = ['standard', 'phase_rotated', 'despike_decon', 'simple_correlated',]
 trace_window_labels_for_feature_extraction = ['primary', 'multiple_1', 'multiple_2',
@@ -37,24 +56,26 @@ def get_window_widths(global_config):
     @TODO: remove for PPv3;
     """
     try:
+        #pdb.set_trace()
         window_widths = json.loads(global_config.window_widths)
     except AttributeError:
         print('window widths not specified in global config')
         return None
+    except TypeError:
         #<From [FEATURE_EXTRACTION] config>
-#        window_widths = {}
-#        component = 'axial'
-#        window_widths[component] = {}
-#        window_widths[component]['primary'] = 4.0 * 1e-3
-#        window_widths[component]['multiple_1'] = 4.0 * 1e-3
-#        window_widths[component]['multiple_2'] = 4.0 * 1e-3
-#        window_widths[component]['multiple_3'] = 4.0 * 1e-3
-#        component = 'tangential'
-#        window_widths[component] = {}
-#        window_widths[component]['primary'] = 4.0 * 1e-3
-#        window_widths[component]['multiple_1'] = 4.0 * 1e-3
-#        window_widths[component]['multiple_2'] = 4.0 * 1e-3
-#        window_widths[component]['multiple_3'] = 4.0 * 1e-3
+        window_widths = {}
+        component = 'axial'
+        window_widths[component] = {}
+        window_widths[component]['primary'] = 4.0 * 1e-3
+        window_widths[component]['multiple_1'] = 4.0 * 1e-3
+        window_widths[component]['multiple_2'] = 4.0 * 1e-3
+        window_widths[component]['multiple_3'] = 4.0 * 1e-3
+        component = 'tangential'
+        window_widths[component] = {}
+        window_widths[component]['primary'] = 4.0 * 1e-3
+        window_widths[component]['multiple_1'] = 4.0 * 1e-3
+        window_widths[component]['multiple_2'] = 4.0 * 1e-3
+        window_widths[component]['multiple_3'] = 4.0 * 1e-3
         #</From [FEATURE_EXTRACTION] config>
     return window_widths
 
@@ -112,9 +133,9 @@ def set_window_boundaries_in_time(expected_multiple_periods, window_widths, comp
         WINDOW_BOUNDARIES_TIME[component][window_label] = window_bounds
     return WINDOW_BOUNDARIES_TIME#dont need to return this global
 
-def update_window_boundaries_in_time(component, trimmed_trace, trimmed_time_vector, window_widths,
-                                     window_boundaries_indices, expected_multiple_periods,
-                                     global_config, dynamic_windows=['primary',] ):
+def update_window_boundaries_in_time(component, trimmed_trace, trimmed_time_vector,
+                                     window_widths, expected_multiple_periods,
+                                     global_config, dynamic_windows=['primary',]):
     """
      #<dynamic window allocation>: idea is that the primary window will depend on
      the data, not an predetermined expected window assignment
@@ -131,7 +152,7 @@ def update_window_boundaries_in_time(component, trimmed_trace, trimmed_time_vect
     """
 
     if dynamic_windows is None:
-        return window_boundaries_indices
+        return
     elif 'primary' in dynamic_windows:
         acceptable_peak_wander = .003 #3ms - add to env_cfg
         max_index = np.argmax(trimmed_trace)
@@ -141,14 +162,15 @@ def update_window_boundaries_in_time(component, trimmed_trace, trimmed_time_vect
             primary_shift = max_time - applicable_window_width/2.0 #this 2.0 means center the window on the max
             set_window_boundaries_in_time(expected_multiple_periods, window_widths,
                                           component, primary_shift=primary_shift)
-            window_boundaries_indices = convert_window_boundaries_to_sample_indices(component, global_config)
-            return window_boundaries_indices
+            convert_window_boundaries_to_sample_indices(component, global_config)
+            return
 
 
         else:
-            return window_boundaries_indices
+            print('primary peak has wandered further than expected ... not updating feature windows')
+            return
     else:
-        return window_boundaries_indices
+        return
 
     #</dynamic window allocation>
 
@@ -163,22 +185,22 @@ def convert_window_boundaries_to_sample_indices(component_label, global_config):
     dt = 1./sampling_rate
     index_offset = abs(int(global_config.min_lag_trimmed_trace * sampling_rate))
 
-    window_boundaries_indices = {}
+    #window_boundaries_indices = {}
     #for component_label in window_boundaries_time.keys():
     sub_dict = WINDOW_BOUNDARIES_TIME[component_label]
-    window_boundaries_indices[component_label] = {}
+    #window_boundaries_indices[component_label] = {}
     for window_label in sub_dict.keys():
         subsub_dict = sub_dict[window_label]
         lower_time = subsub_dict[0]; upper_time = subsub_dict[1]
         lower_index = int(np.floor(lower_time/dt)) + index_offset
         upper_index = int(np.ceil(upper_time/dt)) + index_offset
 
-        window_boundaries_indices[component_label][window_label] = [lower_index, upper_index]
+        WINDOW_BOUNDARIES_INDICES[component_label][window_label] = [lower_index, upper_index]
 
-    return window_boundaries_indices
+    return #window_boundaries_indices
 
 
-def populate_window_data_dict(window_boundaries_indices, trimmed_trace, trimmed_time_vector):#time_vector needed here?, n_samples):
+def populate_window_data_dict(component, trimmed_trace, trimmed_time_vector):
     """
     associate with each window_label, the data in that window, and the time
     takes a dictionary of times as input
@@ -189,8 +211,8 @@ def populate_window_data_dict(window_boundaries_indices, trimmed_trace, trimmed_
 
     trace_data_window_dict = {}
     trace_time_vector_dict = {}
-    for window_label in window_boundaries_indices.keys():
-        sub_dict = window_boundaries_indices[window_label]
+    for window_label in WINDOW_BOUNDARIES_INDICES[component].keys():
+        sub_dict = WINDOW_BOUNDARIES_INDICES[component][window_label]
         lower_index = sub_dict[0]; upper_index = sub_dict[1]
         trace_data_window_dict[window_label] = trimmed_trace[lower_index:upper_index]
         trace_time_vector_dict[window_label] = trimmed_time_vector[lower_index:upper_index]
@@ -267,33 +289,33 @@ def calculate_boolean_features(feature_dict, global_config):
 def feature_extractor_J1(global_config, trimmed_traces_dict):
     """
     """
+    components_to_process = ['axial', 'tangential', ]
     window_widths = get_window_widths(global_config)
 
     samples_per_trace = len(trimmed_traces_dict['axial'])
     sampling_rate = global_config.output_sampling_rate; dt = 1./sampling_rate;
-    #<Define intervals of data for analysis and prep containers>
 
+    #<Define intervals of data for analysis and prep containers>
     expected_multiple_periods = get_expected_multiple_times(global_config)
     #pdb.set_trace()
-    for component in ['axial', 'tangential', ]:
+    for component in components_to_process:
         set_window_boundaries_in_time(expected_multiple_periods, window_widths, component)
-        window_boundaries_indices = convert_window_boundaries_to_sample_indices(component, global_config)
+        convert_window_boundaries_to_sample_indices(component, global_config)
     #</Define intervals of data for analysis and prep containers>
-    trimmed_time_vector = (dt * np.arange(samples_per_trace)) + global_config.min_lag_trimmed_trace
-    #Allocate space for feature arrays
 
+    trimmed_time_vector = (dt * np.arange(samples_per_trace)) + global_config.min_lag_trimmed_trace
+
+    #Allocate space for feature arrays
     new_features_dict = {}
-    for component in window_boundaries_indices.keys():
+    for component in components_to_process:
         trimmed_trace = trimmed_traces_dict[component]
         #<update primary window to be centered on max amplitude of trace>
         print("20181226 update the window time boundaries to be based on trace data")
-        window_boundaries_indices = update_window_boundaries_in_time(component, trimmed_trace,
-                                                                     trimmed_time_vector, window_widths,
-                                                                     window_boundaries_indices, expected_multiple_periods,
-                                                                     global_config)
+        update_window_boundaries_in_time(component, trimmed_trace, trimmed_time_vector,
+                                         window_widths, expected_multiple_periods, global_config)
 
         #</update primary window to be centered on max amplitude>
-        window_data_dict, window_time_vector_dict = populate_window_data_dict(window_boundaries_indices[component],
+        window_data_dict, window_time_vector_dict = populate_window_data_dict(component,
                                                                           trimmed_trace,
                                                                           trimmed_time_vector)
         #test_populate_window_data_dict(window_data_dict, window_time_vector_dict,

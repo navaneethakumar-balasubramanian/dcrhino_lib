@@ -85,6 +85,7 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, h5_helper,
     while actual_ts < end_time_ts:
         trace_index = actual_ts - start_time_ts
         ts[trace_index] = actual_ts
+        print (trace_index)
 
         indexes_array_of_actual_second = get_ts_array_indexes(actual_ts,entire_ts_int)
 
@@ -102,7 +103,7 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, h5_helper,
             component_name = COMPONENT_LABELS[i]
             component_index = global_config.get_component_index(component_name)
 
-            component_trace_raw_data = h5_helper.load_axis_boundaries(xyz[i],indexes_array_of_actual_second.min(),indexes_array_of_actual_second.max())
+            component_trace_raw_data = h5_helper.load_axis_boundaries(xyz[component_index],indexes_array_of_actual_second.min(),indexes_array_of_actual_second.max())
             #component_trace_raw_data = get_values_from_index(indexes_array_of_actual_second,
             #                                                 entire_xyz[component_index], np.float32)
             #pdb.set_trace()
@@ -152,7 +153,7 @@ def get_features_extracted_v2(traces_dict, global_config, recipe_list):
     axial_traces = traces_dict['axial_trimmed_filtered_correlated_array']
     radial_traces = traces_dict['radial_trimmed_filtered_correlated_array']
     tangential_traces = traces_dict['tangential_trimmed_filtered_correlated_array']
-    tangential_despiked_filtered_correlated_traces = traces_dict['tangential_filtered_despiked_correlated_array']
+    tangential_despiked_filtered_correlated_traces = traces_dict['tangential_filtered_despiked_correlated']
     timestamp_array = traces_dict['ts_array']
     print("Extracting features")
     #initial_timestamp = timestamp_array[0]
@@ -209,7 +210,10 @@ def load_processed_traces(temppath):
     _key_list = ['axial_trimmed_filtered_correlated_array',
                      'tangential_trimmed_filtered_correlated_array',
                      'radial_trimmed_filtered_correlated_array',
-                     'tangential_filtered_despiked_correlated']
+                     'tangential_filtered_despiked_correlated', 'ts_array'
+                     ,'axial_max_acceleration_array','axial_min_acceleration_array'
+                     ,'tangential_max_acceleration_array','tangential_min_acceleration_array'
+                     ,'radial_max_acceleration_array','radial_min_acceleration_array']
     for _key in _key_list:
         if _key == 'axial_trimmed_filtered_correlated_array':
             expected_filename = os.path.join(temppath, 'axial.npy')
@@ -219,6 +223,13 @@ def load_processed_traces(temppath):
             traces_dict[_key] = np.load(expected_filename)
         elif _key == 'radial_trimmed_filtered_correlated_array':
             expected_filename = os.path.join(temppath, 'radial.npy')
+            traces_dict[_key] = np.load(expected_filename)
+        elif _key == 'ts_array':
+            expected_filename = os.path.join(temppath, 'ts.npy')
+            traces_dict[_key] = np.load(expected_filename)
+        elif 'acceleration' in _key:
+            filename = _key.replace('_array','') + ".npy"
+            expected_filename = os.path.join(temppath, filename)
             traces_dict[_key] = np.load(expected_filename)
         else:
 #            pdb.set_trace()
@@ -318,7 +329,7 @@ def process_h5_file(h5py_file, output_folder, reprocess_signals, cfg_file_path=F
                                                         feature_recipe_list)
 
     extracted_features_df = pd.DataFrame(extracted_features_list)
-    extracted_features_df.dropna(axis=1, how='all', inplace=True)
+    #extracted_features_df.dropna(axis=1, how='all', inplace=True)
 
     acceleration_stats_df = get_df_acceleration_stats(traces_dict)
     extracted_features_df_path = os.path.join(temppath,"extracted_features.csv")
