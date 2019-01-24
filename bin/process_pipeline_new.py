@@ -319,7 +319,7 @@ def process_h5_file(h5py_file, output_folder, reprocess_signals, cfg_file_path=F
                                                         feature_recipe_list)
 
     extracted_features_df = pd.DataFrame(extracted_features_list)
-    extracted_features_df.dropna(axis=1, how='all', inplace=True)
+    #extracted_features_df.dropna(axis=1, how='all', inplace=True)
 
     acceleration_stats_df = get_df_acceleration_stats(traces_dict)
     extracted_features_df_path = os.path.join(temppath,"extracted_features.csv")
