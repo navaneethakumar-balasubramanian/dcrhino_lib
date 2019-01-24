@@ -48,9 +48,9 @@ if conn is not False:
 
     relevant_file_ids = acor_trace.dataframe['acorr_file_id'].unique()
     for file_id in relevant_file_ids:
-        cfg_unicode_string = db_helper.get_file_config(file_id, 1)
+        cfg_unicode_string = db_helper.get_file_config(file_id, CFG_VERSION)
         print('warning! assuming unique above - need to add logic to check this')
-        unicode_string = db_helper.get_file_config(14, 1)
+
     config_dict = json.loads(unicode_string)
     print('save the unicode string as an attr')
     h5_path = 'test3.h5'
