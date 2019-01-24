@@ -242,7 +242,31 @@ METADATA_HEADER_FORMAT_KEYS = {
         'segy_output_step':DataType.STRING,
         'data_message_identifier':DataType.STRING,
         'info_message_identifier':DataType.STRING,
-        'auto_correlation_trace_duration':DataType.FLOAT
+        'auto_correlation_trace_duration':DataType.FLOAT,
+        'x_axis_length_in_seconds':DataType.INTEGER,
+        'x_axis_tick_interval':DataType.INTEGER,
+        'rssi_y_lim':DataType.STRING,
+        'packets_y_lim':DataType.STRING,
+        'delay_y_lim':DataType.STRING,
+        'temperature_y_lim':DataType.STRING,
+        'battery_y_lim':DataType.STRING,
+        'rssi_upper_limit':DataType.FLOAT,
+        'rssi_lower_limit':DataType.FLOAT,
+        'packets_upper_limit':DataType.FLOAT,
+        'packets_lower_limit':DataType.FLOAT,
+        'battery_upper_limit':DataType.FLOAT,
+        'battery_lower_limit':DataType.FLOAT,
+        'temp_positive_upper_limit':DataType.FLOAT,
+        'temp_positive_lower_limit':DataType.FLOAT,
+        'temp_negative_upper_limit':DataType.FLOAT,
+        'temp_negative_lower_limit':DataType.FLOAT,
+        'delay_upper_limit':DataType.FLOAT,
+        'delay_lower_limit':DataType.FLOAT,
+        'trace_plot_pre_cut':DataType.INTEGER,
+        'trace_plot_post_add':DataType.INTEGER,
+        'number_of_traces_to_display':DataType.INTEGER,
+        'traces_subsample':DataType.INTEGER,
+        'battery_max_voltage':DataType.FLOAT
         }
 
 
