@@ -17,7 +17,9 @@ result in a new file uid??)
 In any case, the dataset we get back will be a dataframe indexed by timestamp.
 For each timestamp there are traces but also a column called 'acorr_file_id', this
 is an integer which is basically a uid for the parent file and can be used to call
-the relevant config ... it is equal to 14 in our prelimniary test
+the relevant config ... it is equal to 14 in our prelimniary test)
+
+So the global configs should be a dictionary, keyed by 'acorr_file_id',
 """
 
 from __future__ import absolute_import, division, print_function
