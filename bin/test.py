@@ -25,7 +25,7 @@ CFG_VERSION = 1 #we need to discuss cases when this could be different from 1
 if conn is not False:
     db_helper = RhinoDBHelper(conn=conn)
     acor_trace = TraceData()
-
+    #pdb.set_trace()
     files = db_helper.get_files_list()
     mwd_df = mwd_helper.get_rhino_mwd_from_mine_name(mine_name)
     #pdb.set_trace()
@@ -47,16 +47,21 @@ if conn is not False:
     acor_trace.dataframe = merger.merge_mwd_with_trace(hole_mwd,acor_trace.dataframe)
 
     relevant_file_ids = acor_trace.dataframe['acorr_file_id'].unique()
+
+    #<HACK>
+    acor_trace._global_config_jsons = {}
     for file_id in relevant_file_ids:
         cfg_unicode_string = db_helper.get_file_config(file_id, CFG_VERSION)
-        print('warning! assuming unique above - need to add logic to check this')
+        print('warning! assuming unique CFG-VERSION ... not sure I understand what I am doing!')
+        config_dict = json.loads(cfg_unicode_string)
+        #pdb.set_trace()
+        acor_trace._global_config_jsons[file_id] = config_dict
 
-    config_dict = json.loads(unicode_string)
-    print('save the unicode string as an attr')
     h5_path = 'test3.h5'
+    #pdb.set_trace()
     acor_trace.save_to_h5(h5_path)
     #pdb.set_trace()
     reloaded_traces = TraceData()
     reloaded_traces.load_from_h5(h5_path)
     print('hooray')
-pdb.set_trace()
+#pdb.set_trace()

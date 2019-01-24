@@ -57,6 +57,7 @@ class TraceData(object):
         self.dataframe = kwargs.get('df', pd.DataFrame())
         self.applied_modules = []
         self._global_configs = dict()
+        self._global_config_jsons = {}
 
     def apply_module(self,module_type,arguments):
         """
@@ -132,7 +133,14 @@ class TraceData(object):
             else:
                 column_data = column_data.astype(float)
                 h5f.create_dataset(column_label, data=column_data, dtype=float)
+        #</mwd columns>
 
+        #<config>
+        #pdb.set_trace()
+        print('save the unicode string as an attr')
+        unicode_string = json.dumps(self._global_config_jsons)
+        h5f.attrs['global_config_jsons'] = unicode_string
+        #</config>
         h5f.close()
         return
 
@@ -162,6 +170,19 @@ class TraceData(object):
 
         df = pd.DataFrame(dict_for_df)
         self.dataframe = df
+
+        #<config>
+        unicode_string = h5f.attrs['global_config_jsons']
+        global_config_jsons = json.loads(unicode_string)
+        self._global_config_jsons = global_config_jsons
+        for file_id, file_config in self._global_config_jsons.iteritems():
+            #tmp = json.dumps(file_config)
+            global_config = Config()
+            global_config.set_data_from_json(json.loads(json.dumps(file_config)))
+            self.add_global_config(global_config, str(file_id))
+        #</config>
+
+        h5f.close()
         return
 
 
@@ -173,6 +194,9 @@ class TraceData(object):
     def add_global_config(self,global_config, file_id):
         self._global_configs[file_id] = global_config
         return file_id
+
+    def global_config_to_json_string(self):
+        pass
 
     def remove_global_config(self,index):
         pass
