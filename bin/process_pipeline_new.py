@@ -210,7 +210,7 @@ def load_processed_traces(temppath):
     _key_list = ['axial_trimmed_filtered_correlated_array',
                      'tangential_trimmed_filtered_correlated_array',
                      'radial_trimmed_filtered_correlated_array',
-                     'tangential_filtered_despiked_correlated']
+                     'tangential_filtered_despiked_correlated', 'ts_array']
     for _key in _key_list:
         if _key == 'axial_trimmed_filtered_correlated_array':
             expected_filename = os.path.join(temppath, 'axial.npy')
@@ -220,6 +220,9 @@ def load_processed_traces(temppath):
             traces_dict[_key] = np.load(expected_filename)
         elif _key == 'radial_trimmed_filtered_correlated_array':
             expected_filename = os.path.join(temppath, 'radial.npy')
+            traces_dict[_key] = np.load(expected_filename)
+        elif _key == 'ts_array':
+            expected_filename = os.path.join(temppath, 'ts.npy')
             traces_dict[_key] = np.load(expected_filename)
         else:
 #            pdb.set_trace()
