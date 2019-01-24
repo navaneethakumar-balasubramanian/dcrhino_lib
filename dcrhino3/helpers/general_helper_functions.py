@@ -31,6 +31,11 @@ def init_logging(name):
 logger = init_logging(__name__)
 home = os.path.expanduser('~/')
 
+def create_folders_if_needed(path):
+    path = os.path.dirname(path)
+    if not os.path.exists(path):
+        os.makedirs(path)
+
 def splitDataFrameIntoSmaller(df, chunk_size = 10000):
     listOfDf = list()
     number_of_chunks = len(df) // chunk_size + 1

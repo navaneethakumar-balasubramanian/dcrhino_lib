@@ -32,7 +32,7 @@ import numpy as np
 import pandas as pd
 import pdb
 
-from dcrhino3.helpers.general_helper_functions import init_logging
+from dcrhino3.helpers.general_helper_functions import init_logging,create_folders_if_needed
 from dcrhino3.models.config import Config
 
 COMPONENT_IDS = ['axial', 'tangential', 'radial']
@@ -107,13 +107,15 @@ class TraceData(object):
         #df_as_dict = dict(self.dataframe)
 
         all_columns = list(self.dataframe.columns)
+        create_folders_if_needed(path)
         h5f = h5py.File(path, 'w')
+        
         #<save traces>
         for component_id in COMPONENT_IDS:
             try:
                 trace_label = '{}_trace'.format(component_id)
                 trace_data = self.component_as_array(component_id)
-                h5f.create_dataset(trace_label, data=trace_data, dtype=float)
+                h5f.create_dataset(trace_label, data=trace_data, dtype=float, compression="gzip", compression_opts=9)
                 all_columns.remove(trace_label)
             except KeyError:
                 logger.info('Skipping saving {} as it DNE'.format(trace_label))
@@ -123,16 +125,16 @@ class TraceData(object):
         mwd_columns = all_columns#traces removed
         for column_label in mwd_columns:
             dtype = type(self.dataframe[column_label].iloc[0])
-            print (column_label, dtype)
+            #print (column_label, dtype)
             column_data = np.asarray(self.dataframe[column_label])
             if dtype == str or dtype == unicode:
                 dt = h5py.special_dtype(vlen=unicode)
-                h5f.create_dataset(column_label, data=column_data, dtype=dt)
+                h5f.create_dataset(column_label, data=column_data, dtype=dt, compression="gzip", compression_opts=9)
             elif dtype == np.int64:
-                h5f.create_dataset(column_label, data=column_data, dtype='i8')
+                h5f.create_dataset(column_label, data=column_data, dtype='i8', compression="gzip", compression_opts=9)
             else:
                 column_data = column_data.astype(float)
-                h5f.create_dataset(column_label, data=column_data, dtype=float)
+                h5f.create_dataset(column_label, data=column_data, dtype=float, compression="gzip", compression_opts=9)
         #</mwd columns>
 
         #<config>
@@ -150,13 +152,16 @@ class TraceData(object):
         """
         h5f = h5py.File(path, 'r')
         dict_for_df = {}
+        
         #<load traces>
         for component_id in COMPONENT_IDS:
             try:
                 trace_label = '{}_trace'.format(component_id)
                 trace_data = h5f.get(trace_label)
                 trace_data = np.asarray(trace_data)
-                trace_data = list(trace_data)
+                #print (trace_label)
+                #pdb.set_trace()
+                #trace_data = list(trace_data)
                 dict_for_df[trace_label] = trace_data
             except KeyError:
                 logger.info('Skipping loading {} as it DNE'.format(trace_label))
@@ -166,8 +171,8 @@ class TraceData(object):
             if key[-9:]=='ial_trace':#skip traces
                 continue
             data = h5f.get(key)
-            dict_for_df[key] = data
-
+            dict_for_df[key] = np.asarray(data)
+        pdb.set_trace()
         df = pd.DataFrame(dict_for_df)
         self.dataframe = df
 

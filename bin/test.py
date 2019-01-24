@@ -8,6 +8,7 @@ Created on Mon Jan 21 16:10:30 2019
 import json
 import numpy as np
 import pdb
+import os
 
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
 from dcrhino3.helpers.mwd_helper import MWDHelper
@@ -24,44 +25,42 @@ CFG_VERSION = 1 #we need to discuss cases when this could be different from 1
 
 if conn is not False:
     db_helper = RhinoDBHelper(conn=conn)
-    acor_trace = TraceData()
+    
     #pdb.set_trace()
     files = db_helper.get_files_list()
     mwd_df = mwd_helper.get_rhino_mwd_from_mine_name(mine_name)
     #pdb.set_trace()
     merger = MWDRhinoMerger(files,mwd_df)
     matches = merger.matches_list
-
-    line = matches.iloc[0]
-    hole_mwd = mwd_helper.get_hole_mwd_from_mine_mwd(mwd_df, line.bench_name,
-                                                     line.pattern_name,line.hole_name,
-                                                     line.hole_id)
-    files_ids = np.array(line.files_ids.split(','))
-    min_ts = int((hole_mwd['start_time'].astype(int)/1000000000).min())
-    max_ts = int((hole_mwd['start_time'].astype(int)/1000000000).max())
-
-    acor_trace.load_from_db(db_helper, files_ids, min_ts, max_ts)
-    #pdb.set_trace()
-
-    #pdb.set_trace()
-    acor_trace.dataframe = merger.merge_mwd_with_trace(hole_mwd,acor_trace.dataframe)
-
-    relevant_file_ids = acor_trace.dataframe['acorr_file_id'].unique()
-
-    #<HACK>
-    acor_trace._global_config_jsons = {}
-    for file_id in relevant_file_ids:
-        cfg_unicode_string = db_helper.get_file_config(file_id, CFG_VERSION)
-        print('warning! assuming unique CFG-VERSION ... not sure I understand what I am doing!')
-        config_dict = json.loads(cfg_unicode_string)
+    
+    for line in matches.itertuples():
+        
+        h5_filename = str(line.hole_id) + ".h5"
+        holes_cached_folder = envConfig.get_hole_h5_interpolated_cache_folder(mine_name)
+        h5_path = os.path.join(holes_cached_folder,h5_filename)
+        acor_trace = TraceData()
+        
+        if os.path.exists(h5_path) and os.path.isfile(h5_path):
+            acor_trace.load_from_h5(h5_path)
+            print ("loaded " + str(h5_path))
+        else:
+            print (line.bench_name,line.pattern_name,line.hole_name,line.hole_id)
+            hole_mwd = mwd_helper.get_hole_mwd_from_mine_mwd(mwd_df, line.bench_name,
+                                                             line.pattern_name,line.hole_name,
+                                                             line.hole_id)
+            files_ids = np.array(line.files_ids.split(','))
+            min_ts = int((hole_mwd['start_time'].astype(int)/1000000000).min())
+            max_ts = int((hole_mwd['start_time'].astype(int)/1000000000).max())
+        
+            acor_trace.load_from_db(db_helper, files_ids, min_ts, max_ts)
+            print ("Loaded")
+            acor_trace.dataframe = merger.merge_mwd_with_trace(hole_mwd,acor_trace.dataframe)
+            print ("Merged")
+            relevant_file_ids = acor_trace.dataframe['acorr_file_id'].unique()
+            acor_trace.save_to_h5(h5_path)
+            print ("Saved")
         #pdb.set_trace()
-        acor_trace._global_config_jsons[file_id] = config_dict
-
-    h5_path = 'test3.h5'
-    #pdb.set_trace()
-    acor_trace.save_to_h5(h5_path)
-    #pdb.set_trace()
-    reloaded_traces = TraceData()
-    reloaded_traces.load_from_h5(h5_path)
+    #reloaded_traces = TraceData()
+    #reloaded_traces.load_from_h5(h5_path)
     print('hooray')
 #pdb.set_trace()
