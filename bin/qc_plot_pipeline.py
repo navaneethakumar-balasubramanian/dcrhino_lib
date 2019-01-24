@@ -50,7 +50,6 @@ def get_multiples(global_config):
 def get_ax_lim(extracted_features_df):
     """
     """
-    pdb.set_trace()
     try:
         min_ax_RC = min(extracted_features_df['J0_reflection_coefficient'])
         max_ax_RC = max(extracted_features_df['J0_reflection_coefficient'])

@@ -357,7 +357,7 @@ def process_h5_using_mwd(h5_iterator_df, mwd_df, mmap, output_folder,config_pars
         generate_segy_from_hole_data(segy_component_data,segy_mwd_components,global_config,hole_id,output_path)
 
 
-        hole_features_extracted.dropna(axis=1, how='all', inplace=True)
+        #hole_features_extracted.dropna(axis=1, how='all', inplace=True)
         hole_features_extracted.to_csv(os.path.join(hole_output_folder,"extracted_features.csv"),index=False)
 
         holes_h5[hole]['hole_mwd_df'].to_csv(os.path.join(hole_output_folder,"hole_mwd.csv"),index=False)
