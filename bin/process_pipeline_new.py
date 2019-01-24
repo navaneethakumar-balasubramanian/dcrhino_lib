@@ -153,7 +153,10 @@ def get_features_extracted_v2(traces_dict, global_config, recipe_list):
     axial_traces = traces_dict['axial_trimmed_filtered_correlated_array']
     radial_traces = traces_dict['radial_trimmed_filtered_correlated_array']
     tangential_traces = traces_dict['tangential_trimmed_filtered_correlated_array']
-    tangential_despiked_filtered_correlated_traces = traces_dict['tangential_filtered_despiked_correlated']
+    try:
+        tangential_despiked_filtered_correlated_traces = traces_dict['tangential_filtered_despiked_correlated']
+    except KeyError:
+        tangential_despiked_filtered_correlated_traces = traces_dict['tangential_filtered_despiked_correlated_array']
     timestamp_array = traces_dict['ts_array']
     print("Extracting features")
     #initial_timestamp = timestamp_array[0]
