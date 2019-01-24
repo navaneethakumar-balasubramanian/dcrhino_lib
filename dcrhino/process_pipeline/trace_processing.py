@@ -25,7 +25,7 @@ def trim_trace(min_lag_trimmed_trace, max_lag_trimmed_trace, num_taps_in_decon_f
     return little_data
 
 class TraceProcessing:
-    def __init__(self,global_config,is_ide_file,accelerometer_max_voltage,rhino_version=2):
+    def __init__(self,global_config,is_ide_file,accelerometer_max_voltage,rhino_version=1.0):
         self.config = global_config
         self.is_ide_file = is_ide_file
         self.accelerometer_max_voltage = accelerometer_max_voltage
@@ -171,17 +171,18 @@ class TraceProcessing:
 
     def _apply_calibration(self,values_arr,sensitivity):
         output = values_arr
-
+        print("process_pipeline")
+        pdb.set_trace()
         if self.is_ide_file:
             # TODO CHECK THAT
             # NATAL SAID ITS CORRECT!
             return output / sensitivity
         else:
-            if self.rhino_version == '1.0':
+            if float(self.rhino_version) == 1.0:
                 output = (output * 5.0) / 65535 #Covert to Voltage
                 output = (self.accelerometer_max_voltage/2.0) - output #Calculate difference from reference voltage
                 output = output / (sensitivity/1000.0) #Convert to G's
-            elif self.rhino_version == '1.1':
+            elif float(self.rhino_version) == 1.1:
                 #<Convert to Voltage>
                 pow_of_2 = pow(2.0,32)
                 volt_per_bit = 5.0/pow(2.0,31)
@@ -193,4 +194,6 @@ class TraceProcessing:
                 #</Calculate difference from reference voltage>
                 #<Convert to G's>
                 #</Convert to G's>
+            else:
+                raise ValueError("The Rhino Hardware version should be 1.0 or 1.1")
             return output
