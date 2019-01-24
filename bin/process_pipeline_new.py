@@ -227,6 +227,10 @@ def load_processed_traces(temppath):
         elif _key == 'ts_array':
             expected_filename = os.path.join(temppath, 'ts.npy')
             traces_dict[_key] = np.load(expected_filename)
+        elif 'acceleration' in _key:
+            filename = _key.replace('_array','') + ".npy"
+            expected_filename = os.path.join(temppath, filename)
+            traces_dict[_key] = np.load(expected_filename)
         else:
 #            pdb.set_trace()
             expected_filename = os.path.join(temppath,'{}.npy'.format(_key))
