@@ -210,7 +210,10 @@ def load_processed_traces(temppath):
     _key_list = ['axial_trimmed_filtered_correlated_array',
                      'tangential_trimmed_filtered_correlated_array',
                      'radial_trimmed_filtered_correlated_array',
-                     'tangential_filtered_despiked_correlated', 'ts_array']
+                     'tangential_filtered_despiked_correlated', 'ts_array'
+                     ,'axial_max_acceleration_array','axial_min_acceleration_array'
+                     ,'tangential_max_acceleration_array','tangential_min_acceleration_array'
+                     ,'radial_max_acceleration_array','radial_min_acceleration_array']
     for _key in _key_list:
         if _key == 'axial_trimmed_filtered_correlated_array':
             expected_filename = os.path.join(temppath, 'axial.npy')
