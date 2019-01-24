@@ -85,6 +85,7 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, h5_helper,
     while actual_ts < end_time_ts:
         trace_index = actual_ts - start_time_ts
         ts[trace_index] = actual_ts
+        print (trace_index)
 
         indexes_array_of_actual_second = get_ts_array_indexes(actual_ts,entire_ts_int)
 
@@ -102,7 +103,7 @@ def get_axial_tangential_radial_traces(start_time_ts, end_time_ts, h5_helper,
             component_name = COMPONENT_LABELS[i]
             component_index = global_config.get_component_index(component_name)
 
-            component_trace_raw_data = h5_helper.load_axis_boundaries(xyz[i],indexes_array_of_actual_second.min(),indexes_array_of_actual_second.max())
+            component_trace_raw_data = h5_helper.load_axis_boundaries(xyz[component_index],indexes_array_of_actual_second.min(),indexes_array_of_actual_second.max())
             #component_trace_raw_data = get_values_from_index(indexes_array_of_actual_second,
             #                                                 entire_xyz[component_index], np.float32)
             #pdb.set_trace()
