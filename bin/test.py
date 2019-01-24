@@ -20,6 +20,7 @@ mine_name = 'milligan'
 envConfig = EnvConfig()
 conn = envConfig.get_rhino_db_connection_from_mine_name(mine_name)
 mwd_helper = MWDHelper(envConfig)
+CFG_VERSION = 1 #we need to discuss cases when this could be different from 1
 
 if conn is not False:
     db_helper = RhinoDBHelper(conn=conn)
@@ -39,14 +40,17 @@ if conn is not False:
     min_ts = int((hole_mwd['start_time'].astype(int)/1000000000).min())
     max_ts = int((hole_mwd['start_time'].astype(int)/1000000000).max())
 
-    acor_trace.load_from_db(db_helper,files_ids,min_ts,max_ts)
+    acor_trace.load_from_db(db_helper, files_ids, min_ts, max_ts)
     #pdb.set_trace()
 
     #pdb.set_trace()
     acor_trace.dataframe = merger.merge_mwd_with_trace(hole_mwd,acor_trace.dataframe)
-    file_id = acor_trace.dataframe['acorr_file_id'].unique()[0]
-    print('warning! assuming unique above - need to add logic to check this')
-    unicode_string = db_helper.get_file_config(14, 1)
+
+    relevant_file_ids = acor_trace.dataframe['acorr_file_id'].unique()
+    for file_id in relevant_file_ids:
+        cfg_unicode_string = db_helper.get_file_config(file_id, 1)
+        print('warning! assuming unique above - need to add logic to check this')
+        unicode_string = db_helper.get_file_config(14, 1)
     config_dict = json.loads(unicode_string)
     print('save the unicode string as an attr')
     h5_path = 'test3.h5'

@@ -3,6 +3,21 @@
 """
 
 @author: natal
+
+@note 20190123: we have not discussed exactly how we will handle the global_config
+storage.  We know that for a particular trace only one global config can be active
+and since a trace comes from a file, we are planning to reference the global_config
+of a file to the trace.  A modest complication we have discussed is when a file
+has more than one config.  I cannot recall how that is possible but it seems that
+it is believed to be possible (@TODO: discuss this case ... can we eliminate it?
+is it becuase we may swap out a sensor without rebooting rhino?? ... or is this
+because different processing types maybe used for different traces?  Or because a
+single hole could have a reboot where some cfg changes, i.e. sampling rate -- but wouldn't that
+result in a new file uid??)
+In any case, the dataset we get back will be a dataframe indexed by timestamp.
+For each timestamp there are traces but also a column called 'acorr_file_id', this
+is an integer which is basically a uid for the parent file and can be used to call
+the relevant config ... it is equal to 14 in our prelimniary test
 """
 
 from __future__ import absolute_import, division, print_function
@@ -35,16 +50,33 @@ class ModuleType(Enum):
 
 class TraceData(object):
     def __init__(self, **kwargs):
+        """
+        """
         self.dataframe = kwargs.get('df', pd.DataFrame())
         self.applied_modules = []
         self._global_configs = dict()
 
     def apply_module(self,module_type,arguments):
+        """
+        """
         self.applied_modules.append({module_type:arguments})
         #return the index where it was appended
         return len(self.applied_modules)-1
 
-    def load_from_db(self,db_helper,files_ids,min_ts,max_ts):
+    def load_from_db(self, db_helper, files_ids, min_ts, max_ts):
+        """
+        @type db_helper: dcrhino3.helpers.rhino_db_helper.RhinoDBHelper
+        @type files_ids: list (of integers)
+        @type min_ts, max_ts: integer (or float?)
+        @param min_ts, max_ts: start and end timestamps of data set to get from db
+
+        @note: the intended use case for this function is to get data from a
+        'observed-blasthole'.  Normally len(files_ids) will equal 1, but we need to
+        consider the case where the hole is in more than one file ...
+        @TODO: push thhe handling of the files_ids, and timestamps back a layer so the
+        user doesn't use this method outside of exceptional circumstances ...
+        i.e. it will be more common to request a blasthole, together with a sensor_id
+        """
         self.dataframe = db_helper.get_autocor_traces_from_files_ids(files_ids,min_ts,max_ts)
         for file_id in files_ids:
             file_config = db_helper.get_last_file_config_from_file_id(file_id)
@@ -99,10 +131,6 @@ class TraceData(object):
                 column_data = column_data.astype(float)
                 h5f.create_dataset(column_label, data=column_data, dtype=float)
 
-#        for k, v in df_as_dict.iteritems():
-#            if isinstance(v[0], float):
-#                h5f.create_dataset(k, data=v, dtype=float)
-#            elif isinstance(v[0], float):
         h5f.close()
         return
 
