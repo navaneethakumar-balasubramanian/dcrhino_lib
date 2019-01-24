@@ -170,9 +170,8 @@ class TraceProcessing:
             # return data
 
     def _apply_calibration(self,values_arr,sensitivity):
+
         output = values_arr
-        # print("process_pipeline")
-        #pdb.set_trace()
         if self.is_ide_file:
             # TODO CHECK THAT
             # NATAL SAID ITS CORRECT!
@@ -181,19 +180,18 @@ class TraceProcessing:
             if float(self.rhino_version) == 1.0:
                 output = (output * 5.0) / 65535 #Covert to Voltage
                 output = (self.accelerometer_max_voltage/2.0) - output #Calculate difference from reference voltage
-                output = output / (sensitivity/1000.0) #Convert to G's
             elif float(self.rhino_version) == 1.1:
                 #<Convert to Voltage>
-                pow_of_2 = pow(2.0,32)
-                volt_per_bit = 5.0/pow(2.0,31)
-                indices = output & 0x80000000 == 0x80000000
-                output[indices] = output[indices] - pow_of_2
+                tmp = output
+                output = output.astype(np.int32)#need to change the type so that the operation - pow_of_2 works
+                pow_of_2 = pow(2,32)
+                volt_per_bit = self.accelerometer_max_voltage/pow(2.0,31)
+                # output = np.asarray([x - pow_of_2 if x& 0x80000000 == 0x80000000 else x for x in output])
+                mask_true_or_false = tmp&0x80000000==0x80000000
+                output[mask_true_or_false] = tmp[mask_true_or_false]-pow_of_2
                 output = np.round(output/2.0,0) * volt_per_bit
                 #</Convert to Voltage>
-                #<Calculate difference from reference voltage>
-                #</Calculate difference from reference voltage>
-                #<Convert to G's>
-                #</Convert to G's>
+            output = output / (sensitivity/1000.0) #Convert to G's
             else:
                 raise ValueError("The Rhino Hardware version should be 1.0 or 1.1")
             return output
