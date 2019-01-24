@@ -171,8 +171,8 @@ class TraceProcessing:
 
     def _apply_calibration(self,values_arr,sensitivity):
         output = values_arr
-        print("process_pipeline")
-        pdb.set_trace()
+        # print("process_pipeline")
+        #pdb.set_trace()
         if self.is_ide_file:
             # TODO CHECK THAT
             # NATAL SAID ITS CORRECT!
