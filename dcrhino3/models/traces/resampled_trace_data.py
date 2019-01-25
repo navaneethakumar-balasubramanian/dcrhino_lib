@@ -24,6 +24,5 @@ from dcrhino3.process_flow.modules.trace_processing.autocorrelate import autocor
 logger = init_logging(__name__)
 
 class ResampledTraceData(TraceData):
-    def load_from_db(self,db_helper,files_ids,min_ts,max_ts):
-        self.dataframe = db_helper.get_autocor_traces_from_files_ids(files_ids,min_ts,max_ts)
+    
         

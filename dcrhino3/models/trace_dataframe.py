@@ -187,11 +187,8 @@ class TraceData(object):
         h5f.close()
         return
 
-
-        pass
-
-    def append_to_h5(self,path):
-        pass
+    def add_applied_module(self,module_string):
+        self.applied_modules.append(module_string)
 
     def add_global_config(self,global_config, file_id):
         self._global_configs[file_id] = global_config
@@ -204,7 +201,7 @@ class TraceData(object):
         pass
 
     def global_config_by_index(self,index):
-        return self._global_configs[index]
+        return self._global_configs[str(index)]
 
     def component_as_array(self, component_id):
         """

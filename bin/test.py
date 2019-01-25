@@ -22,7 +22,7 @@ mine_name = 'milligan'
 envConfig = EnvConfig()
 conn = envConfig.get_rhino_db_connection_from_mine_name(mine_name)
 mwd_helper = MWDHelper(envConfig)
-CFG_VERSION = 1 #we need to discuss cases when this could be different from 1
+#CFG_VERSION = 1 #we need to discuss cases when this could be different from 1
 
 if conn is not False:
     db_helper = RhinoDBHelper(conn=conn)
@@ -61,4 +61,6 @@ if conn is not False:
             reloaded_traces.load_from_h5(h5_path)
             print ("Reloaded")
 
+
+    
     print('hooray')
