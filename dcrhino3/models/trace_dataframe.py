@@ -57,7 +57,6 @@ class TraceData(object):
         self.dataframe = kwargs.get('df', pd.DataFrame())
         self.applied_modules = []
         self._global_configs = dict()
-        self._global_config_jsons = {}
 
     def apply_module(self,module_type,arguments):
         """
@@ -109,7 +108,7 @@ class TraceData(object):
         all_columns = list(self.dataframe.columns)
         create_folders_if_needed(path)
         h5f = h5py.File(path, 'w')
-        
+
         #<save traces>
         for component_id in COMPONENT_IDS:
             try:
@@ -138,11 +137,14 @@ class TraceData(object):
         #</mwd columns>
 
         #<config>
-        #pdb.set_trace()
-        print('save the unicode string as an attr')
-        unicode_string = json.dumps(self._global_config_jsons)
-        h5f.attrs['global_config_jsons'] = unicode_string
+        configs_dict = {}
+        for file_id in self._global_configs.keys():
+            unicode_string = self.global_config_by_index(file_id).json_string()
+            configs_dict[file_id] = unicode_string
+        all_configs_as_a_string = json.dumps(configs_dict)
+        h5f.attrs['global_config_jsons'] = all_configs_as_a_string
         #</config>
+
         h5f.close()
         return
 
@@ -152,16 +154,14 @@ class TraceData(object):
         """
         h5f = h5py.File(path, 'r')
         dict_for_df = {}
-        
+
         #<load traces>
         for component_id in COMPONENT_IDS:
             try:
                 trace_label = '{}_trace'.format(component_id)
                 trace_data = h5f.get(trace_label)
                 trace_data = np.asarray(trace_data)
-                #print (trace_label)
-                #pdb.set_trace()
-                #trace_data = list(trace_data)
+                trace_data = list(trace_data)
                 dict_for_df[trace_label] = trace_data
             except KeyError:
                 logger.info('Skipping loading {} as it DNE'.format(trace_label))
@@ -172,18 +172,15 @@ class TraceData(object):
                 continue
             data = h5f.get(key)
             dict_for_df[key] = np.asarray(data)
-        pdb.set_trace()
         df = pd.DataFrame(dict_for_df)
         self.dataframe = df
 
         #<config>
         unicode_string = h5f.attrs['global_config_jsons']
         global_config_jsons = json.loads(unicode_string)
-        self._global_config_jsons = global_config_jsons
-        for file_id, file_config in self._global_config_jsons.iteritems():
-            #tmp = json.dumps(file_config)
+        for file_id, file_config in global_config_jsons.iteritems():
             global_config = Config()
-            global_config.set_data_from_json(json.loads(json.dumps(file_config)))
+            global_config.set_data_from_json(json.loads(file_config))
             self.add_global_config(global_config, str(file_id))
         #</config>
 

@@ -5,6 +5,7 @@ Created on Thu Sep 27 21:14:10 2018
 /home/kkappler/software/datacloud/dcrhino_lib/dcrhino/process_pipeline/config.py
 @author: thiago
 """
+import json
 import numpy as np
 import pdb
 
@@ -164,6 +165,9 @@ class Config( object ):
         for _key in data.keys():
             self.__dict__[_key] = data[_key]
 
+    def json_string(self):
+        json_str = json.dumps(vars(self), indent=4)
+        return json_str
 
     def _get_num_decon_taps(self,deconvolution_filter_duration,sampling_rate):
         dt = 1. / sampling_rate
