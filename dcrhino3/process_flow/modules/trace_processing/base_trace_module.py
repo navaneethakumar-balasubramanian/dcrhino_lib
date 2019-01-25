@@ -10,14 +10,24 @@ class BaseTraceModule(BaseModule):
         self.id = "base_trace_module"
 
 
-    def process_trace(self,trace,args=None):
+    def process_trace_data(self,trace,args=None):
+        """
+        works with a TraceData() class, typically an entire hole, or
+        dataframe spanning a time interval comprising many traces
+        """
         output_df = trace.dataframe.copy()
+        #n_rows = len(output_df)
+        #acorr_column = output_df['acorr_file_id'].values
+
 
         for line_idx in range(len(output_df)):
-            trace_config = trace.global_config_by_index(output_df.iloc[line_idx]['acorr_file_id'])
+            #print(line_idx)
+            row_of_df = output_df.iloc[line_idx]
+            trace_config = trace.global_config_by_index(row_of_df['acorr_file_id'])
             for component_id in trace_config.components_to_process:
+                #print(component_id, line_idx)
                 component_column_on_df = component_id+"_trace"
-                trace_to_process = output_df.iloc[line_idx][component_column_on_df]
+                trace_to_process = row_of_df[component_column_on_df]
                 processed_trace = self.process_component(component_id,trace_to_process,trace_config)
                 output_df.at[line_idx,component_column_on_df] = processed_trace
 
