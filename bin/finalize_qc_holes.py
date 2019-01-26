@@ -17,7 +17,7 @@ base_path = "/data_sdd/qc_test_dataset"
 output_path = os.path.join(base_path,"final_files","final_files_lco_rhino")
 if not os.path.exists(output_path):
     os.makedirs(output_path)
-files_to_copy = ["depth_plot_v2.png","extracted_features.csv","binned.csv","global_config.json","Acceleration_histogram.png","deconvolved_traces.sgy"]
+files_to_copy = ["depth_plot_v2.png","extracted_features.csv","binned.csv","global_config.json","Acceleration_histogram.png","correlated_traces.sgy"]
 
 def load_holes_csv():
     return pd.read_csv(os.path.join(base_path,"qc_blastholes.csv"),dtype=str)
@@ -52,7 +52,23 @@ def main():
         except:
             pass
 
+def plot_and_prepare_all_files():
+    holes_path = "/data_sdd/new_structure/arcelormittal/mont_wright/processed_data/20190124/sss_output/holes"
+    output_path = os.path.join(holes_path,"final_files")
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+    for root, dirs, files in os.walk(holes_path, topdown=True):
+        for dir in dirs:
+            hole_path = os.path.join(root,dir)
+            mmap_path = os.path.join(hole_path,"mwd_map.json")
+            os.system("python qc_plot_pipeline.py -ddir {} -mmap {}".format(hole_path,mmap_path))
+            for file in files_to_copy:
+                copyfile(os.path.join(hole_path,file),os.path.join(output_path,"{}_{}").format(dir.replace(",","_"),file))
+            print('Done with {}'.format(hole_path))
+
+
 
 
 if __name__ == "__main__":
-  main()
+  #main()
+  plot_and_prepare_all_files():
