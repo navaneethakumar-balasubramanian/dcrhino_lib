@@ -59,12 +59,13 @@ def plot_and_prepare_all_files():
         os.makedirs(output_path)
     for root, dirs, files in os.walk(holes_path, topdown=True):
         for dir in dirs:
-            hole_path = os.path.join(root,dir)
-            mmap_path = os.path.join(hole_path,"mwd_map.json")
-            os.system("python qc_plot_pipeline.py -ddir {} -mmap {}".format(hole_path,mmap_path))
-            for file in files_to_copy:
-                copyfile(os.path.join(hole_path,file),os.path.join(output_path,"{}_{}").format(dir.replace(",","_"),file))
-            print('Done with {}'.format(hole_path))
+            if dir != "final_files":
+                hole_path = os.path.join(root,dir)
+                mmap_path = os.path.join(hole_path,"mwd_map.json")
+                os.system("python qc_plot_pipeline.py -ddir {} -mmap {}".format(hole_path,mmap_path))
+                for file in files_to_copy:
+                    copyfile(os.path.join(hole_path,file),os.path.join(output_path,"{}_{}").format(dir.replace(",","_"),file))
+                print('Done with {}'.format(hole_path))
 
 
 
