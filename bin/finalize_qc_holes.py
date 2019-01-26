@@ -71,4 +71,4 @@ def plot_and_prepare_all_files():
 
 if __name__ == "__main__":
   #main()
-  plot_and_prepare_all_files():
+  plot_and_prepare_all_files()
