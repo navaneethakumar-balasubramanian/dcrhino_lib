@@ -152,7 +152,11 @@ def get_features_extracted_v2(traces_dict, global_config, recipe_list):
     axial_traces = traces_dict['axial_trimmed_filtered_correlated_array']
     radial_traces = traces_dict['radial_trimmed_filtered_correlated_array']
     tangential_traces = traces_dict['tangential_trimmed_filtered_correlated_array']
-    tangential_despiked_filtered_correlated_traces = traces_dict['tangential_filtered_despiked_correlated_array']
+    pdb.set_trace()
+    try:
+        tangential_despiked_filtered_correlated_traces = traces_dict['tangential_filtered_despiked_correlated']
+    except KeyError:
+        tangential_despiked_filtered_correlated_traces = traces_dict['tangential_filtered_despiked_correlated_array']
     timestamp_array = traces_dict['ts_array']
     print("Extracting features")
     #initial_timestamp = timestamp_array[0]
@@ -209,7 +213,7 @@ def load_processed_traces(temppath):
     _key_list = ['axial_trimmed_filtered_correlated_array',
                      'tangential_trimmed_filtered_correlated_array',
                      'radial_trimmed_filtered_correlated_array',
-                     'tangential_filtered_despiked_correlated']
+                     'tangential_filtered_despiked_correlated', 'ts_array']
     for _key in _key_list:
         if _key == 'axial_trimmed_filtered_correlated_array':
             expected_filename = os.path.join(temppath, 'axial.npy')
@@ -219,6 +223,9 @@ def load_processed_traces(temppath):
             traces_dict[_key] = np.load(expected_filename)
         elif _key == 'radial_trimmed_filtered_correlated_array':
             expected_filename = os.path.join(temppath, 'radial.npy')
+            traces_dict[_key] = np.load(expected_filename)
+        elif _key == 'ts_array':
+            expected_filename = os.path.join(temppath, 'ts.npy')
             traces_dict[_key] = np.load(expected_filename)
         else:
 #            pdb.set_trace()
@@ -290,7 +297,7 @@ def process_h5_file(h5py_file, output_folder, reprocess_signals, cfg_file_path=F
     io_helper.make_dirs_if_needed(temppath)
     start_ts = int(h5_helper.min_ts)
     end_ts = int(h5_helper.max_ts)
-
+    #reprocess_signals = False;#pdb.set_trace()
     if reprocess_signals:
         print('reprocess_signals TRUE')
         traces_dict = get_axial_tangential_radial_traces(start_ts, end_ts, h5_helper,

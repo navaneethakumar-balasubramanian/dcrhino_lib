@@ -16,6 +16,7 @@ import pandas as pd
 import pdb
 from dcrhino.analysis.util.general_helper_functions import init_logging
 from dcrhino.analysis.unstable.feature_extraction.feature_extraction_20181226 import feature_extractor_J1
+
 logger = init_logging(__name__)
 
 def get_features_extracted_v3(df, global_config):
@@ -39,12 +40,16 @@ def get_features_extracted_v3(df, global_config):
         recipe_list = global_config.recipe_list
     except AttributeError:
         logger.error("you need to add recipe list ot processsing json flow")
-        recipe_list = ['J1', ]
+        recipe_list = ['J1', 'J0', '1810' ]
     #<OLD J0 FEATURES>
-
-    axial_traces = df['axial']
+    try:
+        axial_traces = df['axial']
+        tangential_traces = df['tangential']
+    except KeyError:
+        axial_traces = df['axial_trace']#v3 branch integration
+        tangential_traces = df['tangential_trace']
     #radial_traces = traces_dict['radial_trimmed_filtered_correlated_array']
-    tangential_traces = df['tangential']
+
     #tangential_despiked_filtered_correlated_traces = traces_dict['tangential_filtered_despiked_correlated_array']
     timestamp_array = df['timestamp']
     print("Extracting features")
@@ -56,7 +61,7 @@ def get_features_extracted_v3(df, global_config):
         tangential_trace = tangential_traces.iloc[i]
         #radial_trace = radial_traces.iloc[i]
         #tangential_despiked_filtered_correlated = tangential_despiked_filtered_correlated_traces[i,:]
-
+        all_features_great_and_small.update({'timestamp':actual_timestamp})
         if 'original' in recipe_list:
             extractor = FeatureExtractor(global_config.output_sampling_rate,
                                          global_config.primary_window_halfwidth_ms,
