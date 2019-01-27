@@ -6,6 +6,9 @@ from dcrhino3.process_flow.modules.base_module import BaseModule
 
 class BaseTraceModule(BaseModule):
     def __init__(self, json, output_path):
+        """
+        @ivar id: data_processing_stage_designator
+        """
         BaseModule.__init__(self, json, output_path)
         self.id = "base_trace_module"
 
@@ -28,8 +31,10 @@ class BaseTraceModule(BaseModule):
                 #print(component_id, line_idx)
                 component_column_on_df = component_id+"_trace"
                 trace_to_process = row_of_df[component_column_on_df]
-                processed_trace = self.process_component(component_id,trace_to_process,trace_config)
-                output_df.at[line_idx,component_column_on_df] = processed_trace
+                processed_trace = self.process_component(component_id,
+                                                         trace_to_process,
+                                                         trace_config)
+                output_df.at[line_idx, component_column_on_df] = processed_trace
 
         trace.dataframe = output_df
 

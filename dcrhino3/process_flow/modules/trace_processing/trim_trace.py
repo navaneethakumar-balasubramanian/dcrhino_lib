@@ -25,7 +25,7 @@ from dcrhino3.process_flow.modules.trace_processing.base_trace_module import Bas
 
 
 
-class LeadChannelDeconvolutionModule(BaseTraceModule):
+class TrimTrace(BaseTraceModule):
     def __init__(self, json, output_path):
         BaseTraceModule.__init__(self, json, output_path)
         self.id = "lead_channel_deconvolution"
@@ -33,27 +33,29 @@ class LeadChannelDeconvolutionModule(BaseTraceModule):
     def process_component(self,component_id, component_vector, global_config):
         """
         @type component_array: numpy array
-        @TODO: this should also return the filter as there is probably some
-        physical rock property info in the filter coefficients
-        This doesn't seem supported in v3; change for v3.1;
-        @TODO: Add trim to this methid so tht deconv trace gets trimmed here?
+        need min_lag, max_lag, sampling_rate,num_taps_in_decon_filter
+        @warn: This assumes a symmetric and centered data acorr decendant data vector
         """
-        #pdb.set_trace()
+        pdb.set_trace()
         transformed_args = self.get_transformed_args(global_config)
-        #n_samples_in_input_traces = len(component_array)
-        #samples_per_trace = 2*n_samples_in_input_traces - 1
+        sampling_rate = global_config.sampling_rate
+        #dt = global_config.dt
+        min_lag = global_config.min_lag_trimmed_trace
+        max_lag = global_config.max_lag_trimmed_trace
+        #n_samples_output_traces = int(np.abs(min_lag)/dt) + int(max_lag/dt) + 1
+        #samples_per_trace = n_samples_output_traces
 
-        n_taps_decon = transformed_args['num_taps_in_decon_filter']
+
+        n_samples_in_input_trace = len(component_vector)
+        N = (n_samples_in_input_trace + 1) // 2
+        t0_index = N-1;
+        t0_index += global_config.num_taps_in_decon_filter // 2
+        n_samples_back = int(sampling_rate * np.abs(min_lag))
+        n_samples_fwd = int(sampling_rate * max_lag) + 1
+        back_ndx = t0_index - n_samples_back
+        fin_ndx = t0_index + n_samples_fwd
+        #pdb.set_trace()
         trace_data = component_vector
-        acorr_for_filter = trace_data[0:n_taps_decon]
-        ATA = scipy.linalg.toeplitz(acorr_for_filter)
-        try:
-            ATAinv = scipy.linalg.inv(ATA)
-        except scipy.linalg.LinAlgError:
-            return acorr_for_filter
+        trimmed_trace = trace_data[back_ndx:fin_ndx]
 
-        x_filter = ATAinv[0,:]
-        trace_of_proof = np.hstack((np.flipud(trace_data[1:]), trace_data))
-        deconv_trace = np.correlate(trace_of_proof, x_filter,'same')#YES
-
-        return deconv_trace
+        return trimmed_trace

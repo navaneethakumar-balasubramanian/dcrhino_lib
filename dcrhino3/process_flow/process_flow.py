@@ -41,6 +41,9 @@ class ProcessFlow:
 
 
     def process(self, trace_data):
+        """
+        why  are we reassigning name in first line?  do you mean .copy?
+        """
         output_trace = trace_data
         for module in self.trace_flow:
             t0 = time.time()

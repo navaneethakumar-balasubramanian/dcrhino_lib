@@ -35,18 +35,22 @@ import pdb
 from dcrhino3.helpers.general_helper_functions import init_logging,create_folders_if_needed
 from dcrhino3.models.config import Config
 
-COMPONENT_IDS = ['axial', 'tangential', 'radial']
 logger = init_logging(__name__)
 
+COMPONENT_IDS = ['axial', 'tangential', 'radial']
+TRACE_COLUMN_LABELS = ['{}_trace'.format(x) for x in COMPONENT_IDS]
+
+
 class ModuleType(Enum):
-    RAW=1
-    INTERPOLATION=2
-    AUTOCORRELATION=3
-    MWD_MERGE=4
-    LEAD_DECON=5
-    LAG_DECON=6
-    BAND_PASS_FILTER=7
-    PHASE_ROTATION=8
+    RAW = 1
+    INTERPOLATION = 2
+    AUTOCORRELATION = 3
+    MWD_MERGE = 4
+    LEAD_DECON = 5
+    LAG_DECON = 6
+    BAND_PASS_FILTER = 7
+    PHASE_ROTATION = 8
+    TRIM = 9
 
 
 
@@ -211,6 +215,15 @@ class TraceData(object):
         column_name = '{}_trace'.format(component_id)
         data_array = np.atleast_2d(list(self.dataframe[column_name]))
         return data_array
+
+    def copy_without_trace_data(self):
+        output_df = self.dataframe.copy(deep=False)
+        for trace_column_label in TRACE_COLUMN_LABELS:
+            try:
+                output_df.drop([trace_column_label,], axis=1)
+            except ValueError:
+                pass#that column was never there in the first place
+        return output_df
 
 def main():
     pass
