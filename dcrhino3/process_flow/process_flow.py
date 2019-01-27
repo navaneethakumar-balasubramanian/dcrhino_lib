@@ -43,7 +43,8 @@ class ProcessFlow:
 
     def process(self, trace_data):
         """
-        why  are we reassigning name in first line?  do you mean .copy?
+        @Thiago: why are we reassigning name in first line?  do you mean .copy?
+        @var module: process_flow.modules.trace_processing.base
         """
         output_trace = trace_data
         for module in self.trace_flow:

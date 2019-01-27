@@ -50,7 +50,8 @@ class LeadChannelDeconvolutionModule(BaseTraceModule):
         try:
             ATAinv = scipy.linalg.inv(ATA)
         except scipy.linalg.LinAlgError:
-            return acorr_for_filter
+            dummy_trace_of_expected_length = np.hstack((np.flipud(trace_data[1:]), trace_data))
+            return dummy_trace_of_expected_length
 
         x_filter = ATAinv[0,:]
         trace_of_proof = np.hstack((np.flipud(trace_data[1:]), trace_data))
