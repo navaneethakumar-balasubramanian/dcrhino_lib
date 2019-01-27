@@ -12,7 +12,7 @@ from dcrhino3.process_flow.modules.trace_processing.band_pass_filter import Band
 from dcrhino3.process_flow.modules.trace_processing.add_one import AddOneModule
 from dcrhino3.process_flow.modules.trace_processing.add_n import AddNModule
 from dcrhino3.process_flow.modules.trace_processing.lead_channel_decon import LeadChannelDeconvolutionModule
-
+from dcrhino3.process_flow.modules.trace_processing.trim_trace import TrimTraceModule
 
 logger = init_logging(__name__)
 
@@ -25,6 +25,7 @@ class ProcessFlow:
                                             "add_one":AddOneModule,
                                             "add_n":AddNModule,
                                             "lead_channel_deconvolution":LeadChannelDeconvolutionModule,
+                                            "trim":TrimTraceModule
                                         }
         self.trace_flow = []
 

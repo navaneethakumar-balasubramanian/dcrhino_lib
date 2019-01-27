@@ -25,10 +25,10 @@ from dcrhino3.process_flow.modules.trace_processing.base_trace_module import Bas
 
 
 
-class TrimTrace(BaseTraceModule):
+class TrimTraceModule(BaseTraceModule):
     def __init__(self, json, output_path):
         BaseTraceModule.__init__(self, json, output_path)
-        self.id = "lead_channel_deconvolution"
+        self.id = "trim"
 
     def process_component(self,component_id, component_vector, global_config):
         """
@@ -36,7 +36,7 @@ class TrimTrace(BaseTraceModule):
         need min_lag, max_lag, sampling_rate,num_taps_in_decon_filter
         @warn: This assumes a symmetric and centered data acorr decendant data vector
         """
-        pdb.set_trace()
+        #pdb.set_trace()
         transformed_args = self.get_transformed_args(global_config)
         sampling_rate = global_config.sampling_rate
         #dt = global_config.dt
