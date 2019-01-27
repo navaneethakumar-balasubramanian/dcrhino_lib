@@ -16,7 +16,7 @@ import pandas as pd
 import pdb
 from dcrhino.analysis.util.general_helper_functions import init_logging
 from dcrhino.analysis.unstable.feature_extraction.feature_extraction_20181226 import feature_extractor_J1
-
+from dcrhino.process_pipeline.feature_extractor import FeatureExtractor#J0
 logger = init_logging(__name__)
 
 def get_features_extracted_v3(df, global_config):
@@ -45,9 +45,11 @@ def get_features_extracted_v3(df, global_config):
     try:
         axial_traces = df['axial']
         tangential_traces = df['tangential']
+        radial_traces = df['radial']
     except KeyError:
         axial_traces = df['axial_trace']#v3 branch integration
         tangential_traces = df['tangential_trace']
+        radial_traces = df['radial_trace']
     #radial_traces = traces_dict['radial_trimmed_filtered_correlated_array']
 
     #tangential_despiked_filtered_correlated_traces = traces_dict['tangential_filtered_despiked_correlated_array']
@@ -59,20 +61,20 @@ def get_features_extracted_v3(df, global_config):
         all_features_great_and_small = {}
         axial_trace = axial_traces.iloc[i]
         tangential_trace = tangential_traces.iloc[i]
-        #radial_trace = radial_traces.iloc[i]
+        radial_trace = radial_traces.iloc[i]
         #tangential_despiked_filtered_correlated = tangential_despiked_filtered_correlated_traces[i,:]
         all_features_great_and_small.update({'timestamp':actual_timestamp})
-        if 'original' in recipe_list:
+        if 'J0' in recipe_list:
             extractor = FeatureExtractor(global_config.output_sampling_rate,
                                          global_config.primary_window_halfwidth_ms,
                                          global_config.multiple_window_search_width_ms,
                                          sensor_distance_to_source=global_config.sensor_distance_to_source)
             logger.error("J0 features not yet implemented in V3")
-#            original_features = extractor.extract_features(actual_timestamp, axial_trace, tangential_trace,
-#                                                       radial_trace, global_config.n_samples_trimmed_trace,
-#                                                       -global_config.min_lag_trimmed_trace)
-#            #pdb.set_trace()
-#            all_features_great_and_small.update(original_features)
+            original_features = extractor.extract_features(actual_timestamp, axial_trace, tangential_trace,
+                                                       radial_trace, global_config.n_samples_trimmed_trace,
+                                                       -global_config.min_lag_trimmed_trace)
+            #pdb.set_trace()
+            all_features_great_and_small.update(original_features)
         if 'tangential_201810' in recipe_list:
             logger.error("1810 features not yet implemented in V3")
 #            trim_tang_dspk = trim_trace(global_config.min_lag_trimmed_trace, global_config.max_lag_trimmed_trace,
