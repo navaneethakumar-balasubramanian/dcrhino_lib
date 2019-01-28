@@ -13,6 +13,7 @@ from dcrhino3.process_flow.modules.trace_processing.add_one import AddOneModule
 from dcrhino3.process_flow.modules.trace_processing.add_n import AddNModule
 from dcrhino3.process_flow.modules.trace_processing.lead_channel_decon import LeadChannelDeconvolutionModule
 from dcrhino3.process_flow.modules.trace_processing.trim_trace import TrimTraceModule
+from dcrhino3.process_flow.modules.trace_processing.unfold_autocorrelation import UnfoldAutocorrelationModule
 
 from dcrhino3.process_flow.modules.features_extraction.j1 import J1FeaturesModule
 
@@ -27,15 +28,16 @@ class ProcessFlow:
                                             "add_one":AddOneModule,
                                             "add_n":AddNModule,
                                             "lead_channel_deconvolution":LeadChannelDeconvolutionModule,
-                                            "trim":TrimTraceModule
+                                            "trim":TrimTraceModule,
+                                            "unfold":UnfoldAutocorrelationModule
                                         }
         self.trace_flow = []
-        
-        
+
+
         self.features_extraction_modules = {
                                             "j1":J1FeaturesModule
                                         }
-        
+
         self.features_flow = []
 
         self.parse_json(process_json)
@@ -71,7 +73,7 @@ class ProcessFlow:
             output_trace = module.process_trace_data(output_trace)
             delta_t = time.time() - t0
             logger.info("{} ran in {}s ".format(module.id, delta_t))
-            
+
         for module in self.features_flow:
             t0 = time.time()
             logger.info("Extracting features using module: " +str(module.id)+ " with: " + str(module.args))

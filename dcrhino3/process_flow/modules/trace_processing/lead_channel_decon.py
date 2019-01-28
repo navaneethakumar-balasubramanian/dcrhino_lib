@@ -37,25 +37,29 @@ class LeadChannelDeconvolutionModule(BaseTraceModule):
         physical rock property info in the filter coefficients
         This doesn't seem supported in v3; change for v3.1;
         @TODO: Add trim to this methid so tht deconv trace gets trimmed here?
+        @note: 20180128: this is now expecting an 'unfolded' acorr, which will have
+        an odd number of samples;
         """
         #pdb.set_trace()
         transformed_args = self.get_transformed_args(global_config)
-
-        #n_samples_in_input_traces = len(component_array)
-        #samples_per_trace = 2*n_samples_in_input_traces - 1
-
-        n_taps_decon = transformed_args['num_taps_in_decon_filter']
         trace_data = component_vector
-        acorr_for_filter = trace_data[0:n_taps_decon]
+        n_samples_in_input_trace = len(trace_data)
+        zero_lag_index = (n_samples_in_input_trace -1) // 2
+        #can sanity check this should be the argmax
+        #samples_per_trace = 2*n_samples_in_input_traces - 1
+        #pdb.set_trace()
+        n_taps_decon = transformed_args.num_taps_in_decon_filter
+        acorr_for_filter = trace_data[zero_lag_index : zero_lag_index + n_taps_decon]
         ATA = scipy.linalg.toeplitz(acorr_for_filter)
         try:
             ATAinv = scipy.linalg.inv(ATA)
         except scipy.linalg.LinAlgError:
-            dummy_trace_of_expected_length = np.hstack((np.flipud(trace_data[1:]), trace_data))
-            return dummy_trace_of_expected_length
+            return trace_data
+#            dummy_trace_of_expected_length = np.hstack((np.flipud(trace_data[1:]), trace_data))
+#            return dummy_trace_of_expected_length
 
         x_filter = ATAinv[0,:]
-        trace_of_proof = np.hstack((np.flipud(trace_data[1:]), trace_data))
-        deconv_trace = np.correlate(trace_of_proof, x_filter,'same')#YES
+#        trace_of_proof = np.hstack((np.flipud(trace_data[1:]), trace_data))
+        deconv_trace = np.correlate(trace_data, x_filter,'same')#YES
 
         return deconv_trace
