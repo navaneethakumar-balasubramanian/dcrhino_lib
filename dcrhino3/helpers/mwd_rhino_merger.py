@@ -28,6 +28,13 @@ class MWDRhinoMerger():
         
         self.matches_list = self._generate_matches_list()
     
+    
+    def get_min_max_time(self,hole_id):
+        hole_mwd = self.mwd_dc_df[self.mwd_dc_df['hole_id']== str(hole_id)]
+        min_ts = hole_mwd['start_time'].astype(int).min()/1000000000
+        max_ts = hole_mwd['start_time'].astype(int).max()/1000000000
+        return min_ts, max_ts
+        
     def get_acorr_trace_data_from_index(self,idx):
         line = self.matches_list.iloc[idx]
         hole_mwd = self.get_hole_df(line.bench_name,line.pattern_name,line.hole_name,line.hole_id)        
@@ -36,7 +43,6 @@ class MWDRhinoMerger():
     def _generate_matches_list(self):
         file_list = self.file_list
         pre_filtered_mwd = self.pre_filtered_mwd
-        
         columns_sort_group = ['bench_name','pattern_name','hole_name','hole_id']
         holes_cfgs = dict()
         
@@ -63,6 +69,8 @@ class MWDRhinoMerger():
         dict_list  = [dict()] * len(holes_cfgs.keys())
         for idx , unique_hole in enumerate(holes_cfgs.keys()):
             splitted = unique_hole.split('----')
+            start_time_min, start_time_max = self.get_min_max_time(splitted[3])
+            
             line = dict()
             line['bench_name'] = str(splitted[0])
             line['pattern_name'] = str(splitted[1])
@@ -75,6 +83,8 @@ class MWDRhinoMerger():
             for i, file in enumerate(holes_cfgs[unique_hole]):
                 files_ids[i] = int(file[0])
             line['files_ids'] = ','.join(files_ids.astype(str))
+            line['start_time_min'] = start_time_min
+            line['start_time_max'] = start_time_max
             dict_list[idx] = line
             
         files_holes_df = pd.DataFrame(dict_list)
