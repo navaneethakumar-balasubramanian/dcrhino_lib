@@ -26,7 +26,7 @@ class MWDRhinoMerger():
             logger.warn("Couldnt find any combination on this file_list and mwd, please check rig_ids and start_time")
             return False
         
-        self.matches_list = self._generate_matches_list()
+        self.observed_blasthole_catalog = self._generate_matches_list()
     
     
     def get_min_max_time(self,hole_id):

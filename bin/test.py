@@ -35,9 +35,8 @@ if conn is not False:
     mwd_df = mwd_helper.get_rhino_mwd_from_mine_name(mine_name)
     files = db_helper.get_files_list()
     merger = MWDRhinoMerger(files,mwd_df)
-    matches = merger.matches_list
-    pdb.set_trace()
-    
+    matches = merger.observed_blasthole_catalog
+
     for line in matches.itertuples():
 
         h5_filename = str(line.hole_id)+"_"+str(line.sensor_id)+"_"+str(line.digitizer_id) + ".h5"
