@@ -29,6 +29,7 @@ from enum import Enum
 import h5py
 import json
 import numpy as np
+import os
 import pandas as pd
 import pdb
 
@@ -110,7 +111,8 @@ class TraceData(object):
         #df_as_dict = dict(self.dataframe)
 
         all_columns = list(self.dataframe.columns)
-        create_folders_if_needed(path)
+        folder = os.path.dirname(path)
+        create_folders_if_needed(folder)
         h5f = h5py.File(path, 'w')
 
         #<save traces>
