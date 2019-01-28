@@ -16,7 +16,7 @@ from dcrhino3.models.env_config import EnvConfig
 
 process_flow_path = "/home/thiago/Documents/Projects/Dc_rhino/v3/bin/process_flows/example_simple_flow.json"
 holes_selection_path = "/home/thiago/Documents/Projects/Dc_rhino/v3/bin/process_flows/holes_selection/example_hole_selection.json"
-acorr_h5_file_path = "/home/thiago/milligan_cache/interpolated/59219.h5"
+acorr_h5_file_path = "/home/thiago/milligan_cache/interpolated/32555_2235_2235.h5"
 env_cfg = EnvConfig()
 
 with open(process_flow_path) as f:

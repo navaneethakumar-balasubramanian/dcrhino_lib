@@ -16,5 +16,5 @@ class AddOneModule(BaseTraceModule):
         BaseTraceModule.__init__(self,json,output_path)
         self.id = "add_one"
         
-    def process_component(self,component_id,component_array,global_config):
+    def process_component(self,component_id,component_array,transformed_args):
         return component_array+1

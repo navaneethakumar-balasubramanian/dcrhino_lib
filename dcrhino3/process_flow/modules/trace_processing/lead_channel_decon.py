@@ -40,6 +40,7 @@ class LeadChannelDeconvolutionModule(BaseTraceModule):
         """
         #pdb.set_trace()
         transformed_args = self.get_transformed_args(global_config)
+
         #n_samples_in_input_traces = len(component_array)
         #samples_per_trace = 2*n_samples_in_input_traces - 1
 

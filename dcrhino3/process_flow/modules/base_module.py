@@ -2,6 +2,7 @@
 
 
 import json
+from collections import namedtuple
 
 class BaseModule(object):
     def __init__(self, json, output_path):
@@ -31,7 +32,11 @@ class BaseModule(object):
                 transformed[key] = getattr(global_config, gc_var_name)
             else:
                 transformed[key] = val
-        return transformed
+        
+        transformed_obj = namedtuple("transformed",transformed.keys())(*transformed.values())
+        return transformed_obj
+    
+    
 
     def set_data_from_json(self,json):
         """
