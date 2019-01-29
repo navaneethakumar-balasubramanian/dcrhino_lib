@@ -6,18 +6,18 @@ import scipy.signal as ssig
 from dcrhino3.process_flow.modules.trace_processing.base_trace_module import BaseTraceModule
 from dcrhino3.signal_processing.filters import FIRLSFilter
 
-def get_band_pass_filter_taps(global_config):
+def get_band_pass_filter_taps(transformed_args):
     """
     """
-    corners = [global_config.trapezoidal_bpf_corner_1,
-               global_config.trapezoidal_bpf_corner_2,
-               global_config.trapezoidal_bpf_corner_3,
-               global_config.trapezoidal_bpf_corner_4]
-    fir_duration = global_config.trapezoidal_bpf_duration# = 0.02
+    corners = [transformed_args.trapezoidal_bpf_corner_1,
+               transformed_args.trapezoidal_bpf_corner_2,
+               transformed_args.trapezoidal_bpf_corner_3,
+               transformed_args.trapezoidal_bpf_corner_4]
+    fir_duration = transformed_args.trapezoidal_bpf_duration# = 0.02
 
     firls = FIRLSFilter(corners, fir_duration)
     #pdb.set_trace()
-    fir_taps = firls.make(global_config.sampling_rate)
+    fir_taps = firls.make(transformed_args.sampling_rate)
     return fir_taps
 
 class BandPassFilterModule(BaseTraceModule):
@@ -41,7 +41,7 @@ class BandPassFilterModule(BaseTraceModule):
 #
 #        num_traces = len(df['timestamp'])
 
-        fir_taps = get_band_pass_filter_taps(global_config)
+        fir_taps = get_band_pass_filter_taps(transformed_args)
         trace_data = component_vector
         filtered_trace = ssig.filtfilt(fir_taps, 1, trace_data)
         return filtered_trace

@@ -38,10 +38,10 @@ class TrimTraceModule(BaseTraceModule):
         """
         #pdb.set_trace()
         transformed_args = self.get_transformed_args(global_config)
-        sampling_rate = global_config.sampling_rate
+        sampling_rate = transformed_args.sampling_rate
         #dt = global_config.dt
-        min_lag = global_config.min_lag_trimmed_trace
-        max_lag = global_config.max_lag_trimmed_trace
+        min_lag = transformed_args.min_lag_trimmed_trace
+        max_lag = transformed_args.max_lag_trimmed_trace
         #n_samples_output_traces = int(np.abs(min_lag)/dt) + int(max_lag/dt) + 1
         #samples_per_trace = n_samples_output_traces
 
@@ -49,7 +49,7 @@ class TrimTraceModule(BaseTraceModule):
         n_samples_in_input_trace = len(component_vector)
         N = (n_samples_in_input_trace + 1) // 2
         t0_index = N-1;
-        t0_index += global_config.num_taps_in_decon_filter // 2
+        t0_index += transformed_args.num_taps_in_decon_filter // 2
         n_samples_back = int(sampling_rate * np.abs(min_lag))
         n_samples_fwd = int(sampling_rate * max_lag) + 1
         back_ndx = t0_index - n_samples_back

@@ -16,6 +16,7 @@ from dcrhino3.process_flow.modules.trace_processing.trim_trace import TrimTraceM
 from dcrhino3.process_flow.modules.trace_processing.unfold_autocorrelation import UnfoldAutocorrelationModule
 
 from dcrhino3.process_flow.modules.features_extraction.j1 import J1FeaturesModule
+from dcrhino3.process_flow.modules.features_extraction.j0 import J0FeaturesModule
 
 logger = init_logging(__name__)
 
@@ -35,7 +36,8 @@ class ProcessFlow:
 
 
         self.features_extraction_modules = {
-                                            "j1":J1FeaturesModule
+                                            "j0":J0FeaturesModule,
+                                            "j1":J1FeaturesModule,
                                         }
 
         self.features_flow = []
