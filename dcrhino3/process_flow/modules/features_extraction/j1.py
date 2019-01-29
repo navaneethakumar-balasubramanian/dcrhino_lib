@@ -10,6 +10,7 @@ Created on Fri Jan 25 11:52:23 2019
 
 import pdb
 from dcrhino3.process_flow.modules.features_extraction.base_feature_module import BaseFeatureModule
+from dcrhino3.feature_extraction.feature_extractor_j1 import feature_extractor_j1
 
 class J1FeaturesModule(BaseFeatureModule):
     def __init__(self,json,output_path):
@@ -17,6 +18,7 @@ class J1FeaturesModule(BaseFeatureModule):
         self.id = "j1"
 
     def extract_feature_component(self, component_id, trace_to_process, transformed_args, timestamp):
-        line_features_dict = dict()
-        line_features_dict[component_id + "_example_feature"] = 1
-        return line_features_dict
+        if component_id == 'radial':
+            return {}
+        line_feature_dict = feature_extractor_j1(component_id, trace_to_process, transformed_args, timestamp)
+        return line_feature_dict
