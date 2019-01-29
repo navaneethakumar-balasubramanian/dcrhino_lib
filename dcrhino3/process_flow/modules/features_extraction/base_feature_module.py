@@ -27,8 +27,8 @@ class BaseFeatureModule(BaseModule):
         dataframe spanning a time interval comprising many traces
         """
         output_df = trace.dataframe.copy()
-        features_dict_array = [None] * len(output_df)
-
+        features_dict_list = [None] * len(output_df) 
+        
         for line_idx in range(len(output_df)):
             row_of_df = output_df.iloc[line_idx]
             line_features_dict = {}
@@ -46,12 +46,12 @@ class BaseFeatureModule(BaseModule):
                                                                  timestamp)
                 #pdb.set_trace()
                 line_features_dict.update(component_features)
+                
+            
+            features_dict_list[line_idx] = line_features_dict
 
-
-            features_dict_array[line_idx] = line_features_dict
-
-        features_df = pd.DataFrame(features_dict_array)
-
+        features_df = pd.DataFrame(features_dict_list)
+        
         merged = pd.concat([features_df,trace.dataframe],axis=1)
 
         trace.dataframe = merged
