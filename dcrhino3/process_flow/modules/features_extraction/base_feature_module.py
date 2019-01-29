@@ -1,15 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-@TODO: 20190127; rename this to BaseTraceProcessingModule, or just call it
-base.py and that its in trace_processing folder.  THis module is all about
-the action of processing and so processign should figure in its name so
-one knows can reference it easily;
-dcrhino3/process_flow/modules/trace_processing/base_trace_module.py
+
 """
 
-import pdb
-#import json
 import pandas as pd
+import pdb
 from dcrhino3.process_flow.modules.base_module import BaseModule
 
 class BaseFeatureModule(BaseModule):
