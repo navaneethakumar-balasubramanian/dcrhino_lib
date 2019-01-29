@@ -11,7 +11,7 @@ and max_lag_trimmed_trace; These were set to -0.1 (min) and +0.1 (max).
 We need to make sure that the traces have enough 'slop' on the
 edges that the filtering edge effects do not create artefacts in the data.
 
-The code here is modified from the dev branch of dchrino_lib
+The code here is modified from the dev branch of dchrino_lib in
 dcrhino/analysis/unstable/v03/test_can_process_acorr_to_features.py
 """
 
@@ -54,7 +54,7 @@ class LeadChannelDeconvolutionModule(BaseTraceModule):
         try:
             ATAinv = scipy.linalg.inv(ATA)
         except scipy.linalg.LinAlgError:
-            return trace_data
+            return trace_data #ok if unfolded
 #            dummy_trace_of_expected_length = np.hstack((np.flipud(trace_data[1:]), trace_data))
 #            return dummy_trace_of_expected_length
 
