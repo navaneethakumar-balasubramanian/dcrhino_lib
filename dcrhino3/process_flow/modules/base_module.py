@@ -28,7 +28,19 @@ class BaseModule(object):
         transformed = dict()
         for key in self.args.keys():
             val = self.args[key]
-            if (type(val) == unicode or type(val) == str) and "|global_config." in str(val):
+            if type(val) == list:
+                ## USE GLOBAL_CONFIG OR DEFAULT
+                if (type(val[0]) == unicode or type(val[0]) == str) and "|global_config." in str(val[0]):
+                    gc_var_name = val[0].replace("|","").replace("global_config.","")
+                    if gc_var_name in vars(global_config):
+                        transformed[key] = getattr(global_config, gc_var_name)
+                    else:
+                        transformed[key] = val[1]
+                else:
+                    transformed[key] = val
+                ################################
+            
+            elif (type(val) == unicode or type(val) == str) and "|global_config." in str(val):
                 gc_var_name = val.replace("|","").replace("global_config.","")
                 transformed[key] = getattr(global_config, gc_var_name)
             else:
