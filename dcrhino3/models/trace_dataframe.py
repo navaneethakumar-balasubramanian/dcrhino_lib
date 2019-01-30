@@ -92,6 +92,10 @@ class TraceData(object):
             self._global_configs[file_id] = global_config
 
 
+    def save_to_csv(self,path):
+        df = self.copy_without_trace_data()
+        df.to_csv(path,index=False)
+
     def save_to_h5(self, path):
         """
         @note: when porting to python3 replace iteritems with items see Keith's answer in
@@ -222,7 +226,7 @@ class TraceData(object):
         output_df = self.dataframe.copy(deep=False)
         for trace_column_label in TRACE_COLUMN_LABELS:
             try:
-                output_df.drop([trace_column_label,], axis=1)
+                output_df = output_df.drop([trace_column_label,], axis=1)
             except ValueError:
                 pass#that column was never there in the first place
         return output_df
