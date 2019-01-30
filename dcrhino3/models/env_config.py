@@ -41,7 +41,12 @@ class EnvConfig(object):
         if not mine_cfg or 'paths' not in mine_cfg.keys() or 'hole_h5_interpolated_cache_folder' not in mine_cfg['paths']:
             return False
         return mine_cfg['paths']['hole_h5_interpolated_cache_folder']
-        
+    
+    def get_hole_h5_processed_cache_folder(self,mine_name):
+        mine_cfg = self._get_mine_config(mine_name)
+        if not mine_cfg or 'paths' not in mine_cfg.keys() or 'hole_h5_processed_cache_folder' not in mine_cfg['paths']:
+            return False
+        return mine_cfg['paths']['hole_h5_processed_cache_folder']    
 
     
     def is_file_blacklisted(self,file_path):
