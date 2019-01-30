@@ -51,9 +51,9 @@ class BaseFeatureModule(BaseModule):
         trace.dataframe = merged
 
         trace.add_applied_module(self.applied_module_string(self.args))
-
-#        if self.output_to_file:
-#            trace.save_to_h5(self.output_path)
+        
+        if self.output_to_file:
+            trace.save_to_csv(self.output_path)
 
         return trace
 

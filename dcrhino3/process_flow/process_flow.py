@@ -5,6 +5,7 @@ import json
 import logging
 import pdb
 import time
+import os
 
 from dcrhino3.helpers.general_helper_functions import init_logging
 
@@ -18,12 +19,14 @@ from dcrhino3.process_flow.modules.trace_processing.unfold_autocorrelation impor
 from dcrhino3.process_flow.modules.features_extraction.j1 import J1FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.j0 import J0FeaturesModule
 
+from dcrhino3.process_flow.modules.qc_plotter import QCPlotterModule
+
 logger = init_logging(__name__)
 
 class ProcessFlow:
-    def __init__(self,process_json):
-
-
+    def __init__(self,process_json,output_path=""):
+        self.id = "process_flow"
+        
         self.trace_processing_modules = {
                                             "band_pass_filter":BandPassFilterModule,
                                             "add_one":AddOneModule,
@@ -41,16 +44,26 @@ class ProcessFlow:
                                         }
 
         self.features_flow = []
-
+        
+        self.qc_plotter = None
+        
+        self.output_path = output_path
+        
         self.parse_json(process_json)
 
     def parse_json(self,process_json):
-        module_output_path = ''
+        self.id = process_json['id']
+        
+        process_flow_output_path = os.path.join(self.output_path,self.id)
+        process_counter = 0
         if 'trace_processing' in process_json.keys():
             trace_processing_json = process_json['trace_processing']
             if 'modules' in trace_processing_json.keys():
                 trace_processing_modules_json = trace_processing_json['modules']
                 for module in trace_processing_modules_json:
+                    process_counter +=1
+                    module_file_name = str(process_counter)+"_"+module['type']+".h5"
+                    module_output_path = os.path.join(process_flow_output_path,module_file_name)
                     self.trace_flow.append(self.trace_processing_modules[module['type']](module,module_output_path))
 
 
@@ -59,7 +72,18 @@ class ProcessFlow:
             if 'modules' in features_extraction_json.keys():
                 features_extraction__modules_json = features_extraction_json['modules']
                 for module in features_extraction__modules_json:
+                    process_counter +=1
+                    module_file_name = str(process_counter)+"_"+module['type']+".csv"
+                    module_output_path = os.path.join(process_flow_output_path,module_file_name)
                     self.features_flow.append(self.features_extraction_modules[module['type']](module,module_output_path))
+        
+        if "qc_plotter" in process_json.keys():
+            process_counter +=1
+            module_file_name = str(process_counter)+"_"+module['type']+".h5"
+            module_output_path = os.path.join(process_flow_output_path,module_file_name)
+            qc_plotter_json = process_json['qc_plotter']
+            self.qc_plotter = QCPlotterModule(qc_plotter_json,module_output_path)
+            
 
 
     def process(self, trace_data):
