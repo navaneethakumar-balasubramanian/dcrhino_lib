@@ -90,8 +90,10 @@ class MWDRhinoMerger():
         files_holes_df = pd.DataFrame(dict_list)
         return files_holes_df
     
-    def merge_mwd_with_trace(self,hole_mwd,rhino_traces_df):
+    def merge_mwd_with_trace(self,hole_mwd,trace_data):
+        rhino_traces_df = trace_data.dataframe
         time_vector = (rhino_traces_df['timestamp'].values*1000000000).astype(np.int64)
+        pdb.set_trace()
         
         interpolated_hole_mwd = self.get_mwd_interpolated_by_second(hole_mwd,time_vector)
         merged = pd.concat([rhino_traces_df,interpolated_hole_mwd],axis=1)
@@ -106,6 +108,8 @@ class MWDRhinoMerger():
         for col in hole_mwd.columns:
             if len(np.unique(hole_mwd[col])) == 1:
                 interpolated_mwd[col] = hole_mwd[col].values[0]
+            #elif pd.core.dtypes.cast.is_categorical_dtype(trace.dataframe[col]):
+            #    interpolated_mwd[col] = 
             elif hole_mwd[col].values.dtype in [np.int,np.float,np.datetime64]:
                 interpolated_mwd[col] = self.get_interpolated_column(time_vector,hole_mwd,col)    
             elif hole_mwd[col].values.dtype == np.dtype('datetime64[ns]'):

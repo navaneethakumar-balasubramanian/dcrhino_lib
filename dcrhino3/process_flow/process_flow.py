@@ -116,6 +116,9 @@ class ProcessFlow:
         if self.save_features_to_file:
             output_trace.save_to_csv(os.path.join(process_flow_output_path,"extracted_features.csv"))
 
+        if self.qc_plotter is not None:
+            self.qc_plotter.plot()
+            
         return output_trace
 
 

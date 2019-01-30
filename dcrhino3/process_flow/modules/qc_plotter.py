@@ -3,6 +3,9 @@
 
 import pdb
 import pandas as pd
+
+
+
 #import json
 from dcrhino3.process_flow.modules.base_module import BaseModule
 from dcrhino3.models.drill_types import DrillTypes
@@ -14,6 +17,37 @@ class QCPlotterModule(BaseModule):
     def __init__(self, json, output_path):
         BaseModule.__init__(self, json, output_path)
         self.id = "qc_plotter_module"
+        
+    def plot_trace_data(self,trace):
+        
+        row_of_df = trace.dataframe.iloc[0]
+        first_global_conf = trace.global_config_by_index(row_of_df['acorr_file_id'])
+        
+        axial = trace.component_as_array('axial')
+        tangential = trace.component_as_array('tangential')
+        radial = trace.component_as_array('radial')
+        
+        ax_lim = self.get_ax_lim(trace.dataframe)
+        
+        plot_title = self.get_plot_title(first_global_conf)
+        
+        noise_threshold = global_config_tmp.noise_threshold
+        
+        mult_pos = self.get_multiples(transformed_args)
+        
+        
+        
+    
+        
+    
+    def get_multiples(self,transformed_args):
+            expected_multiple = get_expected_multiple_times(transformed_args, recipe='J1')
+            mult_pos = pd.DataFrame({'axial_first_multiple':[expected_multiple['axial']*1000], 'axial_second_multiple':[expected_multiple['axial_second_multiple']*1000],
+                                     'tangential_first_multiple':[expected_multiple['tangential']*1000], 'tangential_second_multiple':[expected_multiple['tangential_second_multiple']*1000]})
+#            pdb.set_trace()
+            return mult_pos
+        
+
         
     def get_ax_lim(self,extracted_features_df):
         min_ax_RC = min(extracted_features_df['J0_reflection_coefficient'])
