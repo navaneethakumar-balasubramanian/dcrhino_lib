@@ -38,7 +38,6 @@ class BaseFeatureModule(BaseModule):
                                                                  trace_to_process,
                                                                  transformed_args,
                                                                  timestamp)
-                #pdb.set_trace()
                 line_features_dict.update(component_features)
                 
             
@@ -53,7 +52,7 @@ class BaseFeatureModule(BaseModule):
         trace.add_applied_module(self.applied_module_string(self.args))
         
         if self.output_to_file:
-            trace.save_to_csv(self.output_path)
+            features_df.to_csv(self.output_path,index=False)
 
         return trace
 

@@ -44,6 +44,7 @@ class ProcessFlow:
                                         }
 
         self.features_flow = []
+        self.save_features_to_file = False
         
         self.qc_plotter = None
         
@@ -69,6 +70,9 @@ class ProcessFlow:
 
         if 'features_extraction' in process_json.keys():
             features_extraction_json = process_json['features_extraction']
+            if 'output_to_file' in features_extraction_json.keys():
+                self.save_features_to_file = features_extraction_json['output_to_file']
+                
             if 'modules' in features_extraction_json.keys():
                 features_extraction__modules_json = features_extraction_json['modules']
                 for module in features_extraction__modules_json:
@@ -87,6 +91,7 @@ class ProcessFlow:
 
 
     def process(self, trace_data):
+        process_flow_output_path = os.path.join(self.output_path,self.id)
         """
         @Thiago: why are we reassigning name in first line?  do you mean .copy?
         @var module: process_flow.modules.trace_processing.base
@@ -107,6 +112,9 @@ class ProcessFlow:
             output_trace = module.extract_features(output_trace)
             delta_t = time.time() - t0
             logger.info("{} ran in {}s ".format(module.id, delta_t))
+        
+        if self.save_features_to_file:
+            output_trace.save_to_csv(os.path.join(process_flow_output_path,"extracted_features.csv"))
 
         return output_trace
 
