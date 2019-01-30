@@ -16,7 +16,7 @@ class BaseFeatureModule(BaseModule):
         self.id = "base_feature_module"
 
 
-    def extract_features(self,trace,args=None):
+    def extract_features(self,trace):
         """
         works with a TraceData() class, typically an entire hole, or
         dataframe spanning a time interval comprising many traces
@@ -34,7 +34,6 @@ class BaseFeatureModule(BaseModule):
                 component_column_on_df = component_id+"_trace"
                 trace_to_process = row_of_df[component_column_on_df]
                 timestamp = row_of_df.timestamp
-                #pdb.set_trace()
                 component_features = self.extract_feature_component(component_id,
                                                                  trace_to_process,
                                                                  transformed_args,
@@ -51,7 +50,7 @@ class BaseFeatureModule(BaseModule):
 
         trace.dataframe = merged
 
-        trace.add_applied_module(self.applied_module_string(args))
+        trace.add_applied_module(self.applied_module_string(self.args))
 
 #        if self.output_to_file:
 #            trace.save_to_h5(self.output_path)

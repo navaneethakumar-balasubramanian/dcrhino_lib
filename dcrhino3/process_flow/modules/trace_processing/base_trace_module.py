@@ -19,7 +19,7 @@ class BaseTraceModule(BaseModule):
         self.id = "base_trace_module"
 
 
-    def process_trace_data(self,trace,args=None):
+    def process_trace_data(self,trace):
         """
         works with a TraceData() class, typically an entire hole, or
         dataframe spanning a time interval comprising many traces
@@ -47,7 +47,7 @@ class BaseTraceModule(BaseModule):
 
         trace.dataframe = output_df
 
-        trace.add_applied_module(self.applied_module_string(args))
+        trace.add_applied_module(self.applied_module_string(self.args))
 
 #        if self.output_to_file():
 #            trace.save_to_h5(self.output_path)
