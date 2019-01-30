@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-
+import pdb
 import json
 from collections import namedtuple
+from dcrhino3.helpers.general_helper_functions import json_string_to_object,dict_to_object
 
 class BaseModule(object):
     def __init__(self, json, output_path):
@@ -32,10 +33,11 @@ class BaseModule(object):
                 transformed[key] = getattr(global_config, gc_var_name)
             else:
                 transformed[key] = val
-        
-        transformed_obj = namedtuple("transformed",transformed.keys())(*transformed.values())
-        return transformed_obj
-    
+            
+            transformed[key] = json_string_to_object(transformed[key])
+        transformed = dict_to_object(transformed)
+                
+        return transformed
     
 
     def set_data_from_json(self,json):

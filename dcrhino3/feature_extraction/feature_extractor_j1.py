@@ -37,7 +37,7 @@ def feature_extractor_j1(component_id, trimmed_trace, transformed_args, timestam
     #pdb.set_trace()
     logger.warning("transformed args failed to unpack window_widths - hack around here:")
     window_widths = transformed_args.window_widths
-    window_widths = json.loads(window_widths)
+    #window_widths = json.loads(window_widths)
 
     samples_per_trace = len(trimmed_trace)
     sampling_rate = transformed_args.output_sampling_rate; dt = 1./sampling_rate;

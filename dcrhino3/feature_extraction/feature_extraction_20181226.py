@@ -97,14 +97,16 @@ def set_window_boundaries_in_time(expected_multiple_periods, window_widths, comp
     """
     for window_label in trace_window_labels_for_feature_extraction:
         if window_label == 'primary':
-            width = window_widths[component][window_label]
+            #width = window_widths[component][window_label]
+            width = getattr(window_widths,component).primary
             window_bounds = np.array([primary_shift, primary_shift + width])
         elif bool(re.match('multiple', window_label)):
             n_multiple = int(window_label[-1])
             #print(n_multiple)
             delay = n_multiple * expected_multiple_periods[component]
             #delay += primary_shift
-            width = window_widths[component][window_label]
+            #width = window_widths[component][window_label]
+            width = getattr(getattr(window_widths,component),window_label)
             window_bounds = np.array([delay, delay+width])
         elif window_label == 'noise_1':
             start_of_window = WINDOW_BOUNDARIES_TIME[component]['multiple_1'][1]
@@ -141,7 +143,7 @@ def update_window_boundaries_in_time(component, trimmed_trace, trimmed_time_vect
         acceptable_peak_wander = .003 #3ms - add to env_cfg
         max_index = np.argmax(trimmed_trace)
         max_time = trimmed_time_vector[max_index]
-        applicable_window_width = window_widths[component]['primary']
+        applicable_window_width = getattr(window_widths,component).primary
         if np.abs(max_time) < acceptable_peak_wander:
             primary_shift = max_time - applicable_window_width/2.0 #this 2.0 means center the window on the max
             set_window_boundaries_in_time(expected_multiple_periods, window_widths,

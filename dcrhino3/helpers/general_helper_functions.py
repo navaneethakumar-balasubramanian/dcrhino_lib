@@ -37,14 +37,34 @@ def create_folders_if_needed(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
-def dict_or_false_from_json_str(json_str):
+def var_or_dict_from_json_str(var):
     try:
-        return json.loads(json_str)
+        loaded = json.loads(var)
+        pdb.set_trace()
+        if type(loaded) == dict:
+            for key in loaded.keys():
+                loaded[key] = var_or_dict_from_json_str(loaded[key])
+        else:
+            return loaded
     except:
-        return False
+        return var
 
-def dict_to_object(dictinstance):
-    return namedtuple("obj",dictinstance.keys())(*dictinstance.values())
+def dict_to_object(var):
+    if type(var) == dict:
+        return namedtuple("obj",var.keys())(*var.values())
+    return var
+
+def json_string_to_object(_str):
+    try:
+        dict_json  = json.loads(_str)
+    except:
+        dict_json = _str
+    if type(dict_json) == dict:
+        for key in dict_json.keys():
+            dict_json[key] = json_string_to_object(dict_json[key])
+        dict_json = dict_to_object(dict_json)
+        
+    return dict_json
 
 def splitDataFrameIntoSmaller(df, chunk_size = 10000):
     listOfDf = list()
