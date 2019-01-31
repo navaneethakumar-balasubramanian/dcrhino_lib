@@ -2,6 +2,9 @@ import numpy as np
 from bruges.filters.wavelets import rotate_phase
 from skimage.feature import peak_local_max
 from scipy.signal import ricker, cwt
+from dcrhino3.helpers.general_helper_functions import init_logging
+
+logger = init_logging(__name__)
 
 def feature_extractor_b0(component_id, trimmed_trace, transformed_args, timestamp):
 
@@ -28,7 +31,7 @@ def feature_extractor_b0(component_id, trimmed_trace, transformed_args, timestam
                            min_distance=2).ravel()
 
     if len(peaks) == 0:
-        logger.error('No peaks detected.')
+        logger.error('No peaks detected:' + str(component_id) + " " + str(timestamp))
         peaks = np.asarray([0,0,0])
     width_i, angles_i = zip(*[np.unravel_index(np.argmax(p), (p.shape)) for p in np.moveaxis(array_wdp[:, peaks, :], 1, 0)])
 
