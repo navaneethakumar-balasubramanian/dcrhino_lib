@@ -48,7 +48,10 @@ def feature_extractor_b0(component_id, trimmed_trace, transformed_args, timestam
         window = np.asarray(['primary', 'multiple1', 'multiple2'])[i]
         output_dict['_'.join(['b0', component_id, window, 'rotation_angle'])] = phi
         output_dict['_'.join(['b0', component_id, window, 'peak_amplitude'])] = amp
-        output_dict['_'.join(['b0', component_id, window, 'peak_width'])] = trimmed_time_vector[p + (width * 2)] - trimmed_time_vector[p - (width * 2)]
+        try:
+            output_dict['_'.join(['b0', component_id, window, 'peak_width'])] = trimmed_time_vector[p + (width * 2)] - trimmed_time_vector[p - (width * 2)]
+        except:
+            output_dict['_'.join(['b0', component_id, window, 'peak_width'])] = 0.00448
         output_dict['_'.join(['b0', component_id, window, 'peak_time'])] = trimmed_time_vector[p]
 
     return output_dict
