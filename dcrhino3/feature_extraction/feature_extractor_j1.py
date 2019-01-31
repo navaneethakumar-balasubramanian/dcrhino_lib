@@ -35,7 +35,7 @@ def feature_extractor_j1(component_id, trimmed_trace, transformed_args, timestam
     """
     #components_to_process = ['axial', 'tangential', ]
     #pdb.set_trace()
-    logger.warning("transformed args failed to unpack window_widths - hack around here:")
+    #logger.warning("transformed args failed to unpack window_widths - hack around here:")
     window_widths = transformed_args.window_widths
     #window_widths = json.loads(window_widths)
 
