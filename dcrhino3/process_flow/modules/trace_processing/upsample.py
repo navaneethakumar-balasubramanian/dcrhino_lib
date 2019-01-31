@@ -79,7 +79,7 @@ class UpsampleModule(BaseTraceModule):
         n_samples_upsampled_trace = trimmed_trace_duration / upsampled_dt #should be odd
         upsampled_time_vector = upsampled_dt * np.arange(n_samples_upsampled_trace) - np.abs(min_lag)
 
-        pdb.set_trace()
+        #pdb.set_trace()
         interp_function = interp1d(original_time_vector, component_vector,
                                    kind=interp_kind, bounds_error=False,
                                    fill_value=(component_vector[0], component_vector[-1]))
