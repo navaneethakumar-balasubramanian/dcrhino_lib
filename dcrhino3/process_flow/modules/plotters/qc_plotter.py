@@ -8,6 +8,7 @@ import pandas as pd
 
 #import json
 from dcrhino3.process_flow.modules.base_module import BaseModule
+from dcrhino3.plotters.qc_plotter import QCLogPlotter
 from dcrhino3.models.drill_types import DrillTypes
 from dcrhino3.models.bit_types import BitTypes
 from dcrhino3.models.sensor_installation_locations import SensorInstallationLocations
@@ -22,6 +23,7 @@ class QCPlotterModule(BaseModule):
         
         row_of_df = trace.dataframe.iloc[0]
         first_global_conf = trace.global_config_by_index(row_of_df['acorr_file_id'])
+        transformed_args = self.get_transformed_args(first_global_conf)
         
         axial = trace.component_as_array('axial')
         tangential = trace.component_as_array('tangential')
@@ -29,13 +31,40 @@ class QCPlotterModule(BaseModule):
         
         ax_lim = self.get_ax_lim(trace.dataframe)
         
-        plot_title = self.get_plot_title(first_global_conf)
+        plot_title = self.get_plot_title(transformed_args)
         
-        noise_threshold = global_config_tmp.noise_threshold
-        
+        noise_threshold = transformed_args.noise_threshold
         mult_pos = self.get_multiples(transformed_args)
         
+        depth = trace.dataframe['depth']
+        peak_ampl_x = trace.dataframe[transformed_args.plot.peak_ampl_x_col_name]
+        peak_ampl_y = trace.dataframe[transformed_args.plot.peak_ampl_y_col_name]
+        peak_ampl_z = trace.dataframe[transformed_args.plot.peak_ampl_z_col_name]
+        reflection_coefficient = trace.dataframe[transformed_args.plot.reflection_coefficient_col_name]
+        ax_vel_del = trace.dataframe[transformed_args.plot.ax_vel_del_col_name]
+        tangential_RC = trace.dataframe[transformed_args.plot.tangential_RC_col_name]
+        tang_vel_del = trace.dataframe[transformed_args.plot.tang_vel_del_col_name]
         
+        plotter = QCLogPlotter(axial,tangential,radial,depth,plot_title)
+        
+        output_path = None
+        if self.output_to_file:
+            output_path = self.output_path
+        
+        show = True
+        
+        plotter.plot(
+                 peak_ampl_x,
+                 peak_ampl_y,
+                 reflection_coefficient,
+                 ax_vel_del,
+                 tang_vel_del,
+                 ax_lim,
+                 tangential_RC,
+                 noise_threshold,
+                 show,
+                 output_path
+                 )
         
     
         
@@ -76,14 +105,14 @@ class QCPlotterModule(BaseModule):
                                'upper_tang_RC':[upper_tang_RC]})
         return ax_lim
 
-    def get_plot_title(self):
-        drill_type = DrillTypes(self.args.drill_type)
-        bit_type = BitTypes(self.args.bit_type)
-        sensor_location = SensorInstallationLocations(self.args.sensor_installation_location)
+    def get_plot_title(self,transformed_args):
+        drill_type = DrillTypes(transformed_args.drill_type)
+        bit_type = BitTypes(transformed_args.bit_type)
+        sensor_location = SensorInstallationLocations(transformed_args.sensor_installation_location)
             
-        title_line1 = r"$\bf{"+ "SENSOR"+"}$"+": LOCATION: {}".format(sensor_location) +", SERIAL NUMBER: {}".format(global_config.sensor_serial_number)+'\n'+"SENSITIVITY: {}, ORIENTATION: <> ".format(global_config.sensor_saturation_g)
-        title_line2 = r"$\bf{"+ "RIG/BIT/DRILLSTRING"+"}$"+": RIG TYPE: <>, DRILL TYPE: {},".format(drill_type)+'\n'+"BIT SIZE: {}/".format(global_config.bit_size)+" Type:{}".format(bit_type)+"/Model:{}".format(global_config.bit_model)+"/Tooth Length:<>,"+'\n'+" DRILL STRING LENGTH:{}".format(global_config.drill_string_total_length)
-        title_line3 = "DISTANCE FROM BIT TO SENSOR: {}".format(global_config.sensor_distance_to_source,global_config.rig_id)
+        title_line1 = r"$\bf{"+ "SENSOR"+"}$"+": LOCATION: {}".format(sensor_location) +", SERIAL NUMBER: {}".format(transformed_args.sensor_serial_number)+'\n'+"SENSITIVITY: {}, ORIENTATION: <> ".format(transformed_args.sensor_saturation_g)
+        title_line2 = r"$\bf{"+ "RIG/BIT/DRILLSTRING"+"}$"+": RIG TYPE: <>, DRILL TYPE: {},".format(drill_type)+'\n'+"BIT SIZE: {}/".format(transformed_args.bit_size)+" Type:{}".format(bit_type)+"/Model:{}".format(transformed_args.bit_model)+"/Tooth Length:<>,"+'\n'+" DRILL STRING LENGTH:{}".format(transformed_args.drill_string_total_length)
+        title_line3 = "DISTANCE FROM BIT TO SENSOR: {}".format(transformed_args.sensor_distance_to_source,transformed_args.rig_id)
         title_line4 = ""
         plot_title = [title_line4, title_line2+' '+title_line3, title_line1]
     

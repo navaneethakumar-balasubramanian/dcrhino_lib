@@ -46,7 +46,11 @@ class ProcessFlow:
         self.features_flow = []
         self.save_features_to_file = False
         
-        self.qc_plotter = None
+        self.plotters_flow = []
+        
+        self.plotters_modules = {
+                                            "qc_log_v1":QCPlotterModule
+                                        }
         
         self.output_path = output_path
         
@@ -77,16 +81,19 @@ class ProcessFlow:
                 features_extraction__modules_json = features_extraction_json['modules']
                 for module in features_extraction__modules_json:
                     process_counter +=1
-                    module_file_name = str(process_counter)+"_"+module['type']+".csv"
+                    module_file_name = str(process_counter)+"_features_"+module['type']+".csv"
                     module_output_path = os.path.join(process_flow_output_path,module_file_name)
                     self.features_flow.append(self.features_extraction_modules[module['type']](module,module_output_path))
         
-        if "qc_plotter" in process_json.keys():
-            process_counter +=1
-            module_file_name = str(process_counter)+"_"+module['type']+".h5"
-            module_output_path = os.path.join(process_flow_output_path,module_file_name)
-            qc_plotter_json = process_json['qc_plotter']
-            self.qc_plotter = QCPlotterModule(qc_plotter_json,module_output_path)
+        if "plotters" in process_json.keys():
+            plotters_json = process_json['plotters']
+            if 'modules' in plotters_json.keys():
+                plotters_modules_json = plotters_json['modules']
+                for module in plotters_modules_json:
+                    process_counter +=1
+                    module_file_name = str(process_counter)+"_plot_"+module['type']+".png"
+                    module_output_path = os.path.join(process_flow_output_path,module_file_name)
+                    self.plotters_flow.append(self.plotters_modules[module['type']](module,module_output_path))
             
 
 
@@ -116,8 +123,16 @@ class ProcessFlow:
         if self.save_features_to_file:
             output_trace.save_to_csv(os.path.join(process_flow_output_path,"extracted_features.csv"))
 
-        if self.qc_plotter is not None:
-            self.qc_plotter.plot()
+        #if self.qc_plotter is not None:
+        #    self.qc_plotter.plot_trace_data(output_trace)
+            
+        for module in self.plotters_flow:
+            t0 = time.time()
+            logger.info("Plotting using module: " +str(module.id)+ " with: " + str(module.args))
+            #pdb.set_trace()
+            output_trace = module.plot_trace_data(output_trace)
+            delta_t = time.time() - t0
+            logger.info("{} ran in {}s ".format(module.id, delta_t))
             
         return output_trace
 

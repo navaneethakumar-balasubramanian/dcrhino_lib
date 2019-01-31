@@ -94,6 +94,7 @@ class TraceData(object):
 
     def save_to_csv(self,path):
         df = self.copy_without_trace_data()
+        ## TODO: INSERT SENSOR_ID DIGITIZER_ID COLUMNS HERE CHECKING FOR EACH LINE ACOR_FILE_ID
         df.to_csv(path,index=False)
 
     def save_to_h5(self, path):
