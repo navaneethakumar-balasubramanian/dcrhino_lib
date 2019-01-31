@@ -97,7 +97,6 @@ class MWDRhinoMerger():
         
         
         interpolated_hole_mwd = self.get_mwd_interpolated_by_second(hole_mwd,time_vector)
-        pdb.set_trace()
         merged = pd.concat([rhino_traces_df,interpolated_hole_mwd],axis=1)
         #pdb.set_trace()
         return merged
