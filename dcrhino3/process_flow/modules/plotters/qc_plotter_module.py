@@ -45,7 +45,7 @@ class QCPlotterModule(BaseModule):
         tangential_RC = trace.dataframe[transformed_args.plot.tangential_RC_col_name]
         tang_vel_del = trace.dataframe[transformed_args.plot.tang_vel_del_col_name]
         
-        plotter = QCLogPlotter(axial,tangential,radial,depth,plot_title)
+        plotter = QCLogPlotter(axial,tangential,radial,depth,plot_title,transformed_args.output_sampling_rate)
         
         output_path = None
         if self.output_to_file:

@@ -9,23 +9,54 @@ import matplotlib.pyplot as plt
 import pdb
 import pandas as pd
 
-
+from dcrhino3.plotters.colour_bar_axis_limits import ColourBarAxisLimits
 
 class QCLogPlotter():
 
-    def __init__(self,axial,tangential,radial,depth,plot_title,lower_num_ms=-5.0,upper_num_ms=30.0,plot_by_depth=True):
-        
-        self.axial = np.flipud(axial)
-        self.tangential = np.flipud(tangential)
-        self.radial = np.flipud(radial)
-        self.num_traces_per_component, self.num_samples = self.axial.T.shape
-        self.depth = depth
+    def __init__(self,axial,tangential,radial,depth,plot_title,output_sampling_rate,normalize=True,lower_num_ms=-5.0,upper_num_ms=30.0,dt_ms=5,plot_by_depth=True):
         
         self.plot_title = plot_title
         
+        self.output_sampling_rate = output_sampling_rate
+        self.dt_ms = dt_ms
         self.lower_num_ms = lower_num_ms
         self.upper_num_ms = upper_num_ms
         
+        self.depth = depth
+        
+        self.normalize = normalize
+        self.axial = self.prepare_trace(axial)
+        self.tangential = self.prepare_trace(tangential)
+        self.radial = self.prepare_trace(radial)
+        self.num_traces_per_component, self.num_samples = self.axial.T.shape
+        
+    def prepare_trace(self,component_trace):
+
+        data = component_trace
+
+        num_traces_in_blasthole, samples_per_trace = data.shape
+        component_trace = data.T
+        n_samples = int(0.2*self.output_sampling_rate)
+
+#            n_samples = self.global_config.n_samples_trimmed_trace
+        dt = 1./self.output_sampling_rate
+        samples_back = (np.abs(self.lower_num_ms))/1000./dt
+        samples_back = int(np.ceil(samples_back))
+        samples_fwd = self.upper_num_ms/1000./dt
+        samples_fwd = int(np.ceil(samples_fwd))
+        half_way = int(n_samples/2)
+        component_trace = component_trace[half_way-samples_back:half_way+samples_fwd,:]
+        #pdb.set_trace()
+        if self.normalize:
+            nans_locations = np.where(np.isnan(component_trace))
+            component_trace[nans_locations]=0.0
+            num_samples, num_traces = component_trace.shape
+            max_amplitudes = np.max(component_trace, axis=0)
+            component_trace = component_trace/max_amplitudes
+            component_trace[nans_locations] = np.nan
+        
+        return np.flipud(component_trace)
+
         
     def x_from_depth(self):
         X = self.depth.astype(float)
@@ -54,8 +85,8 @@ class QCLogPlotter():
         plt.rcParams.update(params)
         
         colourbar_type = 'all_one'#'all_one' vsdepth
-        #cbal = ColourBarAxisLimtis(colourbar_type=colourbar_type)#, v_min_1=-22)
-        #cmap_string = 'spring'; cmap_string = 'jet'
+        cbal = ColourBarAxisLimits(colourbar_type=colourbar_type)#, v_min_1=-22)
+        cmap_string = 'spring'; cmap_string = 'jet'
         
         X = self.x_from_depth()
         
@@ -64,7 +95,23 @@ class QCLogPlotter():
         
         fig, ax = plt.subplots(nrows=5, sharex=False, figsize=(24,12))
         self.Panel1_plot(ax[0], X, peak_ampl_x,reflection_coefficient,ax_vel_del,ax_lim)
+        
+        dt_ms = self.dt_ms
+        lowest_y_tick =  int(self.lower_num_ms/dt_ms)
+        greatest_y_tick = int(self.upper_num_ms/dt_ms)
+
+        y_tick_locations = dt_ms * np.arange(lowest_y_tick, greatest_y_tick + 1)
+        #<sort out yticks every 5 ms>
+
+    	#Generate Axial, Radial, Tangential heatmap plots
+        #pdb.set_trace()
+        ax[1], heatmap1 = self.plot_hole_as_heatmap(ax[1], cbal.v_min_1, cbal.v_max_1, X, Y, self.axial, cmap_string, y_tick_locations)
+        
         self.Panel3_plot(ax[2], X, peak_ampl_y,tangential_RC,tang_vel_del,ax_lim,noise_threshold)
+
+        ax[3], heatmap2 = self.plot_hole_as_heatmap(ax[3], cbal.v_min_2, cbal.v_max_2, X, Y,self.tangential, cmap_string, y_tick_locations)
+#       
+
         self.legend_box(ax[4])
         
         
@@ -77,6 +124,38 @@ class QCLogPlotter():
         
         if show:
             plt.show()
+            
+    def plot_hole_as_heatmap(self, ax, v_min, v_max, X, Y, Z, cmap_string, y_tick_locations,
+                         two_way_travel_time_ms=None, multiple_search_back_ms=None,
+                         multiple_search_forward_ms=None):
+        """
+        """
+        minor_locator = AutoMinorLocator()
+        if any([x is None for x in [v_min, v_max]]):# autoselcet color axes
+            heatmap = ax.pcolormesh(X, Y, Z, cmap=cmap_string)
+        else:
+            heatmap = ax.pcolormesh(X, Y, Z, cmap=cmap_string, vmin=v_min, vmax=v_max)
+        locs,labs = plt.xticks()
+        ax.set_ylabel('time (ms)')
+        ax.invert_yaxis()
+        ax.set_yticks(y_tick_locations, minor=False)
+    
+        ax.yaxis.set_minor_locator(minor_locator)
+        ax.tick_params(which='major', width=1)
+        ax.tick_params(which='major', length=8)
+        ax.tick_params(which='minor', length=4, color='r', width=0.5)
+    
+        if two_way_travel_time_ms is not None:
+            ax.plot(np.asarray([X[0], X[-1]]), two_way_travel_time_ms*np.ones(2), 'r', linewidth=1.)
+            #this indent not a bug/error
+            if multiple_search_back_ms is not None:
+                ax.plot(np.asarray([X[0], X[-1]]), (two_way_travel_time_ms - multiple_search_back_ms) * np.ones(2), 'k', linewidth=1.)
+            if multiple_search_forward_ms is not None:
+                ax.plot(np.asarray([X[0], X[-1]]), (two_way_travel_time_ms + multiple_search_forward_ms) * np.ones(2), 'k', linewidth=1.)
+    
+        ax.set_xlim(X[0], X[-1])
+    #    ax.set_xticklabels()
+        return ax, heatmap
         
 
     def Panel1_plot(self,ax, X, peak_ampl_x,reflection_coefficient,ax_vel_del,ax_lim):
