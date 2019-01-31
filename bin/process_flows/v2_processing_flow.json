@@ -50,7 +50,7 @@
         "type": "j0",
         "output_to_file": true,
         "args": {
-                "output_sampling_rate":"|global_config.output_sampling_rate",
+                "output_sampling_rate":["|global_config.output_sampling_rate|",100],
                 "primary_window_halfwidth_ms":"|global_config.primary_window_halfwidth_ms|",
                 "multiple_window_search_width_ms":"|global_config.multiple_window_search_width_ms|",
                 "sensor_distance_to_source":"|global_config.sensor_distance_to_source|",
@@ -74,6 +74,47 @@
                 "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|"
                 }
       }
+    ],
+    "output_to_file":true
+    
+  },
+  "plotters":{
+      "modules":[
+          {
+              "type":"qc_log_v1",
+              "output_to_file":true,
+              "args":{
+                  "plot":{
+                      "upper_num_ms":30.0,
+                      "lower_num_ms":-5.0,
+                      "dt_ms":5,
+                      "peak_ampl_x_col_name":"J0_axial_primary_peak_sample",
+                      "peak_ampl_y_col_name":"J0_tangential_primary_peak_sample",
+                      "peak_ampl_z_col_name":"J0_radial_primary_peak_sample",
+                      "tangential_RC_col_name":"J0_tangential_RC",
+                      "ax_vel_del_col_name":"J0_axial_velocity_delay",
+                      "tang_vel_del_col_name":"J0_tangential_velocity_delay",
+                      "reflection_coefficient_col_name":"J0_reflection_coefficient"
+                  },
+                  "output_sampling_rate":"|global_config.output_sampling_rate",
+                  "mine_id":["|global_config.mine_id|","default_mine_name"],
+                  "ACOUSTIC_VELOCITY":"|global_config.ACOUSTIC_VELOCITY|",
+                  "SHEAR_VELOCITY":"|global_config.SHEAR_VELOCITY|",
+                  "noise_threshold":"|global_config.noise_threshold|",
+                  "rig_id":"|global_config.rig_id|",
+                  "drill_type":"|global_config.drill_type|",
+                  "drill_string_total_length":"|global_config.drill_string_total_length|",
+                  "bit_type":"|global_config.bit_type|",
+                  "bit_size":"|global_config.bit_size|",
+                  "bit_model":"|global_config.bit_model|",
+                  "sensor_installation_location":"|global_config.sensor_installation_location|",
+                  "sensor_distance_to_source":"|global_config.sensor_distance_to_source|",
+                  "sensor_distance_to_shocksub":"|global_config.sensor_distance_to_shocksub|",
+                  "sensor_serial_number":"|global_config.sensor_serial_number|",
+                  "sensor_saturation_g":"|global_config.sensor_saturation_g|"
+              }
+          }
     ]
   }
+  
 }
