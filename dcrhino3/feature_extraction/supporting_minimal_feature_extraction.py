@@ -134,7 +134,7 @@ def get_trough_times(reference_index, data_series, time_vector):
 
     if len(neg_peak_times) != 1:
         #pdb.set_trace()
-        logger.error("WTF!")
+        #logger.error("WTF!")
         left_trough_time = np.nan
         #pdb.set_trace()
 
