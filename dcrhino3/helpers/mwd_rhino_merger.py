@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 from dcrhino3.helpers.general_helper_functions import init_logging
 from scipy.interpolate import interp1d
+from sklearn.neighbors.classification import KNeighborsClassifier
 
 
 logger = init_logging(__name__)
@@ -90,8 +91,10 @@ class MWDRhinoMerger():
         files_holes_df = pd.DataFrame(dict_list)
         return files_holes_df
     
-    def merge_mwd_with_trace(self,hole_mwd,rhino_traces_df):
+    def merge_mwd_with_trace(self,hole_mwd,trace_data):
+        rhino_traces_df = trace_data.dataframe
         time_vector = (rhino_traces_df['timestamp'].values*1000000000).astype(np.int64)
+        
         
         interpolated_hole_mwd = self.get_mwd_interpolated_by_second(hole_mwd,time_vector)
         merged = pd.concat([rhino_traces_df,interpolated_hole_mwd],axis=1)
@@ -105,7 +108,9 @@ class MWDRhinoMerger():
         interpolated_mwd = pd.DataFrame()
         for col in hole_mwd.columns:
             if len(np.unique(hole_mwd[col])) == 1:
-                interpolated_mwd[col] = hole_mwd[col].values[0]
+                interpolated_mwd[col] = np.full(len(time_vector),hole_mwd[col].values[0])
+            elif pd.core.dtypes.cast.is_categorical_dtype(hole_mwd[col]):
+                interpolated_mwd[col] = self.get_interpolated_categorical_column(time_vector,hole_mwd,col)    
             elif hole_mwd[col].values.dtype in [np.int,np.float,np.datetime64]:
                 interpolated_mwd[col] = self.get_interpolated_column(time_vector,hole_mwd,col)    
             elif hole_mwd[col].values.dtype == np.dtype('datetime64[ns]'):
@@ -115,6 +120,21 @@ class MWDRhinoMerger():
         
         #interpolated_mwd['timestamp'] = time_vector/1000000000
         return interpolated_mwd
+    
+    def get_interpolated_categorical_column(self,time_vector, mwd_hole_df, column_label,
+                    end_time_column_label='start_time'):
+        
+        time_vector = pd.DatetimeIndex(time_vector).astype(np.int64)
+        
+        X = pd.DatetimeIndex(mwd_hole_df[end_time_column_label]).astype(np.int64).reshape((-1, 1))
+        X_pred = time_vector.reshape((-1, 1))
+        
+        y = mwd_hole_df[column_label].cat.codes.values.reshape((-1, 1))
+    
+        knc = KNeighborsClassifier(1, algorithm='auto', n_jobs=-1)
+        knc.fit(X, y)
+        y_pred = knc.predict(X_pred)
+        return mwd_hole_df[column_label].cat.categories[y_pred].ravel()
     
     def get_interpolated_column(self,time_vector, mwd_hole_df, column_label,
                             end_time_column_label='start_time'):

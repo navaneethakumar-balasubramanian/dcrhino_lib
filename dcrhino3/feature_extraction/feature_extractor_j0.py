@@ -4,16 +4,15 @@ value from global_config
 
 """
 import numpy as np
-import pandas as pd
+import pdb
 from datetime import datetime
 
-from dcrhino.feature_extraction.supporting_minimal_feature_extraction import get_zero_crossing_samples
-from dcrhino.feature_extraction.supporting_minimal_feature_extraction import get_trough_times
-from dcrhino.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_multiple_wavelet
-from dcrhino.process_pipeline.j0_derived_features import J0FeatureDeriver
+from dcrhino3.feature_extraction.j0_derived_features import J0FeatureDeriver
+#from dcrhino3.feature_extraction.supporting_minimal_feature_extraction import get_zero_crossing_samples
+#from dcrhino3.feature_extraction.supporting_minimal_feature_extraction import get_trough_times
+from dcrhino3.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_multiple_wavelet
+from dcrhino3.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_primary_wavelet
 
-#from dcrhino.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_primary_wavelet
-import pdb
 
 class WaveletForFeatureExtraction(object):
     """
@@ -108,64 +107,7 @@ class FeatureExtractorJ0():
 
         return indices
 
-    def extract_features_from_primary_wavelet(self, trace_packet, component, wavelet_type):
-        """
-        TODO: migrate this to seismic processing eventually
 
-        """
-        time_vector = trace_packet.time_vector
-        primary_window_halfwidth = self.primary_window_halfwidth_ms * 1e-3
-
-        #pdb.set_trace()
-        primary_wavelet_indices_1 = self.get_wavelet_window_indices(time_vector,
-                                                               -primary_window_halfwidth,
-                                                               primary_window_halfwidth)
-
-
-        trace_packet.data = np.asarray(trace_packet.data)
-
-        window_to_search_for_primary_1 = trace_packet.data[primary_wavelet_indices_1]
-        hopefully_prim_peak_ndx = np.argmax(window_to_search_for_primary_1)
-        hopefully_prim_center_time = time_vector[primary_wavelet_indices_1][hopefully_prim_peak_ndx]
-
-        primary_fit_lower_bound = hopefully_prim_center_time - primary_window_halfwidth
-        primary_fit_upper_bound = hopefully_prim_center_time + primary_window_halfwidth
-        primary_wavelet_indices_2 = self.get_wavelet_window_indices(time_vector,
-                                                               primary_fit_lower_bound,
-                                                               primary_fit_upper_bound)
-        primary_wavelet = trace_packet.data[primary_wavelet_indices_2]
-        primary_time_vector = time_vector[primary_wavelet_indices_2]
-
-        wffe = WaveletForFeatureExtraction(primary_wavelet,primary_time_vector,self.WAVELET_FEATURES,
-                                           component=component, wavelet_type=wavelet_type)
-
-        wffe.peak_sample = np.max(window_to_search_for_primary_1)
-        wffe.peak_time_sample = hopefully_prim_center_time
-
-        if np.max(trace_packet.data)==np.max(window_to_search_for_primary_1):#sanity check;
-            reference_index = np.argmax(trace_packet.data)
-            try:
-                zx_left, zx_right = get_zero_crossing_samples(reference_index, trace_packet.data, time_vector)
-            except IndexError:
-                print("?? - index erroR")
-                zx_left = np.nan; zx_right = np.nan
-                print("last timethis was a werid trace having shape of a heavisidcfctn")
-                #pdb.set_trace()
-            try:
-                left_trough_time, left_trough_time_sample = get_trough_times(reference_index, trace_packet.data, time_vector)
-            except ValueError:
-                left_trough_time = np.nan; left_trough_time_sample = np.nan
-                print("emptyseq?? - last timethis was a zero trace")
-                #pdb.set_trace()
-        else:
-            zx_left = np.nan; zx_right = np.nan
-            left_trough_time = np.nan; left_trough_time_sample = np.nan;
-        wffe.zero_crossing_prior_sample = zx_left
-        wffe.zero_crossing_after_sample = zx_right
-        wffe.left_trough_time = left_trough_time
-        wffe.left_trough_time_sample = left_trough_time_sample
-
-        return wffe
 
     def create_features_dictionary(self, component_id):
         """
@@ -197,7 +139,8 @@ class FeatureExtractorJ0():
             if component_id == 'axial':
 
                 if wavelet_type=='primary':
-                    wffe = self.extract_features_from_primary_wavelet(packet, component_id, wavelet_type)
+                    wffe = extract_features_from_primary_wavelet(packet, self.primary_window_halfwidth_ms,
+                                                                 component_id, wavelet_type)
                 elif wavelet_type=='multiple':
                     earliest_multiple_time = self.get_earliest_expected_mulitple_time() - (2.0 * packet.dt)
                     latest_multiple_time =  earliest_multiple_time + self.multiple_window_search_width_ms*1e-3
@@ -209,7 +152,8 @@ class FeatureExtractorJ0():
             elif component_id == 'tangential':
 
                 if wavelet_type=='primary':
-                    wffe = self.extract_features_from_primary_wavelet(packet, component_id, wavelet_type)
+                    wffe = extract_features_from_primary_wavelet(packet, self.primary_window_halfwidth_ms,
+                                                                 component_id, wavelet_type)
                 elif wavelet_type=='multiple':
                     earliest_multiple_time = self.get_earliest_expected_mulitple_time() - (2.0 * packet.dt)
                     latest_multiple_time =  earliest_multiple_time + self.multiple_window_search_width_ms*1e-3
@@ -219,7 +163,8 @@ class FeatureExtractorJ0():
                     raise Exception
 
             else :
-                wffe = self.extract_features_from_primary_wavelet(packet, component_id, wavelet_type)
+                wffe = extract_features_from_primary_wavelet(packet, self.primary_window_halfwidth_ms,
+                                                             component_id, wavelet_type)
             #pdb.set_trace()
             for attr in self.WAVELET_FEATURES[component_id]:
                 label = '{}_{}_{}'.format(component_id, wavelet_type, attr)

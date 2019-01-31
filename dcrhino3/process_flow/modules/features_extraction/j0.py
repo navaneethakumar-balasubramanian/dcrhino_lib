@@ -23,11 +23,6 @@ class J0FeaturesModule(BaseFeatureModule):
     def extract_feature_component(self, component_id, component_array, transformed_args, trace_timestamp):
         extractor = FeatureExtractorJ0(transformed_args)
         logger.error("J0 features not yet implemented in V3")
-        #pdb.set_trace()
         original_features = extractor.extract_features(component_id, component_array,
                                                        trace_timestamp,transformed_args)
-            #pdb.set_trace()
-        #all_features_great_and_small.update(original_features)
-        #line_features_dict = dict()
-        #line_features_dict[component_id + "_example_feature"] = 1
         return original_features

@@ -1,20 +1,15 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
-Created on Thu Sep 27 21:14:10 2018
-/home/kkappler/software/datacloud/dcrhino_lib/dcrhino/process_pipeline/config.py
 @author: thiago
 """
 import json
 import numpy as np
 import pdb
 
-#from dcrhino.analysis.instrumentation.rhino import get_rhino_channel_map_v2
-#from dcrhino.analysis.util.general_helper_functions import init_logging
+
 from dcrhino3.models.metadata import METADATA_HEADER_FORMAT_KEYS, DataType
 
-
-#logger = init_logging(__name__)
 
 
 class Config( object ):

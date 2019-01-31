@@ -33,11 +33,10 @@ class BaseTraceArrayModule(BaseModule):
                 output_df.at[line_idx,component_column_on_df] = processed_trace
 
         trace.dataframe = output_df
-
         trace.add_applied_module(self.applied_module_string(args))
 
-#        if self.output_to_file():
-#            trace.save_to_h5(self.output_path)
+        if self.output_to_file:
+            trace.save_to_h5(self.output_path)
 
         return trace
 

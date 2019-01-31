@@ -1,15 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-@TODO: 20190127; rename this to BaseTraceProcessingModule, or just call it
-base.py and that its in trace_processing folder.  THis module is all about
-the action of processing and so processign should figure in its name so
-one knows can reference it easily;
-dcrhino3/process_flow/modules/trace_processing/base_trace_module.py
+
 """
 
-import pdb
-#import json
 import pandas as pd
+import pdb
 from dcrhino3.process_flow.modules.base_module import BaseModule
 
 class BaseFeatureModule(BaseModule):
@@ -21,14 +16,14 @@ class BaseFeatureModule(BaseModule):
         self.id = "base_feature_module"
 
 
-    def extract_features(self,trace,args=None):
+    def extract_features(self,trace):
         """
         works with a TraceData() class, typically an entire hole, or
         dataframe spanning a time interval comprising many traces
         """
         output_df = trace.dataframe.copy()
-        features_dict_array = [None] * len(output_df)
-
+        features_dict_list = [None] * len(output_df) 
+        
         for line_idx in range(len(output_df)):
             row_of_df = output_df.iloc[line_idx]
             line_features_dict = {}
@@ -39,27 +34,25 @@ class BaseFeatureModule(BaseModule):
                 component_column_on_df = component_id+"_trace"
                 trace_to_process = row_of_df[component_column_on_df]
                 timestamp = row_of_df.timestamp
-                #pdb.set_trace()
                 component_features = self.extract_feature_component(component_id,
                                                                  trace_to_process,
                                                                  transformed_args,
                                                                  timestamp)
-                #pdb.set_trace()
                 line_features_dict.update(component_features)
+                
+            
+            features_dict_list[line_idx] = line_features_dict
 
-
-            features_dict_array[line_idx] = line_features_dict
-
-        features_df = pd.DataFrame(features_dict_array)
-
+        features_df = pd.DataFrame(features_dict_list)
+        
         merged = pd.concat([features_df,trace.dataframe],axis=1)
 
         trace.dataframe = merged
 
-        trace.add_applied_module(self.applied_module_string(args))
-
-#        if self.output_to_file:
-#            trace.save_to_h5(self.output_path)
+        trace.add_applied_module(self.applied_module_string(self.args))
+        
+        if self.output_to_file:
+            features_df.to_csv(self.output_path,index=False)
 
         return trace
 

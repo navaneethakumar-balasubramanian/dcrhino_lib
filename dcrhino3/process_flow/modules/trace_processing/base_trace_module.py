@@ -4,7 +4,6 @@
 base.py and that its in trace_processing folder.  THis module is all about
 the action of processing and so processign should figure in its name so
 one knows can reference it easily;
-dcrhino3/process_flow/modules/trace_processing/base_trace_module.py
 """
 
 import pdb
@@ -20,24 +19,25 @@ class BaseTraceModule(BaseModule):
         self.id = "base_trace_module"
 
 
-    def process_trace_data(self,trace,args=None):
+    def process_trace_data(self,trace):
         """
         works with a TraceData() class, typically an entire hole, or
         dataframe spanning a time interval comprising many traces
         """
         output_df = trace.dataframe.copy()
-        
-        
-        previous_acorr_file_id = None        
-        
+
+
+        previous_acorr_file_id = None
+
         for line_idx in range(len(output_df)):
             #print(line_idx)
             row_of_df = output_df.iloc[line_idx]
             if previous_acorr_file_id != row_of_df['acorr_file_id']:
                 trace_config = trace.global_config_by_index(row_of_df['acorr_file_id'])
+                print type(trace_config)
                 transformed_args = self.get_transformed_args(trace_config)
                 previous_acorr_file_id = row_of_df['acorr_file_id']
-            
+
             for component_id in trace_config.components_to_process:
                 component_column_on_df = component_id+"_trace"
                 trace_to_process = row_of_df[component_column_on_df]
@@ -48,10 +48,10 @@ class BaseTraceModule(BaseModule):
 
         trace.dataframe = output_df
 
-        trace.add_applied_module(self.applied_module_string(args))
+        trace.add_applied_module(self.applied_module_string(self.args))
 
-#        if self.output_to_file():
-#            trace.save_to_h5(self.output_path)
+        if self.output_to_file:
+            trace.save_to_h5(self.output_path)
 
         return trace
 

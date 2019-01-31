@@ -21,7 +21,12 @@
     	"modules":[
         	{
             	"type":"j1",
-            	"output_to_file":true
+            	"output_to_file":true,
+            	"args":{
+        			"axial":10,
+        			"tangential":"|global_config.sensor_distance_to_source|",
+        			"radial":10
+    			}
         	}
     	]
 	}

@@ -6,7 +6,7 @@ Created on Sat Apr 26 13:59:10 2014
 
 Basic tools, mostly taken from websites
 """
-
+import json
 import collections
 import datetime
 import fnmatch
@@ -16,6 +16,8 @@ import os
 from string import zfill
 import subprocess
 import pdb
+
+from collections import namedtuple
 
 #<temporary logging>
 import logging
@@ -32,9 +34,37 @@ logger = init_logging(__name__)
 home = os.path.expanduser('~/')
 
 def create_folders_if_needed(path):
-    path = os.path.dirname(path)
     if not os.path.exists(path):
         os.makedirs(path)
+
+def var_or_dict_from_json_str(var):
+    try:
+        loaded = json.loads(var)
+        pdb.set_trace()
+        if type(loaded) == dict:
+            for key in loaded.keys():
+                loaded[key] = var_or_dict_from_json_str(loaded[key])
+        else:
+            return loaded
+    except:
+        return var
+
+def dict_to_object(var):
+    if type(var) == dict:
+        return namedtuple("obj",var.keys())(*var.values())
+    return var
+
+def json_string_to_object(_str):
+    try:
+        dict_json  = json.loads(_str)
+    except:
+        dict_json = _str
+    if type(dict_json) == dict:
+        for key in dict_json.keys():
+            dict_json[key] = json_string_to_object(dict_json[key])
+        dict_json = dict_to_object(dict_json)
+        
+    return dict_json
 
 def splitDataFrameIntoSmaller(df, chunk_size = 10000):
     listOfDf = list()

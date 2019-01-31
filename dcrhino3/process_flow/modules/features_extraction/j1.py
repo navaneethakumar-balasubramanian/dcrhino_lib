@@ -21,4 +21,6 @@ class J1FeaturesModule(BaseFeatureModule):
         if component_id == 'radial':
             return {}
         line_feature_dict = feature_extractor_j1(component_id, trace_to_process, transformed_args, timestamp)
+        
+
         return line_feature_dict
