@@ -15,6 +15,7 @@ from dcrhino3.process_flow.modules.trace_processing.add_n import AddNModule
 from dcrhino3.process_flow.modules.trace_processing.lead_channel_decon import LeadChannelDeconvolutionModule
 from dcrhino3.process_flow.modules.trace_processing.trim_trace import TrimTraceModule
 from dcrhino3.process_flow.modules.trace_processing.unfold_autocorrelation import UnfoldAutocorrelationModule
+from dcrhino3.process_flow.modules.trace_processing.upsample import UpsampleModule
 
 from dcrhino3.process_flow.modules.features_extraction.j1 import J1FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.j0 import J0FeaturesModule
@@ -26,14 +27,15 @@ logger = init_logging(__name__)
 class ProcessFlow:
     def __init__(self,process_json,output_path=""):
         self.id = "process_flow"
-        
+
         self.trace_processing_modules = {
                                             "band_pass_filter":BandPassFilterModule,
                                             "add_one":AddOneModule,
                                             "add_n":AddNModule,
                                             "lead_channel_deconvolution":LeadChannelDeconvolutionModule,
                                             "trim":TrimTraceModule,
-                                            "unfold":UnfoldAutocorrelationModule
+                                            "unfold":UnfoldAutocorrelationModule,
+                                            "upsample":UpsampleModule
                                         }
         self.trace_flow = []
 
