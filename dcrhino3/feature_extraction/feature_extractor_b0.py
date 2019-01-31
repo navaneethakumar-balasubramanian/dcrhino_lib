@@ -27,6 +27,9 @@ def feature_extractor_b0(component_id, trimmed_trace, transformed_args, timestam
     peaks = peak_local_max(peaks_to_detect, num_peaks=3,
                            min_distance=2).ravel()
 
+    if len(peaks) == 0:
+        logger.error('No peaks detected.')
+        peaks = np.asarray([0,0,0])
     width_i, angles_i = zip(*[np.unravel_index(np.argmax(p), (p.shape)) for p in np.moveaxis(array_wdp[:, peaks, :], 1, 0)])
 
     peak_phis = angles.take(angles_i)
