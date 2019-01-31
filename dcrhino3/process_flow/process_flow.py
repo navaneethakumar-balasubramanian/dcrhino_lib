@@ -19,8 +19,9 @@ from dcrhino3.process_flow.modules.trace_processing.upsample import UpsampleModu
 
 from dcrhino3.process_flow.modules.features_extraction.j1 import J1FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.j0 import J0FeaturesModule
+from dcrhino3.process_flow.modules.features_extraction.b0 import B0FeaturesModule
 
-from dcrhino3.process_flow.modules.qc_plotter import QCPlotterModule
+from dcrhino3.process_flow.modules.plotters.qc_plotter_module import QCPlotterModule
 
 logger = init_logging(__name__)
 
@@ -43,6 +44,7 @@ class ProcessFlow:
         self.features_extraction_modules = {
                                             "j0":J0FeaturesModule,
                                             "j1":J1FeaturesModule,
+                                            "b0":B0FeaturesModule
                                         }
 
         self.features_flow = []
@@ -124,9 +126,6 @@ class ProcessFlow:
         
         if self.save_features_to_file:
             output_trace.save_to_csv(os.path.join(process_flow_output_path,"extracted_features.csv"))
-
-        #if self.qc_plotter is not None:
-        #    self.qc_plotter.plot_trace_data(output_trace)
             
         for module in self.plotters_flow:
             t0 = time.time()
