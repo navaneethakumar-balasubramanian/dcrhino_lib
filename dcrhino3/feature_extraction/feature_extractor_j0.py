@@ -199,8 +199,7 @@ class FeatureExtractorJ0():
         for key in df_dict.keys():
             df_dict['J0_{}'.format(key)] = df_dict.pop('{}'.format(key))
 
-        df_dict['datetime'] = datetime.utcfromtimestamp(trace_timestamp)
-        #df_dict['timestamp'] = trace_timestamp
+        #df_dict['datetime'] = datetime.utcfromtimestamp(trace_timestamp)
         #pdb.set_trace()
 
         return df_dict
