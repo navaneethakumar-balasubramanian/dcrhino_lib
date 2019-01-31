@@ -82,8 +82,10 @@ class MWDHelper():
         df['hole_name'] = df['hole_name'].astype(str)
         df['hole_id'] = df['hole_id'].astype(str)
         df['rig_id'] = df['rig_id'].astype(str)
-        df['depth'] = (df['elevation'] - df['collar_elevation']).astype(float)
-        return df
+        df['depth'] = (df['collar_elevation'] - df['elevation']).astype(float)
+        
+        sorted_by_start_time = df.sort_values(by=['start_time'])
+        return sorted_by_start_time
 
     def get_rhino_mwd_from_mine_name(self,mine_name):
         mine_type = self.env_config.get_mwd_type(mine_name)
