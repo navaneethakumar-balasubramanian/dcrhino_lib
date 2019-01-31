@@ -94,7 +94,9 @@ class TraceData(object):
 
     def save_to_csv(self,path):
         df = self.copy_without_trace_data()
-        ## TODO: INSERT SENSOR_ID DIGITIZER_ID COLUMNS HERE CHECKING FOR EACH LINE ACOR_FILE_ID
+        first_global_config = self.global_config_by_index(df['acorr_file_id'].values[0])
+        df['sensor_id'] = first_global_config.sensor_serial_number
+        df['digitizer_id'] = first_global_config.digitizer_serial_number
         df.to_csv(path,index=False)
 
     def save_to_h5(self, path):
