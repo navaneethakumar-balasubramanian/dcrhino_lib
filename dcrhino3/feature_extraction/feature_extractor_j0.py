@@ -99,16 +99,6 @@ class FeatureExtractorJ0():
         earliest_multiple_time = theoretical_two_way_travel_time #WHY
         return earliest_multiple_time
 
-    def get_wavelet_window_indices(self, time_vector, start_time, end_time):
-        """
-        20170823: this intended to replace variations on method from primary, multiple_peak_finder, multiple_refined,
-        Here start and end times are intended to be floats
-        """
-        indices = np.where( (time_vector > start_time) & (time_vector < end_time) )[0]
-
-        return indices
-
-
 
     def create_features_dictionary(self, component_id):
         """
