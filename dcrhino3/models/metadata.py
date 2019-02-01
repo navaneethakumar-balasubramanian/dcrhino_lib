@@ -243,7 +243,8 @@ METADATA_HEADER_FORMAT_KEYS = {
         'data_message_identifier':DataType.STRING,
         'info_message_identifier':DataType.STRING,
         'auto_correlation_trace_duration':DataType.FLOAT,
-        'interpolation_upsample_factor':DataType.FLOAT
+        'interpolation_upsample_factor':DataType.FLOAT,
+        'battery_max_voltage':DataType.FLOAT
         }
 
 
