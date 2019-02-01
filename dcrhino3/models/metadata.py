@@ -266,7 +266,8 @@ METADATA_HEADER_FORMAT_KEYS = {
         'trace_plot_post_add':DataType.INTEGER,
         'number_of_traces_to_display':DataType.INTEGER,
         'traces_subsample':DataType.INTEGER,
-        'battery_max_voltage':DataType.FLOAT
+        'battery_max_voltage':DataType.FLOAT,
+        'battery_min_voltage':DataType.FLOAT
         }
 
 
