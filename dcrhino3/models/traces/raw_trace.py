@@ -17,9 +17,9 @@ from dcrhino3.process_flow.modules.trace_processing.autocorrelate import autocor
 logger = init_logging(__name__)
 
 class RawTraceData(TraceData):
-    def load_from_h5(self,path):
-        self.dataframe , global_config = self._cast_h5_to_dataframe(path)
-        self._global_configs.append(global_config)
+    #def load_from_h5(self,path):
+    #    self.dataframe , global_config = self._cast_h5_to_dataframe(path)
+    #    self._global_configs.append(global_config)
 
     def _cast_h5_to_dataframe(self,h5_filename):
         """
