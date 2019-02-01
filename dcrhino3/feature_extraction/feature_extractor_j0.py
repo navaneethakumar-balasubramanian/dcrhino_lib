@@ -30,14 +30,15 @@ class WaveletForFeatureExtraction(object):
             setattr(self, k, np.nan)
 
 
-class CorrelatedTracePacket():
-    def __init__(self, sampling_rate,n_samples=640,min_lag=0.1):
+class TrimmedCorrelatedTracePacket():
+    def __init__(self, sampling_rate, n_samples, min_lag):
         """
         metadata requirements: sampling rate, time_vector
+        @note 20190131
+        #def __init__(self, sampling_rate,n_samples=640,min_lag=0.1):
         """
         self.data = None
         self.sampling_rate = sampling_rate
-
         self.n_samples = n_samples
         self.min_lag = min_lag
 
@@ -131,7 +132,8 @@ class FeatureExtractorJ0():
         df_dict = self.create_features_dictionary(component_id)
 
         for wavelet_type in self.COMPONENT_WAVELET_MAP[component_id]:
-            packet = CorrelatedTracePacket(self.output_sampling_rate,
+            #pdb.set_trace()
+            packet = TrimmedCorrelatedTracePacket(self.output_sampling_rate,
                                            self.n_samples_trimmed_trace,
                                            self.min_lag_trimmed_trace)
             packet.data = component_array
