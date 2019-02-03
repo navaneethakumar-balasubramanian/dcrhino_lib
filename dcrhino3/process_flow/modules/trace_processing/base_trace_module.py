@@ -59,6 +59,10 @@ class BaseTraceModule(BaseModule):
         """
         this function is to be overwritten on each Module class.  It is basically
         the "make" method for the data processing
+        component_id, 'axial', 'radial', ... etc.
+        component_array, numpy array, 1d of trace
+        transformed_args : global config's cousin
+
         """
         return component_array
 
