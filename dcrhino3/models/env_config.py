@@ -79,6 +79,13 @@ class EnvConfig(object):
             return False
         if 'csv' in mine_cfg['mwd']:
             return mine_cfg['mwd']['csv']
+        
+    def get_mwd_db_cfg(self,mine_name):
+        mine_cfg = self._get_mine_config(mine_name)
+        if not mine_cfg or 'mwd' not in mine_cfg.keys():
+            return False
+        if 'db' in mine_cfg['mwd']:
+            return mine_cfg['mwd']['db']
             
         
             
