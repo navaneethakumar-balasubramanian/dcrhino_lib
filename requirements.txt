@@ -21,7 +21,6 @@ contextlib2==0.5.5
 cryptography==2.3.1
 cycler==0.10.0
 dask==1.1.1
--e git+https://github.com/DatacloudIntl/dcrhino_lib.git@87ebd95e311b82174da8295ac3c60fd97fee4808#egg=dcrhino3
 decorator==4.3.0
 docutils==0.14
 entrypoints==0.3
@@ -94,7 +93,6 @@ QtAwesome==0.5.5
 qtconsole==4.4.3
 QtPy==1.6.0
 requests==2.21.0
--e git+git@github.com:DatacloudIntl/dcrhino_data_processing.git@62da79081463b8e076d34baa60711a84a2008ca9#egg=rhino_acquisition
 rope==0.10.7
 scandir==1.9.0
 scikit-image==0.14.2
