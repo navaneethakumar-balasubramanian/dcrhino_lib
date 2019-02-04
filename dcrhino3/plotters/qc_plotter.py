@@ -13,7 +13,7 @@ from dcrhino3.plotters.colour_bar_axis_limits import ColourBarAxisLimits
 
 class QCLogPlotter():
 
-    def __init__(self,axial,tangential,radial,depth,plot_title,output_sampling_rate,normalize=True,lower_num_ms=-5.0,upper_num_ms=30.0,dt_ms=5,plot_by_depth=True):
+    def __init__(self,axial,tangential,radial,depth,plot_title,output_sampling_rate,mult_pos,mult_win_label,normalize=True,lower_num_ms=-5.0,upper_num_ms=30.0,dt_ms=5,plot_by_depth=True):
         
         self.plot_title = plot_title
         
@@ -21,6 +21,8 @@ class QCLogPlotter():
         self.dt_ms = dt_ms
         self.lower_num_ms = lower_num_ms
         self.upper_num_ms = upper_num_ms
+        self.mult_pos = mult_pos
+        self.mult_win_label = mult_win_label
         
         self.depth = depth
         
@@ -94,7 +96,7 @@ class QCLogPlotter():
         Y = np.flipud(Y)
         
         fig, ax = plt.subplots(nrows=5, sharex=False, figsize=(24,12))
-        self.Panel1_plot(ax[0], X, peak_ampl_x,reflection_coefficient,ax_vel_del,ax_lim)
+        self.Panel1_plot(ax[0], X, peak_ampl_x,reflection_coefficient,ax_vel_del,ax_lim,noise_threshold)
         
         dt_ms = self.dt_ms
         lowest_y_tick =  int(self.lower_num_ms/dt_ms)
@@ -116,7 +118,7 @@ class QCLogPlotter():
         
         
         ax[1].text(1.01, 0.5, 'axial', fontsize=11.5, rotation='vertical', transform=ax[1].transAxes)
-        ax[3].text(1.01, 0.6, 'tangential', fontsize=11.5, rotation='vertical', transform=ax[2].transAxes)
+        ax[3].text(1.01, 0.6, 'tangential', fontsize=11.5, rotation='vertical', transform=ax[3].transAxes)
         ax[3].set_xlabel('Depth (m)')
         
         if output_path is not None:
@@ -152,13 +154,18 @@ class QCLogPlotter():
                 ax.plot(np.asarray([X[0], X[-1]]), (two_way_travel_time_ms - multiple_search_back_ms) * np.ones(2), 'k', linewidth=1.)
             if multiple_search_forward_ms is not None:
                 ax.plot(np.asarray([X[0], X[-1]]), (two_way_travel_time_ms + multiple_search_forward_ms) * np.ones(2), 'k', linewidth=1.)
-    
+        if self.mult_pos is not None:
+            ax.plot(X,self.mult_pos.ax_1_mult, color = 'k',linestyle = '--',linewidth = 2)
+            ax.plot(X,self.mult_pos.ax_2_mult, color = 'k',linestyle = '--',linewidth = 2)
+            ax.plot(X,self.mult_pos.tang_1_mult, color = 'k',linestyle = '-',linewidth = 2)
+            ax.plot(X,self.mult_pos.tang_2_mult, color = 'k',linestyle = '-',linewidth = 2)
+            
         ax.set_xlim(X[0], X[-1])
     #    ax.set_xticklabels()
         return ax, heatmap
         
 
-    def Panel1_plot(self,ax, X, peak_ampl_x,reflection_coefficient,ax_vel_del,ax_lim):
+    def Panel1_plot(self,ax, X, peak_ampl_x,reflection_coefficient,ax_vel_del,ax_lim,noise_threshold):
         """
         	#Peak axial, radial, tangential and multiple plots
 
@@ -196,7 +203,9 @@ class QCLogPlotter():
         x_maj_tick = (np.arange(X[0],X[-1])-X[0])
         x_min_tick = (np.arange(X[0],X[-1],0.5)-X[0])
 
-
+        if noise_threshold is not None:
+            ax.axhline(y = noise_threshold,xmin = 0, xmax = X[-1], color = 'k')
+            
         for x_maj_tick in x_maj_tick:
             ax.axvline(x = x_maj_tick, ymin = 0, ymax = 1.5, color = 'k')
 
@@ -235,9 +244,8 @@ class QCLogPlotter():
         ax2.spines['right'].set_linewidth(2)
         ax2.set_ylabel('Tang. Delay').set_color('lime')
         ax2.spines['right'].set_position(('outward',60))
-
-        if noise_threshold == True:
-            ax.axhline(y = self.noise_threshold,xmin = 0, xmax = X[-1], color = 'k')
+        if noise_threshold is not None:
+            ax.axhline(y = noise_threshold,xmin = 0, xmax = X[-1], color = 'k')
 
         ax.set_xlim(X[0], X[-1])
         ax.minorticks_on()
@@ -274,6 +282,11 @@ class QCLogPlotter():
         legend_lines3 = [Line2D([0],[0],color = 'k',linestyle = '--', linewidth = 2,label = 'Axial Multiples'),
                         Line2D([0],[0],color = 'k',linestyle = '-', linewidth = 2,label = 'Tangential Multiples')]
 
+        
+        ax1.annotate(self.mult_win_label, xy=(10, 10), xycoords='axes points',
+             size=10, ha='left', va='center',
+             bbox=dict(boxstyle='square', fc='w'))
+        
         ax.legend(handles=legend_lines1, loc=2)
         ax1.legend(handles=legend_lines2, loc=9)
         ax2.legend(handles=legend_lines3, loc=1)

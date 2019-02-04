@@ -31,10 +31,11 @@ class QCPlotterModule(BaseModule):
         
         ax_lim = self.get_ax_lim(trace.dataframe)
         
-        plot_title = self.get_plot_title(transformed_args)
+        plot_title = self.get_plot_title(transformed_args, trace)
         
         noise_threshold = transformed_args.noise_threshold
-        mult_pos = self.get_multiples(transformed_args)
+        mult_pos = self.get_multiples(transformed_args,trace)
+        mult_win_label = self.get_multiple_win_label(transformed_args)
         
         depth = trace.dataframe['depth']
         peak_ampl_x = trace.dataframe[transformed_args.plot.peak_ampl_x_col_name]
@@ -45,8 +46,8 @@ class QCPlotterModule(BaseModule):
         tangential_RC = trace.dataframe[transformed_args.plot.tangential_RC_col_name]
         tang_vel_del = trace.dataframe[transformed_args.plot.tang_vel_del_col_name]
         
-        plotter = QCLogPlotter(axial,tangential,radial,depth,plot_title,transformed_args.output_sampling_rate)
-        
+        plotter = QCLogPlotter(axial,tangential,radial,depth,plot_title,transformed_args.output_sampling_rate,mult_pos,mult_win_label)
+    
         output_path = None
         if self.output_to_file:
             output_path = self.output_path
@@ -69,11 +70,26 @@ class QCPlotterModule(BaseModule):
     
         
     
-    def get_multiples(self,transformed_args):
+    def get_multiples(self,transformed_args,trace):
             expected_multiple = get_expected_multiple_times(transformed_args, recipe='J1')
-            mult_pos = pd.DataFrame({'axial_first_multiple':[expected_multiple['axial']*1000], 'axial_second_multiple':[expected_multiple['axial_second_multiple']*1000],
-                                     'tangential_first_multiple':[expected_multiple['tangential']*1000], 'tangential_second_multiple':[expected_multiple['tangential_second_multiple']*1000]})
-#            pdb.set_trace()
+            
+            
+            
+            
+            try:
+                ax_1_mult = (trace.dataframe.J0_axial_primary_peak_time_sample + expected_multiple['axial'])*1000
+                ax_2_mult =  (trace.dataframe.J0_axial_primary_peak_time_sample + expected_multiple['axial_second_multiple'])*1000
+
+                tang_1_mult = (trace.dataframe.J0_tangential_primary_peak_time_sample + expected_multiple['tangential'])*1000
+                tang_2_mult = (trace.dataframe.J0_tangential_primary_peak_time_sample + expected_multiple['tangential_second_multiple'])*1000
+            except KeyError:
+                ax_1_mult = (trace.dataframe.axial_primary_peak_time_sample + expected_multiple['axial'])*1000
+                ax_2_mult =  (trace.dataframe.axial_primary_peak_time_sample + expected_multiple['axial_second_multiple'])*1000
+
+                tang_1_mult = (trace.dataframe.tangential_primary_peak_time_sample + expected_multiple['tangential'])*1000
+                tang_2_mult = (trace.dataframe.tangential_primary_peak_time_sample + expected_multiple['tangential_second_multiple'])*1000
+            
+            mult_pos = pd.DataFrame({'ax_1_mult':ax_1_mult, 'ax_2_mult':ax_2_mult, 'tang_1_mult':tang_1_mult, 'tang_2_mult':tang_2_mult})
             return mult_pos
         
 
@@ -105,7 +121,7 @@ class QCPlotterModule(BaseModule):
                                'upper_tang_RC':[upper_tang_RC]})
         return ax_lim
 
-    def get_plot_title(self,transformed_args):
+    def get_plot_title(self,transformed_args, trace):
         drill_type = DrillTypes(transformed_args.drill_type).name
         bit_type = BitTypes(transformed_args.bit_type).name
         sensor_location = SensorInstallationLocations(transformed_args.sensor_installation_location).name
@@ -113,7 +129,19 @@ class QCPlotterModule(BaseModule):
         title_line1 = r"$\bf{"+ "SENSOR"+"}$"+": LOCATION: {}".format(sensor_location) +", SERIAL NUMBER: {}".format(transformed_args.sensor_serial_number)+'\n'+"SENSITIVITY: {}, ORIENTATION: <> ".format(transformed_args.sensor_saturation_g)
         title_line2 = r"$\bf{"+ "RIG/BIT/DRILLSTRING"+"}$"+": RIG TYPE: <>, DRILL TYPE: {},".format(drill_type)+'\n'+"BIT SIZE: {}/".format(transformed_args.bit_size)+" Type:{}".format(bit_type)+"/Model:{}".format(transformed_args.bit_model)+"/Tooth Length:<>,"+'\n'+" DRILL STRING LENGTH:{}".format(transformed_args.drill_string_total_length)
         title_line3 = "DISTANCE FROM BIT TO SENSOR: {}".format(transformed_args.sensor_distance_to_source,transformed_args.rig_id)
-        title_line4 = ""
+        title_line4 = r"$\bf{"+"MINE"+"}$"+": {},".format(transformed_args.mine_name)+ r"$\bf{"+"DATE:"+"}$"+ "{},".format(pd.to_datetime(trace.dataframe.start_time.iloc[0]),format='%Y%m%d.0')+'\n'+r"$\bf{"+" BENCH:"+"}$"+"{},".format(trace.dataframe.bench_name.iloc[0])+ r"$\bf{"+"HOLE:"+"}$"+ "{}" .format(trace.dataframe.hole_name.iloc[0])
+
         plot_title = [title_line4, title_line2+' '+title_line3, title_line1]
     
         return plot_title
+    
+    def get_noise_threshold(self,transformed_args):
+        noise_threshold = transformed_args.sensor_saturation_g/2000.
+        return noise_threshold
+    
+    def get_multiple_win_label(self,transformed_args):
+        mult_title1 = "axial window = {}/{}".format(transformed_args.mult_neg_win,transformed_args.mult_pos_win)
+        mult_title2 = "tangential_window = {}/{}".format(transformed_args.mult_neg_win,transformed_args.mult_pos_win)
+        mult_title = mult_title1 + '\n' + mult_title2 
+        return mult_title
+        
