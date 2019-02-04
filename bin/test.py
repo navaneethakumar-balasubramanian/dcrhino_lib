@@ -19,7 +19,7 @@ from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.models.trace_dataframe import TraceData
 
 
-mine_name = 'milligan'
+mine_name = 'mont_wright'
 
 envConfig = EnvConfig()
 holes_cached_folder = envConfig.get_hole_h5_interpolated_cache_folder(mine_name)
@@ -58,7 +58,7 @@ if conn is not False:
             max_ts = int((hole_mwd['start_time'].astype(int)/1000000000).max())
 
             acor_trace.load_from_db(db_helper, files_ids, min_ts, max_ts)
-            pdb.set_trace()
+            #pdb.set_trace()
             acor_trace.dataframe = merger.merge_mwd_with_trace(hole_mwd,acor_trace)
             acor_trace.save_to_h5(temp_h5_path)
             os.rename(temp_h5_path,h5_path)
