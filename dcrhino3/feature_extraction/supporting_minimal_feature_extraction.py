@@ -79,12 +79,8 @@ def get_zero_crossing_samples(reference_index, data_series, time_vector):
     #<use two point line formula>
     t1 = left_time[n_steps]; t2 = left_time[n_steps-1]
     y1 = left_data[n_steps]; y2 = left_data[n_steps-1]
-    m = (y2-y1) / (t2 - t1)
-    #y - y1 = m * (x - x1), solve for y=0
-    #0 - y1 = m * (x - x1)
-    #- y1 = (m * x) - (m *x1)
-    #-(m * x) = y1 - (m * x1)
-    # x = (y1 - mx1 ) / -m
+    m = (y2 - y1) / (t2 - t1)
+
     zx_left = (y1 - m*t1) / (-1.*m)
 
     right_side = square_series[reference_index-1:]
@@ -153,12 +149,23 @@ def extract_features_from_primary_wavelet(tr, primary_window_halfwidth_ms,
                                           component, wavelet_type):
     """
     TODO: migrate this to seismic processing eventually
+    tr: TrimmedCorrelatedTracePacket()
+*    search a region near lag=0 (t=0) for the primary-peak, in two steps,
+step 1 find a local maxima
+step 2: center on the local maxima
+
+    ::primary_window_halfwidth:: float, (~3ms) this is the expected half width of the primary
+    peak, it can be approximate, we use it to define a chunk of the trace_data
+    where we expect the primary peak to live.
+    ::primary_wavelet_indices_1 :: these are the indices of the data array used to extract
+    the primary wavelet search region
 
     """
     time_vector = tr.time_vector
     primary_window_halfwidth = primary_window_halfwidth_ms * 1e-3
 
-
+    #<Get a window of data having duration ~2*primary_window_halfwidth, centered
+    #on teh maximum value>
     primary_wavelet_indices_1 = get_wavelet_window_indices(time_vector,
                                                            -primary_window_halfwidth,
                                                            primary_window_halfwidth)
@@ -176,6 +183,8 @@ def extract_features_from_primary_wavelet(tr, primary_window_halfwidth_ms,
                                                            primary_fit_upper_bound)
     primary_wavelet = tr.data[primary_wavelet_indices_2]
     primary_time_vector = time_vector[primary_wavelet_indices_2]
+    #</Get a window of data having duration ~2*primary_window_halfwidth, centered
+    #on teh maximum value>
 
     wffe = WaveletForFeatureExtraction(primary_wavelet,primary_time_vector,
                                        component=component, wavelet_type=wavelet_type)
@@ -183,8 +192,8 @@ def extract_features_from_primary_wavelet(tr, primary_window_halfwidth_ms,
     wffe.peak_sample = np.max(window_to_search_for_primary_1)
     wffe.peak_time_sample = hopefully_prim_center_time
     #pdb.set_trace()
-    #print (np.max(tr.data))
-    #print (np.max(tr.data)==np.max(window_to_search_for_primary_1))
+
+
     if np.max(tr.data)==np.max(window_to_search_for_primary_1):#sanity check;
         reference_index = np.argmax(tr.data)
         try:
