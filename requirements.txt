@@ -18,7 +18,7 @@ configparser==3.5.0
 cryptography==2.3.1
 cycler==0.10.0
 dask==1.1.1
--e git+https://github.com/DatacloudIntl/dcrhino_lib.git@a8077c0dc2d3bf18ffb7d7508d907a86e650c20a#egg=dcrhino3
+-e git+https://github.com/DatacloudIntl/dcrhino_lib.git@e2c4e38b14192416c751190bc44361173ebb3533#egg=dcrhino3
 decorator==4.3.0
 docutils==0.14
 entrypoints==0.3
