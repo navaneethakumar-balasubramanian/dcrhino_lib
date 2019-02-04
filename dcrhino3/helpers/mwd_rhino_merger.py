@@ -55,16 +55,19 @@ class MWDRhinoMerger():
             
             holes_mwd = pre_filtered_mwd[cond_1 & cond_2 & cond_3].copy().sort_values(by=columns_sort_group).reset_index(drop=True)
             holes_identified = np.array(list(holes_mwd.groupby(columns_sort_group).groups))
-            rig_id_ar = np.full([holes_identified.shape[0],1],str(line.rig_id))
-            sensor_id_ar = np.full([holes_identified.shape[0],1],str(line.sensor_id))
-            digitizer_id_ar = np.full([holes_identified.shape[0],1],str(line.digitizer_id))
-            holes_identified = np.hstack((holes_identified,rig_id_ar,sensor_id_ar,digitizer_id_ar))
-            holes_identified = np.unique(holes_identified, axis=0)
-        
-            for hole in holes_identified:
-                if '----'.join(list(hole)) not in holes_cfgs:
-                    holes_cfgs['----'.join(list(hole))] = []
-                holes_cfgs['----'.join(list(hole))].append([line.id,line.min_ts,line.max_ts])
+            if len(holes_identified) > 0:
+                rig_id_ar = np.full([holes_identified.shape[0],1],str(line.rig_id))
+                sensor_id_ar = np.full([holes_identified.shape[0],1],str(line.sensor_id))
+                digitizer_id_ar = np.full([holes_identified.shape[0],1],str(line.digitizer_id))
+                holes_identified = np.hstack((holes_identified,rig_id_ar,sensor_id_ar,digitizer_id_ar))
+                holes_identified = np.unique(holes_identified, axis=0)
+            
+                for hole in holes_identified:
+                    if '----'.join(list(hole)) not in holes_cfgs:
+                        holes_cfgs['----'.join(list(hole))] = []
+                    holes_cfgs['----'.join(list(hole))].append([line.id,line.min_ts,line.max_ts])
+            else:
+                logger.warn("NO HOLES IDENTIFIED ON THIS FILE:" + str(line.file_path))
         
         ## TRANSFORM TO DATAFRAME ONE HOLE PER LINE WITH MULTIPLE FILES                
         dict_list  = [dict()] * len(holes_cfgs.keys())
