@@ -36,6 +36,8 @@ if conn is not False:
     files = db_helper.get_files_list()
     merger = MWDRhinoMerger(files,mwd_df)
     matches = merger.observed_blasthole_catalog
+    
+    pdb.set_trace()
 
     for line in matches.itertuples():
 
@@ -47,6 +49,7 @@ if conn is not False:
 
         if os.path.exists(h5_path) and os.path.isfile(h5_path):
             acor_trace.load_from_h5(h5_path)
+            #pdb.set_trace()
             print ("loaded " + str(h5_path))
         else:
             print (line.bench_name,line.pattern_name,line.hole_name,line.hole_id)

@@ -16,6 +16,7 @@ from dcrhino3.process_flow.modules.trace_processing.lead_channel_decon import Le
 from dcrhino3.process_flow.modules.trace_processing.trim_trace import TrimTraceModule
 from dcrhino3.process_flow.modules.trace_processing.unfold_autocorrelation import UnfoldAutocorrelationModule
 from dcrhino3.process_flow.modules.trace_processing.upsample import UpsampleModule
+from dcrhino3.process_flow.modules.trace_processing.upsample_sinc import UpsampleSincModule
 
 from dcrhino3.process_flow.modules.features_extraction.j1 import J1FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.j0 import J0FeaturesModule
@@ -36,7 +37,8 @@ class ProcessFlow:
                                             "lead_channel_deconvolution":LeadChannelDeconvolutionModule,
                                             "trim":TrimTraceModule,
                                             "unfold":UnfoldAutocorrelationModule,
-                                            "upsample":UpsampleModule
+                                            "upsample":UpsampleModule,
+                                            "upsample_sinc":UpsampleSincModule
                                         }
         self.trace_flow = []
 
@@ -49,20 +51,20 @@ class ProcessFlow:
 
         self.features_flow = []
         self.save_features_to_file = False
-        
+
         self.plotters_flow = []
-        
+
         self.plotters_modules = {
                                             "qc_log_v1":QCPlotterModule
                                         }
-        
+
         self.output_path = output_path
-        
+
         self.parse_json(process_json)
 
     def parse_json(self,process_json):
         self.id = process_json['id']
-        
+
         process_flow_output_path = os.path.join(self.output_path,self.id)
         process_counter = 0
         if 'trace_processing' in process_json.keys():
@@ -80,7 +82,7 @@ class ProcessFlow:
             features_extraction_json = process_json['features_extraction']
             if 'output_to_file' in features_extraction_json.keys():
                 self.save_features_to_file = features_extraction_json['output_to_file']
-                
+
             if 'modules' in features_extraction_json.keys():
                 features_extraction__modules_json = features_extraction_json['modules']
                 for module in features_extraction__modules_json:
@@ -88,7 +90,7 @@ class ProcessFlow:
                     module_file_name = str(process_counter)+"_features_"+module['type']+".csv"
                     module_output_path = os.path.join(process_flow_output_path,module_file_name)
                     self.features_flow.append(self.features_extraction_modules[module['type']](module,module_output_path))
-        
+
         if "plotters" in process_json.keys():
             plotters_json = process_json['plotters']
             if 'modules' in plotters_json.keys():
@@ -98,7 +100,7 @@ class ProcessFlow:
                     module_file_name = str(process_counter)+"_plot_"+module['type']+".png"
                     module_output_path = os.path.join(process_flow_output_path,module_file_name)
                     self.plotters_flow.append(self.plotters_modules[module['type']](module,module_output_path))
-            
+
 
 
     def process(self, trace_data):
@@ -119,14 +121,14 @@ class ProcessFlow:
         for module in self.features_flow:
             t0 = time.time()
             logger.info("Extracting features using module: " +str(module.id)+ " with: " + str(module.args))
-            #pdb.set_trace()
+            pdb.set_trace()
             output_trace = module.extract_features(output_trace)
             delta_t = time.time() - t0
             logger.info("{} ran in {}s ".format(module.id, delta_t))
-        
+
         if self.save_features_to_file:
             output_trace.save_to_csv(os.path.join(process_flow_output_path,"extracted_features.csv"))
-            
+
         for module in self.plotters_flow:
             t0 = time.time()
             logger.info("Plotting using module: " +str(module.id)+ " with: " + str(module.args))
@@ -134,7 +136,7 @@ class ProcessFlow:
             output_trace = module.plot_trace_data(output_trace)
             delta_t = time.time() - t0
             logger.info("{} ran in {}s ".format(module.id, delta_t))
-            
+
         return output_trace
 
 

@@ -1,0 +1,77 @@
+{
+    "blacklist_files":["/data_sdd/new_structure/centerra_gold/mount_milligan/field_data/3/5043/5043/level_1/piezo/20180212_SSX56572_5043_20000.h5"],
+    "mines":{
+        "mont_wright":{
+            "name":"mont_wright",
+            "alternative_names":["mwright","mount_wright"],
+            "rhino_db_connection":{
+                "host":"13.66.189.94",
+                "user":"default",
+                "password":"",
+                "database":"mont_wright"
+            },
+            "mwd":{
+                "csv":{
+                    "path":"/home/thiago/Documents/mwds/mt_wright_all_merged.csv",
+                    "mapping":{
+                        "tob":"torque",
+                    	"wob":"weight_on_bit",
+                    	"rop":"rop",
+                    	"start_time":"time_start",
+                    	"end_time":"time_end",
+                    	"bench_name":"bench",
+                    	"pattern_name":"pattern",
+                    	"hole_id":"|hole_id|",
+                    	"hole_name":"hole_id",
+                    	"collar_elevation":"collar_elev",
+                    	"rig_id":"machine_id",
+                    	"mse":"mse",
+                    	"easting":"easting",
+                    	"northing":"northing",
+                    	"elevation":"computed_elevation"
+                    }
+                }
+            },
+            "paths":{
+    			"hole_h5_interpolated_cache_folder":"/home/thiago/mountwright_cache/interpolated/",
+    			"hole_h5_processed_cache_folder":"/home/thiago/mountwright_cache/processed/"
+	       }
+        },
+        "mount_milligan":{
+            "name":"mount_milligan",
+            "alternative_names":["mountmilligan","mount_milligan_mine","milligan"],
+            "rhino_db_connection":{
+                "host":"13.66.189.94",
+                "user":"default",
+                "password":"",
+                "database":"milligan_v3"
+            },
+            "mwd":{
+                "csv":{
+                    "path":"/home/thiago/Documents/mwds/milligan_mwd.csv",
+                    "mapping":{
+                        "hole_id_2":"|hole|-|bench|-|pattern|-|time_start_utc|",
+                    	"tob":"torque",
+                    	"wob":"weight_on_bit",
+                    	"rop":"rop",
+                    	"start_time":"time_start_utc",
+                    	"end_time":"time_end_utc",
+                    	"rig_id":"machine_id",
+                    	"mse":"MSE",
+                    	"bench_name": "bench",
+                    	"pattern_name" : "pattern",
+                    	"hole_name" : "hole",
+                    	"collar_elevation" : "collar_elevation",
+                     	"elevation" : "computed_elevation",
+                     	"easting" : "easting",
+                     	"northing" : "northing"
+                    }
+                }
+            },
+            "paths":{
+    			"hole_h5_interpolated_cache_folder":"/home/thiago/milligan_cache/interpolated/",
+    			"hole_h5_processed_cache_folder":"/home/thiago/milligan_cache/processed/"
+	       }
+        }
+    }
+}
