@@ -135,6 +135,7 @@ class DataType(Enum):
     BOOLEAN = 6
     MEASUREMENT = 7
     DS_COMPONENT = 8
+    DICTIONARY = 9
 
 
 
@@ -267,7 +268,8 @@ METADATA_HEADER_FORMAT_KEYS = {
         'number_of_traces_to_display':DataType.INTEGER,
         'traces_subsample':DataType.INTEGER,
         'battery_max_voltage':DataType.FLOAT,
-        'battery_min_voltage':DataType.FLOAT
+        'battery_min_voltage':DataType.FLOAT,
+        'sensor_sensitivity':DataType.DICTIONARY
         }
 
 
@@ -326,6 +328,29 @@ class Metadata(object):
         self.sensor_distance_to_source = round(self.drill_string_total_length - self.sensor_position,2)
         self.sensor_distance_to_shocksub = round(self.sensor_position - shocksub_length,2)
         self.accelerometer_max_voltage = cfg.getfloat("PLAYBACK","accelerometer_max_voltage")
+        self.sensor_sensitivity = self.get_sensitivities_dict(cfg)
+
+
+
+
+    def get_sensitivities_dict(self,cfg):
+        output_dict = dict()
+        axial_index = self.sensor_axial_axis - 1
+        tangential_index = self.sensor_tangential_axis - 1
+        radial_index = 3 - axial_index - tangential_index
+        if self.sensor_type == 2:
+            sensitivities = [cfg.getfloat("PLAYBACK","x_sensitivity"),
+                            cfg.getfloat("PLAYBACK","y_sensitivity"),
+                            cfg.getfloat("PLAYBACK","z_sensitivity")]
+        else:
+            sensitivities = [cfg.getfloat("PLAYBACK","ide_multiplier"),
+                            cfg.getfloat("PLAYBACK","ide_multiplier"),
+                            cfg.getfloat("PLAYBACK","ide_multiplier")]
+        output_dict["axial"] = sensitivities[axial_index]
+        output_dict["tangential"] = sensitivities[axial_index]
+        output_dict["radial"] = sensitivities[radial_index]
+        return output_dict
+
 
 
     def __str__(self):
