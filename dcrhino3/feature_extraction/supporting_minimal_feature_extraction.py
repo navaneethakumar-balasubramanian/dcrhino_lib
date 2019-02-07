@@ -204,7 +204,7 @@ step 2: center on the local maxima
             print("last timethis was a werid trace having shape of a heavisidcfctn")
             #pdb.set_trace()
         try:
-            left_trough_time, left_trough_time_sample = get_trough_times(reference_index, tr.data, time_vector)
+            left_trough_time, left_trough_time_sample = np.nan, np.nan;#get_trough_times(reference_index, tr.data, time_vector)
         except ValueError:
             left_trough_time = np.nan; left_trough_time_sample = np.nan
             print("emptyseq?? - last timethis was a zero trace")

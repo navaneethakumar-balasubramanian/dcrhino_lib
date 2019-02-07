@@ -191,6 +191,13 @@ class Config( object ):
         n_samples_fwd = int(sampling_rate * self.max_lag_trimmed_trace)
         return int(n_samples_fwd + n_samples_back)
 
+    @property
+    def trimmed_trace_duration(self):
+        duration = self.max_lag_trimmed_trace - self.min_lag_trimmed_trace
+        #duration = np.abs(self.max_lag_trimmed_trace) + np.abs(self.min_lag_trimmed_trace)
+        return duration
+
+
     def set_config_parser( self, config_parser ):
         """
         can be the env_config_parser here ...

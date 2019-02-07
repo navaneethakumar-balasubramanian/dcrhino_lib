@@ -6,7 +6,7 @@ Created on Fri Jan 25 11:52:23 2019
 @author: karl
 
 @TODO: Check that the trimmed_trace number of samples and duration is kosher
-I think that the change to autocorrelation-based processing from simple resampled
+
 
 """
 
@@ -19,6 +19,8 @@ from scipy.interpolate import interp1d
 
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.process_flow.modules.trace_processing.base_trace_module import BaseTraceModule
+from dcrhino3.signal_processing.interpolation import sinc_interp
+from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
 
 logger = init_logging(__name__)
 
@@ -59,34 +61,59 @@ class UpsampleModule(BaseTraceModule):
         want to study the variations in the deconvolution filter w.r.t. the phase
         rotation and time shift parameters
 
+        @TODO: modify to support  interp_kind == 'sinc' and merge the sinc interpolation
+        so all in the same module
+
+
+        @note: to modify sinc-interpolation to use an integer upsample_factor replace
+        #old_axis = np.arange(len(data))
+        #new_axis = np.arange(upsample_factor * n_obs) / upsample_factor
         """
         #pdb.set_trace()
         transformed_args = self.get_transformed_args(global_config)
         interp_kind = transformed_args.upsample_interpolation_kind
-        max_lag = transformed_args.max_lag_trimmed_trace
-        min_lag = transformed_args.min_lag_trimmed_trace
+
         input_dt = 1./transformed_args.sampling_rate #original
+
+        #trimmed_trace_duration = transformed_args.trimmed_trace_duration + input_dt #odd number of samples, symmetric about zero
         upsample_sampling_rate = transformed_args.upsample_sampling_rate
-        upsampled_dt = 1./upsample_sampling_rate
+        upsample_dt = 1./upsample_sampling_rate
+        n_samples_input = len(component_vector)
 
-        trimmed_trace_duration = max_lag - min_lag + input_dt
-        n_samples_input_trimmed_trace = len(component_vector)
-        logger.warning("v3 needs a review of the trimmed_trace_duration attr of global_config ...\
-                       Now an od vs even number of samples in trimmed trace")
-        original_time_vector = input_dt * np.arange(n_samples_input_trimmed_trace) - np.abs(min_lag)
+        min_lag = transformed_args.min_lag_trimmed_trace
+        max_lag = transformed_args.max_lag_trimmed_trace
+        input_sampling_rate = transformed_args.sampling_rate
+        input_dt = 1. / input_sampling_rate #original
 
-        #pdb.set_trace()
-        n_samples_upsampled_trace = trimmed_trace_duration / upsampled_dt #should be odd
-        upsampled_time_vector = upsampled_dt * np.arange(n_samples_upsampled_trace) - np.abs(min_lag)
 
-        #pdb.set_trace()
-        interp_function = interp1d(original_time_vector, component_vector,
-                                   kind=interp_kind, bounds_error=False,
-                                   fill_value=(component_vector[0], component_vector[-1]))
-        upsampled_data = interp_function(upsampled_time_vector)
-#        plt.plot(original_time_vector, component_vector, 'bs', label='original')
-#        plt.plot(upsampled_time_vector, upsampled_data, 'r*', label='upsampled')
-#        plt.legend();plt.show()
+        #original_time_vector_old = input_dt * np.arange(n_samples_input) - np.abs(min_lag) #+input_dt
+        #<For symmetric traces>
+        if np.mod(n_samples_input,2) == 1:
+            input_trace = SymmetricTrace(component_vector, input_sampling_rate)
+            original_time_vector = input_trace.time_vector
+            steps_in_max_lag = int(np.abs(max_lag)/upsample_dt)
+            upsampled_time_vector = upsample_dt * np.arange(steps_in_max_lag + 1)
+            left_hand_side = -np.flipud(upsampled_time_vector[1:])
+            upsampled_time_vector = np.hstack((left_hand_side, upsampled_time_vector))
+            #after thinking pretty deeply about this for way too long I have decided
+            #the above expression is correct; technically we should have a few more points
+            #but they would be extrapolation points and we would trim them anyhow; knk 20190204
 
+        #</For symmetric traces>
+        else:
+            original_time_vector = input_dt * np.arange(n_samples_input) - np.abs(min_lag)
+            trimmed_trace_duration = max_lag + np.abs(min_lag)
+            n_samples_upsampled_trace = trimmed_trace_duration / upsample_dt #should be odd
+            upsampled_time_vector = upsample_dt * np.arange(n_samples_upsampled_trace) - np.abs(min_lag)
+            logger.warning("untested with even number of points")
+        if interp_kind == 'sinc':
+            data = component_vector
+            upsampled_data = sinc_interp(data, original_time_vector, upsampled_time_vector)
+        else:
+
+            interp_function = interp1d(original_time_vector, component_vector,
+                                       kind=interp_kind, bounds_error=False,
+                                       fill_value=(component_vector[0], component_vector[-1]))
+            upsampled_data = interp_function(upsampled_time_vector)
 
         return upsampled_data
