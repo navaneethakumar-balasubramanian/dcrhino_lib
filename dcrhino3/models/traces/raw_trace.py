@@ -68,7 +68,24 @@ class RawTraceData(TraceData):
 
         output_df.index = output_df['timestamp']
         return output_df, global_config
+    
+    def calibrate_l1h5(self,df,global_config):
+        t0 = time.time()
+    
+        
+        for line_idx in range(len(df)):
+            #print(line_idx)
+            row_of_df = df.iloc[line_idx]
+            for component_id in global_config.components_to_process:
+                trace_to_process = row_of_df[component_id]
+                processed_trace = self.calibrate_1d_component_array(trace_to_process,global_config,global_config.sensor_sensitivity[component_id])
+                df.at[line_idx, component_id] = processed_trace
 
+        time_interval = time.time() - t0
+        logger.info("Took %s seconds to calibrate %s traces" % (time_interval,len(df)))
+        return df
+    
+    
     def resample_l1h5(self,df, global_config):
 
         """
