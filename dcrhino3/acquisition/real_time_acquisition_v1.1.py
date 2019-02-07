@@ -847,9 +847,9 @@ def main_run(run=True):
             displayQ.put(m)
 
 def calculate_battery_percentage(current_voltage,battery_max_voltage,battery_lower_limit):
+    print (current_voltage)
     value = 100 - (battery_max_voltage - current_voltage)/(battery_max_voltage - battery_lower_limit)*100
-    # return value
-    return current_voltage
+    return value
 
 
 
