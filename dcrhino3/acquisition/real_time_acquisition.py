@@ -142,7 +142,7 @@ class FileFlusher(threading.Thread):
         self.previous_timestamp = 0
         self.current_timestamp  = 0
         self.sequence = 0
-        self.buffer = []
+        self.bufferQ = Queue.Queue()
         self.elapsed_tx_sequences = 0
         self.elapsed_tx_clock_cycles = 0
         self.counter_changes = 0
@@ -201,7 +201,7 @@ class FileFlusher(threading.Thread):
         #TODO: Create a class of row that will be appended to the buffer
         # row = ('' , str(self.current_timestamp),int(self.current_timestamp) , timestamp ,packet.tx_sequence,packet.tx_clock_ticks,packet.x,packet.y,packet.z,self.sequence, packet.rx_sequence,0,0,timestamp,packet.rssi,packet.temp,packet.batt,self.counter_changes,self.rhino_serial_number)
         row = (self.current_timestamp,laptop_ts,packet.tx_clock_ticks,packet.x,packet.y,packet.z,self.sequence,packet.rx_sequence,packet.rssi,packet.temp,packet.batt,self.counter_changes,self.rhino_serial_number)
-        self.buffer.append(row)
+        self.bufferQ.put(row)
 
     def stop(self):
         self.stope.set()
@@ -335,9 +335,9 @@ class SerialThread(threading.Thread):
                 pass
 
 class CollectionDaemonThread(threading.Thread):
-    def __init__(self, buffer,tracesQ,logQ,displayQ):
+    def __init__(self, bufferQ,tracesQ,logQ,displayQ):
         threading.Thread.__init__(self)
-        self.buffer = buffer
+        self.bufferQ = bufferQ
         self.bufferThisSecond = []
         self.lastSecond = None
         self.tracesQ = tracesQ
@@ -348,7 +348,7 @@ class CollectionDaemonThread(threading.Thread):
     def run (self):
         lastFileName = None
         while True:
-            if len(self.buffer) != 0:
+            if not self.bufferQ.empty():
                 #print (len(self.buffer))
                 # row = (0 =self.current_timestamp,
                 # 1=laptop_ts,
@@ -364,7 +364,7 @@ class CollectionDaemonThread(threading.Thread):
                 # 11=self.counter_changes,
                 # 12=self.rhino_serial_number)
                 #row = np.asarray(self.buffer.pop(0)[1:-1],dtype=np.float64)
-                row = np.asarray(self.buffer.pop(0)[0:-1],dtype=np.float64)
+                row = np.asarray(self.bufferQ.get(0)[0:-1],dtype=np.float64)
                 #print (int(row[1]))
                 #print(row)
                 if self.lastSecond != int(row[0]) :
@@ -461,7 +461,7 @@ class CollectionDaemonThread(threading.Thread):
                         #trace_processor = TraceProcessing(global_config, is_ide_file,accelerometer_max_voltage,rhino_version)
                         raw_trace_data = RawTraceData()
 
-                        old_component_trace_dict = {}
+                        #old_component_trace_dict = {}
                         new_component_trace_dict = {}
                         axial_index = int(axis[0])-1
                         tangential_index = int(axis[1])-1
@@ -509,6 +509,8 @@ class CollectionDaemonThread(threading.Thread):
                     self.bufferThisSecond = list()
 
                 self.bufferThisSecond.append(row)
+            else:
+                time.sleep(0.025)
 
 
 def write_data_to_h5_files(h5f,key,trace):
