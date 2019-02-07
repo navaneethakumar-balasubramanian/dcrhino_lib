@@ -30,22 +30,14 @@ class QCPlotterModule(BaseModule):
         radial = trace.component_as_array('radial')
 
         ax_lim = self.get_ax_lim(trace.dataframe)
-<<<<<<< HEAD
-        
+
         plot_title = self.get_plot_title(transformed_args, trace)
-        
+
         noise_threshold = transformed_args.noise_threshold
         mult_pos = self.get_multiples(transformed_args,trace)
         mult_win_label = self.get_multiple_win_label(transformed_args)
-        
-=======
 
-        plot_title = self.get_plot_title(transformed_args)
 
-        noise_threshold = transformed_args.noise_threshold
-        mult_pos = self.get_multiples(transformed_args)
-
->>>>>>> upsampled_feature_extraction
         depth = trace.dataframe['depth']
         peak_ampl_x = trace.dataframe[transformed_args.plot.peak_ampl_x_col_name]
         peak_ampl_y = trace.dataframe[transformed_args.plot.peak_ampl_y_col_name]
@@ -54,15 +46,10 @@ class QCPlotterModule(BaseModule):
         ax_vel_del = trace.dataframe[transformed_args.plot.ax_vel_del_col_name]
         tangential_RC = trace.dataframe[transformed_args.plot.tangential_RC_col_name]
         tang_vel_del = trace.dataframe[transformed_args.plot.tang_vel_del_col_name]
-<<<<<<< HEAD
-        
+
         plotter = QCLogPlotter(axial,tangential,radial,depth,plot_title,transformed_args.output_sampling_rate,mult_pos,mult_win_label)
-    
-=======
 
-        plotter = QCLogPlotter(axial,tangential,radial,depth,plot_title,transformed_args.output_sampling_rate)
 
->>>>>>> upsampled_feature_extraction
         output_path = None
         if self.output_to_file:
             output_path = self.output_path
@@ -81,39 +68,32 @@ class QCPlotterModule(BaseModule):
                  show,
                  output_path
                  )
-<<<<<<< HEAD
-        
-    
-        
-    
+
+
+
+
     def get_multiples(self,transformed_args,trace):
-=======
+
+        expected_multiple = get_expected_multiple_times(transformed_args, recipe='J1')
 
 
 
 
-    def get_multiples(self,transformed_args):
->>>>>>> upsampled_feature_extraction
-            expected_multiple = get_expected_multiple_times(transformed_args, recipe='J1')
-            
-            
-            
-            
-            try:
-                ax_1_mult = (trace.dataframe.J0_axial_primary_peak_time_sample + expected_multiple['axial'])*1000
-                ax_2_mult =  (trace.dataframe.J0_axial_primary_peak_time_sample + expected_multiple['axial_second_multiple'])*1000
+        try:
+            ax_1_mult = (trace.dataframe.J0_axial_primary_peak_time_sample + expected_multiple['axial'])*1000
+            ax_2_mult =  (trace.dataframe.J0_axial_primary_peak_time_sample + expected_multiple['axial_second_multiple'])*1000
 
-                tang_1_mult = (trace.dataframe.J0_tangential_primary_peak_time_sample + expected_multiple['tangential'])*1000
-                tang_2_mult = (trace.dataframe.J0_tangential_primary_peak_time_sample + expected_multiple['tangential_second_multiple'])*1000
-            except KeyError:
-                ax_1_mult = (trace.dataframe.axial_primary_peak_time_sample + expected_multiple['axial'])*1000
-                ax_2_mult =  (trace.dataframe.axial_primary_peak_time_sample + expected_multiple['axial_second_multiple'])*1000
+            tang_1_mult = (trace.dataframe.J0_tangential_primary_peak_time_sample + expected_multiple['tangential'])*1000
+            tang_2_mult = (trace.dataframe.J0_tangential_primary_peak_time_sample + expected_multiple['tangential_second_multiple'])*1000
+        except KeyError:
+            ax_1_mult = (trace.dataframe.axial_primary_peak_time_sample + expected_multiple['axial'])*1000
+            ax_2_mult =  (trace.dataframe.axial_primary_peak_time_sample + expected_multiple['axial_second_multiple'])*1000
 
-                tang_1_mult = (trace.dataframe.tangential_primary_peak_time_sample + expected_multiple['tangential'])*1000
-                tang_2_mult = (trace.dataframe.tangential_primary_peak_time_sample + expected_multiple['tangential_second_multiple'])*1000
-            
-            mult_pos = pd.DataFrame({'ax_1_mult':ax_1_mult, 'ax_2_mult':ax_2_mult, 'tang_1_mult':tang_1_mult, 'tang_2_mult':tang_2_mult})
-            return mult_pos
+            tang_1_mult = (trace.dataframe.tangential_primary_peak_time_sample + expected_multiple['tangential'])*1000
+            tang_2_mult = (trace.dataframe.tangential_primary_peak_time_sample + expected_multiple['tangential_second_multiple'])*1000
+
+        mult_pos = pd.DataFrame({'ax_1_mult':ax_1_mult, 'ax_2_mult':ax_2_mult, 'tang_1_mult':tang_1_mult, 'tang_2_mult':tang_2_mult})
+        return mult_pos
 
 
 
@@ -155,21 +135,16 @@ class QCPlotterModule(BaseModule):
         title_line4 = r"$\bf{"+"MINE"+"}$"+": {},".format(transformed_args.mine_name)+ r"$\bf{"+"DATE:"+"}$"+ "{},".format(pd.to_datetime(trace.dataframe.start_time.iloc[0]),format='%Y%m%d.0')+'\n'+r"$\bf{"+" BENCH:"+"}$"+"{},".format(trace.dataframe.bench_name.iloc[0])+ r"$\bf{"+"HOLE:"+"}$"+ "{}" .format(trace.dataframe.hole_name.iloc[0])
 
         plot_title = [title_line4, title_line2+' '+title_line3, title_line1]
-<<<<<<< HEAD
-    
+
         return plot_title
-    
+
     def get_noise_threshold(self,transformed_args):
         noise_threshold = transformed_args.sensor_saturation_g/2000.
         return noise_threshold
-    
+
     def get_multiple_win_label(self,transformed_args):
         mult_title1 = "axial window = {}/{}".format(transformed_args.mult_neg_win,transformed_args.mult_pos_win)
         mult_title2 = "tangential_window = {}/{}".format(transformed_args.mult_neg_win,transformed_args.mult_pos_win)
-        mult_title = mult_title1 + '\n' + mult_title2 
+        mult_title = mult_title1 + '\n' + mult_title2
         return mult_title
-        
-=======
 
-        return plot_title
->>>>>>> upsampled_feature_extraction
