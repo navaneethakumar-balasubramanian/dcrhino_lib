@@ -149,7 +149,7 @@ class Packet(object):
         return val
 
     def calc_batt(self,val):
-        val = ((val/4096.)*13.2)+0.5
+        val = ((val/4096.)*13.2)#+0.5
         return round(val,2)
 
     def packet_decoder(self, pkt):
@@ -600,8 +600,9 @@ class CollectionDaemonThread(threading.Thread):
 
                             #Send data to the Q so that it can be plotted
                             rssi_avg = np.average(rssi)
-                            temp_avg = np.average(temp)
-                            batt_avg = np.average(batt)
+                            temp_avg = temp[-1]
+                            batt_avg = batt[-1]
+                            print("reported temp {} reported batt {}".format(temp_avg,batt_avg))
 
                             # self.tracesQ.put([temp_lastSecond,
                             # component_trace_raw_data[0],component_trace_dict[0]["axial_interpolated"],component_trace_dict[0]["axial_trimmed_filtered_correlated"],
