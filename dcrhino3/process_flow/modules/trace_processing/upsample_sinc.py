@@ -34,18 +34,34 @@ class UpsampleSincModule(BaseTraceModule):
         """
         #pdb.set_trace()
         transformed_args = self.get_transformed_args(global_config)
-        #input_dt = 1./transformed_args.sampling_rate #original
-        upsample_factor = float(transformed_args.sinc_upsample_factor)
+        trimmed_trace_duration = transformed_args.trimmed_trace_duration
+        upsample_sampling_rate = transformed_args.upsample_sampling_rate
+        upsample_dt = 1./upsample_sampling_rate
+        n_samples_output = trimmed_trace_duration / upsample_dt
+        #upsample_factor = float(transformed_args.sinc_upsample_factor)
         #confirm integer value, otherwise need to handle differently;
-        if int(upsample_factor)-upsample_factor != 0:
-            logger.error("sinc interpolator only handles integer valued\
-                         upsampling factors ")
-            raise(Exception)
+        #if int(upsample_factor)-upsample_factor != 0:
+        #    logger.error("sinc interpolator only handles integer valued\
+        #                 upsampling factors ")
+        #    raise(Exception)
         data = component_vector
         n_obs = len(data)
-        old_axis = np.arange(len(data))
-        new_axis = np.arange(upsample_factor * n_obs) / upsample_factor
+        #<old way>
+        #old_axis = np.arange(len(data))
+        #new_axis = np.arange(upsample_factor * n_obs) / upsample_factor
+        #</old way>
+        #<new way>
+        old_axis = np.arange(n_obs) / (1.0* n_obs)
+        new_axis = np.arange(n_samples_output) / (1.0* n_samples_output)
+        #<new way>
         upsampled_data = sinc_interp(data, old_axis, new_axis)
-
+        pdb.set_trace()
+        #</new way>
+#        plt.figure(1)
+#        plt.clf()
+#        plt.plot(old_axis, data, 'rs', label='old');
+#        plt.plot(new_axis, upsampled_data, 'b*', label='new');
+#        plt.legend()
+#        plt.show()
 
         return upsampled_data
