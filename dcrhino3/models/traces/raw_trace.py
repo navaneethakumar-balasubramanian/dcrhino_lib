@@ -106,15 +106,27 @@ class RawTraceData(TraceData):
         return df
 
     def interpolate_1d_component_array(self,raw_timestamps,component_array,ideal_timestamps):
-        interp_function = interp1d(raw_timestamps,
-                                   component_array,
-                                   kind='linear', bounds_error=False,
-                                   fill_value=[0.0,])
-        interp_data = interp_function(ideal_timestamps)
-        # pdb.set_trace()
+        #This was the original function>
+        # interp_function = interp1d(raw_timestamps,
+        #                            component_array,
+        #                            kind='linear', bounds_error=False,
+        #                            fill_value=[0.0,])
+        # </Original Function>
+        #<Changed to this so I could use the 1d arrays from the realtime data>
+        # interp_function = interp1d(raw_timestamps,
+        #                            component_array,
+        #                            kind='linear', bounds_error=False)
+        # interp_data = interp_function(ideal_timestamps)
+        #</New Scipy method>
+        #<Numpy is a lot faster and it was the legacy method we have been using so will continue using the
+        #Extrapolation capabilities>
+        interp_data = np.interp(ideal_timestamps, raw_timestamps,component_array)
+        #</numpy function>
+        print("interp",interp_data.shape,"component",component_array.shape)
         return interp_data
 
     def calibrate_1d_component_array(self,component_array,global_config,sensitivity):
+        t0 = time.time()
         output = component_array
         is_ide_file = not int(global_config.sensor_type) == 2
 
@@ -139,6 +151,9 @@ class RawTraceData(TraceData):
                 raise ValueError("Calibration Error: The Rhino Hardware version should be 1.0 or 1.1")
             output = output / (sensitivity/1000.0) #Convert to G's
             return output
+
+    def autocorrelate_1d_component_array(self,input_trace, samples_per_trace):
+        return autocorrelate_trace(input_trace, samples_per_trace)
 
     def autocorrelate_l1h5(self,df, global_config):
         """
@@ -172,7 +187,7 @@ class RawTraceData(TraceData):
                 #pdb.set_trace()
 
                 input_trace = df[component_id].iloc[i_trace]
-                acorr_trace = autocorrelate_trace(input_trace, samples_per_trace)
+                acorr_trace = autocorrelate_1d_component_array(input_trace, samples_per_trace)
 
                 output_dict[component_id][i_trace, :] = acorr_trace#[0:samples_per_trace]
             output_dict[component_id] = list(output_dict[component_id])
