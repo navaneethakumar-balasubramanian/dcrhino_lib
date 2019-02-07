@@ -185,6 +185,7 @@ class Packet(object):
             self.batt = self.calc_batt(lst[5])
             self.sleep_time = lst[6]
             self.rssi=self.calc_rssi_value(lst[7])
+            print ("Info Packet: {} temp {} batt {} rsss".format(self.temp,self.batt,self.rssi))
             # self.curts = time.time()
             # Need to convert these values - temp and vbat
             # ln = 'info,'+str(self.curts)+','+str(rseq)+','+str(temp)+','+str(vbat)+','+str(calc_rssi_value(rssi))+','+str(self.seq)+'\n'
@@ -847,7 +848,6 @@ def main_run(run=True):
             displayQ.put(m)
 
 def calculate_battery_percentage(current_voltage,battery_max_voltage,battery_lower_limit):
-    print (current_voltage)
     value = 100 - (battery_max_voltage - current_voltage)/(battery_max_voltage - battery_lower_limit)*100
     return value
 
