@@ -35,10 +35,11 @@ import subprocess
 import atexit
 import re
 from shutil import copyfile
-from dcrhino.process_pipeline.config import Config
-from dcrhino.real_time.metadata import Metadata
-from dcrhino.process_pipeline.trace_processing import TraceProcessing
-from dcrhino.external.seismic_wiggle import seismic_wiggle
+from dcrhino3.models.config import Config
+from dcrhino3.models.metadata import Metadata
+# from dcrhino3.acquisition.trace_processing import TraceProcessing
+from dcrhino3.models.traces.raw_trace import RawTraceData
+from dcrhino3.acquisition.external.seismic_wiggle import seismic_wiggle
 
 
 config_collection_file_path = os.path.join(PATH,'collection_daemon.cfg')
