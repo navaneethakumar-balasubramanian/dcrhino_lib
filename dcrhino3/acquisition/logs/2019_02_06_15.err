@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "/home/natal/Documents/datacloud/software/rhino/v3/dcrhino_lib/dcrhino3/acquisition/real_time_acquisition_v1.1.py", line 887, in <module>
+    main_run()
+  File "/home/natal/Documents/datacloud/software/rhino/v3/dcrhino_lib/dcrhino3/acquisition/real_time_acquisition_v1.1.py", line 611, in main_run
+    os.makedirs(run_folder_path)
+  File "/home/natal/anaconda2/envs/py2.7/lib/python2.7/os.py", line 150, in makedirs
+    makedirs(head, mode)
+  File "/home/natal/anaconda2/envs/py2.7/lib/python2.7/os.py", line 150, in makedirs
+    makedirs(head, mode)
+  File "/home/natal/anaconda2/envs/py2.7/lib/python2.7/os.py", line 150, in makedirs
+    makedirs(head, mode)
+  File "/home/natal/anaconda2/envs/py2.7/lib/python2.7/os.py", line 150, in makedirs
+    makedirs(head, mode)
+  File "/home/natal/anaconda2/envs/py2.7/lib/python2.7/os.py", line 157, in makedirs
+    mkdir(name, mode)
+OSError: [Errno 13] Permission denied: '/home/field'
