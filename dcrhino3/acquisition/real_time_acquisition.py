@@ -365,7 +365,8 @@ class CollectionDaemonThread(threading.Thread):
                     # 11=self.counter_changes,
                     # 12=self.rhino_serial_number)
                     #row = np.asarray(self.buffer.pop(0)[1:-1],dtype=np.float64)
-                    row = np.asarray(self.bufferQ.get(),dtype=np.float64)[0:-1]
+                    row = np.asarray(self.bufferQ.get()[0:-1],dtype=np.float64)
+
                     #print (int(row[1]))
                     #print(row)
                     if self.lastSecond != int(row[0]) :
@@ -513,7 +514,7 @@ class CollectionDaemonThread(threading.Thread):
                 else:
                     time.sleep(0.025)
         except:
-            print(sys.exc_info())
+            print("Collection Daemon Exception:", sys.exc_info())
 
 def write_data_to_h5_files(h5f,key,trace):
     # saveNumpyToFileWithoutAppend(h5f, key +'_x_data',trace[2] )
