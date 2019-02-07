@@ -37,7 +37,6 @@ import re
 from shutil import copyfile
 from dcrhino3.models.config import Config
 from dcrhino3.models.metadata import Metadata
-# from dcrhino3.acquisition.trace_processing import TraceProcessing
 from dcrhino3.models.traces.raw_trace import RawTraceData
 from dcrhino3.acquisition.external.seismic_wiggle import seismic_wiggle
 
@@ -63,6 +62,8 @@ rhino_port = "/dev/"+rhino_ttyusb
 rhino_serial_number = config.get("INSTALLATION","sensor_serial_number","S9999")
 rhino_version = config.get("COLLECTION","rhino_version")
 run_start_time = time.time()
+battery_max_voltage = config.getfloat("INSTALLATION","battery_max_voltage")
+battery_lower_limit = config.getfloat("INSTALLATION","battery_min_voltage")
 
 
 #run_folder_path = DATA_PATH + "run_" + str(int(run_start_time))+"/"
@@ -364,7 +365,6 @@ class CollectionDaemonThread(threading.Thread):
                     # 10=packet.batt,
                     # 11=self.counter_changes,
                     # 12=self.rhino_serial_number)
-                    #row = np.asarray(self.buffer.pop(0)[1:-1],dtype=np.float64)
                     row = np.asarray(self.bufferQ.get()[0:-1],dtype=np.float64)
 
                     #print (int(row[1]))
@@ -460,7 +460,6 @@ class CollectionDaemonThread(threading.Thread):
                             #process the raw data the same way that it is being done in the processing Pipeline
                             accelerometer_max_voltage = config.getfloat("PLAYBACK","accelerometer_max_voltage")
                             is_ide_file=False
-                            #trace_processor = TraceProcessing(global_config, is_ide_file,accelerometer_max_voltage,rhino_version)
                             raw_trace_data = RawTraceData()
 
                             #old_component_trace_dict = {}
@@ -605,8 +604,6 @@ def main_run(run=True):
     sensor_radial_axis = 3 - sensor_axial_axis - sensor_tangential_axis
     channel_mapping = {"axial":sensor_axial_axis,"tangential":sensor_tangential_axis,"radial":sensor_radial_axis}
     component_to_display = config.get("RUNTIME","component_to_display")
-    battery_max_voltage = config.getfloat("INSTALLATION","battery_max_voltage")
-    battery_lower_limit = config.getfloat("SYSTEM_HEALTH_PLOTS","battery_lower_limit")
     pre_cut=config.getint("SYSTEM_HEALTH_PLOTS","trace_plot_pre_cut")
     post_add=config.getint("SYSTEM_HEALTH_PLOTS","trace_plot_post_add")
     output_sampling_rate=config.getfloat("COLLECTION","output_sampling_rate")
@@ -738,7 +735,8 @@ def main_run(run=True):
             displayQ.put(m)
 
 def calculate_battery_percentage(current_voltage,battery_max_voltage,battery_lower_limit):
-    return (battery_max_voltage - current_voltage)/(battery_max_voltage - battery_lower_limit)*100
+    value = 100 - (battery_max_voltage - current_voltage)/(battery_max_voltage - battery_lower_limit)*100
+    return value
 
 
 
