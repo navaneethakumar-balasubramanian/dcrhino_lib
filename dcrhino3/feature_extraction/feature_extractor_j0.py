@@ -27,38 +27,6 @@ class WaveletForFeatureExtraction(object):
             setattr(self, k, np.nan)
 
 
-#class TrimmedCorrelatedTracePacket():
-#    def __init__(self, data, sampling_rate, n_samples, min_lag):#, max_lag):
-#        """
-#        metadata requirements: sampling rate, time_vector
-#        @note 20190131
-#        #def __init__(self, sampling_rate,n_samples=640,min_lag=0.1):
-#
-#        @note: 20190202: Modifying this so it receives data as input argument;
-#        Also should validate the sampling rate as a fcn of min-lag, max-lag;
-#        """
-#        self.data = data
-#        self.sampling_rate = sampling_rate
-#        self.min_lag = min_lag
-#
-#
-#
-#    @property
-#    def time_vector(self):
-#        """
-#        TODO: check that self.max_lag = timevector[-1]+dt
-#        This can be where we do our even/odd checking as well
-#        """
-#        dt = 1./self.sampling_rate
-#        #time_vector = dt * np.arange(self.n_samples)
-#        time_vector = dt * np.arange(len(self.data))
-#        time_vector -= np.abs(self.min_lag) # if centerd at zero is desired
-#
-#        return time_vector
-#
-#    @property
-#    def dt(self):
-#        return 1./self.sampling_rate
 
 
 
