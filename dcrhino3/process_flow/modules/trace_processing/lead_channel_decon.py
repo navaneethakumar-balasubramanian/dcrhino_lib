@@ -39,6 +39,15 @@ class LeadChannelDeconvolutionModule(BaseTraceModule):
         @TODO: Add trim to this methid so tht deconv trace gets trimmed here?
         @note: 20180128: this is now expecting an 'unfolded' acorr, which will have
         an odd number of samples;
+        @note: 20180204: added Trim to this method.  Note that I am removing
+        two extra samples ... this could be becuase t0_index is not dead center
+        after filtering, but one sample earlier than center ...
+        THe input trace in my tests was 3999 points, using a 500 point filter,
+        and the output trace was 3497 points (rather than 3499 as expected).
+        It could be that we should switch to an odd numbered decon filter for
+        these acorr traces ...
+        @TODO: try using odd-number-taps acorr filter to maintain 3999 points
+        (i.e. shift back by 1 the t0_index ... need to test to see its really true)
         """
         #pdb.set_trace()
         transformed_args = self.get_transformed_args(global_config)
@@ -61,5 +70,12 @@ class LeadChannelDeconvolutionModule(BaseTraceModule):
         x_filter = ATAinv[0,:]
 #        trace_of_proof = np.hstack((np.flipud(trace_data[1:]), trace_data))
         deconv_trace = np.correlate(trace_data, x_filter,'same')#YES
+        t0_index = (len(deconv_trace)+1) // 2
+        t0_index += n_taps_decon // 2 #-1 more here to make clean  reduction by n_taps_decon
+        n_valid_samples_rhs = len(deconv_trace) - t0_index
+        n_valid_samples_lhs = n_valid_samples_rhs - 1
+        output_trace = deconv_trace[t0_index-n_valid_samples_lhs:len(deconv_trace)]
 
-        return deconv_trace
+        #pdb.set_trace()
+
+        return output_trace

@@ -9,13 +9,11 @@ from __future__ import absolute_import, division, print_function
 
 
 import datetime
-import json
 import matplotlib.pyplot as plt
 import numpy as np
 import pdb
 import re
 
-from dcrhino3.helpers.general_helper_functions import flatten
 
 PRIMARY_SHIFT_AXIAL = 0.0
 PRIMARY_SHIFT_TANGENTIAL = 0.0
@@ -26,42 +24,11 @@ WINDOW_BOUNDARIES_INDICES = {}
 WINDOW_BOUNDARIES_INDICES['axial'] = {}
 WINDOW_BOUNDARIES_INDICES['tangential'] = {}
 
-
-processing_scheme_list = ['standard', 'phase_rotated', 'despike_decon', 'simple_correlated',]
-trace_window_labels_for_feature_extraction = ['primary', 'multiple_1', 'multiple_2',
+TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION = ['primary', 'multiple_1', 'multiple_2',
                                         'multiple_3', 'noise_1', 'noise_2']
 
 #wavelet_feature_extractor_types = ['sample', 'polynomial', 'ricker',]
 
-def get_window_widths(global_config):
-    """
-    @note 20181227: this method to be deprecated and replaced with simply
-    global_config.window_widths attribute;
-    @TODO: remove for PPv3;
-    """
-    try:
-        #pdb.set_trace()
-        window_widths = json.loads(global_config.window_widths)
-    except AttributeError:
-        print('window widths not specified in global config')
-        return None
-    except TypeError:
-        #<From [FEATURE_EXTRACTION] config>
-        window_widths = {}
-        component = 'axial'
-        window_widths[component] = {}
-        window_widths[component]['primary'] = 4.0 * 1e-3
-        window_widths[component]['multiple_1'] = 4.0 * 1e-3
-        window_widths[component]['multiple_2'] = 4.0 * 1e-3
-        window_widths[component]['multiple_3'] = 4.0 * 1e-3
-        component = 'tangential'
-        window_widths[component] = {}
-        window_widths[component]['primary'] = 4.0 * 1e-3
-        window_widths[component]['multiple_1'] = 4.0 * 1e-3
-        window_widths[component]['multiple_2'] = 4.0 * 1e-3
-        window_widths[component]['multiple_3'] = 4.0 * 1e-3
-        #</From [FEATURE_EXTRACTION] config>
-    return window_widths
 
 def get_expected_multiple_times(global_config, recipe='J1'):
     """
@@ -95,7 +62,7 @@ def set_window_boundaries_in_time(expected_multiple_periods, window_widths, comp
     sure of a better way to do this right now;
 
     """
-    for window_label in trace_window_labels_for_feature_extraction:
+    for window_label in TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION:
         if window_label == 'primary':
             #width = window_widths[component][window_label]
             width = getattr(window_widths,component).primary
@@ -118,6 +85,7 @@ def set_window_boundaries_in_time(expected_multiple_periods, window_widths, comp
             window_bounds = np.array([start_of_window, end_of_window])
         WINDOW_BOUNDARIES_TIME[component][window_label] = window_bounds
     return WINDOW_BOUNDARIES_TIME#dont need to return this global
+
 
 def update_window_boundaries_in_time(component, trimmed_trace, trimmed_time_vector,
                                      window_widths, expected_multiple_periods,
@@ -237,13 +205,15 @@ def extract_features_from_each_window(window_data_dict, time_vector_dict):
     new_feature_dict = {}
     for window_label in window_data_dict.keys():
         tmp = {}
+        #pdb.set_trace()
         data_window = window_data_dict[window_label]
         time_vector = time_vector_dict[window_label]
+        dt = time_vector[1] - time_vector[0]
         tmp['max_amplitude'] = np.max(data_window)
         tmp['max_time'] = time_vector[np.argmax(data_window)]
         tmp['min_amplitude'] = np.min(data_window)
         tmp['min_time'] = time_vector[np.argmin(data_window)]
-        tmp['integrated_absolute_amplitude'] = np.sum(np.abs(data_window))/(time_vector[-1]-time_vector[0])
+        tmp['integrated_absolute_amplitude'] = dt*np.sum(np.abs(data_window))/(time_vector[-1]-time_vector[0])
         new_feature_dict[window_label] = tmp
     return new_feature_dict
 
@@ -272,60 +242,10 @@ def calculate_boolean_features(feature_dict, global_config):
     return output_dict
 
 
-def feature_extractor_J1(global_config, trimmed_traces_dict):
-    """
-    """
-    components_to_process = ['axial', 'tangential', ]
-    window_widths = get_window_widths(global_config)
-
-    samples_per_trace = len(trimmed_traces_dict['axial'])
-    sampling_rate = global_config.output_sampling_rate; dt = 1./sampling_rate;
-
-    #<Define intervals of data for analysis and prep containers>
-    expected_multiple_periods = get_expected_multiple_times(global_config)
-    #pdb.set_trace()
-    for component in components_to_process:
-        set_window_boundaries_in_time(expected_multiple_periods, window_widths, component)
-        convert_window_boundaries_to_sample_indices(component, global_config)
-    #</Define intervals of data for analysis and prep containers>
-
-    trimmed_time_vector = (dt * np.arange(samples_per_trace)) + global_config.min_lag_trimmed_trace
-
-    #Allocate space for feature arrays
-    new_features_dict = {}
-    for component in components_to_process:
-        trimmed_trace = trimmed_traces_dict[component]
-        #<update primary window to be centered on max amplitude of trace>
-        print("20181226 update the window time boundaries to be based on trace data")
-        update_window_boundaries_in_time(component, trimmed_trace, trimmed_time_vector,
-                                         window_widths, expected_multiple_periods, global_config)
-
-        #</update primary window to be centered on max amplitude>
-        window_data_dict, window_time_vector_dict = populate_window_data_dict(component,
-                                                                          trimmed_trace,
-                                                                          trimmed_time_vector)
-        #test_populate_window_data_dict(window_data_dict, window_time_vector_dict,
-                                        #                           trimmed_trace, trimmed_time_vector)
-        extracted_features_dict = extract_features_from_each_window(window_data_dict,
-                                                                    window_time_vector_dict)
-
-        boolean_features_dict = calculate_boolean_features(extracted_features_dict, global_config)
-        extracted_features_dict['boolean'] = boolean_features_dict
-        new_features_dict[component] = extracted_features_dict
-        #pdb.set_trace()
-    #pdb.set_trace()
-    unnested_dictionary = flatten(new_features_dict)#print('now dump out with dict keys concatenated')
-    for key in unnested_dictionary.keys():
-        unnested_dictionary['J1_{}'.format(key)] = unnested_dictionary.pop('{}'.format(key))
-    return unnested_dictionary
-
 
 def main():
     """
     """
-    #ww = get_window_widths()
-    #pdb.set_trace()
-    #feature_extractor_J1()
     print("finito {}".format(datetime.datetime.now()))
 
 if __name__ == "__main__":

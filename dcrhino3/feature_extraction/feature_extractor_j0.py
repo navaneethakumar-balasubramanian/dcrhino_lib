@@ -5,14 +5,11 @@ value from global_config
 """
 import numpy as np
 import pdb
-from datetime import datetime
 
 from dcrhino3.feature_extraction.j0_derived_features import J0FeatureDeriver
-#from dcrhino3.feature_extraction.supporting_minimal_feature_extraction import get_zero_crossing_samples
-#from dcrhino3.feature_extraction.supporting_minimal_feature_extraction import get_trough_times
 from dcrhino3.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_multiple_wavelet
 from dcrhino3.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_primary_wavelet
-
+from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
 
 class WaveletForFeatureExtraction(object):
     """
@@ -30,35 +27,38 @@ class WaveletForFeatureExtraction(object):
             setattr(self, k, np.nan)
 
 
-class TrimmedCorrelatedTracePacket():
-    def __init__(self, sampling_rate, n_samples, min_lag):
-        """
-        metadata requirements: sampling rate, time_vector
-        @note 20190131
-        #def __init__(self, sampling_rate,n_samples=640,min_lag=0.1):
-        """
-        self.data = None
-        self.sampling_rate = sampling_rate
-        self.n_samples = n_samples
-        self.min_lag = min_lag
-
-
-
-    @property
-    def time_vector(self):
-        """
-        TODO: check that self.max_lag = timevector[-1]+dt
-        """
-        dt = 1./self.sampling_rate
-        time_vector = dt * np.arange(self.n_samples)
-
-        time_vector -= self.min_lag # if centerd at zero is desired
-        #comment abive line out give you a "starts at zero" trace#
-        return time_vector
-
-    @property
-    def dt(self):
-        return 1./self.sampling_rate
+#class TrimmedCorrelatedTracePacket():
+#    def __init__(self, data, sampling_rate, n_samples, min_lag):#, max_lag):
+#        """
+#        metadata requirements: sampling rate, time_vector
+#        @note 20190131
+#        #def __init__(self, sampling_rate,n_samples=640,min_lag=0.1):
+#
+#        @note: 20190202: Modifying this so it receives data as input argument;
+#        Also should validate the sampling rate as a fcn of min-lag, max-lag;
+#        """
+#        self.data = data
+#        self.sampling_rate = sampling_rate
+#        self.min_lag = min_lag
+#
+#
+#
+#    @property
+#    def time_vector(self):
+#        """
+#        TODO: check that self.max_lag = timevector[-1]+dt
+#        This can be where we do our even/odd checking as well
+#        """
+#        dt = 1./self.sampling_rate
+#        #time_vector = dt * np.arange(self.n_samples)
+#        time_vector = dt * np.arange(len(self.data))
+#        time_vector -= np.abs(self.min_lag) # if centerd at zero is desired
+#
+#        return time_vector
+#
+#    @property
+#    def dt(self):
+#        return 1./self.sampling_rate
 
 
 
@@ -70,13 +70,21 @@ class FeatureExtractorJ0():
         @warning: The declaration of min_lag_trimmed_trace as its absolute
         value is not good form:  np.abs(transformed_args.min_lag_trimmed_trace)
         """
+        try:
+            self.sampling_rate = transformed_args.upsample_sampling_rate
+            #pdb.set_trace()
+        except AttributeError:
+            self.sampling_rate = transformed_args.output_sampling_rate
+            pass
+
         self.primary_window_halfwidth_ms = transformed_args.primary_window_halfwidth_ms
         self.multiple_window_search_width_ms = transformed_args.multiple_window_search_width_ms
         self.sensor_distance_to_source = transformed_args.sensor_distance_to_source
-        self.output_sampling_rate = transformed_args.output_sampling_rate
+        #self.sampling_rate = transformed_args.output_sampling_rate
         self.ACOUSTIC_VELOCITY = transformed_args.ACOUSTIC_VELOCITY
         self.n_samples_trimmed_trace = transformed_args.n_samples_trimmed_trace
-        self.min_lag_trimmed_trace = np.abs(transformed_args.min_lag_trimmed_trace)
+        self.min_lag_trimmed_trace = transformed_args.min_lag_trimmed_trace
+        #self.max_lag_trimmed_trace = np.abs(transformed_args.max_lag_trimmed_trace)
 
         self.COMPONENT_WAVELET_MAP = {}
         self.COMPONENT_WAVELET_MAP['axial'] = ['primary', 'multiple']
@@ -103,9 +111,8 @@ class FeatureExtractorJ0():
     def create_features_dictionary(self, component_id):
         """
         """
-        num_traces_per_component = 1
         feature_dict = {}
-        #for component in self.COMPONENT_WAVELET_MAP.keys():
+
         for wavelet_type in self.COMPONENT_WAVELET_MAP[component_id]:
             for wavelet_feature in self.WAVELET_FEATURES[component_id]:
                 feature_string = '{}_{}_{}'.format(component_id, wavelet_type, wavelet_feature)
@@ -123,10 +130,11 @@ class FeatureExtractorJ0():
 
         for wavelet_type in self.COMPONENT_WAVELET_MAP[component_id]:
             #pdb.set_trace()
-            packet = TrimmedCorrelatedTracePacket(self.output_sampling_rate,
-                                           self.n_samples_trimmed_trace,
-                                           self.min_lag_trimmed_trace)
-            packet.data = component_array
+#            packet = TrimmedCorrelatedTracePacket(component_array,
+#                                                  self.sampling_rate,
+#                                                  self.n_samples_trimmed_trace,
+#                                                  self.min_lag_trimmed_trace)
+            packet = SymmetricTrace(component_array, self.sampling_rate)
             #pdb.set_trace()
             if component_id == 'axial':
 
@@ -191,7 +199,5 @@ class FeatureExtractorJ0():
         for key in df_dict.keys():
             df_dict['J0_{}'.format(key)] = df_dict.pop('{}'.format(key))
 
-        #df_dict['datetime'] = datetime.utcfromtimestamp(trace_timestamp)
-        #pdb.set_trace()
 
         return df_dict

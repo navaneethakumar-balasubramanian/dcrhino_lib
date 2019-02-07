@@ -121,7 +121,7 @@ class ProcessFlow:
         for module in self.features_flow:
             t0 = time.time()
             logger.info("Extracting features using module: " +str(module.id)+ " with: " + str(module.args))
-            pdb.set_trace()
+            #pdb.set_trace()
             output_trace = module.extract_features(output_trace)
             delta_t = time.time() - t0
             logger.info("{} ran in {}s ".format(module.id, delta_t))

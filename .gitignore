@@ -2,3 +2,4 @@
 dcrhino.egg-info/*
 
 *.json
+bin/can_be_deleted
