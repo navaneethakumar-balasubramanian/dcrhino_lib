@@ -608,7 +608,7 @@ class CollectionDaemonThread(threading.Thread):
                         # component_trace_raw_data[2],component_trace_dict[2]["radial_interpolated"],component_trace_dict[2]["radial_trimmed_filtered_correlated"],
                         # rssi_avg,temp_avg,batt_avg,counterchanges])
                         self.tracesQ.put({"second":temp_lastSecond,"raw_data":component_trace_raw_data,
-                                        "trace_data":old_component_trace_dict,"rssi":rssi_avg,"temp":temp_avg,"batt":batt_avg,"counter_changes":counterchanges})
+                                        "trace_data":new_component_trace_dict,"rssi":rssi_avg,"temp":temp_avg,"batt":batt_avg,"counter_changes":counterchanges})
 
                     self.bufferThisSecond = list()
 
@@ -618,11 +618,11 @@ class CollectionDaemonThread(threading.Thread):
 def write_data_to_h5_files(h5f,key,trace):
     pass
     # saveNumpyToFileWithoutAppend(h5f, key +'_x_data',trace[2] )
-    # saveNumpyToFileWithoutAppend(h5f, key +'_axial_trimmed_filtered_correlated_trace',trace["trace_data"]["axial"]["axial_trimmed_filtered_correlated"] )
+    saveNumpyToFileWithoutAppend(h5f, key +'_axial_auto_correlated',trace["trace_data"]["axial"]["axial_auto_correlated"] )
     # saveNumpyToFileWithoutAppend(h5f, key +'_y_data',trace[5] )
-    # saveNumpyToFileWithoutAppend(h5f, key +'_tangential_trimmed_filtered_correlated_trace',trace["trace_data"]["tangential"]["tangential_trimmed_filtered_correlated"] )
+    saveNumpyToFileWithoutAppend(h5f, key +'_tangential_auto_correlated',trace["trace_data"]["tangential"]["tangential_auto_correlated"] )
     # saveNumpyToFileWithoutAppend(h5f, key +'_z_data',trace[8] )
-    # saveNumpyToFileWithoutAppend(h5f, key +'_radial_trimmed_filtered_correlated_trace',trace["trace_data"]["radial"]["radial_trimmed_filtered_correlated"] )
+    saveNumpyToFileWithoutAppend(h5f, key +'_radial_auto_correlated',trace["trace_data"]["radial"]["radial_auto_correlated"] )
 
 
 def main_run(run=True):
@@ -758,8 +758,8 @@ def main_run(run=True):
             plt.suptitle("Channel {} - ".format(channels[channel_mapping[component_to_display]]) + tracetime.strftime('%H:%M:%S' ) + " plotted at " + datetime.utcfromtimestamp(now).strftime('%H:%M:%S') +  " delay of " + str(sec_delay) )
 
 
-            # signal_plot.plot(trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)],'k')#2 for X, 5 for Y and 8 for Z
-            # trace_plot.plot(trace[6],'b')#3 for X, 6 for Y and 9 for Z
+            signal_plot.plot(trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)],'k')#2 for X, 5 for Y and 8 for Z
+            trace_plot.plot(trace["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display),'b')#3 for X, 6 for Y and 9 for Z
 
             rssi.pop(0)
             temp.pop(0)
@@ -789,17 +789,17 @@ def main_run(run=True):
 
 
 
-            trace_start = int(output_sampling_rate/10)-pre_cut
-            trace_end = int(output_sampling_rate/10)+post_add
-            acorr_data = trace["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display)]
-            #trimmed_data = acorr_data[trace_start:trace_end]#TODO set the values for the trimmed trace from config file
-            trimmed_data = acorr_data
-            # traces_for_plot.append(trimmed_data[0::traces_subsample])
-            traces_for_plot.append(trimmed_data)
-            if len(traces_for_plot) > number_of_traces_to_display:
-                traces_for_plot.pop(0)
-            arr = np.asarray(traces_for_plot)
-            arr = arr.transpose()
+            # trace_start = int(output_sampling_rate/10)-pre_cut
+            # trace_end = int(output_sampling_rate/10)+post_add
+            # acorr_data = trace["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display)]
+            # #trimmed_data = acorr_data[trace_start:trace_end]#TODO set the values for the trimmed trace from config file
+            # trimmed_data = acorr_data
+            # # traces_for_plot.append(trimmed_data[0::traces_subsample])
+            # traces_for_plot.append(trimmed_data)
+            # if len(traces_for_plot) > number_of_traces_to_display:
+            #     traces_for_plot.pop(0)
+            # arr = np.asarray(traces_for_plot)
+            # arr = arr.transpose()
             # seismic_wiggle(trace_plot,arr,dt=(1.0/output_sampling_rate),normalize=True)
             plt.pause(0.05)
 
