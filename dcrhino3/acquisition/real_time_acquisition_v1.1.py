@@ -759,7 +759,7 @@ def main_run(run=True):
 
 
             signal_plot.plot(trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)],'k')#2 for X, 5 for Y and 8 for Z
-            trace_plot.plot(trace["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display),'b')#3 for X, 6 for Y and 9 for Z
+            trace_plot.plot(trace["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display)],'b')#3 for X, 6 for Y and 9 for Z
 
             rssi.pop(0)
             temp.pop(0)
