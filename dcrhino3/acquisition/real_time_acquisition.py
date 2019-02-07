@@ -537,7 +537,7 @@ def main_run(run=True):
     comport = SerialThread(rhino_port,rhino_baudrate,rhino_pktlen,flushQ,logQ,displayQ)#comport = SerialThread(rhino_port,rhino_baudrate,rhino_pktlen,flushQ,secsQ,logQ,displayQ)
     display = GUI(displayQ,system_healthQ)
     fflush = FileFlusher(flushQ,logQ,displayQ)#fflush = FileFlusher(flushQ,secsQ,logQ,displayQ)
-    collection_daemon = CollectionDaemonThread(fflush.buffer,traces,logQ,displayQ)
+    collection_daemon = CollectionDaemonThread(fflush.bufferQ,traces,logQ,displayQ)
 
     m = plt.get_backend()+"\n"
     logQ.put(m)
