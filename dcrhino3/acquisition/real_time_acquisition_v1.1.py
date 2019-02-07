@@ -567,7 +567,7 @@ class CollectionDaemonThread(threading.Thread):
                         trace_processor = TraceProcessing(global_config, is_ide_file,accelerometer_max_voltage,rhino_version)
                         raw_trace_data = RawTraceData()
 
-                        old_component_trace_dict = {}
+                        #old_component_trace_dict = {}
                         new_component_trace_dict = {}
                         axial_index = int(axis[0])-1
                         tangential_index = int(axis[1])-1
@@ -585,7 +585,7 @@ class CollectionDaemonThread(threading.Thread):
 
                         for label in component_labels:
                             #<Old Method>
-                            old_component_trace_dict[label] = trace_processor.process(component_trace_raw_data[label], secondless_timestamps, label, component_sensitivity[label], debug=True)
+                            #old_component_trace_dict[label] = trace_processor.process(component_trace_raw_data[label], secondless_timestamps, label, component_sensitivity[label], debug=True)
                             #</Old Method>
                             #<New Method>
                             calibrated_data = raw_trace_data.calibrate_1d_component_array(component_trace_raw_data[label],global_config,global_config.sensor_sensitivity[label])
@@ -687,7 +687,7 @@ def main_run(run=True):
 
 
     #TODO: set the plot length from configuration file
-    length = 120
+    length = config.getint("SYSTEM_HEALTH_PLOTS","x_axis_length_in_seconds")
     q_timeout_wait = 2
     rssi = [-65]*length
     temp = [30]*length
@@ -752,7 +752,7 @@ def main_run(run=True):
             row += 1
 
             trace_plot = plt.subplot2grid((rows, columns), (row, column), colspan=3,rowspan=1)
-            trace_plot.get_xaxis().set_visible(False)
+            #trace_plot.get_xaxis().set_visible(False)
 
             sec_delay = round(now - trace_second,2)
             plt.suptitle("Channel {} - ".format(channels[channel_mapping[component_to_display]]) + tracetime.strftime('%H:%M:%S' ) + " plotted at " + datetime.utcfromtimestamp(now).strftime('%H:%M:%S') +  " delay of " + str(sec_delay) )
