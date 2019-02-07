@@ -70,6 +70,9 @@ class FeatureExtractorJ0():
 
 
     def get_earliest_expected_mulitple_time(self):
+        """
+        TODO to be deprecated and replaced by supporting_j1.get_expected_multiple_times()
+        """
         travel_distance = 2 * self.sensor_distance_to_source
         theoretical_two_way_travel_time = travel_distance / self.ACOUSTIC_VELOCITY
         earliest_multiple_time = theoretical_two_way_travel_time #WHY
@@ -97,11 +100,7 @@ class FeatureExtractorJ0():
         df_dict = self.create_features_dictionary(component_id)
 
         for wavelet_type in self.COMPONENT_WAVELET_MAP[component_id]:
-            #pdb.set_trace()
-#            packet = TrimmedCorrelatedTracePacket(component_array,
-#                                                  self.sampling_rate,
-#                                                  self.n_samples_trimmed_trace,
-#                                                  self.min_lag_trimmed_trace)
+
             packet = SymmetricTrace(component_array, self.sampling_rate)
             #pdb.set_trace()
             if component_id == 'axial':
