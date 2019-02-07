@@ -504,7 +504,7 @@ class CollectionDaemonThread(threading.Thread):
                         # component_trace_raw_data[2],component_trace_dict[2]["radial_interpolated"],component_trace_dict[2]["radial_trimmed_filtered_correlated"],
                         # rssi_avg,temp_avg,batt_avg,counterchanges])
                         self.tracesQ.put({"second":temp_lastSecond,"raw_data":component_trace_raw_data,
-                                        "trace_data":component_trace_dict,"rssi":rssi_avg,"temp":temp_avg,"batt":batt_avg,"counter_changes":counterchanges})
+                                        "trace_data":new_component_trace_dict,"rssi":rssi_avg,"temp":temp_avg,"batt":batt_avg,"counter_changes":counterchanges})
 
                     self.bufferThisSecond = list()
 
