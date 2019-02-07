@@ -12,10 +12,10 @@ import time
 import socket
 import ConfigParser
 import os
-from constants import ACQUISITION_PATH as PATH
-from constants import DATA_PATH, LOGS_PATH, RAM_PATH
-from config_file_utilities import config_file_to_attrs
-from system_health_display_gui import GUI
+from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
+from dcrhino3.acquisition.constants import DATA_PATH, LOGS_PATH, RAM_PATH
+from dcrhino3.acquisition.config_file_utilities import config_file_to_attrs
+from dcrhino3.acquisition.system_health_display_gui import GUI
 import pdb
 import time
 import numpy as np
@@ -457,23 +457,40 @@ class CollectionDaemonThread(threading.Thread):
                         #process the raw data the same way that it is being done in the processing Pipeline
                         accelerometer_max_voltage = config.getfloat("PLAYBACK","accelerometer_max_voltage")
                         is_ide_file=False
-                        trace_processor = TraceProcessing(global_config, is_ide_file,accelerometer_max_voltage,rhino_version)
+                        #trace_processor = TraceProcessing(global_config, is_ide_file,accelerometer_max_voltage,rhino_version)
+                        raw_trace_data = RawTraceData()
 
-                        component_trace_dict = {}
+                        old_component_trace_dict = {}
+                        new_component_trace_dict = {}
                         axial_index = int(axis[0])-1
                         tangential_index = int(axis[1])-1
                         radial_index = 3-axial_index-tangential_index
-                        # component_sensitivity = [sensitivity[axial_index],sensitivity[tangential_index],sensitivity[radial_index]]
+
                         component_sensitivity = {"axial":sensitivity[axial_index],"tangential":sensitivity[tangential_index],"radial":sensitivity[radial_index]}
                         component_labels = ["axial","tangential","radial"]
                         channel_trace_raw_data = [x,y,z]
-                        # component_trace_raw_data = [channel_trace_raw_data[axial_index],channel_trace_raw_data[tangential_index],channel_trace_raw_data[radial_index],]
+
                         component_trace_raw_data = {"axial":channel_trace_raw_data[axial_index],"tangential":channel_trace_raw_data[tangential_index],"radial":channel_trace_raw_data[radial_index]}
                         secondless_timestamps = ts - int(ts[0])
-                        # for comp in range(3):
-                        #     component_trace_dict[comp] = trace_processor.process(component_trace_raw_data[comp], secondless_timestamps, component_labels[comp], component_sensitivity[comp], debug=True)
+
+                        ideal_timestamps = 1./float(global_config.output_sampling_rate) * np.arange(0,int(global_config.output_sampling_rate)) + int(ts[0])
+                        #TODO: 0.4 needs to be read from global config
+                        number_of_samples = int(0.4 * global_config.output_sampling_rate)
+
+
                         for label in component_labels:
-                            component_trace_dict[label] = trace_processor.process(component_trace_raw_data[label], secondless_timestamps, label, component_sensitivity[label], debug=True)
+                            #<Old Method>
+                            #old_component_trace_dict[label] = trace_processor.process(component_trace_raw_data[label], secondless_timestamps, label, component_sensitivity[label], debug=True)
+                            #</Old Method>
+                            #<New Method>
+                            calibrated_data = raw_trace_data.calibrate_1d_component_array(component_trace_raw_data[label],global_config,global_config.sensor_sensitivity[label])
+                            interp_data = raw_trace_data.interpolate_1d_component_array(ts,calibrated_data,ideal_timestamps)
+                            acorr_data = raw_trace_data.autocorrelate_1d_component_array(interp_data,number_of_samples)
+                            new_component_trace_dict[label]= {"{}_interpolated".format(label):interp_data,
+                                                          "{}_auto_correlated".format(label):acorr_data}
+                            #</New Method>
+                            # print("Old Method",old_component_trace_dict[label]["{}_auto_correlated".format(label)],len(old_component_trace_dict[label]["{}_auto_correlated".format(label)]))
+                            # print("New Method",new_component_trace_dict[label]["{}_auto_correlated".format(label)],len(new_component_trace_dict[label]["{}_auto_correlated".format(label)]))
 
                         #Send data to the Q so that it can be plotted
                         rssi_avg = np.average(rssi)
@@ -495,11 +512,11 @@ class CollectionDaemonThread(threading.Thread):
 
 def write_data_to_h5_files(h5f,key,trace):
     # saveNumpyToFileWithoutAppend(h5f, key +'_x_data',trace[2] )
-    saveNumpyToFileWithoutAppend(h5f, key +'_axial_trimmed_filtered_correlated_trace',trace["trace_data"]["axial"]["axial_trimmed_filtered_correlated"] )
+    saveNumpyToFileWithoutAppend(h5f, key +'_axial_auto_correlated_trace',trace["trace_data"]["axial"]["axial_auto_correlated"] )
     # saveNumpyToFileWithoutAppend(h5f, key +'_y_data',trace[5] )
-    saveNumpyToFileWithoutAppend(h5f, key +'_tangential_trimmed_filtered_correlated_trace',trace["trace_data"]["tangential"]["tangential_trimmed_filtered_correlated"] )
+    saveNumpyToFileWithoutAppend(h5f, key +'_tangential_auto_correlated_trace',trace["trace_data"]["tangential"]["tangential_auto_correlated"] )
     # saveNumpyToFileWithoutAppend(h5f, key +'_z_data',trace[8] )
-    saveNumpyToFileWithoutAppend(h5f, key +'_radial_trimmed_filtered_correlated_trace',trace["trace_data"]["radial"]["radial_trimmed_filtered_correlated"] )
+    saveNumpyToFileWithoutAppend(h5f, key +'_radial_auto_correlated_trace',trace["trace_data"]["radial"]["radial_auto_correlated"] )
 
 
 def main_run(run=True):
@@ -564,7 +581,7 @@ def main_run(run=True):
 
 
     #TODO: set the plot length from configuration file
-    length = 120
+    length = config.getint("SYSTEM_HEALTH_PLOTS","x_axis_length_in_seconds")
     q_timeout_wait = 2
     rssi = [-65]*length
     temp = [30]*length
@@ -667,14 +684,14 @@ def main_run(run=True):
 
             trace_start = int(output_sampling_rate/10)-pre_cut
             trace_end = int(output_sampling_rate/10)+post_add
-            trimmed_data = trace["trace_data"][component_to_display]["{}_trimmed_filtered_correlated".format(component_to_display)][trace_start:trace_end]#TODO set the values for the trimmed trace from config file
+            trimmed_data = trace["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display)][trace_start:trace_end]#TODO set the values for the trimmed trace from config file
 
             traces_for_plot.append(trimmed_data[0::traces_subsample])
             if len(traces_for_plot) > number_of_traces_to_display:
                 traces_for_plot.pop(0)
             arr = np.asarray(traces_for_plot)
             arr = arr.transpose()
-            seismic_wiggle(trace_plot,arr,dt=(1.0/output_sampling_rate))
+            seismic_wiggle(trace_plot,arr,dt=(1.0/output_sampling_rate),normalize=True)
             plt.pause(0.05)
 
             fig1.canvas.draw()
