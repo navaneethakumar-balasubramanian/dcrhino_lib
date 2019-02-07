@@ -166,8 +166,9 @@ class QCLogPlotterv3():
 
 
         if self.global_config.radial_amp == 'True':
+            y_limits = hack_split_ylimits(self.global_config.peak_amplitude_radial_y_limit)
             ax2.plot(X,qc_plot_input.peak_ampl_z,color = 'lime')
-            ax2.set_ylim(self.global_config.peak_amplitude_radial_y_limit) 
+            ax2.set_ylim(y_limits)
             ax2.spines['right'].set_color('lime')
             ax2.spines['right'].set_linewidth(2)
             ax2.set_ylabel('Radial Amplitude').set_color('lime')
@@ -220,6 +221,7 @@ class QCLogPlotterv3():
 
         #<Get inputs and reshape where appropriate>
         trace_array_dict = qc_plot_input.trace_array_dict
+        pdb.set_trace()
         lower_num_ms = qc_plot_input.lower_number_ms
         upper_num_ms = qc_plot_input.upper_number_ms
 
@@ -434,7 +436,7 @@ class QCLogPlotterv3():
         mult_title2 = "tangential_window = {}/{}".format(mult_neg_win,mult_pos_win)
 
 #        mult_title = mult_title1 + '\n' + mult_title2 + '\n' + mult_title3 + '\n' + mult_title4
-        mult_title = mult_title1 + '\n' + mult_title2 
+        mult_title = mult_title1 + '\n' + mult_title2
 
 #        pdb.set_trace()
 
@@ -667,4 +669,3 @@ class QCLogPlotInput(object):
     @property
     def tangential_velocity_delay(self):
         return self.df['tangential_velocity_delay']
-
