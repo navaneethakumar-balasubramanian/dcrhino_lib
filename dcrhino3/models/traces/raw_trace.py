@@ -68,11 +68,11 @@ class RawTraceData(TraceData):
 
         output_df.index = output_df['timestamp']
         return output_df, global_config
-    
+
     def calibrate_l1h5(self,df,global_config):
         t0 = time.time()
-    
-        
+
+
         for line_idx in range(len(df)):
             #print(line_idx)
             row_of_df = df.iloc[line_idx]
@@ -84,8 +84,8 @@ class RawTraceData(TraceData):
         time_interval = time.time() - t0
         logger.info("Took %s seconds to calibrate %s traces" % (time_interval,len(df)))
         return df
-    
-    
+
+
     def resample_l1h5(self,df, global_config):
 
         """
@@ -139,7 +139,7 @@ class RawTraceData(TraceData):
         #Extrapolation capabilities>
         interp_data = np.interp(ideal_timestamps, raw_timestamps,component_array)
         #</numpy function>
-        print("interp",interp_data.shape,"component",component_array.shape)
+        # print("interp",interp_data.shape,"component",component_array.shape)
         return interp_data
 
     def calibrate_1d_component_array(self,component_array,global_config,sensitivity):
