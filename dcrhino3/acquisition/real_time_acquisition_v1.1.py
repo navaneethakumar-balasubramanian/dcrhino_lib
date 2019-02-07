@@ -533,9 +533,9 @@ class CollectionDaemonThread(threading.Thread):
 
 
                             #this is in preparation for new data stream with battery, rssi and temp
-                            rssi = np.asarray(self.bufferThisSecond[:,8],dtype=np.int32)
-                            temp = np.asarray(self.bufferThisSecond[:,9],dtype=np.int32)
-                            batt = np.asarray(self.bufferThisSecond[:,10],dtype=np.int32)
+                            rssi = np.asarray(self.bufferThisSecond[:,8],dtype=np.float32)
+                            temp = np.asarray(self.bufferThisSecond[:,9],dtype=np.float32)
+                            batt = np.asarray(self.bufferThisSecond[:,10],dtype=np.float32)
                             counterchanges = np.asarray(self.bufferThisSecond[:,11],dtype=np.int32)[-1]
                             # pdb.set_trace()
 
