@@ -37,7 +37,6 @@ import re
 from shutil import copyfile
 from dcrhino3.models.config import Config
 from dcrhino3.models.metadata import Metadata
-# from dcrhino3.acquisition.trace_processing import TraceProcessing
 from dcrhino3.models.traces.raw_trace import RawTraceData
 from dcrhino3.acquisition.external.seismic_wiggle import seismic_wiggle
 
@@ -63,6 +62,8 @@ rhino_port = "/dev/"+rhino_ttyusb
 rhino_serial_number = config.get("INSTALLATION","sensor_serial_number","S9999")
 rhino_version = config.get("COLLECTION","rhino_version")
 run_start_time = time.time()
+battery_max_voltage = config.getfloat("INSTALLATION","battery_max_voltage")
+battery_lower_limit = config.getfloat("INSTALLATION","battery_min_voltage")
 
 
 #run_folder_path = DATA_PATH + "run_" + str(int(run_start_time))+"/"
@@ -142,7 +143,7 @@ class FileFlusher(threading.Thread):
         self.previous_timestamp = 0
         self.current_timestamp  = 0
         self.sequence = 0
-        self.buffer = []
+        self.bufferQ = Queue.Queue()
         self.elapsed_tx_sequences = 0
         self.elapsed_tx_clock_cycles = 0
         self.counter_changes = 0
@@ -201,7 +202,7 @@ class FileFlusher(threading.Thread):
         #TODO: Create a class of row that will be appended to the buffer
         # row = ('' , str(self.current_timestamp),int(self.current_timestamp) , timestamp ,packet.tx_sequence,packet.tx_clock_ticks,packet.x,packet.y,packet.z,self.sequence, packet.rx_sequence,0,0,timestamp,packet.rssi,packet.temp,packet.batt,self.counter_changes,self.rhino_serial_number)
         row = (self.current_timestamp,laptop_ts,packet.tx_clock_ticks,packet.x,packet.y,packet.z,self.sequence,packet.rx_sequence,packet.rssi,packet.temp,packet.batt,self.counter_changes,self.rhino_serial_number)
-        self.buffer.append(row)
+        self.bufferQ.put(row)
 
     def stop(self):
         self.stope.set()
@@ -335,9 +336,9 @@ class SerialThread(threading.Thread):
                 pass
 
 class CollectionDaemonThread(threading.Thread):
-    def __init__(self, buffer,tracesQ,logQ,displayQ):
+    def __init__(self, bufferQ,tracesQ,logQ,displayQ):
         threading.Thread.__init__(self)
-        self.buffer = buffer
+        self.bufferQ = bufferQ
         self.bufferThisSecond = []
         self.lastSecond = None
         self.tracesQ = tracesQ
@@ -347,169 +348,172 @@ class CollectionDaemonThread(threading.Thread):
 
     def run (self):
         lastFileName = None
-        while True:
-            if len(self.buffer) != 0:
-                #print (len(self.buffer))
-                # row = (0 =self.current_timestamp,
-                # 1=laptop_ts,
-                # 2=packet.tx_clock_ticks,
-                # 3=packet.x,
-                # 4=packet.y,
-                # 5=packet.z,
-                # 6=self.sequence,
-                # 7=packet.rx_sequence,
-                # 8=packet.rssi,
-                # 9=packet.temp,
-                # 10=packet.batt,
-                # 11=self.counter_changes,
-                # 12=self.rhino_serial_number)
-                #row = np.asarray(self.buffer.pop(0)[1:-1],dtype=np.float64)
-                row = np.asarray(self.buffer.pop(0)[0:-1],dtype=np.float64)
-                #print (int(row[1]))
-                #print(row)
-                if self.lastSecond != int(row[0]) :
-                    temp_lastSecond = self.lastSecond
-                    #print (self.lastSecond,row[1],len(self.bufferThisSecond))
-                    self.lastSecond = int(row[0])
+        try:
+            while True:
+                if not self.bufferQ.empty():
+                    #print (len(self.buffer))
+                    # row = (0 =self.current_timestamp,
+                    # 1=laptop_ts,
+                    # 2=packet.tx_clock_ticks,
+                    # 3=packet.x,
+                    # 4=packet.y,
+                    # 5=packet.z,
+                    # 6=self.sequence,
+                    # 7=packet.rx_sequence,
+                    # 8=packet.rssi,
+                    # 9=packet.temp,
+                    # 10=packet.batt,
+                    # 11=self.counter_changes,
+                    # 12=self.rhino_serial_number)
+                    row = np.asarray(self.bufferQ.get()[0:-1],dtype=np.float64)
 
-                    #dotheprocessing
-                    if len(self.bufferThisSecond) >= 1:
-                        self.bufferThisSecond = np.asarray(self.bufferThisSecond)
-                        utc_dt = datetime.utcfromtimestamp(temp_lastSecond)
+                    #print (int(row[1]))
+                    #print(row)
+                    if self.lastSecond != int(row[0]) :
+                        temp_lastSecond = self.lastSecond
+                        #print (self.lastSecond,row[1],len(self.bufferThisSecond))
+                        self.lastSecond = int(row[0])
 
-                        if lastFileName != utc_dt.hour:
-                            prefix = utc_dt.strftime('%Y%m%d')+"_RTR"
-                            delta = utc_dt - datetime(year=utc_dt.year,month=utc_dt.month,day=utc_dt.day)
-                            elapsed = str(int(delta.total_seconds()))
-                            leading_zeros = ""
-                            if len(elapsed) < 5:
-                                leading_zeros = "0" * (5-len(elapsed))
-                            filename = "{}{}{}_{}.h5".format(prefix,leading_zeros,elapsed,rhino_serial_number)
-                            filename = os.path.join(run_folder_path,filename)
-                            lastFileName = utc_dt.hour
-                            first = True
-                        h5f = h5py.File(filename, 'a')
+                        #dotheprocessing
+                        if len(self.bufferThisSecond) >= 1:
+                            self.bufferThisSecond = np.asarray(self.bufferThisSecond)
+                            utc_dt = datetime.utcfromtimestamp(temp_lastSecond)
 
-                        if first:
-                            first = False
-                            h5f,m = config_file_to_attrs(config,h5f)
-                            global_config = Config(Metadata(config))
-                            self.displayQ.put(m)
+                            if lastFileName != utc_dt.hour:
+                                prefix = utc_dt.strftime('%Y%m%d')+"_RTR"
+                                delta = utc_dt - datetime(year=utc_dt.year,month=utc_dt.month,day=utc_dt.day)
+                                elapsed = str(int(delta.total_seconds()))
+                                leading_zeros = ""
+                                if len(elapsed) < 5:
+                                    leading_zeros = "0" * (5-len(elapsed))
+                                filename = "{}{}{}_{}.h5".format(prefix,leading_zeros,elapsed,rhino_serial_number)
+                                filename = os.path.join(run_folder_path,filename)
+                                lastFileName = utc_dt.hour
+                                first = True
+                            h5f = h5py.File(filename, 'a')
+
+                            if first:
+                                first = False
+                                h5f,m = config_file_to_attrs(config,h5f)
+                                global_config = Config(Metadata(config))
+                                self.displayQ.put(m)
+                                self.logQ.put(m)
+                                sensitivity = np.array([config.getfloat('PLAYBACK', 'x_sensitivity'),config.getfloat('PLAYBACK', 'y_sensitivity'),config.getfloat('PLAYBACK', 'z_sensitivity')],dtype=np.float32)
+                                saveNumpyToFile(h5f,'sensitivity',sensitivity)
+                                axis = np.array([config.getfloat('INSTALLATION', 'sensor_axial_axis'),config.getfloat('INSTALLATION', 'sensor_tangential_axis')],dtype=np.float32)
+                                saveNumpyToFile(h5f,'axis',axis)
+
+
+
+                            # row = (0 =self.current_timestamp,
+                            # 1=laptop_ts,
+                            # 2=packet.tx_clock_ticks,
+                            # 3=packet.x,
+                            # 4=packet.y,
+                            # 5=packet.z,
+                            # 6=self.sequence,
+                            # 7=packet.rx_sequence,
+                            # 8=packet.rssi,
+                            # 9=packet.temp,
+                            # 10=packet.batt,
+                            # 11=self.counter_changes,
+                            # 12=self.rhino_serial_number)
+                            # pdb.set_trace()
+                            laptop_ts = np.asarray(self.bufferThisSecond[:,1],dtype=np.float64)
+                            ts = np.asarray(self.bufferThisSecond[:,0],dtype=np.float64)
+                            seq = np.asarray(self.bufferThisSecond[:,7],dtype=np.int32)
+                            cticks = np.asarray(self.bufferThisSecond[:,2],dtype=np.int32)
+                            x = np.asarray(self.bufferThisSecond[:,3],dtype=np.uint32)
+                            y = np.asarray(self.bufferThisSecond[:,4],dtype=np.uint32)
+                            z = np.asarray(self.bufferThisSecond[:,5],dtype=np.uint32)
+
+
+                            #this is in preparation for new data stream with battery, rssi and temp
+                            rssi = np.asarray(self.bufferThisSecond[:,8],dtype=np.int32)
+                            temp = np.asarray(self.bufferThisSecond[:,9],dtype=np.int32)
+                            batt = np.asarray(self.bufferThisSecond[:,10],dtype=np.int32)
+                            counterchanges = np.asarray(self.bufferThisSecond[:,11],dtype=np.int32)[-1]
+                            # pdb.set_trace()
+
+
+
+                            #Save to raw_data_file
+                            saveNumpyToFile(h5f,'laptop_ts',laptop_ts)
+                            saveNumpyToFile(h5f,'ts',ts)
+                            saveNumpyToFile(h5f,'cticks',cticks)
+                            saveNumpyToFile(h5f,'seq',seq)
+                            saveNumpyToFile(h5f,'x',x)
+                            saveNumpyToFile(h5f,'y',y)
+                            saveNumpyToFile(h5f,'z',z)
+
+                            #this is in preparation for new data stream with battery, rssi and temp
+                            saveNumpyToFile(h5f,'rssi',rssi)
+                            saveNumpyToFile(h5f,'temp',temp)
+                            saveNumpyToFile(h5f,'batt',batt)
+
+                            h5f.close()
+
+                            m = "Timestamp :{}, Samples: {})\n".format(int(row[1]),len(self.bufferThisSecond))
                             self.logQ.put(m)
-                            sensitivity = np.array([config.getfloat('PLAYBACK', 'x_sensitivity'),config.getfloat('PLAYBACK', 'y_sensitivity'),config.getfloat('PLAYBACK', 'z_sensitivity')],dtype=np.float32)
-                            saveNumpyToFile(h5f,'sensitivity',sensitivity)
-                            axis = np.array([config.getfloat('INSTALLATION', 'sensor_axial_axis'),config.getfloat('INSTALLATION', 'sensor_tangential_axis')],dtype=np.float32)
-                            saveNumpyToFile(h5f,'axis',axis)
+                            self.displayQ.put(m)
+
+                            #process the raw data the same way that it is being done in the processing Pipeline
+                            accelerometer_max_voltage = config.getfloat("PLAYBACK","accelerometer_max_voltage")
+                            is_ide_file=False
+                            raw_trace_data = RawTraceData()
+
+                            #old_component_trace_dict = {}
+                            new_component_trace_dict = {}
+                            axial_index = int(axis[0])-1
+                            tangential_index = int(axis[1])-1
+                            radial_index = 3-axial_index-tangential_index
+
+                            component_sensitivity = {"axial":sensitivity[axial_index],"tangential":sensitivity[tangential_index],"radial":sensitivity[radial_index]}
+                            component_labels = ["axial","tangential","radial"]
+                            channel_trace_raw_data = [x,y,z]
+
+                            component_trace_raw_data = {"axial":channel_trace_raw_data[axial_index],"tangential":channel_trace_raw_data[tangential_index],"radial":channel_trace_raw_data[radial_index]}
+                            secondless_timestamps = ts - int(ts[0])
+
+                            ideal_timestamps = 1./float(global_config.output_sampling_rate) * np.arange(0,int(global_config.output_sampling_rate)) + int(ts[0])
+                            #TODO: 0.4 needs to be read from global config
+                            number_of_samples = int(0.4 * global_config.output_sampling_rate)
 
 
+                            for label in component_labels:
+                                #<Old Method>
+                                #old_component_trace_dict[label] = trace_processor.process(component_trace_raw_data[label], secondless_timestamps, label, component_sensitivity[label], debug=True)
+                                #</Old Method>
+                                #<New Method>
+                                calibrated_data = raw_trace_data.calibrate_1d_component_array(component_trace_raw_data[label],global_config,global_config.sensor_sensitivity[label])
+                                interp_data = raw_trace_data.interpolate_1d_component_array(ts,calibrated_data,ideal_timestamps)
+                                acorr_data = raw_trace_data.autocorrelate_1d_component_array(interp_data,number_of_samples)
+                                new_component_trace_dict[label]= {"{}_interpolated".format(label):interp_data,
+                                                              "{}_auto_correlated".format(label):acorr_data}
+                                #</New Method>
+                                # print("Old Method",old_component_trace_dict[label]["{}_auto_correlated".format(label)],len(old_component_trace_dict[label]["{}_auto_correlated".format(label)]))
+                                # print("New Method",new_component_trace_dict[label]["{}_auto_correlated".format(label)],len(new_component_trace_dict[label]["{}_auto_correlated".format(label)]))
 
-                        # row = (0 =self.current_timestamp,
-                        # 1=laptop_ts,
-                        # 2=packet.tx_clock_ticks,
-                        # 3=packet.x,
-                        # 4=packet.y,
-                        # 5=packet.z,
-                        # 6=self.sequence,
-                        # 7=packet.rx_sequence,
-                        # 8=packet.rssi,
-                        # 9=packet.temp,
-                        # 10=packet.batt,
-                        # 11=self.counter_changes,
-                        # 12=self.rhino_serial_number)
-                        # pdb.set_trace()
-                        laptop_ts = np.asarray(self.bufferThisSecond[:,1],dtype=np.float64)
-                        ts = np.asarray(self.bufferThisSecond[:,0],dtype=np.float64)
-                        seq = np.asarray(self.bufferThisSecond[:,7],dtype=np.int32)
-                        cticks = np.asarray(self.bufferThisSecond[:,2],dtype=np.int32)
-                        x = np.asarray(self.bufferThisSecond[:,3],dtype=np.uint32)
-                        y = np.asarray(self.bufferThisSecond[:,4],dtype=np.uint32)
-                        z = np.asarray(self.bufferThisSecond[:,5],dtype=np.uint32)
+                            #Send data to the Q so that it can be plotted
+                            rssi_avg = np.average(rssi)
+                            temp_avg = np.average(temp)
+                            batt_avg = np.average(batt)
 
+                            # self.tracesQ.put([temp_lastSecond,
+                            # component_trace_raw_data[0],component_trace_dict[0]["axial_interpolated"],component_trace_dict[0]["axial_trimmed_filtered_correlated"],
+                            # component_trace_raw_data[1],component_trace_dict[1]["tangential_interpolated"],component_trace_dict[1]["tangential_trimmed_filtered_correlated"],
+                            # component_trace_raw_data[2],component_trace_dict[2]["radial_interpolated"],component_trace_dict[2]["radial_trimmed_filtered_correlated"],
+                            # rssi_avg,temp_avg,batt_avg,counterchanges])
+                            self.tracesQ.put({"second":temp_lastSecond,"raw_data":component_trace_raw_data,
+                                            "trace_data":new_component_trace_dict,"rssi":rssi_avg,"temp":temp_avg,"batt":batt_avg,"counter_changes":counterchanges})
 
-                        #this is in preparation for new data stream with battery, rssi and temp
-                        rssi = np.asarray(self.bufferThisSecond[:,8],dtype=np.int32)
-                        temp = np.asarray(self.bufferThisSecond[:,9],dtype=np.int32)
-                        batt = np.asarray(self.bufferThisSecond[:,10],dtype=np.int32)
-                        counterchanges = np.asarray(self.bufferThisSecond[:,11],dtype=np.int32)[-1]
-                        # pdb.set_trace()
+                        self.bufferThisSecond = list()
 
-
-
-                        #Save to raw_data_file
-                        saveNumpyToFile(h5f,'laptop_ts',laptop_ts)
-                        saveNumpyToFile(h5f,'ts',ts)
-                        saveNumpyToFile(h5f,'cticks',cticks)
-                        saveNumpyToFile(h5f,'seq',seq)
-                        saveNumpyToFile(h5f,'x',x)
-                        saveNumpyToFile(h5f,'y',y)
-                        saveNumpyToFile(h5f,'z',z)
-
-                        #this is in preparation for new data stream with battery, rssi and temp
-                        saveNumpyToFile(h5f,'rssi',rssi)
-                        saveNumpyToFile(h5f,'temp',temp)
-                        saveNumpyToFile(h5f,'batt',batt)
-
-                        h5f.close()
-
-                        m = "Timestamp :{}, Samples: {})\n".format(int(row[1]),len(self.bufferThisSecond))
-                        self.logQ.put(m)
-                        self.displayQ.put(m)
-
-                        #process the raw data the same way that it is being done in the processing Pipeline
-                        accelerometer_max_voltage = config.getfloat("PLAYBACK","accelerometer_max_voltage")
-                        is_ide_file=False
-                        #trace_processor = TraceProcessing(global_config, is_ide_file,accelerometer_max_voltage,rhino_version)
-                        raw_trace_data = RawTraceData()
-
-                        old_component_trace_dict = {}
-                        new_component_trace_dict = {}
-                        axial_index = int(axis[0])-1
-                        tangential_index = int(axis[1])-1
-                        radial_index = 3-axial_index-tangential_index
-
-                        component_sensitivity = {"axial":sensitivity[axial_index],"tangential":sensitivity[tangential_index],"radial":sensitivity[radial_index]}
-                        component_labels = ["axial","tangential","radial"]
-                        channel_trace_raw_data = [x,y,z]
-
-                        component_trace_raw_data = {"axial":channel_trace_raw_data[axial_index],"tangential":channel_trace_raw_data[tangential_index],"radial":channel_trace_raw_data[radial_index]}
-                        secondless_timestamps = ts - int(ts[0])
-
-                        ideal_timestamps = 1./float(global_config.output_sampling_rate) * np.arange(0,int(global_config.output_sampling_rate)) + int(ts[0])
-                        #TODO: 0.4 needs to be read from global config
-                        number_of_samples = int(0.4 * global_config.output_sampling_rate)
-
-
-                        for label in component_labels:
-                            #<Old Method>
-                            #old_component_trace_dict[label] = trace_processor.process(component_trace_raw_data[label], secondless_timestamps, label, component_sensitivity[label], debug=True)
-                            #</Old Method>
-                            #<New Method>
-                            calibrated_data = raw_trace_data.calibrate_1d_component_array(component_trace_raw_data[label],global_config,global_config.sensor_sensitivity[label])
-                            interp_data = raw_trace_data.interpolate_1d_component_array(ts,calibrated_data,ideal_timestamps)
-                            acorr_data = raw_trace_data.autocorrelate_1d_component_array(interp_data,number_of_samples)
-                            new_component_trace_dict[label]= {"{}_interpolated".format(label):interp_data,
-                                                          "{}_auto_correlated".format(label):acorr_data}
-                            #</New Method>
-                            # print("Old Method",old_component_trace_dict[label]["{}_auto_correlated".format(label)],len(old_component_trace_dict[label]["{}_auto_correlated".format(label)]))
-                            # print("New Method",new_component_trace_dict[label]["{}_auto_correlated".format(label)],len(new_component_trace_dict[label]["{}_auto_correlated".format(label)]))
-
-                        #Send data to the Q so that it can be plotted
-                        rssi_avg = np.average(rssi)
-                        temp_avg = np.average(temp)
-                        batt_avg = np.average(batt)
-
-                        # self.tracesQ.put([temp_lastSecond,
-                        # component_trace_raw_data[0],component_trace_dict[0]["axial_interpolated"],component_trace_dict[0]["axial_trimmed_filtered_correlated"],
-                        # component_trace_raw_data[1],component_trace_dict[1]["tangential_interpolated"],component_trace_dict[1]["tangential_trimmed_filtered_correlated"],
-                        # component_trace_raw_data[2],component_trace_dict[2]["radial_interpolated"],component_trace_dict[2]["radial_trimmed_filtered_correlated"],
-                        # rssi_avg,temp_avg,batt_avg,counterchanges])
-                        self.tracesQ.put({"second":temp_lastSecond,"raw_data":component_trace_raw_data,
-                                        "trace_data":new_component_trace_dict,"rssi":rssi_avg,"temp":temp_avg,"batt":batt_avg,"counter_changes":counterchanges})
-
-                    self.bufferThisSecond = list()
-
-                self.bufferThisSecond.append(row)
-
+                    self.bufferThisSecond.append(row)
+                else:
+                    time.sleep(0.025)
+        except:
+            print("Collection Daemon Exception:", sys.exc_info())
 
 def write_data_to_h5_files(h5f,key,trace):
     # saveNumpyToFileWithoutAppend(h5f, key +'_x_data',trace[2] )
@@ -533,7 +537,7 @@ def main_run(run=True):
     comport = SerialThread(rhino_port,rhino_baudrate,rhino_pktlen,flushQ,logQ,displayQ)#comport = SerialThread(rhino_port,rhino_baudrate,rhino_pktlen,flushQ,secsQ,logQ,displayQ)
     display = GUI(displayQ,system_healthQ)
     fflush = FileFlusher(flushQ,logQ,displayQ)#fflush = FileFlusher(flushQ,secsQ,logQ,displayQ)
-    collection_daemon = CollectionDaemonThread(fflush.buffer,traces,logQ,displayQ)
+    collection_daemon = CollectionDaemonThread(fflush.bufferQ,traces,logQ,displayQ)
 
     m = plt.get_backend()+"\n"
     logQ.put(m)
@@ -600,8 +604,6 @@ def main_run(run=True):
     sensor_radial_axis = 3 - sensor_axial_axis - sensor_tangential_axis
     channel_mapping = {"axial":sensor_axial_axis,"tangential":sensor_tangential_axis,"radial":sensor_radial_axis}
     component_to_display = config.get("RUNTIME","component_to_display")
-    battery_max_voltage = config.getfloat("INSTALLATION","battery_max_voltage")
-    battery_lower_limit = config.getfloat("SYSTEM_HEALTH_PLOTS","battery_lower_limit")
     pre_cut=config.getint("SYSTEM_HEALTH_PLOTS","trace_plot_pre_cut")
     post_add=config.getint("SYSTEM_HEALTH_PLOTS","trace_plot_post_add")
     output_sampling_rate=config.getfloat("COLLECTION","output_sampling_rate")
@@ -733,7 +735,8 @@ def main_run(run=True):
             displayQ.put(m)
 
 def calculate_battery_percentage(current_voltage,battery_max_voltage,battery_lower_limit):
-    return (battery_max_voltage - current_voltage)/(battery_max_voltage - battery_lower_limit)*100
+    value = 100 - (battery_max_voltage - current_voltage)/(battery_max_voltage - battery_lower_limit)*100
+    return value
 
 
 
