@@ -758,7 +758,7 @@ def main_run(run=True):
             row += 1
 
             trace_plot = plt.subplot2grid((rows, columns), (row, column), colspan=3,rowspan=1)
-            trace_plot.set_title("Channel {} - ".format(channels[channel_mapping[second_plot_display]]) + "{} Component Trace".format(second_plot_display.upper()))
+            trace_plot.set_title("Channel {} - ".format(channels[channel_mapping[component_to_display]]) + "{} Component Trace".format(component_to_display.upper()))
 
 
             sec_delay = round(now - trace_second,2)
