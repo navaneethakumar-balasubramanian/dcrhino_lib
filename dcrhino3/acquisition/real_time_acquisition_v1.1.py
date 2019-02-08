@@ -704,6 +704,7 @@ def main_run(run=True):
     last_tracetime = time.time()
     counterchanges = 0
     channels = ["X","Y","Z"]
+    components = ["axial","tangential","radial"]
     sensor_axial_axis = config.getint("INSTALLATION","sensor_axial_axis")-1
     sensor_tangential_axis = config.getint("INSTALLATION","sensor_tangential_axis")-1
     sensor_radial_axis = 3 - sensor_axial_axis - sensor_tangential_axis
@@ -714,6 +715,7 @@ def main_run(run=True):
     output_sampling_rate=config.getfloat("COLLECTION","output_sampling_rate")
     traces_subsample = config.getint("SYSTEM_HEALTH_PLOTS","traces_subsample")
     number_of_traces_to_display=config.getint("SYSTEM_HEALTH_PLOTS","number_of_traces_to_display")
+    second_plot_display=config.get("RUNTIME","second_plot_display")
 
     fig1 = plt.figure("DataCloud Rhino Real Time Data",figsize=(6,4))
     plt.subplots_adjust(hspace=0.5)
@@ -762,8 +764,13 @@ def main_run(run=True):
             plt.suptitle("Channel {} - ".format(channels[channel_mapping[component_to_display]]) + tracetime.strftime('%H:%M:%S' ) + " plotted at " + datetime.utcfromtimestamp(now).strftime('%H:%M:%S') +  " delay of " + str(sec_delay) )
 
 
-            signal_plot.plot(trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)],'k')#2 for X, 5 for Y and 8 for Z
-            trace_plot.plot(trace["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display)],'b')#3 for X, 6 for Y and 9 for Z
+            signal_plot.plot(trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)],'k')
+
+
+            if second_plot_display in components:
+                trace_plot.plot(trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)],'b')
+            else:
+                trace_plot.plot(trace["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display)],'b')
 
             rssi.pop(0)
             temp.pop(0)
