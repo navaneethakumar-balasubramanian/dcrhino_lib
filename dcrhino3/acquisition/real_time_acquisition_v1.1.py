@@ -20,6 +20,7 @@ import pdb
 import time
 import numpy as np
 from math import ceil
+from matplotlib.ticker import FormatStrFormatter
 import matplotlib.pyplot as plt
 if plt.get_backend() == "Qt4Agg":
     pass
