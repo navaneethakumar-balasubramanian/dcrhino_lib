@@ -718,7 +718,7 @@ def main_run(run=True):
     second_plot_display=config.get("RUNTIME","second_plot_display")
 
     fig1 = plt.figure("DataCloud Rhino Real Time Data",figsize=(6,4))
-    plt.subplots_adjust(hspace=0.5)
+    plt.subplots_adjust(hspace=0.8)
     plt.pause(.05)
     fig1.canvas.draw()
     #win = plt.gcf().canvas.manager.window
