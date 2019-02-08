@@ -864,7 +864,7 @@ def main_run(run=True):
             displayQ.put(m)
 
 def calculate_battery_percentage(current_voltage,battery_max_voltage,battery_lower_limit):
-    battery_plot_display_percentage = =config.getbool("SYSTEM_HEALTH_PLOTS","battery_plot_display_percentage")
+    battery_plot_display_percentage = config.getbool("SYSTEM_HEALTH_PLOTS","battery_plot_display_percentage")
     if battery_plot_display_percentage:
         value = 100 - (battery_max_voltage - current_voltage)/(battery_max_voltage - battery_lower_limit)*100
     else:
