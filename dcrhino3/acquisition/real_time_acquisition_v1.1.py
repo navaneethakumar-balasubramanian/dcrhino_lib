@@ -185,7 +185,7 @@ class Packet(object):
             self.batt = self.calc_batt(lst[5])
             self.sleep_time = lst[6]
             self.rssi=self.calc_rssi_value(lst[7])
-            print ("Info Packet: {} temp {} batt {} rsss".format(self.temp,self.batt,self.rssi))
+            # print ("Info Packet: {} temp {} batt {} rsss".format(self.temp,self.batt,self.rssi))
             # self.curts = time.time()
             # Need to convert these values - temp and vbat
             # ln = 'info,'+str(self.curts)+','+str(rseq)+','+str(temp)+','+str(vbat)+','+str(calc_rssi_value(rssi))+','+str(self.seq)+'\n'
@@ -599,10 +599,10 @@ class CollectionDaemonThread(threading.Thread):
                                 # print("New Method",new_component_trace_dict[label]["{}_auto_correlated".format(label)],len(new_component_trace_dict[label]["{}_auto_correlated".format(label)]))
 
                             #Send data to the Q so that it can be plotted
-                            rssi_avg = np.average(rssi)
+                            rssi_avg = np.average(rssi) #Only need the average of RSSI because it's the only value that gets reported on every packet
                             temp_avg = temp[-1]
                             batt_avg = batt[-1]
-                            print("reported temp {} reported batt {}".format(temp_avg,batt_avg))
+                            #print("reported temp {} reported batt {}".format(temp_avg,batt_avg))
 
                             # self.tracesQ.put([temp_lastSecond,
                             # component_trace_raw_data[0],component_trace_dict[0]["axial_interpolated"],component_trace_dict[0]["axial_trimmed_filtered_correlated"],
@@ -693,10 +693,10 @@ def main_run(run=True):
     #TODO: set the plot length from configuration file
     length = config.getint("SYSTEM_HEALTH_PLOTS","x_axis_length_in_seconds")
     q_timeout_wait = 2
-    rssi = [-65]*length
-    temp = [30]*length
-    batt = [100] *length
-    packets = [2800]*length
+    rssi = [-100]*length
+    temp = [999]*length
+    batt = [0] *length
+    packets = [config.getfloat("COLLECTION","output_sampling_rate")]*length
     delay = [0]*length
     trace_time_array = [0]*length
     now_array = [0]*length
@@ -849,7 +849,7 @@ def main_run(run=True):
             displayQ.put(m)
 
 def calculate_battery_percentage(current_voltage,battery_max_voltage,battery_lower_limit):
-    return current_voltage #This is only for troubleshooting 
+    return current_voltage #This is only for troubleshooting
     # value = 100 - (battery_max_voltage - current_voltage)/(battery_max_voltage - battery_lower_limit)*100
     # return value
 

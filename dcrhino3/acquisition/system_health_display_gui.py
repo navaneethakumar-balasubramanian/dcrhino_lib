@@ -80,7 +80,8 @@ class GUI():
         self.tx_status_label = Label(self.master, textvariable=self.tx_status)
         self.tx_status_label.grid(row=row,column=7,sticky="news")
         row+=1
-        Label(self.master, text="Battery Percentage").grid(row=row,column=7)
+        #Label(self.master, text="Battery Percentage").grid(row=row,column=7)
+        Label(self.master, text="Battery Voltage").grid(row=row,column=7)
         row+=1
         self.battery_life = StringVar(self.master)
         self.battery_label = Label(self.master, textvariable=self.battery_life)
@@ -158,7 +159,8 @@ class GUI():
 
                 battery = round(health[4][-1],2)
                 #battery = 20
-                self.battery_life.set("{} %".format(battery))
+                #self.battery_life.set("{} %".format(battery))
+                self.battery_life.set("{} V".format(battery))
                 bgcolor,fgcolor = self.colors("battery",battery)
                 self.battery_label.config(bg=bgcolor,fg=fgcolor)
 
