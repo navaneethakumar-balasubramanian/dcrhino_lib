@@ -81,7 +81,7 @@ class GUI():
         self.tx_status_label.grid(row=row,column=7,sticky="news")
         row+=1
 
-        battery_plot_display_percentage = config.getboolean("SYSTEM_HEALTH_PLOTS","battery_plot_display_percentage")
+        self.battery_plot_display_percentage = config.getboolean("SYSTEM_HEALTH_PLOTS","battery_plot_display_percentage")
         if battery_plot_display_percentage:
             Label(self.master, text="Battery Percentage").grid(row=row,column=7)
         else:
@@ -163,7 +163,7 @@ class GUI():
 
                 battery = round(health[4][-1],2)
                 #battery = 20
-                if battery_plot_display_percentage:
+                if self.battery_plot_display_percentage:
                     self.battery_life.set("{} %".format(battery))
                 else:
                     self.battery_life.set("{} V".format(battery))
