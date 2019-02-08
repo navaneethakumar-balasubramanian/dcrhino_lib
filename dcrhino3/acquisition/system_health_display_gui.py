@@ -82,7 +82,7 @@ class GUI():
         row+=1
 
         self.battery_plot_display_percentage = config.getboolean("SYSTEM_HEALTH_PLOTS","battery_plot_display_percentage")
-        if battery_plot_display_percentage:
+        if self.battery_plot_display_percentage:
             Label(self.master, text="Battery Percentage").grid(row=row,column=7)
         else:
             Label(self.master, text="Battery Voltage").grid(row=row,column=7)
