@@ -755,6 +755,7 @@ def main_run(run=True):
             signal_plot.set_title("Channel {} - ".format(channels[channel_mapping[component_to_display]]) + "{} Component Raw".format(component_to_display.upper()))
             signal_plot.set_ylabel("g")
             signal_plot.set_xlabel("samples")
+            signal_plot.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
             row += 1
 
             trace_plot = plt.subplot2grid((rows, columns), (row, column), colspan=3,rowspan=1)
