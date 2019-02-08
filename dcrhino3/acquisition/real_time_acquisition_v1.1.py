@@ -775,7 +775,7 @@ def main_run(run=True):
                 trace_plot.set_ylabel("g")
                 trace_plot.set_xlabel("samples")
                 trace_plot.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
-                trace_plot.plot(trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)],'b')
+                trace_plot.plot(trace["trace_data"][second_plot_display]["{}_interpolated".format(second_plot_display)],'b')
             else:
                 trace_plot.plot(trace["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display)],'b')
                 trace_plot.get_xaxis().set_visible(False)
