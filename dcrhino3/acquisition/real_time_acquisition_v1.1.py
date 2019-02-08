@@ -752,25 +752,30 @@ def main_run(run=True):
             column = 0
 
             signal_plot = plt.subplot2grid((rows, columns), (row, column), colspan=3,rowspan=1)
-            signal_plot.set_title("Axial Component")
+            signal_plot.set_title("Channel {} - ".format(channels[channel_mapping[component_to_display]]) + "{} Component Raw".format(component_to_display.upper()))
             signal_plot.set_ylabel("g")
             signal_plot.set_xlabel("samples")
             row += 1
 
             trace_plot = plt.subplot2grid((rows, columns), (row, column), colspan=3,rowspan=1)
-            #trace_plot.get_xaxis().set_visible(False)
+            trace_plot.set_title("Channel {} - ".format(channels[channel_mapping[second_plot_display]]) + "{} Component Trace".format(second_plot_display.upper()))
+
 
             sec_delay = round(now - trace_second,2)
-            plt.suptitle("Channel {} - ".format(channels[channel_mapping[component_to_display]]) + tracetime.strftime('%H:%M:%S' ) + " plotted at " + datetime.utcfromtimestamp(now).strftime('%H:%M:%S') +  " delay of " + str(sec_delay) )
+            plt.suptitle( "Trace Time "+ tracetime.strftime('%H:%M:%S' ) + " plotted at " + datetime.utcfromtimestamp(now).strftime('%H:%M:%S') +  " delay of " + str(sec_delay) )
 
 
             signal_plot.plot(trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)],'k')
 
 
             if second_plot_display in components:
+                trace_plot.set_title("Channel {} - ".format(channels[channel_mapping[second_plot_display]]) + "{} Component Raw".format(second_plot_display.upper()))
+                trace_plot.set_ylabel("g")
+                trace_plot.set_xlabel("samples")
                 trace_plot.plot(trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)],'b')
             else:
                 trace_plot.plot(trace["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display)],'b')
+                trace_plot.get_xaxis().set_visible(False)
 
             rssi.pop(0)
             temp.pop(0)
