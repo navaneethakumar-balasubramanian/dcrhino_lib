@@ -25,6 +25,8 @@ class SymmetricTrace(object):
         self.data = data#kwargs.get('data', None)
         self.sampling_rate = sampling_rate#kwargs.get('sampling_rate', None)
         self.component_id = kwargs.get('component_id', None)
+        self.timestamp = kwargs.get('timestamp', None)
+        #self.global_config = kwargs.get('global_config', None)
         if (self.data is not None) & (self.sampling_rate is not None):
             self.calculate_time_vector()
         else:
@@ -54,13 +56,38 @@ class SymmetricTrace(object):
         self.time_vector = time_vector
         return
 
+    @property
+    def center_index(self):
+        return (len(self.data)-1) // 2
+
+    def trim_to_num_points_lr(self, n_points):
+        """
+        """
+        self.data = self.data[self.center_index-n_points:self.center_index+n_points + 1]
+        self.calculate_time_vector()
+
+    def trim_to_indices(self, indices):
+        """
+        """
+        self.data = self.data[indices]
+        self._time_vector = self._time_vector[indices]
+
+
+    def plot(self):
+        plt.plot(self.time_vector, self.data, 'bs');
+        plt.title('{} component'.format(self.component_id))
+        plt.xlabel('Time (s)')
+        plt.show()
+#        pdb.set_trace()
+#        pass
+        #self.data =
+
 
 def my_function():
     """
     """
     x = np.arange(11)
     st = SymmetricTrace(data=x, sampling_rate=10.0)
-    st._get_time_vector()
     pdb.set_trace()
     pass
 
