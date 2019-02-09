@@ -53,14 +53,15 @@ def check_condition_that_makes_me_nervous(data):
         print(implication)
         pdb.set_trace()
 
-def identify_primary_neighbourhood(symmetric_trace, global_config):
+def identify_primary_neighbourhood(symmetric_trace_in, global_config):
     """
     This can be done with zero-crossings ... or with max-min ...
     1. Trim to expected multiple time, left and right of input trace
     This means the trace is now small (for math operations)
     """
+    symmetric_trace = symmetric_trace_in._clone()
     qq = get_expected_multiple_times(global_config)
-    n_steps_keep = int(qq[component_id] / symmetric_trace.dt)
+    #n_steps_keep = int(qq[symmetric_trace.component_id] / symmetric_trace.dt)
     n_steps_keep = int(qq['axial'] / symmetric_trace.dt)
     #mrs_trace.plot()
     symmetric_trace.trim_to_num_points_lr(n_steps_keep)
@@ -88,7 +89,7 @@ data_dir = '/home/kkappler/tmp/dcrhino_lib/bin'
 flow = 'v2_processing_flow'
 flow = 'v2_processing_flow_with_interpolation_j1a'
 component_id = 'axial';
-#component_id = 'tangential'
+component_id = 'tangential'
 
 data_dir = os.path.join(data_dir, flow)#'/home/kkappler/tmp/dcrhino_lib/bin'
 full_h5_file = os.path.join(data_dir,'4_trim.h5'); sampling_rate=5000.0
@@ -103,10 +104,10 @@ check_condition_that_makes_me_nervous(trace_data)
 mrs_trace = SymmetricTrace(trace_data, sampling_rate, component_id=component_id)
 global_config = traces_data.global_config_by_index(row_of_df['acorr_file_id'])
 pdb.set_trace()
-mrs_trace = identify_primary_neighbourhood(mrs_trace, global_config)
-
+mini_trace = identify_primary_neighbourhood(mrs_trace, global_config)
+mini_trace.plot()
 pdb.set_trace()
-#plt.plot(trace);plt.show()
+#plt.plot(mini);plt.show()
 band_pass_left = 100.0
 band_pass_right = 300.0
 

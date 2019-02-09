@@ -7,7 +7,7 @@ Created on Mon Feb  4 21:28:04 2019
 
 from __future__ import absolute_import, division, print_function
 
-
+import copy
 import datetime
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,6 +31,14 @@ class SymmetricTrace(object):
             self.calculate_time_vector()
         else:
             self._time_vector = None
+
+    def _clone(self, **kwargs):
+        """
+        create a new instance of same type.
+
+        """
+        duplicate_symmetric_trace = copy.deepcopy(self)
+        return duplicate_symmetric_trace
 
     @property
     def dt(self):
