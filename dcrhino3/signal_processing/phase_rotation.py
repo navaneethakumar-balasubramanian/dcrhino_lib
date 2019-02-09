@@ -35,12 +35,13 @@ def rotate_phase(data, phase_shift, degrees=True):
     return phase_shifted_data_time
 
 
-def determine_phase_state(data, trough_search_width=10):
+def determine_phase_state(data, trough_search_width):
     """
     trough-search-width: this is how far to the left and right of the peak we will
     look for a minumum.  It MUST be large enough for the minimum to be contained,
     but not so large that we may find another minumum ... show up
     """
+    print('trough_search_width {}'.format(trough_search_width))
     max_index = np.argmax(data)
     left_trough_region = data[max_index-trough_search_width:max_index]
     right_trough_region = data[max_index:max_index+trough_search_width]
