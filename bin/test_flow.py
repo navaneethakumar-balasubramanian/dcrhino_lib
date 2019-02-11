@@ -20,7 +20,7 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 
 logger = init_logging(__name__)
 
-def process_file(process_flow,acorr_h5_file_path):
+def process_file(process_json,acorr_h5_file_path,env_config):
     #process_flow_path = "/home/thiago/Documents/Projects/Dc_rhino/v3/bin/process_flows/example_simple_flow.json"
     #holes_selection_path = "/home/thiago/Documents/Projects/Dc_rhino/v3/bin/process_flows/holes_selection/example_hole_selection.json"
     #acorr_h5_file_path = "/home/thiago/milligan_cache/interpolated/32555_2235_2235.h5"
@@ -30,9 +30,13 @@ def process_file(process_flow,acorr_h5_file_path):
     
     #hole_selector = HoleSelector(hole_selection_json)
     
+    
+    
     acorr_trace = TraceData()
     acorr_trace.load_from_h5(acorr_h5_file_path)
     
+    output_folder = env_config.get_hole_h5_processed_cache_folder(acorr_trace.mine_name)
+    process_flow = ProcessFlow(process_json,output_folder)
     acorr_trace = process_flow.process(acorr_trace)
 
 
@@ -50,7 +54,7 @@ if __name__ == '__main__':
     with open(process_flow_path) as f:
         process_json = json.load(f)
         
-    process_flow = ProcessFlow(process_json)
+    
     files = glob2.glob(args.h5_path)
     
     if not files:
@@ -59,7 +63,7 @@ if __name__ == '__main__':
         if '.h5' in os.path.splitext(file)[1]:
             logger.info("PROCESSING FILE:" + str( file))
             if env_config.is_file_blacklisted(file) is False:
-                process_file(process_flow,file)
+                process_file(process_json,file,env_config)
 
 
 
