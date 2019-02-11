@@ -34,8 +34,11 @@ def process_file(process_json,acorr_h5_file_path,env_config):
     
     acorr_trace = TraceData()
     acorr_trace.load_from_h5(acorr_h5_file_path)
+    filename = os.path.basename(acorr_h5_file_path)
+    filename_without_ext = filename.replace(".h5","")
     
     output_folder = env_config.get_hole_h5_processed_cache_folder(acorr_trace.mine_name)
+    output_folder = os.path.join(output_folder,filename_without_ext)
     process_flow = ProcessFlow(process_json,output_folder)
     acorr_trace = process_flow.process(acorr_trace)
 
