@@ -1,5 +1,6 @@
 {
     "id":"v2_processing_flow_with_interpolation_j1a",
+    "output_to_file":true,
 	"trace_processing":{
 		"modules":[
                                 {
@@ -58,6 +59,7 @@
 		]
 	},
   "features_extraction": {
+    "output_to_file":true,
     "modules": [
       {
         "type": "j0",
