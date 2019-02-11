@@ -18,6 +18,7 @@ from dcrhino3.process_flow.modules.trace_processing.unfold_autocorrelation impor
 from dcrhino3.process_flow.modules.trace_processing.upsample import UpsampleModule
 from dcrhino3.process_flow.modules.trace_processing.upsample_sinc import UpsampleSincModule
 
+
 from dcrhino3.process_flow.modules.features_extraction.j1 import J1FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.j0 import J0FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.b0 import B0FeaturesModule
@@ -27,7 +28,8 @@ from dcrhino3.process_flow.modules.plotters.qc_plotter_module import QCPlotterMo
 logger = init_logging(__name__)
 
 class ProcessFlow:
-    def __init__(self,process_json,output_path=""):
+    def __init__(self,process_json,output_path="",rhino_db_helper=None):
+        self.rhino_db_helper = rhino_db_helper
         self.id = "process_flow"
 
         self.trace_processing_modules = {
@@ -59,11 +61,19 @@ class ProcessFlow:
                                         }
 
         self.output_path = output_path
+        
+        self.output_to_file = False
+        self.output_to_db = False
+
 
         self.parse_json(process_json)
 
     def parse_json(self,process_json):
         self.id = process_json['id']
+        if 'output_to_file' in process_json.keys():
+            self.output_to_file = process_json['output_to_file']
+        if 'output_to_db' in process_json.keys():
+            self.output_to_db = process_json['output_to_db']
 
         process_flow_output_path = os.path.join(self.output_path,self.id)
         process_counter = 0
@@ -137,6 +147,12 @@ class ProcessFlow:
             delta_t = time.time() - t0
             logger.info("{} ran in {}s ".format(module.id, delta_t))
 
+        if self.output_to_file:
+            output_trace.save_to_h5(os.path.join(process_flow_output_path,"processed.h5"))
+            
+        #if self.output_to_db:
+        #    output_trace.save_to_db(self.rhino_db_helper,self.id)
+            
         return output_trace
 
 
