@@ -12,6 +12,8 @@ import os
 import glob2
 import json
 
+from multiprocessing import Pool
+
 from dcrhino3.process_flow.process_flow import ProcessFlow
 #from dcrhino3.process_flow.hole_selector import HoleSelector
 from dcrhino3.models.trace_dataframe import TraceData
@@ -59,14 +61,16 @@ if __name__ == '__main__':
         
     
     files = glob2.glob(args.h5_path)
-    
+    pool = Pool()
+
     if not files:
         print  'File does not exist: ' + args.h5_path
     for file in files:
         if '.h5' in os.path.splitext(file)[1]:
             logger.info("PROCESSING FILE:" + str( file))
             if env_config.is_file_blacklisted(file) is False:
-                process_file(process_json,file,env_config)
+                pool.apply_async(process_file, [process_json,file,env_config])
+                #process_file(process_json,file,env_config)
 
 
 
