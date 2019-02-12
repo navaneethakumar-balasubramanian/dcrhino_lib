@@ -146,8 +146,8 @@ class RawTraceData(TraceData):
         t0 = time.time()
         output = component_array
         is_ide_file = not int(global_config.sensor_type) == 2
-
-        if is_ide_file:
+        
+        if is_ide_file or global_config.rhino_version == None:
             return output / sensitivity
         else:
             if float(global_config.rhino_version) == 1.0:
