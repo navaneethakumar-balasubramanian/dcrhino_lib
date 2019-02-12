@@ -146,8 +146,8 @@ class RawTraceData(TraceData):
         t0 = time.time()
         output = component_array
         is_ide_file = not int(global_config.sensor_type) == 2
-
-        if is_ide_file:
+        
+        if is_ide_file or global_config.rhino_version == None:
             return output / sensitivity
         else:
             if float(global_config.rhino_version) == 1.0:
@@ -204,7 +204,7 @@ class RawTraceData(TraceData):
                 #pdb.set_trace()
 
                 input_trace = df[component_id].iloc[i_trace]
-                acorr_trace = autocorrelate_1d_component_array(input_trace, samples_per_trace)
+                acorr_trace = self.autocorrelate_1d_component_array(input_trace, samples_per_trace)
 
                 output_dict[component_id][i_trace, :] = acorr_trace#[0:samples_per_trace]
             output_dict[component_id] = list(output_dict[component_id])

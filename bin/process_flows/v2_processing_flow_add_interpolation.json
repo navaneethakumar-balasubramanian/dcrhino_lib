@@ -1,5 +1,6 @@
 {
     "id":"v2_processing_flow_with_interpolation_j1a",
+    "output_to_file":true,
 	"trace_processing":{
 		"modules":[
                                 {
@@ -15,6 +16,10 @@
         "args": {
           "num_taps_in_decon_filter": "|global_config.num_taps_in_decon_filter|"
         }
+      },
+      {
+        "type": "export_segy",
+        "args": {}
       },
         {
         "type": "band_pass_filter",
@@ -58,6 +63,7 @@
 		]
 	},
   "features_extraction": {
+    "output_to_file":true,
     "modules": [
       {
         "type": "j0",

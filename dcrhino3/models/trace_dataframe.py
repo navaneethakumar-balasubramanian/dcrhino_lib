@@ -63,6 +63,15 @@ class TraceData(object):
         self.applied_modules = []
         self._global_configs = dict()
 
+
+    @property
+    def mine_name(self):
+        return self.first_global_config.mine_name
+    
+    @property
+    def first_global_config(self):
+        return self.global_config_by_index(self.dataframe["acorr_file_id"].values[0])
+    
     def apply_module(self,module_type,arguments):
         """
         """
