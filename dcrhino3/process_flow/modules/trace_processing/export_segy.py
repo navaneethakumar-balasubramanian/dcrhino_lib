@@ -40,8 +40,9 @@ class ExportSEGYModule(BaseTraceModule):
         else:
             m = "Only one config file identified while generating SEGY"
             logger.info(m)
-            print(m)
-            output_path = "/home/natal/toconvert/v3/{}.sgy".format(self.generate_output_name(trace.applied_modules))
+            #print(m)
+            #output_path = "/home/natal/toconvert/v3/{}.sgy".format(self.generate_output_name(trace.applied_modules))
+            output_path = self.output_path.replace(".h5",".sgy")
             self.global_config = trace.global_config_by_index(trace.dataframe['acorr_file_id'].values[0])
             self.sampling_rate = self.get_sampling_rate(trace.applied_modules)
             self.stream.stats = AttribDict()
