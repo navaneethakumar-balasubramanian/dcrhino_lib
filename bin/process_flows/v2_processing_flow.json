@@ -1,5 +1,6 @@
 {
   "id": "v2_processing_flow",
+  "output_to_file":true,
   "trace_processing": {
     "modules": [
       {

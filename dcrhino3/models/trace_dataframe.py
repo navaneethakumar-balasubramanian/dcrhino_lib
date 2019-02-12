@@ -106,6 +106,7 @@ class TraceData(object):
         first_global_config = self.global_config_by_index(df['acorr_file_id'].values[0])
         df['sensor_id'] = first_global_config.sensor_serial_number
         df['digitizer_id'] = first_global_config.digitizer_serial_number
+        df['rhino_sensor_uid'] = str(first_global_config.sensor_type) + "_" + str(first_global_config.sensor_serial_number) + "_" + str(first_global_config.digitizer_serial_number) + "_" + str(first_global_config.sensor_accelerometer_type) + "_" + str(first_global_config.sensor_saturation_g)
         df.to_csv(path,index=False)
 
     def save_to_h5(self, path):
