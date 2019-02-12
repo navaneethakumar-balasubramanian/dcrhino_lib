@@ -74,7 +74,6 @@ class RawTraceData(TraceData):
 
 
         for line_idx in range(len(df)):
-            #print(line_idx)
             row_of_df = df.iloc[line_idx]
             for component_id in global_config.components_to_process:
                 trace_to_process = row_of_df[component_id]
@@ -104,12 +103,6 @@ class RawTraceData(TraceData):
             output_dict[component_id] = np.full((num_traces, samples_per_trace), np.nan) #Allocate Memory
 
             for i_trace in range(num_traces):
-                # interp_function = interp1d(df['raw_timestamps'].iloc[i_trace],
-                #                            df[component_id].iloc[i_trace],
-                #                            kind='linear', bounds_error=False,
-                #                            fill_value=[0.0,])#'extrapolate')
-                # ideal_timestamps = global_config.dt * np.arange(samples_per_trace) + df['timestamp'].iloc[i_trace]
-                # output_dict[component_id][i_trace, :] = interp_function(ideal_timestamps)
                 ideal_timestamps = global_config.dt * np.arange(samples_per_trace) + df['timestamp'].iloc[i_trace]
                 output_dict[component_id][i_trace, :] = self.interpolate_1d_component_array(df['raw_timestamps'].iloc[i_trace],
                                                                                             df[component_id].iloc[i_trace],
@@ -123,30 +116,17 @@ class RawTraceData(TraceData):
         return df
 
     def interpolate_1d_component_array(self,raw_timestamps,component_array,ideal_timestamps):
-        #This was the original function>
-        # interp_function = interp1d(raw_timestamps,
-        #                            component_array,
-        #                            kind='linear', bounds_error=False,
-        #                            fill_value=[0.0,])
-        # </Original Function>
-        #<Changed to this so I could use the 1d arrays from the realtime data>
-        # interp_function = interp1d(raw_timestamps,
-        #                            component_array,
-        #                            kind='linear', bounds_error=False)
-        # interp_data = interp_function(ideal_timestamps)
-        #</New Scipy method>
         #<Numpy is a lot faster and it was the legacy method we have been using so will continue using the
         #Extrapolation capabilities>
         interp_data = np.interp(ideal_timestamps, raw_timestamps,component_array)
         #</numpy function>
-        # print("interp",interp_data.shape,"component",component_array.shape)
         return interp_data
 
     def calibrate_1d_component_array(self,component_array,global_config,sensitivity):
         t0 = time.time()
         output = component_array
         is_ide_file = not int(global_config.sensor_type) == 2
-        
+
         if is_ide_file or global_config.rhino_version == None:
             return output / sensitivity
         else:
@@ -208,9 +188,6 @@ class RawTraceData(TraceData):
 
                 output_dict[component_id][i_trace, :] = acorr_trace#[0:samples_per_trace]
             output_dict[component_id] = list(output_dict[component_id])
-
-
-            #df[component_id] = output_dict[component_id]
 
         output_dict['timestamp'] = df['timestamp']
 
