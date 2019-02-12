@@ -17,6 +17,10 @@
           "num_taps_in_decon_filter": "|global_config.num_taps_in_decon_filter|"
         }
       },
+      {
+        "type": "export_segy",
+        "args": {}
+      },
         {
         "type": "band_pass_filter",
         "output_to_file": true,
