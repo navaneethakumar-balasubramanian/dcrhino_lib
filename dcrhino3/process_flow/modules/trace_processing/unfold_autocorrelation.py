@@ -16,7 +16,10 @@ import pdb
 
 from dcrhino3.process_flow.modules.trace_processing.base_trace_module import BaseTraceModule
 
-
+def unfold_trace(component_vector):
+    left_hand_side = np.flipud(component_vector[1:])
+    unfolded_trace = np.hstack((left_hand_side, component_vector))
+    return unfolded_trace
 
 class UnfoldAutocorrelationModule(BaseTraceModule):
     def __init__(self, json, output_path):
@@ -30,7 +33,8 @@ class UnfoldAutocorrelationModule(BaseTraceModule):
         """
         #pdb.set_trace()
         #transformed_args = self.get_transformed_args(global_config)
-        left_hand_side = np.flipud(component_vector[1:])
-        unfolded_trace = np.hstack((left_hand_side, component_vector))
-
+        # left_hand_side = np.flipud(component_vector[1:])
+        # unfolded_trace = np.hstack((left_hand_side, component_vector))
+        # return unfolded_trace
+        unfolded_trace = unfold_trace(component_vector)
         return unfolded_trace

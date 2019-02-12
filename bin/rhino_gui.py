@@ -27,6 +27,9 @@ import serial
 import logging
 from dcrhino3.models.metadata import Metadata
 
+if not os.path.exists(LOGS_PATH):
+    os.makedirs(LOGS_PATH)
+
 timestamp = datetime.now().strftime('%Y_%m_%d_%H')
 logging.basicConfig(filename=os.path.join(LOGS_PATH,"{}_GUI.log".format(timestamp)),level=logging.DEBUG,format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
@@ -136,7 +139,7 @@ class GUI():
             timestamp = datetime.now().strftime('%Y_%m_%d_%H')
             rhino_version = config.getfloat("COLLECTION","rhino_version")
             if rhino_version == 1.1:
-                acq_script = 'real_time_acquisition_v1.1.py'
+                acq_script = 'real_time_acquisition_v3.py'
             else:
                 acq_script = 'real_time_acquisition.py'
             health_script = 'system_health_plotter.py'
