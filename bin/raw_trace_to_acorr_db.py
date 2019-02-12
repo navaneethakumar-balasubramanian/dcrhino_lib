@@ -56,27 +56,28 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
     list_df = splitDataFrameIntoSmaller(l1h5_dataframe.reset_index(drop=True),chunk_size)
 
     for chunk in list_df:
-        calibrated_dataframe = raw_trace_data.calibrate_l1h5(chunk, global_config)
-        resampled_dataframe = raw_trace_data.resample_l1h5(calibrated_dataframe, global_config)
-        autcorrelated_dataframe = raw_trace_data.autocorrelate_l1h5(resampled_dataframe, global_config)
-        
-        if 'radial' not in autcorrelated_dataframe.columns:
-            num_lines = autcorrelated_dataframe.shape[0]
-            len_line = len(autcorrelated_dataframe['axial'].values[0])
-            temp = [None] * num_lines
-            for i in range(num_lines):
-                temp[i] = [0] * len_line
-            autcorrelated_dataframe['radial'] = temp
-
-        if 'tangential' not in autcorrelated_dataframe.columns:
-            num_lines = autcorrelated_dataframe.shape[0]
-            len_line = len(autcorrelated_dataframe['axial'].values[0])
-            temp = [None] * num_lines
-            for i in range(num_lines):
-                temp[i] = [0] * len_line
-            autcorrelated_dataframe['tangential'] = temp
-        
-        db_helper.save_autocorr_traces(file_id,autcorrelated_dataframe['timestamp'],axial=autcorrelated_dataframe['axial'],radial=autcorrelated_dataframe['radial'],tangential=autcorrelated_dataframe['tangential'])
+        if len(chunk) > 0:
+            calibrated_dataframe = raw_trace_data.calibrate_l1h5(chunk, global_config)
+            resampled_dataframe = raw_trace_data.resample_l1h5(calibrated_dataframe, global_config)
+            autcorrelated_dataframe = raw_trace_data.autocorrelate_l1h5(resampled_dataframe, global_config)
+            
+            if 'radial' not in autcorrelated_dataframe.columns:
+                num_lines = autcorrelated_dataframe.shape[0]
+                len_line = len(autcorrelated_dataframe['axial'].values[0])
+                temp = [None] * num_lines
+                for i in range(num_lines):
+                    temp[i] = [0] * len_line
+                autcorrelated_dataframe['radial'] = temp
+    
+            if 'tangential' not in autcorrelated_dataframe.columns:
+                num_lines = autcorrelated_dataframe.shape[0]
+                len_line = len(autcorrelated_dataframe['axial'].values[0])
+                temp = [None] * num_lines
+                for i in range(num_lines):
+                    temp[i] = [0] * len_line
+                autcorrelated_dataframe['tangential'] = temp
+            
+            db_helper.save_autocorr_traces(file_id,autcorrelated_dataframe['timestamp'],axial=autcorrelated_dataframe['axial'],radial=autcorrelated_dataframe['radial'],tangential=autcorrelated_dataframe['tangential'])
 
 
 if __name__ == '__main__':
