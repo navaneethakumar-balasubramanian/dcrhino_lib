@@ -60,15 +60,24 @@ def main():
     config.read(configfile_path)
 
     h5fileName = args.output_path
-    output_name = "temp.h5"
-    h5fileName = os.path.join(h5fileName,output_name)
+    tmp_output_name = "{}".format(time.time())
+    h5fileName = os.path.join(h5fileName,tmp_output_name+".h5")
     output_h5f = h5py.File(h5fileName, 'a')
 
     output_h5f = config_file_to_attrs(config,output_h5f)
     saved_sensitivity = False
     min_time = time.time()
 
+    sensor_serial_number = None
+
     for fname in file_list:
+
+        this_sensor_serial_number = fname.split("_")[-1]
+        if sensor_serial_number is None:
+            sensor_serial_number = this_sensor_serial_number
+        elif sensor_serial_number != this_sensor_serial_number:
+            raise ValueError ("Can't merge files from different sensors")
+            
         print("Merging file: " , fname)
         hf = h5py.File(fname, 'r')
         h5_helper = H5Helper(hf)
@@ -129,8 +138,13 @@ def main():
     min_time = datetime.utcfromtimestamp(int(min_time))
     utc_date = datetime(year=min_time.year,month=min_time.month,day=min_time.day)
     elapsed = min_time - utc_date
-    rename = "{}_RHINO{}".format(min_time.strftime("%Y%m%d"),int(elapsed.total_seconds()))
-    rename = h5fileName.replace("temp",rename)
+
+    elapsed_str = int(elapsed.total_seconds())
+    if len(elapsed_str)<5:
+        leading_zeros = "0" * (5-len(elapsed_str))
+        elapsed_str =  leading_zeros+elapsed_str
+    rename = "{}_RHINO{}_{}".format(min_time.strftime("%Y%m%d"),elapsed_str,sensor_serial_number)
+    rename = h5fileName.replace(tmp_output_name,rename)
     cmd ="mv {} {}".format(h5fileName,rename)
     os.system(cmd)
 
