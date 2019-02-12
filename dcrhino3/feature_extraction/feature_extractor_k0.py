@@ -123,7 +123,7 @@ class FeatureExtractorK0(FeatureExtractorJ1):
         #pdb.set_trace()
         unnested_dictionary = flatten(new_features_dict)#print('now dump out with dict keys concatenated')
         for key in unnested_dictionary.keys():
-            unnested_dictionary['J1_{}'.format(key)] = unnested_dictionary.pop('{}'.format(key))
+            unnested_dictionary['K0_{}'.format(key)] = unnested_dictionary.pop('{}'.format(key))
         return unnested_dictionary
 
 
