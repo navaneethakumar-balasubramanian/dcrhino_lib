@@ -15,8 +15,8 @@ from dcrhino3.process_flow.modules.trace_processing.base_trace_module import Bas
 from obspy import Trace, Stream
 from obspy.core import AttribDict, UTCDateTime
 from obspy.io.segy.segy import SEGYTraceHeader, SEGYBinaryFileHeader
-from dcrhino.process_pipeline.segy_trace_header import define_obspy_trace_header #This module needs to remain here in order to redefine the trace headers
-from dcrhino.process_pipeline.config import Config
+from dcrhino3.models.segy_trace_header import define_obspy_trace_header #This module needs to remain here in order to redefine the trace headers
+from dcrhino3.models.config import Config
 from dcrhino3.helpers.general_helper_functions import init_logging
 logger = init_logging(__name__)
 
