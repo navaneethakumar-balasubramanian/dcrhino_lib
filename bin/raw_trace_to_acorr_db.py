@@ -92,6 +92,8 @@ if __name__ == '__main__':
 
     env_config = EnvConfig(args.env_file)
     files = glob2.glob(args.src_path)
+    
+    logger.info("Found " + str(len(files)) + " files" )
 
     if not files:
         print  'File does not exist: ' + args.src_path
