@@ -547,7 +547,7 @@ class CollectionDaemonThread(threading.Thread):
 
                     self.bufferThisSecond.append(row)
                 else:
-                    time.sleep(0.025)
+                    time.sleep(0.05)
         except:
             print("Collection Daemon Exception:", sys.exc_info())
 
@@ -713,7 +713,7 @@ def main_run(run=True):
                 trace_plot.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
                 trace_plot.plot(trace["trace_data"][second_plot_display]["{}_interpolated".format(second_plot_display)],'b')
             else:
-                unfolded_trace = UnfoldAutocorrelationModule.process_component(None,trace["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display)],None)
+                unfolded_trace = UnfoldAutocorrelationModule.unfold_trace(["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display)])
                 trace_plot.plot(unfolded_trace,'b')
                 trace_plot.get_xaxis().set_visible(False)
 
