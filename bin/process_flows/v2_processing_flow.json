@@ -89,7 +89,33 @@
             "tangential_RC_col_name": "J0_tangential_RC",
             "ax_vel_del_col_name": "J0_axial_velocity_delay",
             "tang_vel_del_col_name": "J0_tangential_velocity_delay",
-            "reflection_coefficient_col_name": "J0_reflection_coefficient"
+            "reflection_coefficient_col_name": "J0_reflection_coefficient",
+	     "panels":{		    	
+		"axial_amp_feature_plot":true,
+	    	"axial_delay_feature_plot":false,
+	    	"axial_rc_feature_plot":true,
+	    	"tangential_amp_feature_plot":true,
+	    	"tangential_delay_feature_plot":true,
+	    	"tangential_rc_feature_plot":true,
+	    	"radial_amp_feature_plot":false,
+	    	"radial_delay_feature_plot":false,
+	    	"radial_rc_feature_plot":false,
+	    	"axial_heatmap_plot":true,
+	    	"tangential_heatmap_plot":true,
+            	"radial_heatmap_plot":false
+		},
+		"ax_lim":{
+			"axial_amp_lim":[0,1.5],
+			"axial_rc_lim":[0,1.0],
+			"axial_delay_lim":[80,250],
+			"tangential_amp_lim":[0,1.5],
+			"tangential_rc_lim":[0,1.0],
+			"tangential_delay_lim":[80,130],
+			"radial_amp_lim":[0,1.5],
+			"radial_rc_lim":[0,1.0],
+			"radial_delay_lim":[80,130]
+			
+		}
           },
           "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
           "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|",

@@ -8,12 +8,13 @@ from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 import pdb
 import pandas as pd
+import sys
 
 from dcrhino3.plotters.colour_bar_axis_limits import ColourBarAxisLimits
 
 class QCLogPlotter():
 
-    def __init__(self,axial,tangential,radial,depth,plot_title,output_sampling_rate,mult_pos,mult_win_label,normalize=True,lower_num_ms=-5.0,upper_num_ms=30.0,dt_ms=5,plot_by_depth=True):
+    def __init__(self,axial,tangential,radial,depth,plot_title,output_sampling_rate,mult_pos,mult_win_label,plot_panel_comp,normalize=True,lower_num_ms=-5.0,upper_num_ms=30.0,dt_ms=5,plot_by_depth=True):
         
         self.plot_title = plot_title
         
@@ -23,13 +24,14 @@ class QCLogPlotter():
         self.upper_num_ms = upper_num_ms
         self.mult_pos = mult_pos
         self.mult_win_label = mult_win_label
+        self.plot_panel_comp = plot_panel_comp
         
         self.depth = depth
         
         self.normalize = normalize
-        self.axial = self.prepare_trace(axial)
-        self.tangential = self.prepare_trace(tangential)
-        self.radial = self.prepare_trace(radial)
+        self.axial = self.prepare_trace(axial.T)
+        self.tangential = self.prepare_trace(tangential.T)
+        self.radial = self.prepare_trace(radial.T)
         self.num_traces_per_component, self.num_samples = self.axial.T.shape
         
     def prepare_trace(self,component_trace):
@@ -38,6 +40,7 @@ class QCLogPlotter():
 
         num_traces_in_blasthole, samples_per_trace = data.shape
         component_trace = data.T
+        #component_trace = data
         n_samples = int(0.2*self.output_sampling_rate)
 
 #            n_samples = self.global_config.n_samples_trimmed_trace
@@ -65,10 +68,11 @@ class QCLogPlotter():
         X = np.nan_to_num(X)
         return X
         
-        
+        # this will change in future with radial_rc and radial_vel_del
     def plot(self,
              peak_ampl_x,
              peak_ampl_y,
+             peak_ampl_z,
              reflection_coefficient,
              ax_vel_del,
              tang_vel_del,
@@ -94,9 +98,9 @@ class QCLogPlotter():
         
         Y = np.linspace(self.lower_num_ms, self.upper_num_ms, self.axial.shape[0])
         Y = np.flipud(Y)
-        
-        fig, ax = plt.subplots(nrows=5, sharex=False, figsize=(24,12))
-        self.Panel1_plot(ax[0], X, peak_ampl_x,reflection_coefficient,ax_vel_del,ax_lim,noise_threshold)
+#        pdb.set_trace()
+        nrows = self.panel_count()
+        fig, ax = plt.subplots(nrows, sharex=False, figsize=self.dc_plot_lim())
         
         dt_ms = self.dt_ms
         lowest_y_tick =  int(self.lower_num_ms/dt_ms)
@@ -107,20 +111,22 @@ class QCLogPlotter():
 
     	#Generate Axial, Radial, Tangential heatmap plots
         #pdb.set_trace()
-        ax[1], heatmap1 = self.plot_hole_as_heatmap(ax[1], cbal.v_min_1, cbal.v_max_1, X, Y, self.axial, cmap_string, y_tick_locations)
+        #ax[1], heatmap1 = self.plot_hole_as_heatmap(ax[1], cbal.v_min_1, cbal.v_max_1, X, Y, self.axial, cmap_string, y_tick_locations)
         
-        self.Panel3_plot(ax[2], X, peak_ampl_y,tangential_RC,tang_vel_del,ax_lim,noise_threshold)
-
-        ax[3], heatmap2 = self.plot_hole_as_heatmap(ax[3], cbal.v_min_2, cbal.v_max_2, X, Y,self.tangential, cmap_string, y_tick_locations)
-#       
-
-        self.legend_box(ax[4])
-        
-        
-        ax[1].text(1.01, 0.5, 'axial', fontsize=11.5, rotation='vertical', transform=ax[1].transAxes)
-        ax[3].text(1.01, 0.6, 'tangential', fontsize=11.5, rotation='vertical', transform=ax[3].transAxes)
-        ax[3].set_xlabel('Depth (m)')
-        
+        n = 0
+        if self.plot_panel_comp.axial_heatmap_plot is True and self.axial is not None and (self.axial[~np.isnan(self.axial)]).size !=0 :
+            self.axial_feature_plot(ax[n], X, peak_ampl_x,reflection_coefficient,ax_vel_del,noise_threshold,ax_lim)
+            ax[n+1], heatmap1 = self.plot_hole_as_heatmap(ax[n+1], cbal.v_min_1, cbal.v_max_1, X, Y, self.axial, cmap_string, y_tick_locations)
+            n = n+2
+        if self.plot_panel_comp.tangential_heatmap_plot is True and self.tangential is not None and (self.tangential[~np.isnan(self.tangential)]).size !=0:
+            self.tangential_feature_plot(ax[n], X, peak_ampl_y,tangential_RC,tang_vel_del,noise_threshold,ax_lim)
+            ax[n+1], heatmap2 = self.plot_hole_as_heatmap(ax[n+1], cbal.v_min_2, cbal.v_max_2, X, Y,self.tangential, cmap_string, y_tick_locations)
+            n = n+2
+        if self.plot_panel_comp.radial_heatmap_plot is True and self.radial is not None and (self.radial[~np.isnan(self.radial)]).size !=0:
+            self.radial_feature_plot(ax[n], X, peak_ampl_z,noise_threshold,ax_lim)
+            ax[n+1], heatmap2 = self.plot_hole_as_heatmap(ax[n+1], cbal.v_min_2, cbal.v_max_2, X, Y,self.radial, cmap_string, y_tick_locations)
+            n = n+2
+        self.legend_box(ax[n])
         if output_path is not None:
             plt.savefig(output_path)
         
@@ -132,7 +138,7 @@ class QCLogPlotter():
                          multiple_search_forward_ms=None):
         """
         """
-        minor_locator = AutoMinorLocator()
+        minor_locator = AutoMinorLocator(8)
         if any([x is None for x in [v_min, v_max]]):# autoselcet color axes
             heatmap = ax.pcolormesh(X, Y, Z, cmap=cmap_string)
         else:
@@ -142,7 +148,10 @@ class QCLogPlotter():
         ax.invert_yaxis()
         ax.set_yticks(y_tick_locations, minor=False)
     
-        ax.yaxis.set_minor_locator(minor_locator)
+    
+        #pdb.set_trace()
+        
+#        ax.yaxis.set_minor_locator(minor_locator)
         ax.tick_params(which='major', width=1)
         ax.tick_params(which='major', length=8)
         ax.tick_params(which='minor', length=4, color='r', width=0.5)
@@ -161,11 +170,20 @@ class QCLogPlotter():
             ax.plot(X,self.mult_pos.tang_2_mult, color = 'k',linestyle = '-',linewidth = 2)
             
         ax.set_xlim(X[0], X[-1])
-    #    ax.set_xticklabels()
+        x_maj_tick = (np.arange(X[0],X[-1])-X[0])
+        x_min_tick = (np.arange(X[0],X[-1],0.5)-X[0])
+        for x_maj_tick in x_maj_tick:
+            ax.axvline(x = x_maj_tick, ymin = 0, ymax = 1.5, color = 'k')
+
+        for x_min_tick in x_min_tick:
+            ax.axvline(x = x_min_tick, ymin = 0, ymax = 1.5, color = 'k', linestyle = ':')
+#        ax.set_xticklabels()
+        ax.xaxis.set_minor_locator(minor_locator)
+
         return ax, heatmap
         
 
-    def Panel1_plot(self,ax, X, peak_ampl_x,reflection_coefficient,ax_vel_del,ax_lim,noise_threshold):
+    def axial_feature_plot(self,ax, X, peak_ampl_x,reflection_coefficient,ax_vel_del,noise_threshold,ax_lim):
         """
         	#Peak axial, radial, tangential and multiple plots
 
@@ -177,31 +195,42 @@ class QCLogPlotter():
         ax.set_title(self.plot_title[0],loc = 'center')
         ax1.set_title(self.plot_title[1],loc = 'left')
         ax2.set_title(self.plot_title[2],loc = 'right')
-        y_limits = [0,1.5]
-        ax.plot(X, peak_ampl_x, color = 'red')
-        ax.set_ylim(y_limits)
-        ax.spines['left'].set_color('red')
-        ax.set_ylabel('Ax. Amp').set_color('red')
-        ax.spines['left'].set_linewidth(2)
-        y_limits = [0,1.0]
-        ax1.plot(X,reflection_coefficient, color = 'blue')
-        ax1.set_ylim(y_limits)
-        ax1.spines['right'].set_color('blue')
-        ax1.set_ylabel('Ax. RC').set_color('blue')
-        ax1.spines['right'].set_linewidth(2)
-        y_limits = [80,250]
-        ax2.plot(X,ax_vel_del/10000, color = 'greenyellow')
-        ax2.set_ylim(y_limits)
-        ax2.spines['right'].set_color('greenyellow')
-        ax2.set_ylabel('Ax. Delay').set_color('greenyellow')
+        
+        #pdb.set_trace()
+        
+        
+        if self.plot_panel_comp.axial_amp_feature_plot is True:
+            ax.plot(X, peak_ampl_x, color = 'red')
+            ax.set_ylim(ax_lim.axial_amp_lim)
+            ax.spines['left'].set_color('red')
+            ax.set_ylabel('Ax. Amp').set_color('red')
+            ax.spines['left'].set_linewidth(2)
+        
+        
+#        y_limits = [0,1.0]
+        if self.plot_panel_comp.axial_rc_feature_plot is True:
+            ax1.plot(X,reflection_coefficient, color = 'blue')
+            ax1.set_ylim(ax_lim.axial_rc_lim)
+            ax1.spines['right'].set_color('blue')
+            ax1.set_ylabel('Ax. RC').set_color('blue')
+            ax1.spines['right'].set_linewidth(2)
+        
+        
+#        y_limits = [80,250]
+        if self.plot_panel_comp.axial_delay_feature_plot is True:
+            ax2.plot(X,ax_vel_del/10000, color = 'greenyellow')
+            ax2.set_ylim(ax_lim.axial_delay_lim)
+            ax2.spines['right'].set_color('greenyellow')
+            ax2.set_ylabel('Ax. Delay').set_color('greenyellow')
+        
+        
         ax2.spines['right'].set_linewidth(2)
         ax2.spines['right'].set_position(('outward',60))
         ax.set_xlim(X[0], X[-1])
         x_maj_tick = (np.arange(X[0],X[-1])-X[0])
         x_min_tick = (np.arange(X[0],X[-1],0.5)-X[0])
 
-        x_maj_tick = (np.arange(X[0],X[-1])-X[0])
-        x_min_tick = (np.arange(X[0],X[-1],0.5)-X[0])
+
 
         if noise_threshold is not None:
             ax.axhline(y = noise_threshold,xmin = 0, xmax = X[-1], color = 'k')
@@ -214,7 +243,7 @@ class QCLogPlotter():
 
         ax.xaxis.set_minor_locator(minor_locator)
 
-    def Panel3_plot(self,ax, X, peak_ampl_y,tangential_RC,tang_vel_del,ax_lim,noise_threshold):
+    def tangential_feature_plot(self,ax, X, peak_ampl_y,tangential_RC,tang_vel_del,noise_threshold,ax_lim):
         """
         	#Tangential peak, RC and axial delay plots
 
@@ -224,26 +253,81 @@ class QCLogPlotter():
         ax2 = ax.twinx()
 
 #        if self.global_config.tangential_amp == 'True':
-        y_limits = [0,1.5]
+        #y_limits = [0,1.5]
 #        y_limits = hack_split_ylimits(self.global_config.peak_amplitude_tangential_y_limit)
-        ax.plot(X, peak_ampl_y, color = 'magenta')
-        ax.set_ylim(y_limits)
-        ax.spines['left'].set_color('magenta')
-        ax.spines['left'].set_linewidth(2)
-        ax.set_ylabel('Tang. Amp').set_color('magenta')
-        y_limits = [0,1.0]
-        ax1.plot(X, tangential_RC,color = 'cyan')
-        ax1.set_ylim(y_limits)
-        ax1.spines['right'].set_color('cyan')
-        ax1.spines['right'].set_linewidth(2)
-        ax1.set_ylabel('Tang. RC').set_color('cyan')
-        y_limits = [80,130]
-        ax2.plot(X,tang_vel_del,color = 'lime')
-        ax2.set_ylim(y_limits) # for tangential delay
-        ax2.spines['right'].set_color('lime')
-        ax2.spines['right'].set_linewidth(2)
-        ax2.set_ylabel('Tang. Delay').set_color('lime')
-        ax2.spines['right'].set_position(('outward',60))
+        if self.plot_panel_comp.tangential_amp_feature_plot is True:
+            ax.plot(X, peak_ampl_y, color = 'magenta')
+            ax.set_ylim(ax_lim.tangential_amp_lim)
+            ax.spines['left'].set_color('magenta')
+            ax.spines['left'].set_linewidth(2)
+            ax.set_ylabel('Tang. Amp').set_color('magenta')
+            
+        if self.plot_panel_comp.tangential_rc_feature_plot is True:
+            ax1.plot(X, tangential_RC,color = 'cyan')
+            ax1.set_ylim(ax_lim.tangential_rc_lim)
+            ax1.spines['right'].set_color('cyan')
+            ax1.spines['right'].set_linewidth(2)
+            ax1.set_ylabel('Tang. RC').set_color('cyan')
+        
+        if self.plot_panel_comp.tangential_delay_feature_plot is True:
+
+            ax2.plot(X,tang_vel_del,color = 'lime')
+            ax2.set_ylim(ax_lim.tangential_delay_lim) # for tangential delay
+            ax2.spines['right'].set_color('lime')
+            ax2.spines['right'].set_linewidth(2)
+            ax2.set_ylabel('Tang. Delay').set_color('lime')
+            ax2.spines['right'].set_position(('outward',60))
+        
+        
+        if noise_threshold is not None:
+            ax.axhline(y = noise_threshold,xmin = 0, xmax = X[-1], color = 'k')
+
+        ax.set_xlim(X[0], X[-1])
+        ax.minorticks_on()
+
+        x_maj_tick = (np.arange(X[0],X[-1])-X[0])
+        x_min_tick = (np.arange(X[0],X[-1],0.5)-X[0])
+
+
+        for x_maj_tick in x_maj_tick:
+            ax.axvline(x = x_maj_tick, ymin = -0.5, ymax = 1.5, color = 'k')
+
+        for x_min_tick in x_min_tick:
+            ax.axvline(x = x_min_tick, ymin = -0.5, ymax = 1.5, color = 'k', linestyle = ':')
+
+        ax.xaxis.set_minor_locator(minor_locator)
+        
+    def radial_feature_plot(self,ax, X, peak_ampl_z,noise_threshold,ax_lim):
+        """
+        	#Tangential peak, RC and axial delay plots
+
+        """
+        minor_locator = AutoMinorLocator(8)
+#        ax1 = ax.twinx()
+#        ax2 = ax.twinx()
+
+        if self.plot_panel_comp.radial_amp_feature_plot is True:
+#            y_limits = [0,1.5]
+    #        y_limits = hack_split_ylimits(self.global_config.peak_amplitude_tangential_y_limit)
+            ax.plot(X, peak_ampl_z, color = 'magenta')
+            ax.set_ylim(ax_lim.radial_amp_lim)
+            ax.spines['left'].set_color('magenta')
+            ax.spines['left'].set_linewidth(2)
+            ax.set_ylabel('Radial. Amp').set_color('magenta')
+#            y_limits = [0,1.0]
+#            ax1.plot(X, tangential_RC,color = 'cyan')        ax1 = ax.twinx()
+#        ax2 = ax.twinx()
+#            ax1.set_ylim(y_limits)
+#            ax1.spines['right'].set_color('cyan')
+#            ax1.spines['right'].set_linewidth(2)
+#            ax1.set_ylabel('Tang. RC').set_color('cyan')
+#            y_limits = [80,130]
+#            ax2.plot(X,tang_vel_del,color = 'lime')
+#            ax2.set_ylim(y_limits) # for tangential delay
+#            ax2.spines['right'].set_color('lime')
+#            ax2.spines['right'].set_linewidth(2)
+#            ax2.set_ylabel('Tang. Delay').set_color('lime')
+#            ax2.spines['right'].set_position(('outward',60))
         if noise_threshold is not None:
             ax.axhline(y = noise_threshold,xmin = 0, xmax = X[-1], color = 'k')
 
@@ -311,3 +395,52 @@ class QCLogPlotter():
         ax2.spines['left'].set_visible(False)
         ax2.set_xticks([])
         ax2.set_yticks([])
+
+
+    def panel_count(self):
+        """
+        'Decision regarding how many panels to plot. Current decision flow is 
+        Default: 1 panel (for legend)
+        3 panel for 1 feature, 1 component and 1 legend
+        5 panel for 2 features, 2 components and 1 legend
+        7 panel for all features and components, and 1 legend
+        Assumption is if we plot a component, we also want its features
+        """
+        panel_count = 1
+        if self.plot_panel_comp.axial_heatmap_plot is True:
+            if self.axial is not None:
+                if (self.axial[~np.isnan(self.axial)]).size !=0:
+#            Then we are plotting axial features and components. Need 2 more panel apart from legends
+                    panel_count=3
+
+
+        if self.plot_panel_comp.tangential_heatmap_plot is True:
+            if self.tangential is not None:
+                if (self.tangential[~np.isnan(self.tangential)]).size !=0:
+                    if panel_count == 3:    # if Panel count is 3, this means, we already have axial. now we are checking for others
+                        panel_count =5
+                    else:   #if panel count is not 3, means we do not have axial. Still check if we have tang and if we want to plot it
+                        panel_count = 3
+
+
+        if self.plot_panel_comp.radial_heatmap_plot is True:
+            if self.radial is not None:
+                if (self.radial[~np.isnan(self.radial)]).size !=0:
+                    if panel_count==5:      #if panel count is 5, means we have axial and tangential. with radial heatmap true and not none, we need 2 more panels
+                        panel_count = 7
+                    elif panel_count == 3:  #either axial or tangential is missing
+                        panel_count = 5
+                    else:
+                        panel_count = 3
+
+        
+
+        #both axial and tangential are missing
+        if panel_count ==1:  # no feature or components
+            sys.exit('No features and components found')
+
+
+        return panel_count
+    def dc_plot_lim(self):
+        dc_plot_lim = (24,12)
+        return dc_plot_lim
