@@ -8,12 +8,13 @@ Created on Fri Jan 25 11:44:16 2019
 
 import argparse
 import os
-
+import pdb
 import glob2
 import json
 
 from multiprocessing import Pool
 
+import numpy as np
 from dcrhino3.process_flow.process_flow import ProcessFlow
 #from dcrhino3.process_flow.hole_selector import HoleSelector
 from dcrhino3.models.trace_dataframe import TraceData
@@ -22,7 +23,14 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 
 logger = init_logging(__name__)
 
+def process_file_dict(item_dict):
+
+    return process_file(item_dict['process_json'],
+                        item_dict['acorr_h5_file_path'],
+                        item_dict['env_config'])
+
 def process_file(process_json,acorr_h5_file_path,env_config):
+    logger.info("PROCESSING FILE:" + str( acorr_h5_file_path ))
     #process_flow_path = "/home/thiago/Documents/Projects/Dc_rhino/v3/bin/process_flows/example_simple_flow.json"
     #holes_selection_path = "/home/thiago/Documents/Projects/Dc_rhino/v3/bin/process_flows/holes_selection/example_hole_selection.json"
     #acorr_h5_file_path = "/home/thiago/milligan_cache/interpolated/32555_2235_2235.h5"
@@ -43,7 +51,7 @@ def process_file(process_json,acorr_h5_file_path,env_config):
     output_folder = os.path.join(output_folder,filename_without_ext)
     process_flow = ProcessFlow(process_json,output_folder)
     acorr_trace = process_flow.process(acorr_trace)
-
+    return True
 
 
 if __name__ == '__main__':
@@ -61,17 +69,20 @@ if __name__ == '__main__':
         
     
     files = glob2.glob(args.h5_path)
-    pool = Pool()
-
+    pool = Pool(5)
+    files_to_process = []
     if not files:
         print  'File does not exist: ' + args.h5_path
     for file in files:
         if '.h5' in os.path.splitext(file)[1]:
-            logger.info("PROCESSING FILE:" + str( file))
+            
             if env_config.is_file_blacklisted(file) is False:
-                pool.apply_async(process_file, [process_json,file,env_config])
+                files_to_process.append({"process_json":process_json,
+                                         "acorr_h5_file_path":file,
+                                         "env_config":env_config})
+                #res = pool.apply_async(process_file, [process_json,file,env_config])
+                #res.get(timeout=1000)
+                
                 #process_file(process_json,file,env_config)
-
-
-
-
+    pool.map(process_file_dict,files_to_process)
+    
