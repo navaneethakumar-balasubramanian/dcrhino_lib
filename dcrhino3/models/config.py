@@ -112,7 +112,7 @@ class Config( object ):
         elif component_id == 'tangential':
             return self.sensor_tangential_axis - 1
         elif component_id == 'radial':
-            return 2
+            return 5 - self.sensor_axial_axis - self.sensor_tangential_axis #Depending on the physical installation, radial is not always 2
         else:
             pass
             #logger.critical("unknown componet requested {} DNE".format(component_id))
@@ -120,8 +120,8 @@ class Config( object ):
 
     @property
     def components_to_process(self):
-
         return self.components_to_collect.split(',')
+
     @property
     def sampling_rate(self):
         return float(self.output_sampling_rate)
@@ -177,10 +177,13 @@ class Config( object ):
         #key_list = [key for key, data_type in METADATA_HEADER_FORMAT_KEYS.items()]
         """
         for key, data_type in METADATA_HEADER_FORMAT_KEYS.items():
-            if data_type is DataType.DATE:
-                setattr(self, key, metadata.__getattribute__(key).__str__())
-            else:
-                setattr(self, key, metadata.__getattribute__(key))
+            try:
+                if data_type is DataType.DATE:
+                    setattr(self, key, metadata.__getattribute__(key).__str__())
+                else:
+                    setattr(self, key, metadata.__getattribute__(key))
+            except:
+                print("{} not found in Metadata Header".format(key))
         return
 
 
