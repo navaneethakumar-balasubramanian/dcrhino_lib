@@ -33,7 +33,7 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
         global_config.output_sampling_rate *= upsample_factor
 
     #db_helper = RhinoDBHelper('13.66.189.94',database='mont_wright')
-    logger.info("Mine name on file:",global_config.mine_name)
+    logger.info("Mine name on file:" + str(global_config.mine_name))
     conn = env_config.get_rhino_db_connection_from_mine_name(global_config.mine_name)
     db_helper= RhinoDBHelper(conn=conn)
     dupes = db_helper.check_for_pre_saved_acorr_traces(l1h5_dataframe['timestamp'],global_config.sensor_serial_number)
