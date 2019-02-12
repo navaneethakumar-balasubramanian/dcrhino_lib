@@ -11,28 +11,24 @@ import pandas as pd
 from enum import Enum
 import pdb
 import sys
-
-
+from dcrhino3.helpers.general_helper_functions import init_logging
+logger = init_logging(__name__)
 #==============================================================================
 #FUNCTIONS
 #==============================================================================
 def StandardString(s):
-    #if type(s) is str:
     s = str(s).replace("_"," ")
     components = s.split(" ")
     clean_components=[]
     string=""
     for ch in components:
         word = ''.join(e for e in ch if (e.isalnum() or (e in ['&','.'])))
-        #if(word.isalnum()):
         clean_components.append(word)
     for i,c in enumerate(clean_components):
         string += c
         if i<len(clean_components)-1:
             string+= "_"
     return string.upper()
-    # else:
-    #     raise TypeError("Argument needs to be a string")
 
 def convert_to_meters(value,units):
     for m in range(4,6):
@@ -54,14 +50,6 @@ class Measurement():
         return "{},{}".format(self._value,self._units)
 
     def value_in_meters(self):
-        # for m in range(4,6):
-        #     if self._units == m:
-        #         return self._value / (10**(m-2))
-        # if self._units == 1:
-        #     return self._value * 0.3048
-        # elif self._units == 2:
-        #     return self._value * 0.0254
-        # return self._value
         return convert_to_meters(self._value,self._units)
 
 
@@ -91,18 +79,6 @@ class Drill_String_Component():
 
     @property
     def length_in_meters(self):
-        # value = None
-        # for m in range(2,5):
-        #     if self._length_units == self.measurement_units_options[m]:
-        #         value =  self._length / (10**(m-2))
-        # if self._length_units == self.measurement_units_options[0]:
-        #         value = self._length * 0.3048
-        # elif self._length_units == self.measurement_units_options[1]:
-        #     value =  self._length * 0.0254
-        #
-        # if value is not None:
-        #     value = round(value,2)
-        # return value
         return convert_to_meters(self._length,self._length_units)
 
     #@property
@@ -159,20 +135,20 @@ METADATA_HEADER_FORMAT_KEYS = {
         'sensor_accelerometer_type':DataType.INTEGER,
         'sensor_ideal_sampling_rate':DataType.INTEGER,
         'sensor_saturation_g':DataType.INTEGER,
-        'sensor_true_sampling_rate':DataType.FLOAT,
+        #'sensor_true_sampling_rate':DataType.FLOAT,
         'output_sampling_rate':DataType.INTEGER,
         'comments':DataType.STRING,
-        'trace_length':DataType.INTEGER,
-        'number_of_samples_in_this_trace':DataType.INTEGER,
-        'datetime_data_recorded':DataType.DATETIME,
-        'digitizer_time_of_last_sample_in_trace':DataType.DATETIME,
-        'ideal_time_of_last_sample_in_trace':DataType.DATETIME,
-        'dummy_hole_id':DataType.INTEGER,
+        #'trace_length':DataType.INTEGER,
+        #'number_of_samples_in_this_trace':DataType.INTEGER,
+        #'datetime_data_recorded':DataType.DATETIME,
+        #'digitizer_time_of_last_sample_in_trace':DataType.DATETIME,
+        #'ideal_time_of_last_sample_in_trace':DataType.DATETIME,
+        #'dummy_hole_id':DataType.INTEGER,
         'sensor_distance_to_source':DataType.FLOAT,
         'sensor_distance_to_shocksub':DataType.FLOAT,
-        'blasthole_easting':DataType.FLOAT,
-        'blasthole_northing':DataType.FLOAT,
-        'blasthole_collar_elevation':DataType.FLOAT,
+        #'blasthole_easting':DataType.FLOAT,
+        # 'blasthole_northing':DataType.FLOAT,
+        # 'blasthole_collar_elevation':DataType.FLOAT,
         'sensor_position':DataType.MEASUREMENT,
         'sensor_axial_axis':DataType.INTEGER,
         'sensor_tangential_axis':DataType.INTEGER,
@@ -192,12 +168,12 @@ METADATA_HEADER_FORMAT_KEYS = {
         'drill_string_component10':DataType.DS_COMPONENT,
         #'sensor_installation_diameter':DataType.FLOAT,
         'drill_string_steel_od':DataType.MEASUREMENT,
-        'mwd_hole_id':DataType.INTEGER,
+        #'mwd_hole_id':DataType.INTEGER,
         'sample_interval_duration':DataType.FLOAT,
-        'gps_latitude':DataType.FLOAT,
-        'gps_longitude':DataType.FLOAT,
-        'gps_elevation':DataType.FLOAT,
-        'gps_timestamp':DataType.DATETIME,
+        # 'gps_latitude':DataType.FLOAT,
+        # 'gps_longitude':DataType.FLOAT,
+        # 'gps_elevation':DataType.FLOAT,
+        # 'gps_timestamp':DataType.DATETIME,
         'deconvolution_filter_duration':DataType.FLOAT,
         'min_lag_trimmed_trace':DataType.FLOAT,
         'max_lag_trimmed_trace':DataType.FLOAT,
@@ -229,21 +205,18 @@ METADATA_HEADER_FORMAT_KEYS = {
         'tangential_amp':DataType.BOOLEAN,
         'tangential_rc':DataType.BOOLEAN,
         'axial_vel_delay_y_limit':DataType.STRING,
-        'noise_threshold':DataType.BOOLEAN,
-        'tangential_amp':DataType.BOOLEAN,
-        'tangential_rc':DataType.BOOLEAN,
         'tangential_vel_delay_y_limit':DataType.STRING,
         'peak_amplitude_radial_y_limit':DataType.STRING,
         'radial_amp':DataType.BOOLEAN,
-        'mult_pos_axial':DataType.FLOAT,
-        'mult_pos_tangential':DataType.FLOAT,
+        #'mult_pos_axial':DataType.FLOAT,
+        #'mult_pos_tangential':DataType.FLOAT,
         'mult_pos_win':DataType.FLOAT,
         'mult_neg_win':DataType.FLOAT,
         'rhino_version':DataType.FLOAT,
         'segy_output_step':DataType.STRING,
         'data_message_identifier':DataType.STRING,
         'info_message_identifier':DataType.STRING,
-        'auto_correlation_trace_duration':DataType.FLOAT,
+        'autocorrelation_duration':DataType.FLOAT,
         'battery_max_voltage':DataType.FLOAT,
         'battery_min_voltage':DataType.FLOAT,
         'sensor_sensitivity':DataType.DICTIONARY
@@ -256,14 +229,14 @@ class Metadata(object):
     __slots__ = [key for key,value in METADATA_HEADER_FORMAT_KEYS.items()]
 
     def __init__(self,cfg):
-        #pdb.set_trace()
         excluded_sections = ["RUNTIME", "DATAUNIT", "DATA_TRANSMISSION", "PLAYBACK", "DB","SYSTEM_HEALTH_PLOTS"]
         sections_to_iterate = [x for x in cfg.sections() if x not in excluded_sections]
         print(sections_to_iterate)
 
         shocksub_length = 0
-        for key,key_type in METADATA_HEADER_FORMAT_KEYS.items():
-            setattr(self,key,None)
+        # for key,key_type in METADATA_HEADER_FORMAT_KEYS.items():
+        #     setattr(self,key,None)
+
         value = cfg.getint("COLLECTION","output_sampling_rate")
         setattr(self,"output_sampling_rate",value)
         for section in sections_to_iterate:
@@ -300,12 +273,12 @@ class Metadata(object):
                     #print(key,value)
                     setattr(self,key,value)
                 else:
-                    pass
                     raise LookupError("The metadata value in the configuration file is not declared in the metadata class" , item )
         self.sensor_distance_to_source = round(self.drill_string_total_length - self.sensor_position,2)
         self.sensor_distance_to_shocksub = round(self.sensor_position - shocksub_length,2)
         self.accelerometer_max_voltage = cfg.getfloat("PLAYBACK","accelerometer_max_voltage")
         self.sensor_sensitivity = self.get_sensitivities_dict(cfg)
+        self.sample_interval_duration = 1./self.sensor_ideal_sampling_rate
 
 
 
