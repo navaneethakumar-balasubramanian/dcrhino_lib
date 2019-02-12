@@ -8,3 +8,4 @@ class SensorInstallationLocations(Enum):
     SAVER_SUB = 2
     STEEL = 3
     STEEL_BREAKOUT = 4
+    UNKNOWN = 5
