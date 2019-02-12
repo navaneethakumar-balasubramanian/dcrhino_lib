@@ -18,8 +18,9 @@ from dcrhino3.process_flow.modules.trace_processing.unfold_autocorrelation impor
 from dcrhino3.process_flow.modules.trace_processing.upsample import UpsampleModule
 from dcrhino3.process_flow.modules.trace_processing.upsample_sinc import UpsampleSincModule
 
-from dcrhino3.process_flow.modules.features_extraction.j1 import J1FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.j0 import J0FeaturesModule
+from dcrhino3.process_flow.modules.features_extraction.j1 import J1FeaturesModule
+from dcrhino3.process_flow.modules.features_extraction.k0 import K0FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.b0 import B0FeaturesModule
 
 from dcrhino3.process_flow.modules.plotters.qc_plotter_module import QCPlotterModule
@@ -46,6 +47,7 @@ class ProcessFlow:
         self.features_extraction_modules = {
                                             "j0":J0FeaturesModule,
                                             "j1":J1FeaturesModule,
+                                            "k0":K0FeaturesModule,
                                             "b0":B0FeaturesModule
                                         }
 

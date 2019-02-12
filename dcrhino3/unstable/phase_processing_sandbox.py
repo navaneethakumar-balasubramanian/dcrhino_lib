@@ -32,17 +32,19 @@ from __future__ import absolute_import, division, print_function
 
 
 import datetime
+import json
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pdb
 
 #home = os.path.expanduser("~/")
+from dcrhino3.feature_extraction.feature_extractor_k1 import FeatureExtractorK1
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.signal_processing.phase_rotation import determine_phase_state
 from dcrhino3.signal_processing.phase_rotation import rotate_phase
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
-
+from dcrhino3.process_flow.modules.base_module import BaseModule
 #from dcrhino3.feature_extraction.feature_extractor_j1a import get_expected_multiple_times
 from phase_algorithm_helpers import identify_primary_neighbourhood
 from phase_algorithm_helpers import check_condition_that_makes_me_nervous
@@ -50,15 +52,16 @@ from phase_algorithm_helpers import identify_phase_rotation
 
 #from dcrhino3.signal_processing.phase_rotation import identify_phase_rotation
 
+#json_object = json.loads(json_dict)
 data_dir = '/home/kkappler/tmp/dcrhino_lib/bin'
 flow = 'v2_processing_flow'
-flow = 'v2_processing_flow_with_interpolation_j1a'
+#flow = 'v2_processing_flow_with_interpolation_j1a'
 component_id = 'axial';
-component_id = 'tangential'
+#component_id = 'tangential'
 
 data_dir = os.path.join(data_dir, flow)#'/home/kkappler/tmp/dcrhino_lib/bin'
 full_h5_file = os.path.join(data_dir,'4_trim.h5'); sampling_rate=5000.0
-full_h5_file = os.path.join(data_dir,'5_upsample.h5');sampling_rate=50000.0
+#full_h5_file = os.path.join(data_dir,'5_upsample.h5');sampling_rate=50000.0
 traces_data = TraceData()
 traces_data.load_from_h5(full_h5_file)
 df = traces_data.dataframe
@@ -68,16 +71,33 @@ trace_data = row_of_df['{}_trace'.format(component_id)]
 check_condition_that_makes_me_nervous(trace_data)
 mrs_trace = SymmetricTrace(trace_data, sampling_rate, component_id=component_id)
 global_config = traces_data.global_config_by_index(row_of_df['acorr_file_id'])
-#phpdb.set_trace()
+#base_module = BaseModule(json_object,'')
+pdb.set_trace()
 mini_trace = identify_primary_neighbourhood(mrs_trace, global_config)
 trough_search_width=(mini_trace.num_observations-1)//2
 phase_state = determine_phase_state(mini_trace.data, trough_search_width)
 phi = identify_phase_rotation(mini_trace.data)
 print('initial phase state = {}'.format(phase_state))
 balanced_traceling = rotate_phase(mini_trace.data, phi)
-plt.plot(mini_trace.time_vector, balanced_traceling, 'g', label='balanced')
-plt.plot(mini_trace.time_vector, mini_trace.data, 'b', label='original')
-plt.legend();plt.show()
+#plt.plot(mini_trace.time_vector, balanced_traceling, 'g', label='balanced')
+#plt.plot(mini_trace.time_vector, mini_trace.data, 'b', label='original')
+#plt.legend();plt.show()
+balanced_trace = rotate_phase(mrs_trace.data, phi)
+#plt.plot(mrs_trace.time_vector, balanced_trace, 'g', label='balanced')
+#plt.plot(mrs_trace.time_vector, mrs_trace.data, 'b', label='original')
+#plt.legend();plt.show()
+new_center_index = np.argmax(balanced_trace)
+left_side = balanced_trace[:new_center_index]
+right_side = balanced_trace[new_center_index+1:]
+new_len = min(len(left_side), len(right_side))
+trimmed_trace = balanced_trace[new_center_index-new_len:new_center_index+new_len+1]
+timestamp = 0
+transformed_args = self.get_transformed_args(trace_config)
+fek1 = FeatureExtractorK1(component_id, trimmed_trace, transformed_args, timestamp)
+
+#output_trace
+#balanced_symmetric_trace =
+
 pdb.set_trace()
 
 mini_trace.plot()

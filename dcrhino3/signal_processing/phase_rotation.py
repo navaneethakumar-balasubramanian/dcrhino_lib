@@ -38,16 +38,27 @@ def rotate_phase(data, phase_shift, degrees=True):
 def determine_phase_state(data, trough_search_width):
     """
     trough-search-width: this is how far to the left and right of the peak we will
-    look for a minumum.  It MUST be large enough for the minimum to be contained,
+    look for a minumum.  It must be large enough for the minimum to be contained,
     but not so large that we may find another minumum ... show up
+
+    @note 20190211: I do not understand the condition  max_index<trough_search_width
+    which leads to balanced .. it works most of the time but for left low traces with
+    fewer observations to th left than the right it is returning balanced prematurely
+    -- I'm going to comment it out and see what happens
     """
     print('trough_search_width {}'.format(trough_search_width))
     max_index = np.argmax(data)
     left_trough_region = data[max_index-trough_search_width:max_index]
+    if len(left_trough_region) == 0:
+        left_trough_region = data[:max_index]
     right_trough_region = data[max_index:max_index+trough_search_width]
+    if len(right_trough_region) == 0:
+        pdb.set_trace()
+        print('this should not happen')
+
     #print(max_index)
-    if max_index<trough_search_width:
-        return 'balanced'
+#    if max_index<trough_search_width:
+#        return 'balanced'
     #left_min_value = np.min(left_trough_region)
     left_min_index = np.argmin(left_trough_region)
     left_min_value = left_trough_region[left_min_index]

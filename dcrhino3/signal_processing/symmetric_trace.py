@@ -15,6 +15,7 @@ import os
 import pdb
 
 from dcrhino3.helpers.general_helper_functions import init_logging
+from dcrhino3.signal_processing.phase_rotation import rotate_phase
 
 logger = init_logging(__name__)
 
@@ -60,9 +61,9 @@ class SymmetricTrace(object):
     @property
     def time_vector(self):
         return self._time_vector
-        time_vector = self.dt * (np.arange(self.num_observations) - self.t0_index)
-        self.time_vector = time_vector
-        return
+#        time_vector = self.dt * (np.arange(self.num_observations) - self.t0_index)
+#        self.time_vector = time_vector
+#        return
 
     @property
     def center_index(self):
@@ -86,7 +87,23 @@ class SymmetricTrace(object):
         plt.title('{} component'.format(self.component_id))
         plt.xlabel('Time (s)')
         plt.show()
-#        pdb.set_trace()
+
+    def rotate_recenter_and_trim(self, phi):
+        """
+
+        """
+        rotated_data = rotate_phase(self.data, phi)
+        new_center_index = np.argmax(rotated_data)
+        left_side = rotated_data[:new_center_index]
+        right_side = rotated_data[new_center_index+1:]
+        new_len = min(len(left_side), len(right_side))
+        trimmed_trace = rotated_data[new_center_index-new_len:new_center_index+new_len+1]
+        self.data = trimmed_trace
+        self.calculate_time_vector()
+        return
+
+
+        pdb.set_trace()
 #        pass
         #self.data =
 

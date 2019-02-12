@@ -26,7 +26,7 @@ def identify_primary_neighbourhood(symmetric_trace_in, global_config):
 
     @note 20190209: need to decide to keep +1 or +2 regions to either side of zero_crossing
     """
-    n_regions = 1 #2 number of same-sign regions to keep L and R of center
+    n_regions = 2 #2 number of same-sign regions to keep L and R of center
     symmetric_trace = symmetric_trace_in._clone()
     qq = get_expected_multiple_times(global_config)
     #n_steps_keep = int(qq[symmetric_trace.component_id] / symmetric_trace.dt)
@@ -50,6 +50,7 @@ def identify_primary_neighbourhood(symmetric_trace_in, global_config):
     neighbourhood_indices = np.hstack(reference_array[tmp-n_regions:tmp+n_regions+1])
     symmetric_trace.trim_to_indices(neighbourhood_indices)
     return symmetric_trace
+
 
 def identify_phase_rotation(data):
     """
@@ -81,11 +82,17 @@ def identify_phase_rotation(data):
 
 def check_condition_that_makes_me_nervous(data):
     if np.argmax(data) != np.argmax(np.abs(data)):
-        implication="this means the global maximum deviation from zero\
+        implication_1="this means the global maximum deviation from zero\
         is to the negative ... I hope this is not ever the case for the\
         primary peak, it would add complexity to thinking about this algorithm"
         print('oh dear')
-        print(implication)
+        print(implication_1)
+        implication_2 = "rotate_recenter_and_trim method assumes after rotation\
+        we recenter on the max, it may need to be modified to recenter on min"
+        print(implication_2)
+        thought_1 = 'But I think we maybe ok here ... if we add 180 degrees\
+        to the phase shift.'
+        print(thought_1)
         pdb.set_trace()
 
 def my_function():

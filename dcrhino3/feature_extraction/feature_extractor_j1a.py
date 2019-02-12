@@ -135,6 +135,7 @@ class FeatureExtractorJ1(object):
         except AttributeError:
             self.sampling_rate = transformed_args.output_sampling_rate
 
+        self.transformed_args = transformed_args
         self.trace = SymmetricTrace(trimmed_trace, self.sampling_rate, component_id=component_id)
         self.window_widths = transformed_args.window_widths
         self.expected_multiple_periods = get_expected_multiple_times(transformed_args)
