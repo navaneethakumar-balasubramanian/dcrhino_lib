@@ -56,7 +56,7 @@ class ModuleType(Enum):
 
 
 class TraceData(object):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs): 
         """
         """
         self.dataframe = kwargs.get('df', pd.DataFrame())
