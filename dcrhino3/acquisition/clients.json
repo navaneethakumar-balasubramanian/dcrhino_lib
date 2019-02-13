@@ -1,0 +1,29 @@
+{
+  "clients":
+    [
+      {
+        "name": "ARCELORMITTAL",
+        "mines":["MONT_WRIGHT"]
+      },
+      {
+        "name": "RIO_TINTO",
+        "mines":["WEST_ANGELAS"]
+      },
+      {
+        "name": "CENTERRA_GOLD",
+        "mines":["MOUNT_MILLIGAN"]
+      },
+      {
+        "name": "TECK",
+        "mines":["LINE_CREEK","ELK_VALLEY"]
+      },
+      {
+        "name": "DATACLOUD",
+        "mines":["TEST_MINE","NUC_TEST_MINE"]
+      },
+      {
+        "name": "DETOUR_GOLD",
+        "mines":["DETOUR_LAKE"]
+      }
+    ]
+}

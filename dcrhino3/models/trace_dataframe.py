@@ -56,12 +56,21 @@ class ModuleType(Enum):
 
 
 class TraceData(object):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs): 
         """
         """
         self.dataframe = kwargs.get('df', pd.DataFrame())
         self.applied_modules = []
         self._global_configs = dict()
+
+
+    @property
+    def mine_name(self):
+        return self.first_global_config.mine_name
+
+    @property
+    def first_global_config(self):
+        return self.global_config_by_index(self.dataframe["acorr_file_id"].values[0])
 
     def apply_module(self,module_type,arguments):
         """
@@ -97,6 +106,7 @@ class TraceData(object):
         first_global_config = self.global_config_by_index(df['acorr_file_id'].values[0])
         df['sensor_id'] = first_global_config.sensor_serial_number
         df['digitizer_id'] = first_global_config.digitizer_serial_number
+        df['rhino_sensor_uid'] = str(first_global_config.sensor_type) + "_" + str(first_global_config.sensor_serial_number) + "_" + str(first_global_config.digitizer_serial_number) + "_" + str(first_global_config.sensor_accelerometer_type) + "_" + str(first_global_config.sensor_saturation_g)
         df.to_csv(path,index=False)
 
     def save_to_h5(self, path):
@@ -160,6 +170,48 @@ class TraceData(object):
 
         h5f.close()
         return
+
+    def realtime_append_to_h5(self,path,file_id='0',global_config=None):
+        all_columns = list(self.dataframe.columns)
+        max_shape = (None,)
+        dtype = np.float32
+        h5f = h5py.File(path, 'a')
+        for column in all_columns:
+
+            if column[-9:]=="ial_trace":
+                data=list([self.dataframe[column][0],])
+                max_shape = (None,None)
+            elif column == "timestamp":
+                dtype = np.float64
+                data = np.asarray(self.dataframe[column],dtype=dtype)
+            else:
+                data = np.asarray(self.dataframe[column],dtype=dtype)
+            if column in h5f.keys():
+                ds = h5f[column]
+                ds.resize(ds.shape[0] + 1, axis = 0)
+                ds[-1:] = data
+            else:
+                ds = h5f.create_dataset(column, chunks=True,data=data,
+                                        dtype=dtype, maxshape=max_shape,compression="gzip", compression_opts=9)
+        #<config>
+        configs_dict = {}
+        if file_id in self._global_configs.keys():
+            if not 'global_config_jsons' in h5f.attrs.keys():
+                unicode_string = self.global_config_by_index(file_id).json_string()
+                configs_dict[file_id] = unicode_string
+                all_configs_as_a_string = json.dumps(configs_dict)
+                h5f.attrs['global_config_jsons'] = all_configs_as_a_string
+        else:
+            self.add_global_config(global_config,file_id)
+            configs_dict = {}
+            for each_file_id in self._global_configs.keys():
+                unicode_string = self.global_config_by_index(each_file_id).json_string()
+                configs_dict[each_file_id] = unicode_string
+            all_configs_as_a_string = json.dumps(configs_dict)
+            h5f.attrs['global_config_jsons'] = all_configs_as_a_string
+        h5f.close()
+        return
+
 
     def load_from_h5(self,path):
         """

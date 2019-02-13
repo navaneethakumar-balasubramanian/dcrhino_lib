@@ -1,4 +1,7 @@
 *pyc
 dcrhino.egg-info/*
-
+dcrhino3/acquisition/logs/*.log
+dcrhino3/acquisition/logs/*.err
 *.json
+!dcrhino3/acquisition/clients.json
+bin/can_be_deleted

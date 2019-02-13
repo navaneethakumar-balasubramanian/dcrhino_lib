@@ -19,16 +19,20 @@ logger = init_logging(__name__)
 
 class RhinoDBHelper:
         def __init__(self,host='localhost',user='default',password='',database='test',compression='lz4',conn=False):
-            logger.info('Using database '+str(database)+' on '+str(host))
+            
             if conn is False:
+                logger.info('Using database '+str(database)+' on '+str(host))
                 self.client = Client(host,user=user,password=password,database=database,compression=compression)
             else:
+                logger.info('Using database '+str(conn['database'])+' on '+str(conn['host']))
                 self.client = Client(conn['host'],user=conn['user'],password=conn['password'],database=conn['database'],compression=compression)
             self.acorr_traces_table_name = 'acorr_traces'
             self.acorr_files_table_name = 'acorr_files'
             self.acorr_configs_table_name = 'acorr_files_configs'
             self.max_batch_to_query = 5000
-
+            
+            
+            
         def get_file_id_from_file_path(self,file_path):
             query_vars={
                         'file_path':file_path

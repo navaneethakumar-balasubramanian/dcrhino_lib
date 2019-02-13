@@ -69,6 +69,22 @@ class RawTraceData(TraceData):
         output_df.index = output_df['timestamp']
         return output_df, global_config
 
+    def calibrate_l1h5(self,df,global_config):
+        t0 = time.time()
+
+
+        for line_idx in range(len(df)):
+            row_of_df = df.iloc[line_idx]
+            for component_id in global_config.components_to_process:
+                trace_to_process = row_of_df[component_id]
+                processed_trace = self.calibrate_1d_component_array(trace_to_process,global_config,global_config.sensor_sensitivity[component_id])
+                df.at[line_idx, component_id] = processed_trace
+
+        time_interval = time.time() - t0
+        logger.info("Took %s seconds to calibrate %s traces" % (time_interval,len(df)))
+        return df
+
+
     def resample_l1h5(self,df, global_config):
 
         """
@@ -87,12 +103,10 @@ class RawTraceData(TraceData):
             output_dict[component_id] = np.full((num_traces, samples_per_trace), np.nan) #Allocate Memory
 
             for i_trace in range(num_traces):
-                interp_function = interp1d(df['raw_timestamps'].iloc[i_trace],
-                                           df[component_id].iloc[i_trace],
-                                           kind='linear', bounds_error=False,
-                                           fill_value=[0.0,])#'extrapolate')
                 ideal_timestamps = global_config.dt * np.arange(samples_per_trace) + df['timestamp'].iloc[i_trace]
-                output_dict[component_id][i_trace, :] = interp_function(ideal_timestamps)
+                output_dict[component_id][i_trace, :] = self.interpolate_1d_component_array(df['raw_timestamps'].iloc[i_trace],
+                                                                                            df[component_id].iloc[i_trace],
+                                                                                            ideal_timestamps)
             output_dict[component_id] = list(output_dict[component_id])
             df[component_id] = output_dict[component_id]
 
@@ -101,6 +115,42 @@ class RawTraceData(TraceData):
         logger.info("Took %s seconds to resample %s traces" % (time_interval,len(df)))
         return df
 
+    def interpolate_1d_component_array(self,raw_timestamps,component_array,ideal_timestamps):
+        #<Numpy is a lot faster and it was the legacy method we have been using so will continue using the
+        #Extrapolation capabilities>
+        interp_data = np.interp(ideal_timestamps, raw_timestamps,component_array)
+        #</numpy function>
+        return interp_data
+
+    def calibrate_1d_component_array(self,component_array,global_config,sensitivity):
+        t0 = time.time()
+        output = component_array
+        is_ide_file = not int(global_config.sensor_type) == 2
+
+        if is_ide_file or global_config.rhino_version == None:
+            return output / sensitivity
+        else:
+            if float(global_config.rhino_version) == 1.0:
+                output = (output * 5.0) / 65535 #Covert to Voltage
+                output = (float(global_config.accelerometer_max_voltage)/2.0) - output #Calculate difference from reference voltage
+            elif float(global_config.rhino_version) == 1.1:
+                #<Convert to Voltage>
+                tmp = output
+                output = output.astype(np.int32)#need to change the type so that the operation - pow_of_2 works
+                pow_of_2 = pow(2,32)
+                volt_per_bit = float(global_config.accelerometer_max_voltage)/pow(2.0,31)
+                # output = np.asarray([x - pow_of_2 if x& 0x80000000 == 0x80000000 else x for x in output])
+                mask_true_or_false = tmp&0x80000000==0x80000000
+                output[mask_true_or_false] = tmp[mask_true_or_false]-pow_of_2
+                output = np.round(output/2.0,0) * volt_per_bit
+                #</Convert to Voltage>
+            else:
+                raise ValueError("Calibration Error: The Rhino Hardware version should be 1.0 or 1.1")
+            output = output / (sensitivity/1000.0) #Convert to G's
+            return output
+
+    def autocorrelate_1d_component_array(self,input_trace, samples_per_trace):
+        return autocorrelate_trace(input_trace, samples_per_trace)
 
     def autocorrelate_l1h5(self,df, global_config):
         """
@@ -134,13 +184,10 @@ class RawTraceData(TraceData):
                 #pdb.set_trace()
 
                 input_trace = df[component_id].iloc[i_trace]
-                acorr_trace = autocorrelate_trace(input_trace, samples_per_trace)
+                acorr_trace = self.autocorrelate_1d_component_array(input_trace, samples_per_trace)
 
                 output_dict[component_id][i_trace, :] = acorr_trace#[0:samples_per_trace]
             output_dict[component_id] = list(output_dict[component_id])
-
-
-            #df[component_id] = output_dict[component_id]
 
         output_dict['timestamp'] = df['timestamp']
 

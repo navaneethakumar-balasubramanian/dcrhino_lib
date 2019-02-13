@@ -32,7 +32,10 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
                    upsample factor is coming from the global cfg")
         global_config.output_sampling_rate *= upsample_factor
 
-    db_helper = RhinoDBHelper('13.66.189.94',database='mont_wright')
+    #db_helper = RhinoDBHelper('13.66.189.94',database='mont_wright')
+    logger.info("Mine name on file:" + str(global_config.mine_name))
+    conn = env_config.get_rhino_db_connection_from_mine_name(global_config.mine_name)
+    db_helper= RhinoDBHelper(conn=conn)
     dupes = db_helper.check_for_pre_saved_acorr_traces(l1h5_dataframe['timestamp'],global_config.sensor_serial_number)
 
     if len(dupes)>0:
@@ -54,24 +57,28 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
     list_df = splitDataFrameIntoSmaller(l1h5_dataframe.reset_index(drop=True),chunk_size)
 
     for chunk in list_df:
-        resampled_dataframe = raw_trace_data.resample_l1h5(chunk, global_config)
-        autcorrelated_dataframe = raw_trace_data.autocorrelate_l1h5(resampled_dataframe, global_config)
-        if 'radial' not in autcorrelated_dataframe.columns:
-            num_lines = autcorrelated_dataframe.shape[0]
-            len_line = len(autcorrelated_dataframe['axial'].values[0])
-            temp = [None] * num_lines
-            for i in range(num_lines):
-                temp[i] = [0] * len_line
-            autcorrelated_dataframe['radial'] = temp
-
-        if 'tangential' not in autcorrelated_dataframe.columns:
-            num_lines = autcorrelated_dataframe.shape[0]
-            len_line = len(autcorrelated_dataframe['axial'].values[0])
-            temp = [None] * num_lines
-            for i in range(num_lines):
-                temp[i] = [0] * len_line
-            autcorrelated_dataframe['tangential'] = temp
-        db_helper.save_autocorr_traces(file_id,autcorrelated_dataframe['timestamp'],axial=autcorrelated_dataframe['axial'],radial=autcorrelated_dataframe['radial'],tangential=autcorrelated_dataframe['tangential'])
+        if len(chunk) > 0:
+            calibrated_dataframe = raw_trace_data.calibrate_l1h5(chunk, global_config)
+            resampled_dataframe = raw_trace_data.resample_l1h5(calibrated_dataframe, global_config)
+            autcorrelated_dataframe = raw_trace_data.autocorrelate_l1h5(resampled_dataframe, global_config)
+            
+            if 'radial' not in autcorrelated_dataframe.columns:
+                num_lines = autcorrelated_dataframe.shape[0]
+                len_line = len(autcorrelated_dataframe['axial'].values[0])
+                temp = [None] * num_lines
+                for i in range(num_lines):
+                    temp[i] = [0] * len_line
+                autcorrelated_dataframe['radial'] = temp
+    
+            if 'tangential' not in autcorrelated_dataframe.columns:
+                num_lines = autcorrelated_dataframe.shape[0]
+                len_line = len(autcorrelated_dataframe['axial'].values[0])
+                temp = [None] * num_lines
+                for i in range(num_lines):
+                    temp[i] = [0] * len_line
+                autcorrelated_dataframe['tangential'] = temp
+            
+            db_helper.save_autocorr_traces(file_id,autcorrelated_dataframe['timestamp'],axial=autcorrelated_dataframe['axial'],radial=autcorrelated_dataframe['radial'],tangential=autcorrelated_dataframe['tangential'])
 
 
 if __name__ == '__main__':
@@ -85,6 +92,8 @@ if __name__ == '__main__':
 
     env_config = EnvConfig(args.env_file)
     files = glob2.glob(args.src_path)
+    
+    logger.info("Found " + str(len(files)) + " files" )
 
     if not files:
         print  'File does not exist: ' + args.src_path

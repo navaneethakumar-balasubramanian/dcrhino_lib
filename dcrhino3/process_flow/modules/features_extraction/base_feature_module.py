@@ -4,8 +4,11 @@
 """
 
 import pandas as pd
+import time
 import pdb
 from dcrhino3.process_flow.modules.base_module import BaseModule
+from dcrhino3.helpers.general_helper_functions import init_logging
+logger = init_logging(__name__)
 
 class BaseFeatureModule(BaseModule):
     def __init__(self, json, output_path):
@@ -22,6 +25,7 @@ class BaseFeatureModule(BaseModule):
         dataframe spanning a time interval comprising many traces
         """
         output_df = trace.dataframe.copy()
+
         features_dict_list = [None] * len(output_df) 
         
         for line_idx in range(len(output_df)):
@@ -46,6 +50,7 @@ class BaseFeatureModule(BaseModule):
         features_df = pd.DataFrame(features_dict_list)
         
         merged = pd.concat([features_df,trace.dataframe],axis=1)
+
 
         trace.dataframe = merged
 

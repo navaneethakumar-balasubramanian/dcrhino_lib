@@ -1,14 +1,16 @@
 {
-  "id": "v2_processing_flow",
-  "output_to_file":true,
-  "trace_processing": {
-    "modules": [
-      {
+    "id":"v2_processing_flow_with_interpolation_j1a",
+    "output_to_file":true,
+	"trace_processing":{
+		"modules":[
+                                {
         "type": "unfold",
         "output_to_file": false,
-        "args": {}
+        "args": {
+
+        }
       },
-      {
+                {
         "type": "lead_channel_deconvolution",
         "output_to_file": true,
         "args": {
@@ -16,6 +18,10 @@
         }
       },
       {
+        "type": "export_segy",
+        "args": {}
+      },
+        {
         "type": "band_pass_filter",
         "output_to_file": true,
         "args": {
@@ -25,9 +31,10 @@
           "trapezoidal_bpf_corner_4": "|global_config.trapezoidal_bpf_corner_4|",
           "trapezoidal_bpf_duration": "|global_config.trapezoidal_bpf_duration|",
           "sampling_rate": "|global_config.sampling_rate|"
-        }
+               }
+
       },
-      {
+        {
         "type": "trim",
         "output_to_file": true,
         "args": {
@@ -35,45 +42,61 @@
           "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
           "sampling_rate": "|global_config.sampling_rate|",
           "num_taps_in_decon_filter": "|global_config.num_taps_in_decon_filter|"
-        }
+               }
+
+      },
+        {
+        "type": "upsample",
+        "output_to_file": true,
+        "args": {
+          "trimmed_trace_duration": "|global_config.trimmed_trace_duration|",
+          "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
+          "max_lag_trimmed_trace": "|global_config.max_lag_trimmed_trace|",
+          "sampling_rate": "|global_config.sampling_rate|",
+          "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
+          "upsample_interpolation_kind": ["|global_config.upsample_interpolation_kind|", "quadratic"]
+               }
+
       }
-    ]
-  },
+
+
+		]
+	},
   "features_extraction": {
+    "output_to_file":true,
     "modules": [
       {
         "type": "j0",
         "output_to_file": true,
         "args": {
-          "output_sampling_rate": [
-            "|global_config.output_sampling_rate|",
-            100
-          ],
-          "primary_window_halfwidth_ms": "|global_config.primary_window_halfwidth_ms|",
-          "multiple_window_search_width_ms": "|global_config.multiple_window_search_width_ms|",
-          "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
-          "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
-          "n_samples_trimmed_trace": "|global_config.n_samples_trimmed_trace|",
-          "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|"
-        }
+                "output_sampling_rate":"|global_config.output_sampling_rate",
+                "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
+                "primary_window_halfwidth_ms":"|global_config.primary_window_halfwidth_ms|",
+                "multiple_window_search_width_ms":"|global_config.multiple_window_search_width_ms|",
+                "sensor_distance_to_source":"|global_config.sensor_distance_to_source|",
+                "ACOUSTIC_VELOCITY":"|global_config.ACOUSTIC_VELOCITY|",
+                "n_samples_trimmed_trace": "|global_config.n_samples_trimmed_trace|",
+                "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|"
+                }
       },
-      {
+       {
         "type": "j1",
         "output_to_file": true,
         "args": {
-          "window_widths": "|global_config.window_widths",
-          "output_sampling_rate": "|global_config.output_sampling_rate",
-          "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
-          "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
-          "sensor_saturation_g": "|global_config.sensor_saturation_g|",
-          "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
-          "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|",
-          "n_samples_trimmed_trace": "|global_config.n_samples_trimmed_trace|",
-          "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|"
-        }
+                "window_widths":"|global_config.window_widths",
+                "output_sampling_rate":"|global_config.output_sampling_rate",
+                "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
+                "sensor_distance_to_source":"|global_config.sensor_distance_to_source|",
+                "sensor_distance_to_shocksub":"|global_config.sensor_distance_to_shocksub|",
+                "sensor_saturation_g":"|global_config.sensor_saturation_g|",
+                "ACOUSTIC_VELOCITY":"|global_config.ACOUSTIC_VELOCITY|",
+                "SHEAR_VELOCITY":"|global_config.SHEAR_VELOCITY|",
+                "n_samples_trimmed_trace": "|global_config.n_samples_trimmed_trace|",
+                "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|"
+                }
       }
-    ],
-    "output_to_file": true
+
+    ]
   },
   "plotters": {
     "modules": [
@@ -91,7 +114,7 @@
             "ax_vel_del_col_name": "J0_axial_velocity_delay",
             "tang_vel_del_col_name": "J0_tangential_velocity_delay",
             "reflection_coefficient_col_name": "J0_reflection_coefficient",
-	     "panels":{		    	
+	     "panels":{
 		"axial_amp_feature_plot":true,
 	    	"axial_delay_feature_plot":false,
 	    	"axial_rc_feature_plot":true,
@@ -115,11 +138,11 @@
 			"radial_amp_lim":[0,1.5],
 			"radial_rc_lim":[0,1.0],
 			"radial_delay_lim":[80,130]
-			
+
 		}
           },
-	  "components_to_process":"|global_config.components_to_process|",
-          "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
+          "components_to_process":"|global_config.components_to_process|",
+	  "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
           "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|",
           "noise_threshold": "|global_config.noise_threshold|",
           "rig_id": "|global_config.rig_id|",
@@ -133,6 +156,7 @@
           "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
           "sensor_serial_number": "|global_config.sensor_serial_number|",
           "sensor_saturation_g": "|global_config.sensor_saturation_g|",
+          "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
 	  "output_sampling_rate":"|global_config.output_sampling_rate|",
 	  "mine_name":"|global_config.mine_name|",
 	  "mult_neg_win": 0.5,
@@ -141,5 +165,4 @@
       }
     ]
   }
-  
 }
