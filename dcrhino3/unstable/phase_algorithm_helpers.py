@@ -56,6 +56,7 @@ def identify_phase_rotation(data):
     """
     data: time series of a trace, approximately centered on max amplitude xcorr
     """
+    tolerate_90_degree_plus_rotations = True
     trough_search_width = (len(data) - 1) // 2
     phase_state = determine_phase_state(data, trough_search_width)
     print('inital phase state = {}'.format(phase_state))
@@ -65,17 +66,19 @@ def identify_phase_rotation(data):
             degrees_advance -= 1;#print(degrees_advance)
             rotated_data = rotate_phase(data, degrees_advance);
             phase_state = determine_phase_state(rotated_data, trough_search_width)
-            if np.abs(degrees_advance) > 90:
-                print('error - could not balance with 90 degree rotation')
-                pdb.set_trace()
+            if not tolerate_90_degree_plus_rotations:
+                if np.abs(degrees_advance) > 90:
+                    print('error - could not balance with 90 degree rotation')
+                    pdb.set_trace()
     elif phase_state == 'right_low':
         while phase_state=='right_low':
             degrees_advance += 1;#print(degrees_advance)
             rotated_data = rotate_phase(data, degrees_advance);
             phase_state = determine_phase_state(rotated_data, trough_search_width)
-            if np.abs(degrees_advance) > 90:
-               print('error - could not balance with 90 degree delay')
-               pdb.set_trace()
+            if not tolerate_90_degree_plus_rotations:
+                if np.abs(degrees_advance) > 90:
+                   print('error - could not balance with 90 degree delay')
+                   pdb.set_trace()
 
     return degrees_advance
 
