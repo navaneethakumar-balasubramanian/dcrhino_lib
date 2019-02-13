@@ -23,6 +23,5 @@ class K0FeaturesModule(BaseFeatureModule):
         feature_extractor = FeatureExtractorK0(component_id, trace_to_process, transformed_args, timestamp)
         #pdb.set_trace()
         line_feature_dict = feature_extractor.extract_features()#(component_id, trace_to_process, transformed_args, timestamp)
-        #line_feature_dict = feature_extractor_j1(component_id, trace_to_process, transformed_args, timestamp)
 
         return line_feature_dict
