@@ -63,7 +63,9 @@ class LeadChannelDeconvolutionModule(BaseTraceModule):
         try:
             ATAinv = scipy.linalg.inv(ATA)
         except scipy.linalg.LinAlgError:
-            return trace_data #ok if unfolded
+            ATAinv = np.zeros(ATA.shape)
+            #print("this is only going to make things worse")
+            #return trace_data #ok if unfolded
 #            dummy_trace_of_expected_length = np.hstack((np.flipud(trace_data[1:]), trace_data))
 #            return dummy_trace_of_expected_length
 

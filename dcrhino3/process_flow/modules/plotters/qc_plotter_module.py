@@ -112,32 +112,6 @@ class QCPlotterModule(BaseModule):
 
 
 
-#    def get_ax_lim(self,extracted_features_df):
-#        min_ax_RC = min(extracted_features_df['J0_reflection_coefficient'])
-#        max_ax_RC = max(extracted_features_df['J0_reflection_coefficient'])
-#        min_tang_RC = min(extracted_features_df['J0_tangential_RC'])
-#        max_tang_RC = max(extracted_features_df['J0_tangential_RC'])
-#        min_peak_x = min(extracted_features_df['J0_axial_primary_peak_sample'])
-#        #max_peak_x = max(extracted_features_df['J0_axial_primary_peak_sample'])
-#        min_delay = min(extracted_features_df['J0_axial_velocity_delay'])
-#        max_delay = max(extracted_features_df['J0_axial_velocity_delay'])
-#
-#        lower_ax_RC = (min_ax_RC - (min_ax_RC*0.05))
-#        upper_ax_RC = (max_ax_RC + (max_ax_RC*0.05))
-#
-#        lower_peak_x = (min_peak_x - (min_peak_x*0.05))
-#        #upper_peak_x = (max_peak_x + (max_peak_x*0.05))
-#
-#        lower_delay = (min_delay - (min_delay*0.05))
-#        upper_delay = (max_delay - (max_delay*0.05))
-#
-#        lower_tang_RC = (min_tang_RC - (min_tang_RC*0.05))
-#        upper_tang_RC = (max_tang_RC + (max_tang_RC*0.05))
-#
-#        ax_lim = pd.DataFrame({'lower_ax_RC':[lower_ax_RC],'upper_ax_RC':[upper_ax_RC],'lower_peak_x':[lower_peak_x],
-#                               'lower_delay':[lower_delay],'upper_delay':[upper_delay],'lower_tang_RC':[lower_tang_RC],
-#                               'upper_tang_RC':[upper_tang_RC]})
-#        return ax_lim
 
     def get_plot_title(self,transformed_args, trace):
         drill_type = DrillTypes(transformed_args.drill_type).name
