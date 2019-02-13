@@ -14,7 +14,8 @@ from dcrhino3.plotters.colour_bar_axis_limits import ColourBarAxisLimits
 
 class QCLogPlotter():
 
-    def __init__(self,axial,tangential,radial,depth,plot_title,output_sampling_rate,mult_pos,mult_win_label,plot_panel_comp,normalize=True,lower_num_ms=-5.0,upper_num_ms=30.0,dt_ms=5,plot_by_depth=True):
+    def __init__(self,axial,tangential,radial,depth,plot_title,output_sampling_rate,mult_pos,mult_win_label,
+                 plot_panel_comp, components_to_plot, normalize=True,lower_num_ms=-5.0,upper_num_ms=30.0,dt_ms=5,plot_by_depth=True):
 
         self.plot_title = plot_title
 
@@ -25,13 +26,20 @@ class QCLogPlotter():
         self.mult_pos = mult_pos
         self.mult_win_label = mult_win_label
         self.plot_panel_comp = plot_panel_comp
-
+        self.components_to_plot = components_to_plot
         self.depth = depth
 
         self.normalize = normalize
-        self.axial = self.prepare_trace(axial)
-        self.tangential = self.prepare_trace(tangential)
-        self.radial = self.prepare_trace(radial)
+        self.axial = None
+        self.tangential = None
+        self.radial = None
+        for component_id in components_to_plot.keys():
+            if component_id == 'axial':
+                self.axial = self.prepare_trace(components_to_plot['axial'])
+            elif component_id == 'tangential':
+                self.tangential = self.prepare_trace(components_to_plot['tangential'])
+            elif component_id == 'radial':
+                self.radial = self.prepare_trace(components_to_plot['radial'])
         self.num_traces_per_component, self.num_samples = self.axial.T.shape
 
     def prepare_trace(self,component_trace):
@@ -98,8 +106,7 @@ class QCLogPlotter():
 
         Y = np.linspace(self.lower_num_ms, self.upper_num_ms, self.axial.shape[0])
         Y = np.flipud(Y)
-#        pdb.set_trace()
-        nrows = self.panel_count()
+        nrows = 2*len(self.components_to_plot)+1
         fig, ax = plt.subplots(nrows, sharex=False, figsize=self.dc_plot_lim())
 
         dt_ms = self.dt_ms
@@ -113,16 +120,19 @@ class QCLogPlotter():
         #pdb.set_trace()
         #ax[1], heatmap1 = self.plot_hole_as_heatmap(ax[1], cbal.v_min_1, cbal.v_max_1, X, Y, self.axial, cmap_string, y_tick_locations)
 
+
+    # THIS CAN ALSO BE CHANGED TO USE THE DICT IN LOOP
+
         n = 0
-        if self.plot_panel_comp.axial_heatmap_plot is True and self.axial is not None and (self.axial[~np.isnan(self.axial)]).size !=0 :
+        if self.plot_panel_comp.axial_heatmap_plot is True and self.axial is not None :
             self.axial_feature_plot(ax[n], X, peak_ampl_x,reflection_coefficient,ax_vel_del,noise_threshold,ax_lim)
             ax[n+1], heatmap1 = self.plot_hole_as_heatmap(ax[n+1], cbal.v_min_1, cbal.v_max_1, X, Y, self.axial, cmap_string, y_tick_locations)
             n = n+2
-        if self.plot_panel_comp.tangential_heatmap_plot is True and self.tangential is not None and (self.tangential[~np.isnan(self.tangential)]).size !=0:
+        if self.plot_panel_comp.tangential_heatmap_plot is True and self.tangential is not None:
             self.tangential_feature_plot(ax[n], X, peak_ampl_y,tangential_RC,tang_vel_del,noise_threshold,ax_lim)
             ax[n+1], heatmap2 = self.plot_hole_as_heatmap(ax[n+1], cbal.v_min_2, cbal.v_max_2, X, Y,self.tangential, cmap_string, y_tick_locations)
             n = n+2
-        if self.plot_panel_comp.radial_heatmap_plot is True and self.radial is not None and (self.radial[~np.isnan(self.radial)]).size !=0:
+        if self.plot_panel_comp.radial_heatmap_plot is True and self.radial is not None :
             self.radial_feature_plot(ax[n], X, peak_ampl_z,noise_threshold,ax_lim)
             ax[n+1], heatmap2 = self.plot_hole_as_heatmap(ax[n+1], cbal.v_min_2, cbal.v_max_2, X, Y,self.radial, cmap_string, y_tick_locations)
             n = n+2
@@ -397,50 +407,51 @@ class QCLogPlotter():
         ax2.set_yticks([])
 
 
-    def panel_count(self):
-        """
-        'Decision regarding how many panels to plot. Current decision flow is
-        Default: 1 panel (for legend)
-        3 panel for 1 feature, 1 component and 1 legend
-        5 panel for 2 features, 2 components and 1 legend
-        7 panel for all features and components, and 1 legend
-        Assumption is if we plot a component, we also want its features
-        """
-        panel_count = 1
-        if self.plot_panel_comp.axial_heatmap_plot is True:
-            if self.axial is not None:
-                if (self.axial[~np.isnan(self.axial)]).size !=0:
-#            Then we are plotting axial features and components. Need 2 more panel apart from legends
-                    panel_count=3
-
-
-        if self.plot_panel_comp.tangential_heatmap_plot is True:
-            if self.tangential is not None:
-                if (self.tangential[~np.isnan(self.tangential)]).size !=0:
-                    if panel_count == 3:    # if Panel count is 3, this means, we already have axial. now we are checking for others
-                        panel_count =5
-                    else:   #if panel count is not 3, means we do not have axial. Still check if we have tang and if we want to plot it
-                        panel_count = 3
-
-
-        if self.plot_panel_comp.radial_heatmap_plot is True:
-            if self.radial is not None:
-                if (self.radial[~np.isnan(self.radial)]).size !=0:
-                    if panel_count==5:      #if panel count is 5, means we have axial and tangential. with radial heatmap true and not none, we need 2 more panels
-                        panel_count = 7
-                    elif panel_count == 3:  #either axial or tangential is missing
-                        panel_count = 5
-                    else:
-                        panel_count = 3
-
-
-
-        #both axial and tangential are missing
-        if panel_count ==1:  # no feature or components
-            sys.exit('No features and components found')
-
-
-        return panel_count
+#    def panel_count(self):
+#        """
+#        THIS IS NOW BEING DONE VIA LENGTH OF DICT (COMPONENTS TO PLOT)
+#        'Decision regarding how many panels to plot. Current decision flow is
+#        Default: 1 panel (for legend)
+#        3 panel for 1 feature, 1 component and 1 legend
+#        5 panel for 2 features, 2 components and 1 legend
+#        7 panel for all features and components, and 1 legend
+#        Assumption is if we plot a component, we also want its features
+#        """
+#        panel_count = 1
+#        if self.plot_panel_comp.axial_heatmap_plot is True:
+#            if self.axial is not None:
+#                if (self.axial[~np.isnan(self.axial)]).size !=0:
+##            Then we are plotting axial features and components. Need 2 more panel apart from legends
+#                    panel_count=3
+#
+#
+#        if self.plot_panel_comp.tangential_heatmap_plot is True:
+#            if self.tangential is not None:
+#                if (self.tangential[~np.isnan(self.tangential)]).size !=0:
+#                    if panel_count == 3:    # if Panel count is 3, this means, we already have axial. now we are checking for others
+#                        panel_count =5
+#                    else:   #if panel count is not 3, means we do not have axial. Still check if we have tang and if we want to plot it
+#                        panel_count = 3
+#
+#
+#        if self.plot_panel_comp.radial_heatmap_plot is True:
+#            if self.radial is not None:
+#                if (self.radial[~np.isnan(self.radial)]).size !=0:
+#                    if panel_count==5:      #if panel count is 5, means we have axial and tangential. with radial heatmap true and not none, we need 2 more panels
+#                        panel_count = 7
+#                    elif panel_count == 3:  #either axial or tangential is missing
+#                        panel_count = 5
+#                    else:
+#                        panel_count = 3
+#
+#
+#
+#        #both axial and tangential are missing
+#        if panel_count ==1:  # no feature or components
+#            sys.exit('No features and components found')
+#
+#
+#        return panel_count
     def dc_plot_lim(self):
         dc_plot_lim = (24,12)
         return dc_plot_lim

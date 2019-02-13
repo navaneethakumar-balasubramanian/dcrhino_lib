@@ -3,6 +3,7 @@
 
 import pdb
 import pandas as pd
+import numpy as np
 
 
 
@@ -13,6 +14,30 @@ from dcrhino3.models.drill_types import DrillTypes
 from dcrhino3.models.bit_types import BitTypes
 from dcrhino3.models.sensor_installation_locations import SensorInstallationLocations
 from dcrhino3.feature_extraction.supporting_j1 import get_expected_multiple_times
+
+def decide_what_components_to_plot(transformed_args,axial,tangential,radial):
+    """
+    use global_config.componets to process via transformed args
+    AND uset process flow booleans (heatmaps)
+    AND check the all zeros conditons
+    and return a list like 
+    ['axial', 'radial']
+    for example
+    
+    I HAVE USED EVAL below, but might need a better way for that.
+    """
+    components_to_plot = {}
+    for component_id in transformed_args.components_to_process:
+        user_option = 'transformed_args.plot.panels.{}_heatmap_plot'.format(component_id)
+        if eval(user_option) is True:
+            if component_id is not None:
+                var = eval(component_id)
+                if (var[~np.isnan(var)]).size !=0:
+                    components_to_plot[component_id]=var
+#                else:
+#                    components_to_plot[component_id]='False'
+#    components_to_plot = []#'axial', ... etc
+    return components_to_plot
 
 class QCPlotterModule(BaseModule):
     def __init__(self, json, output_path):
@@ -62,9 +87,11 @@ class QCPlotterModule(BaseModule):
         tangential_RC = trace.dataframe[transformed_args.plot.tangential_RC_col_name]
         tang_vel_del = trace.dataframe[transformed_args.plot.tang_vel_del_col_name]
         # ADD radial_vel_del, radial_rc
-
+#        pdb.set_trace()
+        components_to_plot = decide_what_components_to_plot(transformed_args,axial,tangential,radial)
         plotter = QCLogPlotter(axial,tangential,radial,depth,plot_title,
-                               sampling_rate,mult_pos,mult_win_label,plot_panel_comp)
+                               sampling_rate,mult_pos,mult_win_label,
+                               plot_panel_comp, components_to_plot)
 
         output_path = None
         if self.output_to_file:
