@@ -141,7 +141,8 @@
 
 		}
           },
-          "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
+          "components_to_process":"|global_config.components_to_process|",
+	  "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
           "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|",
           "noise_threshold": "|global_config.noise_threshold|",
           "rig_id": "|global_config.rig_id|",
