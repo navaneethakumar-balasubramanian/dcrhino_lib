@@ -41,7 +41,7 @@ from dcrhino3.models.config import Config
 from dcrhino3.models.metadata import Metadata
 from dcrhino3.models.traces.raw_trace import RawTraceData
 from dcrhino3.acquisition.external.seismic_wiggle import seismic_wiggle
-from dcrhino3.process_flow.modules.trace_processing.unfold_autocorrelation import UnfoldAutocorrelationModule
+from dcrhino3.process_flow.modules.trace_processing.unfold_autocorrelation import unfold_trace
 
 
 config_collection_file_path = os.path.join(PATH,'collection_daemon.cfg')
@@ -63,7 +63,7 @@ info_message_identifier = int(config.get("COLLECTION","info_message_identifier",
 rhino_ttyusb = get_rhino_ttyusb()
 rhino_port = "/dev/"+rhino_ttyusb
 rhino_serial_number = config.get("INSTALLATION","sensor_serial_number","S9999")
-rhino_version = config.get("COLLECTION","rhino_version")
+rhino_version = config.getfloat("COLLECTION","rhino_version")
 run_start_time = time.time()
 battery_max_voltage = config.getfloat("INSTALLATION","battery_max_voltage")
 battery_lower_limit = config.getfloat("INSTALLATION","battery_min_voltage")
@@ -83,6 +83,7 @@ class LogFileDaemonThread(threading.Thread):
         self.output_file = open(self.filename, 'ar', buffering=0)
 
     def run (self):
+        print("Started LogFileDaemon")
         while True:
             filename = os.path.join(LOGS_PATH,datetime.now().strftime('%Y_%m_%d_%H')+'.log')
             if self.filename != filename:
@@ -109,7 +110,27 @@ class LogFileDaemonThread(threading.Thread):
             self.output_file.flush()
 
 
-class Packet(object):
+class Packet_v10(object):
+    def __init__(self,q_data):
+        lst = struct.unpack('=bLbbHHHLLb',q_data)
+        self.rx_sequence = lst[1]
+        self.x = socket.ntohs(lst[4])
+        self.y = socket.ntohs(lst[5])
+        self.z = socket.ntohs(lst[6])
+        self.tx_clock_ticks = lst[7] #Each clock tick is 10 microseconds
+        # self.tx_sequence = lst[8]
+
+        #this is in preparation for new data stream with battery, rssi and temp
+        import random
+        self.rssi = random.randint(10,30)
+        self.temp = random.randint(-15,0)
+        self.batt = random.randint(10,12)
+        self.sleep_time = 0 #For comaptibility with v1.1, not really used for anything
+
+
+
+
+class Packet_v11(object):
     def __init__(self,q_data):
         self.packet_type = 0 # 0=data_packet, 1=info_packet
         self.rx_sequence = 0
@@ -243,6 +264,63 @@ class FileFlusher(threading.Thread):
         self.stope.set()
 
     def run(self):
+    	if rhino_version == 1.1:
+            self.run_v11()
+    	else:
+    		self.run_v10()
+
+
+    def run_v10(self):
+        print("Started File Fluser 1.0")
+        self.tx_status = 1 #for comaptibility with version 1.1.  Status is always 1 (on) for v1.0
+        first_ts = time.time()
+        first_seq = 0
+        psec = None
+        counter = 0
+        prev = 0
+        counterchanges = 0
+        tx_restarted = False
+        lst = ""
+        while True:
+            try:
+                timestamp = time.time()
+                laptop_ts = timestamp
+                q_data = self.get_data_from_q()
+
+                packet = Packet_v10(q_data)
+
+                #First packet received
+                if self.sequence == 0:
+                    m = "{}: FIRST PACKET RECEIVED\n".format(datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S"))
+                    self.logQ.put(m)
+                    self.displayQ.put(m)
+                    self.first_packet_received(packet,timestamp)
+                    self.save_row_to_processing_q(laptop_ts,timestamp,packet)
+                else:
+                    #if it is a consecutive packet or if we missed any
+                    if packet.tx_clock_ticks > self.sequence:
+                        timestamp = self.calculate_packet_timestamp(packet)
+                        self.save_row_to_processing_q(laptop_ts,timestamp,packet)
+                    elif packet.tx_clock_ticks == self.sequence:
+                        print (self.previous_timestamp, packet.tx_clock_ticks)
+                        self.previous_timestamp = 0
+                        timestamp = self.calculate_packet_timestamp(packet)
+                        m = "{}: DUPLICATED RECORD WILL BE IGNORED\n".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+                        self.logQ.put(m)
+                        self.displayQ.put(m)
+                    else:
+                        m = "{}: ADJUSTED FOR CLOCK ROLLOVER USING FIRST PACKET LOGIC\n".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+                        self.logQ.put(m)
+                        self.displayQ.put(m)
+                        self.first_packet_received(packet,timestamp)
+                        self.save_row_to_processing_q(laptop_ts,timestamp,packet)
+            except Queue.Empty:
+                # Handle empty queue here
+                pass
+
+
+    def run_v11(self):
+        print("Started File Fluser 1.1")
         first_ts = time.time()
         first_seq = 0
         psec = None
@@ -262,7 +340,7 @@ class FileFlusher(threading.Thread):
                 laptop_ts = timestamp
                 q_data = self.get_data_from_q()
 
-                packet = Packet(q_data)
+                packet = Packet_v11(q_data)
                 if packet.packet_type == 0:
                     self.tx_status = 1
                     packet.batt = self.current_batt
@@ -350,7 +428,59 @@ class SerialThread(threading.Thread):
         return self._corrupt_packets
 
 
-    def run (self):
+    def run(self):
+
+    	if rhino_version == 1.1:
+            self.run_v11()
+    	else:
+    		self.run_v10()
+
+
+    def run_v10 (self):
+        print("Started Serial 1.0")
+        counter = 0
+        while True:
+            try:
+                a = self.cport.read(self.pktlen)
+                if len(a)==self.pktlen and a[0] == b'\x02' and a[self.pktlen-1] == b'\x03':
+                    counter = 0
+                    self.flushq.put(a)
+                    last_a = a
+                else:
+                    counter += 1
+                    self._corrupt_packets += 1
+                    if len(a) >= self.pktlen:
+                        m = '{}: CORRUPT {} BYTE PACKET>>>>>>>>>>>>>>>>>>>>>{}\n'.format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),len(a),counter)
+                        self.logQ.put(m)
+                        self.displayQ.put(m)
+                    else:
+                        m = '{}: TRUNCATED {} BYTE PACKET>>>>>>>>>>>>>>>>>>>>>{}\n'.format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),len(a),counter)
+                        self.logQ.put(m)
+                        self.displayQ.put(m)
+
+                    temp = self.cport.read(1)
+                    while temp != b'\x03':
+                        temp = self.cport.read(1)
+                        if len(temp):
+                            pass
+                        else:
+                            time.sleep(0.1)
+                            self.start_rx()
+                            m = '{}: ATEMPTING TO RESTART ACQUISITION\n'.format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+                            self.logQ.put(m)
+                            self.displayQ.put(m)
+
+            except:
+                print("Serial Thread Exception")
+                print(sys.exc_info())
+                pass
+
+
+
+
+
+    def run_v11 (self):
+        print("Started Serial 1.1")
         counter = 0
         while True:
             try:
@@ -409,6 +539,7 @@ class CollectionDaemonThread(threading.Thread):
         self.displayQ = displayQ
 
     def run (self):
+        print("Started Collection Daemon")
         lastFileName = None
         try:
             while True:
@@ -554,6 +685,7 @@ class CollectionDaemonThread(threading.Thread):
 
 
 def main_run(run=True):
+    print("Started Main")
     if not os.path.exists(run_folder_path):
         os.makedirs(run_folder_path)
     copyfile(config_collection_file_path, os.path.join(run_folder_path,'config.cfg'))
@@ -580,6 +712,7 @@ def main_run(run=True):
     print (m)
 
     if run:
+        # pdb.set_trace()
         fflush.start()
         comport.start()
         comport.start_rx()
@@ -597,17 +730,21 @@ def main_run(run=True):
                 logQ.put(m)
                 displayQ.put(m)
                 subpids.append(sub_pid)
-
+        print(subpids)
         p = subprocess.Popen(['taskset', '-cp','4', str(pid) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate()
-        p = subprocess.Popen(['taskset', '-cp','4', str(subpids[0]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = p.communicate()
-        p = subprocess.Popen(['taskset', '-cp','5', str(subpids[1]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = p.communicate()
-        p = subprocess.Popen(['taskset', '-cp','6', str(subpids[2]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = p.communicate()
-        p = subprocess.Popen(['taskset', '-cp','7', str(subpids[3]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = p.communicate()
+        # p = subprocess.Popen(['taskset', '-cp','4', str(subpids[0]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # out, err = p.communicate()
+        # p = subprocess.Popen(['taskset', '-cp','5', str(subpids[1]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # out, err = p.communicate()
+        # p = subprocess.Popen(['taskset', '-cp','6', str(subpids[2]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # out, err = p.communicate()
+        # p = subprocess.Popen(['taskset', '-cp','7', str(subpids[3]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # out, err = p.communicate()
+        for index in range(len(subpids)):
+            p = subprocess.Popen(['taskset', '-cp','{}'.format(4+index), str(subpids[index]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out, err = p.communicate()
+
 
     else:
         fflush.stop()
@@ -705,7 +842,7 @@ def main_run(run=True):
 
             signal_plot.plot(trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)],'k')
 
-
+    	    # if rhino_version == 1.1:
             if second_plot_display in components:
                 trace_plot.set_title("Channel {} - ".format(channels[channel_mapping[second_plot_display]]) + "{} Component Raw".format(second_plot_display.upper()))
                 trace_plot.set_ylabel("g")
@@ -713,9 +850,22 @@ def main_run(run=True):
                 trace_plot.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
                 trace_plot.plot(trace["trace_data"][second_plot_display]["{}_interpolated".format(second_plot_display)],'b')
             else:
-                unfolded_trace = UnfoldAutocorrelationModule.unfold_trace(["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display)])
+                unfolded_trace = unfold_trace(trace["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display)])
                 trace_plot.plot(unfolded_trace,'b')
                 trace_plot.get_xaxis().set_visible(False)
+    	    # else:
+    		#     trace_start = int(output_sampling_rate/10)-pre_cut
+    		#     trace_end = int(output_sampling_rate/10)+post_add
+    		#     acorr_data = trace["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display)]
+    		#     #trimmed_data = acorr_data[trace_start:trace_end]#TODO set the values for the trimmed trace from config file
+    		#     trimmed_data = acorr_data
+    		#     # traces_for_plot.append(trimmed_data[0::traces_subsample])
+    		#     traces_for_plot.append(trimmed_data)
+    		#     if len(traces_for_plot) > number_of_traces_to_display:
+    		#         traces_for_plot.pop(0)
+    		#     arr = np.asarray(traces_for_plot)
+    		#     arr = arr.transpose()
+    		#     seismic_wiggle(trace_plot,arr,dt=(1.0/output_sampling_rate),normalize=True)
 
             rssi.pop(0)
             temp.pop(0)
@@ -740,18 +890,6 @@ def main_run(run=True):
             np.save(os.path.join(RAM_PATH,'system_health.npy'),np.asarray(health))
             display.update_system_health()
 
-            # trace_start = int(output_sampling_rate/10)-pre_cut
-            # trace_end = int(output_sampling_rate/10)+post_add
-            # acorr_data = trace["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display)]
-            # #trimmed_data = acorr_data[trace_start:trace_end]#TODO set the values for the trimmed trace from config file
-            # trimmed_data = acorr_data
-            # # traces_for_plot.append(trimmed_data[0::traces_subsample])
-            # traces_for_plot.append(trimmed_data)
-            # if len(traces_for_plot) > number_of_traces_to_display:
-            #     traces_for_plot.pop(0)
-            # arr = np.asarray(traces_for_plot)
-            # arr = arr.transpose()
-            # seismic_wiggle(trace_plot,arr,dt=(1.0/output_sampling_rate),normalize=True)
             plt.pause(0.05)
 
             fig1.canvas.draw()
@@ -798,14 +936,6 @@ def main_run(run=True):
 
 
 def write_data_to_h5_files(h5f_path,trace_data,trace):
-    # dict_for_df={"timestamp":trace_data["timestamp"],
-    # "rssi":trace_data["rssi"],
-    # "batt":trace_data["batt"],
-    # "temp":trace_data["temp"],
-    # "axial_trace":trace_data["trace_data"]["axial"]["axial_auto_correlated"],
-    # "tangential_trace":trace_data["trace_data"]["tangential"]["tangential_auto_correlated"],
-    # "radial_trace":trace_data["trace_data"]["radial"]["radial_auto_correlated"]
-    # }
     df = pd.DataFrame(columns=["timestamp","rssi","batt","temp","axial_trace","tangential_trace","radial_trace"])
     df["timestamp"] = trace_data["timestamp"]
     df["rssi"] = trace_data["rssi"]
@@ -816,14 +946,6 @@ def write_data_to_h5_files(h5f_path,trace_data,trace):
     df["radial_trace"]=list([trace_data["trace_data"]["radial"]["radial_auto_correlated"],])
     trace.dataframe=df
     trace.realtime_append_to_h5(h5f_path)
-
-    # saveTraceToFile(h5f,"timestamp",trace["timestamp"])
-    # saveTraceToFile(h5f,"rssi",trace["rssi"])
-    # saveTraceToFile(h5f,"batt",trace["batt"])
-    # saveTraceToFile(h5f,"temp",trace["temp"])
-    # saveTraceToFile(h5f,"axial_trace",trace["trace_data"]["axial"]["axial_auto_correlated"])
-    # saveTraceToFile(h5f,"tangential_trace",trace["trace_data"]["tangential"]["tangential_auto_correlated"])
-    # saveTraceToFile(h5f,"radial_trace",trace["trace_data"]["radial"]["radial_auto_correlated"])
 
 
 def calculate_battery_percentage(current_voltage,battery_max_voltage,battery_lower_limit):
@@ -877,25 +999,6 @@ def saveNumpyToFile(h5file,key,nparr):
         ds = h5file.create_dataset(my_key, data=x, chunks=True,
                                 dtype=x.dtype , maxshape=(None,),compression="gzip", compression_opts=9)
         ds[:] = x
-
-
-# def saveTraceToFile(h5file,my_key,data_array_list):
-#     max_shape = (None,)
-#     dtype = np.float32
-#     data = data_array_list
-#     if my_key[-9:]=="ial_trace":
-#         data = list([data_array_list],)
-#         max_shape = (None,None)
-#     elif my_key == "timestamp":
-#         dtype = np.float64
-#
-#     if my_key in h5file.keys():
-#         ds = h5file[my_key]
-#         ds.resize((h5file[my_key].shape[0] + 1), axis = 0)
-#         ds[-1:] = data
-#     else:
-#         ds = h5file.create_dataset(my_key, chunks=True,data=data,
-#                                 dtype=dtype, maxshape=max_shape,compression="gzip", compression_opts=9)
 
 def do_nothing():
     pass

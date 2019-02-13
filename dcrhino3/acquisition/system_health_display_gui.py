@@ -17,6 +17,8 @@ cfg_fname = os.path.join(PATH,"collection_daemon.cfg")
 config = ConfigParser.SafeConfigParser()
 config.read(cfg_fname)
 
+rhino_version = config.getfloat("COLLECTION","rhino_version")
+
 
 
 class SystemHealthLogger():
@@ -220,10 +222,18 @@ class GUI():
                 line = [tracetime.strftime("%Y-%m-%d %H:%M:%S"),battery,temp,rssi,delay,counter_changes,self.corrupt_packets,tx_status]
                 self.system_health_logger.log(line)
 
+                if rhino_version == 1.0:
+                    self.disable_element(self.rssi_label)
+                    self.disable_element(self.temperature_label)
+                    self.disable_element(self.battery_label)
+
                 self.master.update()
         except:
             print(sys.exc_info())
             # pdb.set_trace()
+
+    def disable_element(self,element):
+        element.config(bg="gray",fg="gray")
 
     def do_nothing(self):
         pass

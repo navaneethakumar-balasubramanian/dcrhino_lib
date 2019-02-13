@@ -67,7 +67,7 @@ class GUI():
         default_font.configure(size=16)
         master.option_add("*Font", default_font)
 
-        master.title("DataCloud Rhino")
+        master.title("DataCloud Rhino Version 3")
         master.resizable(width=False, height=False)
 
 
@@ -138,10 +138,11 @@ class GUI():
             # self.acquisition_process = Popen(['python', os.path.abspath(os.path.join(PATH,'atexit_test.py'))])
             timestamp = datetime.now().strftime('%Y_%m_%d_%H')
             rhino_version = config.getfloat("COLLECTION","rhino_version")
-            if rhino_version == 1.1:
-                acq_script = 'real_time_acquisition_v3.py'
-            else:
-                acq_script = 'real_time_acquisition.py'
+            acq_script = 'real_time_acquisition_v3.py'
+            # if rhino_version == 1.1:
+            #     acq_script = 'real_time_acquisition_v3_dev.py'
+            # else:
+            #     acq_script = 'real_time_acquisition.py'
             health_script = 'system_health_plotter.py'
             if debug:
                 self.acquisition_process = Popen(['python', os.path.abspath(os.path.join(PATH,acq_script))])
