@@ -73,6 +73,21 @@
                 "n_samples_trimmed_trace": "|global_config.n_samples_trimmed_trace|",
                 "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|"
                 }
+      },
+       {
+        "type": "k0",
+        "output_to_file": true,
+        "args": {
+                "window_widths":"|global_config.window_widths",
+                "output_sampling_rate":"|global_config.output_sampling_rate",
+                "sensor_distance_to_source":"|global_config.sensor_distance_to_source|",
+                "sensor_distance_to_shocksub":"|global_config.sensor_distance_to_shocksub|",
+                "sensor_saturation_g":"|global_config.sensor_saturation_g|",
+                "ACOUSTIC_VELOCITY":"|global_config.ACOUSTIC_VELOCITY|",
+                "SHEAR_VELOCITY":"|global_config.SHEAR_VELOCITY|",
+                "n_samples_trimmed_trace": "|global_config.n_samples_trimmed_trace|",
+                "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|"
+                }
       }
     ],
     "output_to_file":true

@@ -38,7 +38,9 @@ mine_name = 'milligan'
 home = os.path.expanduser("~/")
 env_cfg = EnvConfig()
 cache_path = env_cfg.get_hole_h5_interpolated_cache_folder(mine_name)
-acorr_h5_file_path = os.path.join(cache_path, "59207_5206_5206.h5")
+#file_handle = "20190211_RTA82800_SE100.h5"
+file_handle = "59207_5206_5206.h5"
+acorr_h5_file_path = os.path.join(cache_path, file_handle)
 
 process_flow_path = "process_flows/v2_processing_flow_no_plotter.json"
 

@@ -7,7 +7,7 @@ Created on Mon Feb  4 21:28:04 2019
 
 from __future__ import absolute_import, division, print_function
 
-
+import copy
 import datetime
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,6 +15,7 @@ import os
 import pdb
 
 from dcrhino3.helpers.general_helper_functions import init_logging
+from dcrhino3.signal_processing.phase_rotation import rotate_phase
 
 logger = init_logging(__name__)
 
@@ -25,10 +26,20 @@ class SymmetricTrace(object):
         self.data = data#kwargs.get('data', None)
         self.sampling_rate = sampling_rate#kwargs.get('sampling_rate', None)
         self.component_id = kwargs.get('component_id', None)
+        self.timestamp = kwargs.get('timestamp', None)
+        #self.global_config = kwargs.get('global_config', None)
         if (self.data is not None) & (self.sampling_rate is not None):
             self.calculate_time_vector()
         else:
             self._time_vector = None
+
+    def _clone(self, **kwargs):
+        """
+        create a new instance of same type.
+
+        """
+        duplicate_symmetric_trace = copy.deepcopy(self)
+        return duplicate_symmetric_trace
 
     @property
     def dt(self):
@@ -50,9 +61,51 @@ class SymmetricTrace(object):
     @property
     def time_vector(self):
         return self._time_vector
-        time_vector = self.dt * (np.arange(self.num_observations) - self.t0_index)
-        self.time_vector = time_vector
+#        time_vector = self.dt * (np.arange(self.num_observations) - self.t0_index)
+#        self.time_vector = time_vector
+#        return
+
+    @property
+    def center_index(self):
+        return (len(self.data)-1) // 2
+
+    def trim_to_num_points_lr(self, n_points):
+        """
+        """
+        self.data = self.data[self.center_index-n_points:self.center_index+n_points + 1]
+        self.calculate_time_vector()
+
+    def trim_to_indices(self, indices):
+        """
+        """
+        self.data = self.data[indices]
+        self._time_vector = self._time_vector[indices]
+
+
+    def plot(self):
+        plt.plot(self.time_vector, self.data, 'bs');
+        plt.title('{} component'.format(self.component_id))
+        plt.xlabel('Time (s)')
+        plt.show()
+
+    def rotate_recenter_and_trim(self, phi):
+        """
+
+        """
+        rotated_data = rotate_phase(self.data, phi)
+        new_center_index = np.argmax(rotated_data)
+        left_side = rotated_data[:new_center_index]
+        right_side = rotated_data[new_center_index+1:]
+        new_len = min(len(left_side), len(right_side))
+        trimmed_trace = rotated_data[new_center_index-new_len:new_center_index+new_len+1]
+        self.data = trimmed_trace
+        self.calculate_time_vector()
         return
+
+
+        pdb.set_trace()
+#        pass
+        #self.data =
 
 
 def my_function():
@@ -60,7 +113,6 @@ def my_function():
     """
     x = np.arange(11)
     st = SymmetricTrace(data=x, sampling_rate=10.0)
-    st._get_time_vector()
     pdb.set_trace()
     pass
 
