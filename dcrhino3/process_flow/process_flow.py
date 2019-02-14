@@ -29,8 +29,7 @@ from dcrhino3.process_flow.modules.plotters.qc_plotter_module import QCPlotterMo
 logger = init_logging(__name__)
 
 class ProcessFlow:
-    def __init__(self,process_json,output_path="",rhino_db_helper=None):
-        self.rhino_db_helper = rhino_db_helper
+    def __init__(self, process_json, output_path=""):
         self.id = "process_flow"
 
         self.trace_processing_modules = {
