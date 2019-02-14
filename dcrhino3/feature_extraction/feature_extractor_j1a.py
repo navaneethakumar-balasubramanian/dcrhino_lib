@@ -188,7 +188,6 @@ class FeatureExtractorJ1(object):
         note, this seems to work for +ve and -ve times
         """
         component_id = self.trace.component_id
-        #time_vector = self.trace.time_vector
         time_window_boundaries_dict = self.window_boundaries_time[component_id]
         index_window_boundaries_dict = self.window_boundaries_indices[component_id]
         #pdb.set_trace()
@@ -202,7 +201,7 @@ class FeatureExtractorJ1(object):
             index_window_boundaries_dict[window_label] = [lower_index, upper_index]
             #self.window_boundaries_indices[component_id][window_label] = [lower_index, upper_index]
 
-        return #window_boundaries_indices
+        return
 
     def update_window_boundaries_in_time(self, dynamic_windows=['primary',]):
         """
@@ -275,11 +274,12 @@ class FeatureExtractorJ1(object):
             data_window = window_data_dict[window_label]
             time_vector = time_vector_dict[window_label]
             dt = time_vector[1] - time_vector[0]
+            window_duration = time_vector[-1]-time_vector[0]
             tmp['max_amplitude'] = np.max(data_window)
             tmp['max_time'] = time_vector[np.argmax(data_window)]
             tmp['min_amplitude'] = np.min(data_window)
             tmp['min_time'] = time_vector[np.argmin(data_window)]
-            tmp['integrated_absolute_amplitude'] = dt * np.sum(np.abs(data_window))/(time_vector[-1]-time_vector[0])
+            tmp['integrated_absolute_amplitude'] = dt * np.sum(np.abs(data_window)) / window_duration
             new_feature_dict[window_label] = tmp
         return new_feature_dict
 

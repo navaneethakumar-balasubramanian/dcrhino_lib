@@ -20,6 +20,11 @@ class QCPlotterModule(BaseModule):
         self.id = "qc_log_v1"
 
     def plot_trace_data(self,trace):
+        """
+        @note 20190214: Modify this so that it iterates NOT over all three components
+        but rather over the components_to_plot
+
+        """
 
         row_of_df = trace.dataframe.iloc[0]
         first_global_conf = trace.global_config_by_index(row_of_df['acorr_file_id'])

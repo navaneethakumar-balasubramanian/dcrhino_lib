@@ -90,22 +90,23 @@ class SymmetricTrace(object):
 
     def rotate_recenter_and_trim(self, phi):
         """
-
+        @note 20140214: Initially this method trimmed the trace.  BUT that could result in
+        different length traces within a blasthole.  Theoretically this is not a
+        problem,but practically it will cause problems if we wanted to use the
+        component_as_array() method of TraceDataframe().  So to work around this
+        I can either use np.roll or zeropad the trace.
         """
         rotated_data = rotate_phase(self.data, phi)
         new_center_index = np.argmax(rotated_data)
-        left_side = rotated_data[:new_center_index]
-        right_side = rotated_data[new_center_index+1:]
-        new_len = min(len(left_side), len(right_side))
-        trimmed_trace = rotated_data[new_center_index-new_len:new_center_index+new_len+1]
-        self.data = trimmed_trace
-        self.calculate_time_vector()
+        shifted_rotated_data = np.roll(rotated_data, self.center_index-new_center_index)
+#        left_side = rotated_data[:new_center_index]
+#        right_side = rotated_data[new_center_index+1:]
+#        new_half_len = min(len(left_side), len(right_side))
+#        trimmed_trace = rotated_data[new_center_index-new_half_len:new_center_index+new_half_len+1]
+        #pdb.set_trace()
+        self.data = shifted_rotated_data #previously trimmed_trace
+        #self.calculate_time_vector()
         return
-
-
-        pdb.set_trace()
-#        pass
-        #self.data =
 
 
 def my_function():

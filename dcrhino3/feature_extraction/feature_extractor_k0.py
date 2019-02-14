@@ -67,7 +67,7 @@ class FeatureExtractorK0(FeatureExtractorJ1):
         for window_label in index_window_dict.keys():
             lower_index = index_window_dict[window_label][0]
             upper_index = index_window_dict[window_label][1]
-            tmp = trimmed_trace
+            tmp = trimmed_trace.copy()
             if self.apply_secondary_rotations:
                 if window_label == 'multiple_1':
                     tmp = rotate_phase(trimmed_trace, 90.0)
@@ -92,8 +92,8 @@ class FeatureExtractorK0(FeatureExtractorJ1):
         self.update_window_boundaries_in_time()
         #pdb.set_trace()
         mini_trace = identify_primary_neighbourhood(self.trace, self.transformed_args)
-        trough_search_width=(mini_trace.num_observations-1)//2
-        phase_state = determine_phase_state(mini_trace.data, trough_search_width)
+        #trough_search_width=(mini_trace.num_observations-1)//2
+        #phase_state = determine_phase_state(mini_trace.data, trough_search_width)
         phi = identify_phase_rotation(mini_trace.data)
         self.trace.rotate_recenter_and_trim(phi)
         # trace is now ready for feature extraction
@@ -103,13 +103,19 @@ class FeatureExtractorK0(FeatureExtractorJ1):
         extracted_features_dict = self.extract_features_from_each_window(window_data_dict,
                                                                     window_time_vector_dict)
         #pdb.set_trace()
+        extracted_features_dict['phi'] = phi
+        extracted_features_dict['trace'] = self.trace.data
         boolean_features_dict = calculate_boolean_features(extracted_features_dict, self.sensor_saturation_g)
         extracted_features_dict['boolean'] = boolean_features_dict
         new_features_dict[self.trace.component_id] = extracted_features_dict
         #pdb.set_trace()
         unnested_dictionary = flatten(new_features_dict)#print('now dump out with dict keys concatenated')
         for key in unnested_dictionary.keys():
-            unnested_dictionary['K0_{}'.format(key)] = unnested_dictionary.pop('{}'.format(key))
+            if key == '{}_trace'.format(self.trace.component_id):
+                pass
+            else:
+                unnested_dictionary['K0_{}'.format(key)] = unnested_dictionary.pop('{}'.format(key))
+        #pdb.set_trace()
         return unnested_dictionary
 
 

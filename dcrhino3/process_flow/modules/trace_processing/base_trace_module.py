@@ -23,6 +23,13 @@ class BaseTraceModule(BaseModule):
         """
         works with a TraceData() class, typically an entire hole, or
         dataframe spanning a time interval comprising many traces
+
+        @note 20140214: note that the pandas Dataframe at() method, used below
+        gives value errors when a sub-dataframe is used ... this can be fixed
+        probably by redefinign the indexing or using timestamp as an index ... iloc does not have this
+        problem ...  this problem happens when I pass a random slice (rows 100 to 110 for example)
+        of a dataframe into processing, rather than the first 10 rows
+
         """
         output_df = trace.dataframe.copy()
 
