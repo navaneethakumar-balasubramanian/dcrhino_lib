@@ -87,7 +87,7 @@ class QCLogPlotter():
              ax_lim,
              tangential_RC,
              noise_threshold,
-             show = True,
+             show = False,
              output_path = None
         ):
         params = {

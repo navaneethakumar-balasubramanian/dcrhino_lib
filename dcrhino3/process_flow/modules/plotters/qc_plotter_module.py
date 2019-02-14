@@ -97,7 +97,7 @@ class QCPlotterModule(BaseModule):
         if self.output_to_file:
             output_path = self.output_path
 
-        show = True
+        show = False
 
         plotter.plot(
                  peak_ampl_x,
