@@ -86,7 +86,8 @@
                 "ACOUSTIC_VELOCITY":"|global_config.ACOUSTIC_VELOCITY|",
                 "SHEAR_VELOCITY":"|global_config.SHEAR_VELOCITY|",
                 "n_samples_trimmed_trace": "|global_config.n_samples_trimmed_trace|",
-                "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|"
+                "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
+                "apply_secondary_rotations": true
                 }
       }
     ],

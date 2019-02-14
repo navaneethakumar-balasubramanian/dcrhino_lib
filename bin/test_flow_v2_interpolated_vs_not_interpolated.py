@@ -17,7 +17,7 @@ from dcrhino3.process_flow.process_flow import ProcessFlow
 from dcrhino3.models.trace_dataframe import TraceData as TraceSeries
 from dcrhino3.models.env_config import EnvConfig
 
-def apply_process_flow(acorr_h5_file_path, process_flow_filename):
+def apply_process_flow(acorr_h5_file_path, process_flow_filename, output_path):
     """
     """
     with open(process_flow_filename) as f:
@@ -30,33 +30,38 @@ def apply_process_flow(acorr_h5_file_path, process_flow_filename):
     global_config_tmp = blasthole_data.global_config_by_index(row_of_df['acorr_file_id'])
     pdb.set_trace()
 
-    process_flow = ProcessFlow(process_json)
+    process_flow = ProcessFlow(process_json, output_path=output_path)
     process_flow.process(blasthole_data)
     return blasthole_data
 
 mine_name = 'milligan'
 home = os.path.expanduser("~/")
 env_cfg = EnvConfig()
-cache_path = env_cfg.get_hole_h5_interpolated_cache_folder(mine_name)
+input_cache_path = env_cfg.get_hole_h5_interpolated_cache_folder(mine_name)
+output_cache_path = env_cfg.get_hole_h5_processed_cache_folder(mine_name)
 #file_handle = "20190211_RTA82800_SE100.h5"
 file_handle = "59207_5206_5206.h5"
-acorr_h5_file_path = os.path.join(cache_path, file_handle)
+acorr_h5_file_path = os.path.join(input_cache_path, file_handle)
 
 process_flow_path = "process_flows/v2_processing_flow_no_plotter.json"
 
-no_interp_blasthole_data = apply_process_flow(acorr_h5_file_path, process_flow_path)
+no_interp_blasthole_data = apply_process_flow(acorr_h5_file_path,
+                                              process_flow_path,
+                                              output_cache_path)
 no_interp_df = no_interp_blasthole_data.dataframe.copy()
 
 pdb.set_trace()
 
 process_flow_path = "process_flows/v2_processing_flow_add_interpolation.json"
-interp_blasthole_data = apply_process_flow(acorr_h5_file_path, process_flow_path)
+interp_blasthole_data = apply_process_flow(acorr_h5_file_path,
+                                           process_flow_path,
+                                           output_cache_path)
 interp_df = interp_blasthole_data.dataframe.copy()
 pdb.set_trace()
 
 for col in no_interp_df.columns:
     print(col)
-    if col[0:2]=='J1':
+    if col[0:2]=='K0':
         #pdb.set_trace()
         change = no_interp_df[col] - interp_df[col]
         pct_chg = 100 * change / no_interp_df[col]

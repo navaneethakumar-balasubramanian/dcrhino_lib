@@ -46,7 +46,7 @@ def determine_phase_state(data, trough_search_width):
     fewer observations to th left than the right it is returning balanced prematurely
     -- I'm going to comment it out and see what happens
     """
-    print('trough_search_width {}'.format(trough_search_width))
+    #print('trough_search_width {}'.format(trough_search_width))
     max_index = np.argmax(data)
     left_trough_region = data[max_index-trough_search_width:max_index]
     if len(left_trough_region) == 0:
