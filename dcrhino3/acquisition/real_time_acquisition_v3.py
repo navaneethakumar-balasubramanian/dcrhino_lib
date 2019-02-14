@@ -208,6 +208,7 @@ class FileFlusher(threading.Thread):
         self.rhino_serial_number = rhino_serial_number
         self.last_rollback = 0
         self.tx_status = 0
+        self.good_packets_in_a_row = 1
 
     def first_packet_received(self,packet,timestamp):
         self.current_timestamp = timestamp
@@ -226,8 +227,15 @@ class FileFlusher(threading.Thread):
     def calculate_packet_timestamp(self,packet):
         reference = time.time()
         self.elapsed_tx_clock_cycles = packet.tx_clock_ticks - self.sequence
+        # print(self.elapsed_tx_clock_cycles)
         self.current_timestamp += self.elapsed_tx_clock_cycles * 10/1000000.0
         self.sequence = packet.tx_clock_ticks
+        # if ceil(self.elapsed_tx_clock_cycles/30.)>1:
+        #     print("Good packets in a row", self.good_packets_in_a_row)
+        #     print("Missed packets in a row", ceil(self.elapsed_tx_clock_cycles/30.)-1)
+        #     self.good_packets_in_a_row = 1
+        # else:
+        #     self.good_packets_in_a_row +=1
 
         diff = int(self.current_timestamp-reference)
         if self.current_timestamp > reference:
@@ -316,6 +324,7 @@ class FileFlusher(threading.Thread):
                         self.save_row_to_processing_q(laptop_ts,timestamp,packet)
             except Queue.Empty:
                 # Handle empty queue here
+                time.sleep(0.05)
                 pass
 
 
@@ -382,7 +391,7 @@ class FileFlusher(threading.Thread):
                     self.tx_status = 0
 
             except Queue.Empty:
-                # Handle empty queue here
+                time.sleep(0.05)
                 pass
 
 
@@ -488,9 +497,9 @@ class SerialThread(threading.Thread):
                 if len(a)==self.pktlen and a[0] == b'\x02' and a[self.pktlen-1] == b'\x03':
                     counter = 0
                     if a[1] == b'\x64':
-                        self.tx_status == 1
+                        self.tx_status = 1
                     elif a[1] == b'\x69':
-                        self.tx_status == 0
+                        self.tx_status = 0
                     self.flushq.put(a)
                     last_a = a
                 else:
@@ -661,7 +670,8 @@ class CollectionDaemonThread(threading.Thread):
                                 calibrated_data = raw_trace_data.calibrate_1d_component_array(component_trace_raw_data[label],global_config,global_config.sensor_sensitivity[label])
                                 interp_data = raw_trace_data.interpolate_1d_component_array(ts,calibrated_data,ideal_timestamps)
                                 acorr_data = raw_trace_data.autocorrelate_1d_component_array(interp_data,number_of_samples)
-                                component_trace_dict[label]= {"{}_interpolated".format(label):interp_data,
+                                component_trace_dict[label]= {"{}_calibrated".format(label):calibrated_data,
+                                                              "{}_interpolated".format(label):interp_data,
                                                               "{}_auto_correlated".format(label):acorr_data}
 
                             #Send data to the Q so that it can be plotted
@@ -678,6 +688,7 @@ class CollectionDaemonThread(threading.Thread):
 
                     self.bufferThisSecond.append(row)
                 else:
+                    # print("collection daemon buffer empty")
                     time.sleep(0.05)
         except:
             print("Collection Daemon Exception:", sys.exc_info())
@@ -730,20 +741,19 @@ def main_run(run=True):
                 logQ.put(m)
                 displayQ.put(m)
                 subpids.append(sub_pid)
-        print(subpids)
         p = subprocess.Popen(['taskset', '-cp','4', str(pid) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate()
-        # p = subprocess.Popen(['taskset', '-cp','4', str(subpids[0]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # out, err = p.communicate()
-        # p = subprocess.Popen(['taskset', '-cp','5', str(subpids[1]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # out, err = p.communicate()
-        # p = subprocess.Popen(['taskset', '-cp','6', str(subpids[2]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # out, err = p.communicate()
-        # p = subprocess.Popen(['taskset', '-cp','7', str(subpids[3]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # out, err = p.communicate()
-        for index in range(len(subpids)):
-            p = subprocess.Popen(['taskset', '-cp','{}'.format(4+index), str(subpids[index]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            out, err = p.communicate()
+        p = subprocess.Popen(['taskset', '-cp','4', str(subpids[0]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        p = subprocess.Popen(['taskset', '-cp','5', str(subpids[1]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        p = subprocess.Popen(['taskset', '-cp','6', str(subpids[2]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        p = subprocess.Popen(['taskset', '-cp','6', str(subpids[3]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        # for index in range(len(subpids)):
+        #     p = subprocess.Popen(['taskset', '-cp','{}'.format(4+index), str(subpids[index]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        #     out, err = p.communicate()
 
 
     else:
@@ -807,16 +817,10 @@ def main_run(run=True):
             tracetime = datetime.utcfromtimestamp(trace_second)
 
 
-            #<Create the h5 file that will have the trace information>
+            #<Save Trace data to h5>
             h5f_path = os.path.join(run_folder_path,filename)
-            # h5f = h5py.File(h5f_path, 'a')
-            # if last_filename != filename:
-            #     print("Added config file to traces file",last_filename,filename)
-            #     h5f,m = config_file_to_attrs(config,h5f)
-            #     last_filename = filename
             write_data_to_h5_files(h5f_path,trace,realtime_trace)#This are the Acorr traces
-            # h5f.close()
-            #</Create the h5 file>
+            #</Save Trace data to h5>
 
             #rows,columns
             rows = 2
@@ -924,6 +928,7 @@ def main_run(run=True):
             else:
                 #system is sleeping
                 pass
+            time.sleep(0.05)
             for second in range(q_timeout_wait):#we waited q_timeout_wait seconds before the exception was thrown.  Therefore we need to add one empty row per each second we waited
                 add_empty_health_row_to_Q(rssi,temp,batt,packets,delay,trace_time_array,now_array,system_healthQ,
                                           last_tracetime,counterchanges,comport.corrupt_packets,fflush.tx_status)
@@ -936,11 +941,25 @@ def main_run(run=True):
 
 
 def write_data_to_h5_files(h5f_path,trace_data,trace):
-    df = pd.DataFrame(columns=["timestamp","rssi","batt","temp","axial_trace","tangential_trace","radial_trace"])
+    # pdb.set_trace()
+    df = pd.DataFrame(columns=["timestamp","rssi","batt","temp","packets","max_axial_acceleration",
+                                "max_tangential_acceleration","max_radial_acceleration",
+                                "min_axial_acceleration","min_tangential_acceleration","min_radial_acceleration",
+                                "axial_trace","tangential_trace","radial_trace"])
+    axial_calibrated_trace = trace_data["trace_data"]["axial"]["axial_calibrated"]
+    tangential_calibrated_trace = trace_data["trace_data"]["tangential"]["tangential_calibrated"]
+    radial_calibrated_trace = trace_data["trace_data"]["radial"]["radial_calibrated"]
     df["timestamp"] = trace_data["timestamp"]
     df["rssi"] = trace_data["rssi"]
     df["batt"] = trace_data["batt"]
     df["temp"] = trace_data["temp"]
+    df["packets"] = len(axial_calibrated_trace)
+    df["max_axial_acceleration"] = np.asarray([np.max(axial_calibrated_trace)],)
+    df["max_tangential_acceleration"] = np.asarray([np.max(tangential_calibrated_trace)],)
+    df["max_radial_acceleration"] = np.asarray([np.max(radial_calibrated_trace)],)
+    df["min_axial_acceleration"] = np.asarray([np.min(axial_calibrated_trace)],)
+    df["min_tangential_acceleration"] = np.asarray([np.min(tangential_calibrated_trace)],)
+    df["min_radial_acceleration"] = np.asarray([np.min(radial_calibrated_trace)],)
     df["axial_trace"]=list([trace_data["trace_data"]["axial"]["axial_auto_correlated"],])
     df["tangential_trace"]=list([trace_data["trace_data"]["tangential"]["tangential_auto_correlated"],])
     df["radial_trace"]=list([trace_data["trace_data"]["radial"]["radial_auto_correlated"],])
