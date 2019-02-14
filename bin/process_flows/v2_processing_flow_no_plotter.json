@@ -36,8 +36,7 @@
         "args": {
           "max_lag_trimmed_trace": "|global_config.max_lag_trimmed_trace|",
           "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
-          "sampling_rate": "|global_config.sampling_rate|",
-          "num_taps_in_decon_filter": "|global_config.num_taps_in_decon_filter|"
+          "sampling_rate": "|global_config.sampling_rate|"
                }
 
       }
