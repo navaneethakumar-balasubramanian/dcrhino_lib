@@ -109,6 +109,13 @@ class ExportSEGYModule(BaseTraceModule):
             trace.stats.segy.trace_header.tob = row["tob"]
             trace.stats.segy.trace_header.rop = row["rop"]
             trace.stats.segy.trace_header.air_pressure = row["air_pressure"]
+
+            trace.stats.segy.trace_header.max_axial_acceleration = row["max_axial_acceleration"]
+            trace.stats.segy.trace_header.max_tangential_acceleration = row["max_tangential_acceleration"]
+            trace.stats.segy.trace_header.max_radial_acceleration = row["max_radial_acceleration"]
+            trace.stats.segy.trace_header.min_axial_acceleration = row["min_axial_acceleration"]
+            trace.stats.segy.trace_header.min_tangential_acceleration = row["min_tangential_acceleration"]
+            trace.stats.segy.trace_header.min_radial_acceleration = row["min_radial_acceleration"]
             self.stream.append(trace)
 
 
