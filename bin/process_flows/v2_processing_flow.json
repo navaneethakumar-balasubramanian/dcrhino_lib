@@ -32,8 +32,7 @@
         "args": {
           "max_lag_trimmed_trace": "|global_config.max_lag_trimmed_trace|",
           "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
-          "sampling_rate": "|global_config.sampling_rate|",
-          "num_taps_in_decon_filter": "|global_config.num_taps_in_decon_filter|"
+          "sampling_rate": "|global_config.sampling_rate|"
         }
       }
     ]
@@ -60,6 +59,7 @@
         "type": "j1",
         "output_to_file": true,
         "args": {
+	  "acceptable_peak_wander": ["|global_config.acceptable_peak_wander|", 0.003],
           "window_widths": "|global_config.window_widths",
           "output_sampling_rate": "|global_config.output_sampling_rate",
           "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
