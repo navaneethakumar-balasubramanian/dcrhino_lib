@@ -12,7 +12,7 @@ import os
 import glob2
 import json
 
-from multiprocessing import Pool
+from multiprocessing import Process
 
 from dcrhino3.process_flow.process_flow import ProcessFlow
 #from dcrhino3.process_flow.hole_selector import HoleSelector
@@ -76,8 +76,10 @@ if __name__ == '__main__':
         if '.h5' in os.path.splitext(file)[1]:
             logger.info("PROCESSING FILE:" + str( file))
             if env_config.is_file_blacklisted(file) is False:
-
-                process_file(process_json,file,env_config)
+                p = Process(target=process_file, args=(process_json,file,env_config))
+                p.start()
+                p.join()
+                #process_file(process_json,file,env_config)
 
 
 
