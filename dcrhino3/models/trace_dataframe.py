@@ -56,7 +56,7 @@ class ModuleType(Enum):
 
 
 class TraceData(object):
-    def __init__(self, **kwargs): 
+    def __init__(self, **kwargs):
         """
         """
         self.dataframe = kwargs.get('df', pd.DataFrame())
@@ -174,15 +174,16 @@ class TraceData(object):
     def realtime_append_to_h5(self,path,file_id='0',global_config=None):
         all_columns = list(self.dataframe.columns)
         max_shape = (None,)
-        dtype = np.float32
+        dtype = np.uint32
         h5f = h5py.File(path, 'a')
         for column in all_columns:
 
             if column[-9:]=="ial_trace":
+                dtype = np.float32
                 data=list([self.dataframe[column][0],])
                 max_shape = (None,None)
-            elif column == "timestamp":
-                dtype = np.float64
+            elif "acceleration" in column:
+                dtype = np.float32
                 data = np.asarray(self.dataframe[column],dtype=dtype)
             else:
                 data = np.asarray(self.dataframe[column],dtype=dtype)
