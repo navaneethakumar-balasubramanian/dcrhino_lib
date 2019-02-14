@@ -57,7 +57,10 @@ if __name__ == '__main__':
         args = argparser.parse_args()
         process_flow_path = args.flow_path
     else:
-        process_flow_path = 'add here'
+        home = os.path.expanduser()
+        process_flow_dir = os.path.join(home, 'tmp/v3_reference_checkout/dcrhino_lib/bin/process_flows')
+        process_flow_json_filehandle = 'v2_processing_flow_add_interpolation.json'
+        process_flow_path = os.path.join(process_flow_dir, process_flow_json_filehandle)
 
     env_config = EnvConfig()
 
