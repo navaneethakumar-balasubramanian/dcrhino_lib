@@ -144,18 +144,22 @@ class GUI():
             # else:
             #     acq_script = 'real_time_acquisition.py'
             health_script = 'system_health_plotter.py'
+            # sensor_stats = 'sensor_stats_plotter.py'
             if debug:
                 self.acquisition_process = Popen(['python', os.path.abspath(os.path.join(PATH,acq_script))])
                 self.system_health_process = Popen(['python', os.path.abspath(os.path.join(PATH,health_script))])
+                # self.sensor_stats_process = Popen(['python', os.path.abspath(os.path.join(PATH,sensor_stats))])
                 logging.info("Acquisition started in debug mode")
             else:
                 self.error_file = os.path.join(LOGS_PATH,"{}.err".format(timestamp))
                 with open(self.error_file,"ar",buffering=0) as self.err:
                     self.acquisition_process = Popen(['python', os.path.abspath(os.path.join(PATH,acq_script))],stderr=self.err)
                     self.system_health_process = Popen(['python', os.path.abspath(os.path.join(PATH,health_script))],stderr=self.err)
+                    # self.sensor_stats_process = Popen(['python', os.path.abspath(os.path.join(PATH,sensor_stats))],stderr=self.err)
                 logging.info("Acquisition started in regular mode")
 
             p = subprocess.Popen(['taskset', '-cp','3', str(self.system_health_process.pid) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # p = subprocess.Popen(['taskset', '-cp','7', str(self.sensor_stats_process.pid) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def acquisition_daemon_stop(self):
         # self.acquisition_process.terminate()
@@ -166,6 +170,8 @@ class GUI():
             self.acquisition_process = None
             self.system_health_process.terminate()
             self.system_health_process = None
+            # self.sensor_stats_process.terminate()
+            # self.sensor_stats_process = None
             self.stop_rx(True)
             logging.info("Acquisition stopped")
         # else:
