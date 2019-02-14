@@ -110,7 +110,7 @@ def calculate_boolean_features(feature_dict, sensor_saturation_g):
 class WindowBoundaries(object):
     def __init__(self):#, component_id, trimmed_trace, transformed_args, timestamp):
         """
-        @TODO: window_boundaries time should just have a .to_index() method
+        @TODO: window_boundaries time should just have a .to_index(sampling_rate) method
         """
         self.window_boundaries_time = {}
 #        self.window_boundaries_time['axial'] = {}
@@ -134,24 +134,30 @@ class FeatureExtractorJ1(object):
         #pdb.set_trace()
         except AttributeError:
             self.sampling_rate = transformed_args.output_sampling_rate
-
-        self.transformed_args = transformed_args
-        self.trace = SymmetricTrace(trimmed_trace, self.sampling_rate, component_id=component_id)
-        self.window_widths = transformed_args.window_widths
+        #pdb.set_trace()
+        self.acceptable_peak_wander = transformed_args.acceptable_peak_wander
         self.expected_multiple_periods = get_expected_multiple_times(transformed_args)
         self.sensor_saturation_g = transformed_args.sensor_saturation_g
+        self.trace = SymmetricTrace(trimmed_trace, self.sampling_rate, component_id=component_id)
+        self.transformed_args = transformed_args
         self.window_boundaries_time = {}#WindowBoundaries()
         self.window_boundaries_time[component_id] = {}
         self.window_boundaries_indices = {}#WindowBoundaries()
         self.window_boundaries_indices[component_id] = {}
+        self.window_widths = transformed_args.window_widths
+
 
     def set_time_window_boundaries(self, primary_shift=0.0):
         """
         based on window widths and the expected multiple periods, associate
         the start and end times of each window with a label in a dictionary
         @requires that primary and multiple be defined BEFORE noise
+        i.e. the order of  elements in TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION
+        is important!!!
+
         @TODO Test assignments working properly through window_boundaries_time_dict
         """
+        #pdb.set_trace()
         component_id = self.trace.component_id
         window_boundaries_time_dict = self.window_boundaries_time[component_id]
         for window_label in TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION:
@@ -174,10 +180,8 @@ class FeatureExtractorJ1(object):
                 start_of_window = window_boundaries_time_dict['multiple_2'][1]
                 end_of_window = window_boundaries_time_dict['multiple_3'][0]
                 window_bounds = np.array([start_of_window, end_of_window])
-            component_id = self.trace.component_id
             window_boundaries_time_dict[window_label] = window_bounds
-            #self.window_boundaries_time[component_id][window_label] = window_bounds
-        return# WINDOW_BOUNDARIES_TIME#dont need to return this global
+        return
 
     def convert_time_window_to_indices(self):
         """
@@ -223,11 +227,10 @@ class FeatureExtractorJ1(object):
         if dynamic_windows is None:
             return
         elif 'primary' in dynamic_windows:
-            acceptable_peak_wander = .003 #3ms - add to env_cfg
             max_index = np.argmax(trimmed_trace)
             max_time = trimmed_time_vector[max_index]
             applicable_window_width = getattr(window_widths,component).primary
-            if np.abs(max_time) < acceptable_peak_wander:
+            if np.abs(max_time) < self.acceptable_peak_wander:
                 primary_shift = max_time - applicable_window_width/2.0 #this 2.0 means center the window on the max
                 self.set_time_window_boundaries(primary_shift=primary_shift)
                 self.convert_time_window_to_indices()
