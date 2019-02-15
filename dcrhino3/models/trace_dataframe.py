@@ -54,6 +54,25 @@ class ModuleType(Enum):
     TRIM = 9
 
 
+def split_df_to_simple_and_array(df):
+    """
+    this can be made a method of TraceData or can go in util.py
+    """
+
+    array_df = df.copy()
+    array_columns = []
+    non_array_columns = []
+    for col in df.columns:
+        sample_element = df[col].iloc[0]
+        #print(col, type(sample_element))
+        if isinstance(sample_element, np.ndarray):
+            array_columns.append(col)
+        else:
+            non_array_columns.append(col)
+    array_df.drop(non_array_columns, axis=1, inplace=True)
+    df.drop(array_columns, axis=1, inplace=True)
+    return df, array_df
+
 
 class TraceData(object):
     def __init__(self, **kwargs):
@@ -142,6 +161,16 @@ class TraceData(object):
             except KeyError:
                 logger.info('Skipping saving {} as it DNE'.format(trace_label))
         #<save traces>
+
+        #<cull other columns with array type>
+        print('Fix this so that these columns are saved, but for now we just remove them')
+        for column in all_columns:
+            sample_element = self.dataframe[column].iloc[0]
+            #print(col, type(sample_element))
+            if isinstance(sample_element, np.ndarray):
+                all_columns.remove(column)
+                self.dataframe.drop([column,], axis=1, inplace=True)
+        #<cull other columns with array type>
 
         #<mwd columns>
         mwd_columns = all_columns#traces removed

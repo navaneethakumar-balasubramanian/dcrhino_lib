@@ -111,10 +111,10 @@ class FeatureExtractorK0(FeatureExtractorJ1):
         #pdb.set_trace()
         unnested_dictionary = flatten(new_features_dict)#print('now dump out with dict keys concatenated')
         for key in unnested_dictionary.keys():
-            if key == '{}_trace'.format(self.trace.component_id):
-                pass
-            else:
-                unnested_dictionary['K0_{}'.format(key)] = unnested_dictionary.pop('{}'.format(key))
+#            if key == '{}_trace'.format(self.trace.component_id):
+#                pass
+#            else:
+            unnested_dictionary['K0_{}'.format(key)] = unnested_dictionary.pop('{}'.format(key))
         #pdb.set_trace()
         return unnested_dictionary
 

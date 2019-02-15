@@ -2,13 +2,34 @@
 """
 
 """
-
+import numpy as np
 import pandas as pd
 import time
 import pdb
-from dcrhino3.process_flow.modules.base_module import BaseModule
+
 from dcrhino3.helpers.general_helper_functions import init_logging
+from dcrhino3.models.trace_dataframe import TraceData
+from dcrhino3.models.trace_dataframe import split_df_to_simple_and_array
+from dcrhino3.process_flow.modules.base_module import BaseModule
+
 logger = init_logging(__name__)
+
+
+
+def strip_k0_from_trace_column_labels(df):
+    """
+    hacky fix, can be made general by finding pattersn with
+    {}_axial_trace, etc.
+    """
+    mapper = {}
+    if 'K0_axial_trace' in df.columns:
+        mapper['K0_axial_trace'] = 'axial_trace'
+    if 'K0_tangential_trace' in df.columns:
+        mapper['K0_tangential_trace'] = 'tangential_trace'
+    if 'K0_radial_trace' in df.columns:
+        mapper['K0_radial_trace'] = 'radial_trace'
+    df = df.rename(index=str, columns=mapper)
+    return df
 
 class BaseFeatureModule(BaseModule):
     def __init__(self, json, output_path):
@@ -26,8 +47,8 @@ class BaseFeatureModule(BaseModule):
         """
         output_df = trace.dataframe.copy()
 
-        features_dict_list = [None] * len(output_df) 
-        
+        features_dict_list = [None] * len(output_df)
+
         for line_idx in range(len(output_df)):
             row_of_df = output_df.iloc[line_idx]
             line_features_dict = {}
@@ -43,11 +64,13 @@ class BaseFeatureModule(BaseModule):
                                                                  transformed_args,
                                                                  timestamp)
                 line_features_dict.update(component_features)
-                
-            
+
+
             features_dict_list[line_idx] = line_features_dict
 
         features_df = pd.DataFrame(features_dict_list)
+
+        #<problem HERE if I use axial_trace rather than K0_axial_trace
         
         merged = pd.concat([features_df,trace.dataframe],axis=1)
 
@@ -55,9 +78,19 @@ class BaseFeatureModule(BaseModule):
         trace.dataframe = merged
 
         trace.add_applied_module(self.applied_module_string(self.args))
-        
+
         if self.output_to_file:
+            features_df, arrays_df = split_df_to_simple_and_array(features_df)
             features_df.to_csv(self.output_path,index=False)
+            #trace_dataframe can be cast as TraceData and then df = self.copy_without_trace_data()
+            if arrays_df.empty:
+                pass
+            else:
+                tmp_trace_data = TraceData(df=arrays_df)
+                tmp_trace_data.dataframe = strip_k0_from_trace_column_labels(tmp_trace_data.dataframe)
+                df_path = self.output_path.replace('.csv', '.h5')
+                tmp_trace_data.save_to_h5(df_path)
+                
 
         return trace
 
