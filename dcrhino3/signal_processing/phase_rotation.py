@@ -13,7 +13,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pdb
 
+from dcrhino3.helpers.general_helper_functions import init_logging
+logger = init_logging(__name__)
+
 jj = np.complex(0.0, 1.0)
+
 def rotate_phase(data, phase_shift, degrees=True):
     """
     ::data:: numpy array (currently 1D, need to test as 2D might need to transpose)
@@ -46,6 +50,7 @@ def determine_phase_state(data, trough_search_width):
     fewer observations to th left than the right it is returning balanced prematurely
     -- I'm going to comment it out and see what happens
     """
+    phase_state = 'indeterminate'
     #print('trough_search_width {}'.format(trough_search_width))
     max_index = np.argmax(data)
     left_trough_region = data[max_index-trough_search_width:max_index]
@@ -53,14 +58,18 @@ def determine_phase_state(data, trough_search_width):
         left_trough_region = data[:max_index]
     right_trough_region = data[max_index:max_index+trough_search_width]
     if len(right_trough_region) == 0:
-        pdb.set_trace()
-        print('this should not happen')
-
+        logger.warning('{} phase state'.format(phase_state)) #this should not happen
+        return phase_state
     #print(max_index)
 #    if max_index<trough_search_width:
 #        return 'balanced'
     #left_min_value = np.min(left_trough_region)
-    left_min_index = np.argmin(left_trough_region)
+    try:
+        left_min_index = np.argmin(left_trough_region)
+    except ValueError:
+        logger.warning('{} phase state'.format(phase_state))
+        return phase_state
+
     left_min_value = left_trough_region[left_min_index]
     #left_min_value = data[max_index-left_min_index-1]
 

@@ -9,10 +9,24 @@ import pdb
 
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.models.trace_dataframe import TraceData
-from dcrhino3.models.trace_dataframe import split_df_to_simple_and_array
 from dcrhino3.process_flow.modules.base_module import BaseModule
 
 logger = init_logging(__name__)
+
+def mergey_mc_mergealot(new_features_df, old_dataframe):
+    """
+    special function for K0 features which redefine the traces.
+    Can be made much more general but for now...
+    1. Find traces (array-type elements) in the new_features dataframe and
+    and overwrite their corresponding old dataframe, then use pandas merge
+    on the rest of the columns
+    """
+    #pdb.set_trace()
+    common_column_labels = list(set(new_features_df.columns).intersection(set(old_dataframe.columns)))
+    old_dataframe.update(new_features_df, overwrite=True)
+    new_features_df.drop(common_column_labels, axis=1, inplace=True)
+    merged = pd.concat([new_features_df, old_dataframe], axis=1)
+    return merged
 
 
 
@@ -70,27 +84,15 @@ class BaseFeatureModule(BaseModule):
 
         features_df = pd.DataFrame(features_dict_list)
 
-        #<problem HERE if I use axial_trace rather than K0_axial_trace
-        
-        merged = pd.concat([features_df,trace.dataframe],axis=1)
-
+        merged = mergey_mc_mergealot(features_df,trace.dataframe)
 
         trace.dataframe = merged
 
         trace.add_applied_module(self.applied_module_string(self.args))
 
         if self.output_to_file:
-            features_df, arrays_df = split_df_to_simple_and_array(features_df)
             features_df.to_csv(self.output_path,index=False)
-            #trace_dataframe can be cast as TraceData and then df = self.copy_without_trace_data()
-            if arrays_df.empty:
-                pass
-            else:
-                tmp_trace_data = TraceData(df=arrays_df)
-                tmp_trace_data.dataframe = strip_k0_from_trace_column_labels(tmp_trace_data.dataframe)
-                df_path = self.output_path.replace('.csv', '.h5')
-                tmp_trace_data.save_to_h5(df_path)
-                
+
 
         return trace
 

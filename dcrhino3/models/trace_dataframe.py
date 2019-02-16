@@ -54,24 +54,24 @@ class ModuleType(Enum):
     TRIM = 9
 
 
-def split_df_to_simple_and_array(df):
-    """
-    this can be made a method of TraceData or can go in util.py
-    """
-
-    array_df = df.copy()
-    array_columns = []
-    non_array_columns = []
-    for col in df.columns:
-        sample_element = df[col].iloc[0]
-        #print(col, type(sample_element))
-        if isinstance(sample_element, np.ndarray):
-            array_columns.append(col)
-        else:
-            non_array_columns.append(col)
-    array_df.drop(non_array_columns, axis=1, inplace=True)
-    df.drop(array_columns, axis=1, inplace=True)
-    return df, array_df
+#def split_df_to_simple_and_array(df):
+#    """
+#    this can be made a method of TraceData or can go in util.py
+#    """
+#
+#    array_df = df.copy()
+#    array_columns = []
+#    non_array_columns = []
+#    for col in df.columns:
+#        sample_element = df[col].iloc[0]
+#        #print(col, type(sample_element))
+#        if isinstance(sample_element, np.ndarray):
+#            array_columns.append(col)
+#        else:
+#            non_array_columns.append(col)
+#    array_df.drop(non_array_columns, axis=1, inplace=True)
+#    df.drop(array_columns, axis=1, inplace=True)
+#    return df, array_df
 
 
 class TraceData(object):

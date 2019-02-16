@@ -66,6 +66,8 @@ def identify_phase_rotation(data):
             degrees_advance -= 1;#print(degrees_advance)
             rotated_data = rotate_phase(data, degrees_advance);
             phase_state = determine_phase_state(rotated_data, trough_search_width)
+            if phase_state=='indeterminate':
+                return degrees_advance
             if not tolerate_90_degree_plus_rotations:
                 if np.abs(degrees_advance) > 90:
                     print('error - could not balance with 90 degree rotation')
@@ -75,6 +77,8 @@ def identify_phase_rotation(data):
             degrees_advance += 1;#print(degrees_advance)
             rotated_data = rotate_phase(data, degrees_advance);
             phase_state = determine_phase_state(rotated_data, trough_search_width)
+            if phase_state=='indeterminate':
+                return degrees_advance
             if not tolerate_90_degree_plus_rotations:
                 if np.abs(degrees_advance) > 90:
                    print('error - could not balance with 90 degree delay')
