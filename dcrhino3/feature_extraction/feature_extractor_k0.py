@@ -41,7 +41,9 @@ class FeatureExtractorK0(FeatureExtractorJ1):
         """
         FeatureExtractorJ1.__init__(self, component_id, trimmed_trace,
                                     transformed_args, timestamp)
+        self.apply_primary_rotation = transformed_args.apply_primary_rotation
         self.apply_secondary_rotations = transformed_args.apply_secondary_rotations
+
 
 
 
@@ -105,10 +107,10 @@ class FeatureExtractorK0(FeatureExtractorJ1):
         print("update_window_boundaries_in_time should not be needed for phase rotated data\
               needs testing to confirm its really true")
         self.update_window_boundaries_in_time()
-
-        mini_trace = identify_primary_neighbourhood(self.trace, self.transformed_args)
-        phi = identify_phase_rotation(mini_trace.data)
-        self.trace.rotate_recenter_and_trim(phi)
+        if self.apply_primary_rotation:
+            mini_trace = identify_primary_neighbourhood(self.trace, self.transformed_args)
+            phi = identify_phase_rotation(mini_trace.data)
+            self.trace.rotate_recenter_and_trim(phi)
         # trace is now ready for feature extraction
         #</update primary window to be centered on max amplitude>
         window_data_dict, window_time_vector_dict = self.populate_window_data_dict()
@@ -116,8 +118,10 @@ class FeatureExtractorK0(FeatureExtractorJ1):
         extracted_features_dict = self.extract_features_from_each_window(window_data_dict,
                                                                     window_time_vector_dict)
         #pdb.set_trace()
-        extracted_features_dict['phi'] = phi
-        extracted_features_dict['trace'] = self.trace.data
+        if self.apply_primary_rotation:
+            extracted_features_dict['phi'] = phi
+            extracted_features_dict['trace'] = self.trace.data
+
         boolean_features_dict = calculate_boolean_features(extracted_features_dict, self.sensor_saturation_g)
         extracted_features_dict['boolean'] = boolean_features_dict
         new_features_dict[self.trace.component_id] = extracted_features_dict
