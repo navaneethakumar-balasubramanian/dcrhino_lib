@@ -45,7 +45,6 @@ from dcrhino3.signal_processing.phase_rotation import determine_phase_state
 from dcrhino3.signal_processing.phase_rotation import rotate_phase
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
 from dcrhino3.process_flow.modules.base_module import BaseModule
-#from dcrhino3.feature_extraction.feature_extractor_j1a import get_expected_multiple_times
 from phase_algorithm_helpers import identify_primary_neighbourhood
 from phase_algorithm_helpers import check_condition_that_makes_me_nervous
 from phase_algorithm_helpers import identify_phase_rotation
@@ -55,7 +54,6 @@ from phase_algorithm_helpers import identify_phase_rotation
 #json_object = json.loads(json_dict)
 data_dir = '/home/kkappler/tmp/dcrhino_lib/bin'
 flow = 'v2_processing_flow'
-#flow = 'v2_processing_flow_with_interpolation_j1a'
 component_id = 'axial';
 #component_id = 'tangential'
 

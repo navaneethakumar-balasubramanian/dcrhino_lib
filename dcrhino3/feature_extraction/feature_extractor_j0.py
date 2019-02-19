@@ -6,7 +6,7 @@ value from global_config
 import numpy as np
 import pdb
 
-from dcrhino3.feature_extraction.j0_derived_features import IntermediateFeatureDeriver
+from dcrhino3.feature_extraction.intermediate_derived_features import IntermediateFeatureDeriver
 from dcrhino3.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_multiple_wavelet
 from dcrhino3.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_primary_wavelet
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace

@@ -8,21 +8,12 @@ import numpy as np
 import pdb
 import re
 
-#from dcrhino3.feature_extraction.supporting_j1 import calculate_boolean_features
-#from dcrhino3.feature_extraction.supporting_j1 import convert_window_boundaries_to_sample_indices
-#from dcrhino3.feature_extraction.supporting_j1 import extract_features_from_each_window
-#from dcrhino3.feature_extraction.supporting_j1 import get_expected_multiple_times
-#from dcrhino3.feature_extraction.supporting_j1 import populate_window_data_dict
-#from dcrhino3.feature_extraction.supporting_j1 import set_window_boundaries_in_time
-#from dcrhino3.feature_extraction.supporting_j1 import update_window_boundaries_in_time
+from dcrhino3.feature_extraction.intermediate_derived_features import IntermediateFeatureDeriver
 from dcrhino3.helpers.general_helper_functions import flatten
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
 
 logger = init_logging(__name__)
-
-#PRIMARY_SHIFT_AXIAL = 0.0
-#PRIMARY_SHIFT_TANGENTIAL = 0.0
 
 WINDOW_BOUNDARIES_INDICES = {}
 WINDOW_BOUNDARIES_INDICES['axial'] = {}
@@ -267,7 +258,7 @@ class FeatureExtractorJ1(object):
     def extract_features_from_each_window(self, window_data_dict, time_vector_dict):
         """
         """
-        new_feature_dict = {}
+        new_features_dict = {}
         for window_label in window_data_dict.keys():
             tmp = {}
             #pdb.set_trace()
@@ -280,38 +271,36 @@ class FeatureExtractorJ1(object):
             tmp['min_amplitude'] = np.min(data_window)
             tmp['min_time'] = time_vector[np.argmin(data_window)]
             tmp['integrated_absolute_amplitude'] = dt * np.sum(np.abs(data_window)) / window_duration
-            new_feature_dict[window_label] = tmp
-        return new_feature_dict
+            new_features_dict[window_label] = tmp
+
+        boolean_features_dict = calculate_boolean_features(new_features_dict,
+                                                           self.sensor_saturation_g)
+        new_features_dict['boolean'] = boolean_features_dict
+        tmp2 = {}
+        tmp2[self.trace.component_id] = new_features_dict
+        unnested_dictionary = flatten(tmp2)
+        feature_deriver = IntermediateFeatureDeriver(df_dict=unnested_dictionary)
+        unnested_dictionary = feature_deriver.derive_features(self.trace.component_id)
+        return unnested_dictionary
 
     def extract_features(self):
         """
+        @note: now that we are operating by component we could skip the new_features_dict
+        and flatten step, and instead add the component id explicity in L303...
         """
         self.set_time_window_boundaries()
         self.convert_time_window_to_indices()
-        #trimmed_time_vector = self.trace.time_vector
 
-        #Allocate space for feature arrays
-        new_features_dict = {}
-        #trimmed_trace = trimmed_traces_dict[component]
-        #pdb.set_trace()
-        #<update primary window to be centered on max amplitude of trace>
-        print("20181226 update the window time boundaries to be based on trace data")
+        print("20181226 update window-boundaries based on trace data (center on primary)")
         self.update_window_boundaries_in_time()
-
-        #</update primary window to be centered on max amplitude>
         window_data_dict, window_time_vector_dict = self.populate_window_data_dict()
         #test_populate_window_data_dict(window_data_dict, window_time_vector_dict, trimmed_trace, trimmed_time_vector)
         extracted_features_dict = self.extract_features_from_each_window(window_data_dict,
                                                                     window_time_vector_dict)
-        #pdb.set_trace()
-        boolean_features_dict = calculate_boolean_features(extracted_features_dict, self.sensor_saturation_g)
-        extracted_features_dict['boolean'] = boolean_features_dict
-        new_features_dict[self.trace.component_id] = extracted_features_dict
-        #pdb.set_trace()
-        unnested_dictionary = flatten(new_features_dict)#print('now dump out with dict keys concatenated')
-        for key in unnested_dictionary.keys():
-            unnested_dictionary['J1_{}'.format(key)] = unnested_dictionary.pop('{}'.format(key))
-        return unnested_dictionary
+
+        for key in extracted_features_dict.keys():
+            extracted_features_dict['J1_{}'.format(key)] = extracted_features_dict.pop('{}'.format(key))
+        return extracted_features_dict
 
 
 
