@@ -113,8 +113,8 @@ class DerivedFeatureExtractorV0(object):
         """
         feature_version = 'J0'
         try:
-            primary_time = self.df['{}_axial_primary_peak_time_sample'.format(feature_version)]
-            mulitple_time = self.df['{}_axial_multiple_peak_time_sample'.format(feature_version)]
+            primary_time = self.df['{}_axial_primary_max_time'.format(feature_version)]
+            mulitple_time = self.df['{}_axial_multiple_max_time'.format(feature_version)]
         except KeyError:
             primary_time = self.df['axial_primary_peak_time_sample']
             mulitple_time = self.df['axial_multiple_peak_time_sample']

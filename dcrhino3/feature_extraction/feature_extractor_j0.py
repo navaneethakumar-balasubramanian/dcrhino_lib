@@ -6,7 +6,7 @@ value from global_config
 import numpy as np
 import pdb
 
-from dcrhino3.feature_extraction.j0_derived_features import J0FeatureDeriver
+from dcrhino3.feature_extraction.j0_derived_features import IntermediateFeatureDeriver
 from dcrhino3.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_multiple_wavelet
 from dcrhino3.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_primary_wavelet
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
@@ -42,9 +42,9 @@ class FeatureExtractorJ0():
         self.COMPONENT_WAVELET_MAP['radial'] = ['primary',]
 
         self.WAVELET_FEATURES = {}
-        self.WAVELET_FEATURES['axial'] = ['peak_sample', 'peak_time_sample']
-        self.WAVELET_FEATURES['tangential'] = ['peak_sample','peak_time_sample']
-        self.WAVELET_FEATURES['radial'] = ['peak_sample',]
+        self.WAVELET_FEATURES['axial'] = ['max_amplitude', 'max_time']
+        self.WAVELET_FEATURES['tangential'] = ['max_amplitude', 'max_time']
+        self.WAVELET_FEATURES['radial'] = ['max_amplitude', 'max_time']
 
 
     def get_earliest_expected_mulitple_time(self):
@@ -117,33 +117,16 @@ class FeatureExtractorJ0():
             #pdb.set_trace()
             for attr in self.WAVELET_FEATURES[component_id]:
                 label = '{}_{}_{}'.format(component_id, wavelet_type, attr)
-
-                    #pdb.set_trace()
                 df_dict[label] = wffe.__getattribute__(attr)
                 #print ("Setting label" + label +  " as " + str(wffe.__getattribute__(attr)))
 
 
 
-        #NOTE THIS IS NOT a very desirable way to do these extracted features,
-        #because array math will do once its in a dataframe ... but for now, lets leave it...
-        print("component_id={}".format(component_id))
-        #pdb.set_trace()
-        j0_deriver = J0FeatureDeriver(df_dict=df_dict)
-        #feature_deriver = J0FeatureDeriver(df_dict=df_dict)
-        #df_dict = feature_deriver.derive_features(component_id)
-        if component_id == 'axial':
-            j0_deriver.df_dict = df_dict
-            df_dict['pseudo_ucs'] = j0_deriver.pseudo_ucs_sample
-            df_dict['pseudo_velocity'] = j0_deriver.pseudo_velocity_sample
-            df_dict['pseudo_density'] = j0_deriver.pseudo_density_sample
-            df_dict['reflection_coefficient'] = j0_deriver.reflection_coefficient_sample
-            df_dict['axial_delay'] = j0_deriver.axial_delay_sample
+        #NOTE these derived features are better suited to a dataframe column-by-column
+        #algebra method, but this will do in a pinch...
+        feature_deriver = IntermediateFeatureDeriver(df_dict=df_dict)
+        df_dict = feature_deriver.derive_features(component_id)
 
-        elif component_id == 'tangential':
-
-            df_dict['tangential_RC'] = j0_deriver.tangential_reflection_coefficient_sample
-            df_dict['tangential_delay'] = j0_deriver.tangential_delay_sample
-            df_dict['tangential_velocity_delay'] = 1.0/(df_dict['tangential_delay'])
 
         for key in df_dict.keys():
             df_dict['J0_{}'.format(key)] = df_dict.pop('{}'.format(key))

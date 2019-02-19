@@ -6,11 +6,9 @@
                                 {
         "type": "unfold",
         "output_to_file": false,
-        "args": {
-
-        }
+        "args": {}
       },
-                {
+      {
         "type": "lead_channel_deconvolution",
         "output_to_file": true,
         "args": {
@@ -31,10 +29,9 @@
           "trapezoidal_bpf_corner_4": "|global_config.trapezoidal_bpf_corner_4|",
           "trapezoidal_bpf_duration": "|global_config.trapezoidal_bpf_duration|",
           "sampling_rate": "|global_config.sampling_rate|"
-               }
-
+        }
       },
-        {
+      {
         "type": "trim",
         "output_to_file": true,
         "args": {
@@ -125,9 +122,9 @@
           "plot": {
             "upper_num_ms": 30,
             "lower_num_ms": -5,
-            "peak_ampl_x_col_name": "J0_axial_primary_peak_sample",
-            "peak_ampl_y_col_name": "J0_tangential_primary_peak_sample",
-            "peak_ampl_z_col_name": "J0_radial_primary_peak_sample",
+            "peak_ampl_x_col_name": "J0_axial_primary_max_amplitude",
+            "peak_ampl_y_col_name": "J0_tangential_primary_max_amplitude",
+            "peak_ampl_z_col_name": "J0_radial_primary_max_amplitude",
             "tangential_RC_col_name": "J0_tangential_RC",
             "ax_vel_del_col_name": "J0_pseudo_velocity",
             "tang_vel_del_col_name": "J0_tangential_velocity_delay",

@@ -94,9 +94,9 @@ step 2: center on the local maxima
     #pdb.set_trace()
     wffe = WaveletForFeatureExtraction(primary_wavelet,primary_time_vector, wavelet_features,
                                        component=component, wavelet_type=wavelet_type)
-
-    wffe.peak_sample = np.max(window_to_search_for_primary_1)
-    wffe.peak_time_sample = hopefully_prim_center_time
+   #pdb.set_trace()
+    wffe.max_amplitude = np.max(window_to_search_for_primary_1)
+    wffe.max_time = hopefully_prim_center_time
     #pdb.set_trace()
 
 
@@ -171,12 +171,9 @@ def extract_features_from_multiple_wavelet(tr, time_vector, earliest_multiple_ti
         wffe = WaveletForFeatureExtraction(multiple_wavelet, multiple_time_vector,
                                            wavelet_features, component=component,
                                            wavelet_type=wavelet_type)
-        #wffe.calculate_features()
 
-    wffe.peak_sample = np.max(window_to_search_for_multiple_1)
-    wffe.peak_time_sample = hopefully_mult_center_time
-    #pdb.set_trace()
-    #reference_index = multiple_wavelet_indices_1[hopefully_mult_peak_ndx]
+    wffe.max_amplitude = np.max(window_to_search_for_multiple_1)
+    wffe.max_time = hopefully_mult_center_time
 
     return wffe
 
