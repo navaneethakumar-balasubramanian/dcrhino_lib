@@ -166,8 +166,8 @@ class TraceData(object):
         print('Fix this so that these columns are saved, but for now we just remove them')
         for column in all_columns:
             sample_element = self.dataframe[column].iloc[0]
-            #print(col, type(sample_element))
-            if isinstance(sample_element, np.ndarray):
+            #print(column, type(sample_element))
+            if column == "_drop_features":
                 all_columns.remove(column)
                 self.dataframe.drop([column,], axis=1, inplace=True)
         #<cull other columns with array type>
@@ -184,8 +184,7 @@ class TraceData(object):
             elif dtype == np.int64:
                 h5f.create_dataset(column_label, data=column_data, dtype='i8')#, compression="gzip", compression_opts=9)
             else:
-                if column_label == "_drop_features":
-                    print (column_label)
+
                 column_data = column_data.astype(float)
                 h5f.create_dataset(column_label, data=column_data, dtype=float)#, compression="gzip", compression_opts=9)
         #</mwd columns>
@@ -311,7 +310,7 @@ class TraceData(object):
 
     def copy_without_trace_data(self):
         output_df = self.dataframe.copy(deep=False)
-        return output_df.drop([c for c in output_df.columns if 'traces' in c], axis=1)
+        return output_df.drop([c for c in output_df.columns if 'trace' in c], axis=1)
 
 def main():
     pass

@@ -64,7 +64,7 @@ def test_populate_window_data_dict(trace_data_window_dict, trace_time_vector_dic
           linewidth=2, label='trace data', alpha=0.1)
         i_color = 0
         for window_label in data_sub_dict.keys():
-            print(window_label)
+            #print(window_label)
             ax[i_label].plot(time_sub_dict[window_label], data_sub_dict[window_label],
               color=color_cycle[i_color], linewidth=1, label=window_label)
             i_color+=1
@@ -92,7 +92,7 @@ def calculate_boolean_features(feature_dict, sensor_saturation_g):
     if feature_dict['multiple_1']['max_amplitude'] < system_noise_level:
         output_dict['mask_system_noise_level'] = True
         #pdb.set_trace()
-        print('mask_system_noise_level')
+        #print('mask_system_noise_level')
     snr_mult1 = feature_dict['multiple_1']['integrated_absolute_amplitude'] / feature_dict['noise_1']['integrated_absolute_amplitude']
     if snr_mult1 < 1.0:
         output_dict['mask_snr_mult1'] = True
@@ -182,7 +182,7 @@ class FeatureExtractorJ1(object):
         time_window_boundaries_dict = self.window_boundaries_time[component_id]
         index_window_boundaries_dict = self.window_boundaries_indices[component_id]
         #pdb.set_trace()
-        print("now check that self.window_boundaries_time[component_id] si getting filled out")
+        #print("now check that self.window_boundaries_time[component_id] si getting filled out")
         index_offset = (len(self.trace.data)-1) // 2
         for window_label in TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION:
             time_window_boundaries = time_window_boundaries_dict[window_label]
@@ -291,7 +291,7 @@ class FeatureExtractorJ1(object):
         self.set_time_window_boundaries()
         self.convert_time_window_to_indices()
 
-        print("20181226 update window-boundaries based on trace data (center on primary)")
+        #print("20181226 update window-boundaries based on trace data (center on primary)")
         self.update_window_boundaries_in_time()
         window_data_dict, window_time_vector_dict = self.populate_window_data_dict()
         #test_populate_window_data_dict(window_data_dict, window_time_vector_dict, trimmed_trace, trimmed_time_vector)

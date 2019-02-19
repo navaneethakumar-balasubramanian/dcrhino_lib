@@ -11,8 +11,6 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.process_flow.modules.base_module import BaseModule
 
-from dask import compute, delayed
-
 logger = init_logging(__name__)
 
 def mergey_mc_mergealot(new_features_df, old_dataframe):
@@ -70,26 +68,17 @@ class BaseFeatureModule(BaseModule):
             line_features_dict = {}
             trace_config = trace.global_config_by_index(row_of_df['acorr_file_id'])
             transformed_args = self.get_transformed_args(trace_config)
-            component_features_list = []
 
             for component_id in trace_config.components_to_process:
                 component_column_on_df = component_id+"_trace"
                 trace_to_process = row_of_df[component_column_on_df]
                 timestamp = row_of_df.timestamp
-
-                # Use delayed to map lazily the  extract of features.
-                component_features = delayed(self.extract_feature_component)(component_id,
+                component_features = self.extract_feature_component(component_id,
                                                                  trace_to_process,
                                                                  transformed_args,
                                                                  timestamp)
-                component_features_list.append(component_features)
+                line_features_dict.update(component_features)
 
-            # Here we compute and get a list of dicts.
-            component_features_results = compute(*component_features_list)
-
-            # For each component of the list, we update the final dict.
-            for r in component_features_results:
-                line_features_dict.update(r)
 
             features_dict_list[line_idx] = line_features_dict
 

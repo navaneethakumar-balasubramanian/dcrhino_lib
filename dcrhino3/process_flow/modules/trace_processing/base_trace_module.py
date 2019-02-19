@@ -41,7 +41,7 @@ class BaseTraceModule(BaseModule):
             row_of_df = output_df.iloc[line_idx]
             if previous_acorr_file_id != row_of_df['acorr_file_id']:
                 trace_config = trace.global_config_by_index(row_of_df['acorr_file_id'])
-                print type(trace_config)
+                #print type(trace_config)
                 transformed_args = self.get_transformed_args(trace_config)
                 previous_acorr_file_id = row_of_df['acorr_file_id']
 

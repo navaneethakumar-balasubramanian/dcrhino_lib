@@ -7,7 +7,7 @@ import pdb
 import time
 import os
 
-from dcrhino3.helpers.general_helper_functions import init_logging
+from dcrhino3.helpers.general_helper_functions import init_logging, create_folders_if_needed
 
 from dcrhino3.process_flow.modules.trace_processing.band_pass_filter import BandPassFilterModule
 from dcrhino3.process_flow.modules.trace_processing.add_one import AddOneModule
@@ -155,6 +155,7 @@ class ProcessFlow:
             logger.info("{} ran in {}s ".format(module.id, delta_t))
 
         if self.save_features_to_file:
+            create_folders_if_needed(process_flow_output_path)
             output_trace.save_to_csv(os.path.join(process_flow_output_path, "extracted_features.csv"))
 
         for module in self.plotters_flow:
@@ -174,7 +175,9 @@ class ProcessFlow:
             logger.info("{} ran in {}s ".format(module.id, delta_t))
 
         if self.output_to_file:
+            create_folders_if_needed(process_flow_output_path)
             output_trace.save_to_h5(os.path.join(process_flow_output_path, "processed.h5"))
+
 
         # if self.output_to_db:
         #    output_trace.save_to_db(self.rhino_db_helper,self.id)
