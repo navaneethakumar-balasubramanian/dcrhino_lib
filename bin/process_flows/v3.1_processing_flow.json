@@ -1,5 +1,5 @@
 {
-  "id": "v2_processing_flow",
+  "id": "v3.1_processing_flow",
   "output_to_file":true,
   "trace_processing": {
     "modules": [
@@ -71,7 +71,25 @@
           "n_samples_trimmed_trace": "|global_config.n_samples_trimmed_trace|",
           "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|"
         }
-      }
+      },
+    {
+       "type": "k0",
+       "output_to_file": true,
+       "args": {
+               "acceptable_peak_wander": ["|global_config.acceptable_peak_wander|", 0.003],
+               "output_sampling_rate":"|global_config.output_sampling_rate",
+               "sensor_distance_to_source":"|global_config.sensor_distance_to_source|",
+               "sensor_distance_to_shocksub":"|global_config.sensor_distance_to_shocksub|",
+               "sensor_saturation_g":"|global_config.sensor_saturation_g|",
+               "ACOUSTIC_VELOCITY":"|global_config.ACOUSTIC_VELOCITY|",
+               "SHEAR_VELOCITY":"|global_config.SHEAR_VELOCITY|",
+               "n_samples_trimmed_trace": "|global_config.n_samples_trimmed_trace|",
+               "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
+               "window_widths":"|global_config.window_widths",
+               "apply_secondary_rotations": true
+               }
+     }
+
     ],
     "output_to_file": true
   },

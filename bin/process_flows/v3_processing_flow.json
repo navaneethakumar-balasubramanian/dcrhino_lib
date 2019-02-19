@@ -1,5 +1,5 @@
 {
-    "id":"v2_processing_flow_with_interpolation_j1a",
+    "id":"v3_processing_flow",
     "output_to_file":true,
 	"trace_processing":{
 		"modules":[
@@ -129,7 +129,7 @@
             "peak_ampl_y_col_name": "J0_tangential_primary_peak_sample",
             "peak_ampl_z_col_name": "J0_radial_primary_peak_sample",
             "tangential_RC_col_name": "J0_tangential_RC",
-            "ax_vel_del_col_name": "J0_axial_velocity_delay",
+            "ax_vel_del_col_name": "J0_pseudo_velocity",
             "tang_vel_del_col_name": "J0_tangential_velocity_delay",
             "reflection_coefficient_col_name": "J0_reflection_coefficient",
 	     "panels":{
