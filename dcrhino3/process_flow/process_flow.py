@@ -177,6 +177,7 @@ class ProcessFlow:
         if self.output_to_file:
             create_folders_if_needed(process_flow_output_path)
             output_trace.save_to_h5(os.path.join(process_flow_output_path, "processed.h5"))
+            output_trace.save_to_csv(os.path.join(process_flow_output_path, "processed.csv"))
 
 
         # if self.output_to_db:

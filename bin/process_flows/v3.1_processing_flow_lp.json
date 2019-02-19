@@ -10,14 +10,14 @@
       },
       {
         "type": "lead_channel_deconvolution",
-        "output_to_file": true,
+        "output_to_file": false,
         "args": {
           "num_taps_in_decon_filter": "|global_config.num_taps_in_decon_filter|"
         }
       },
       {
         "type": "band_pass_filter",
-        "output_to_file": true,
+        "output_to_file": false,
         "args": {
           "trapezoidal_bpf_corner_1": "|global_config.trapezoidal_bpf_corner_1|",
           "trapezoidal_bpf_corner_2": "|global_config.trapezoidal_bpf_corner_2|",
@@ -29,7 +29,7 @@
       },
       {
         "type": "trim",
-        "output_to_file": true,
+        "output_to_file": false,
         "args": {
           "max_lag_trimmed_trace": "|global_config.max_lag_trimmed_trace|",
           "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
@@ -42,7 +42,7 @@
     "modules": [
       {
         "type": "j0",
-        "output_to_file": true,
+        "output_to_file": false,
         "args": {
           "output_sampling_rate": [
             "|global_config.output_sampling_rate|",
@@ -58,7 +58,7 @@
       },
       {
         "type": "j1",
-        "output_to_file": true,
+        "output_to_file": false,
         "args": {
 	  "acceptable_peak_wander": ["|global_config.acceptable_peak_wander|", 0.003],
           "window_widths": "|global_config.window_widths",
@@ -74,7 +74,7 @@
       },
     {
        "type": "k0",
-       "output_to_file": true,
+       "output_to_file": false,
        "args": {
                "acceptable_peak_wander": ["|global_config.acceptable_peak_wander|", 0.003],
                "output_sampling_rate":"|global_config.output_sampling_rate",
@@ -166,14 +166,14 @@
     "modules": [
       {
         "type": "binning",
-        "output_to_file": true,
+        "output_to_file": false,
         "args": {
           "interval_in_meters": 0.05
         }
       },
       {
         "type": "rhino_physics",
-        "output_to_file": true,
+        "output_to_file": false,
         "args": {
           "recipe_to_use": "J1"
         }
