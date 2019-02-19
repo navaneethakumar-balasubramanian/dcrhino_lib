@@ -20,10 +20,10 @@ def decide_what_components_to_plot(transformed_args,axial,tangential,radial):
     use global_config.componets to process via transformed args
     AND uset process flow booleans (heatmaps)
     AND check the all zeros conditons
-    and return a list like 
+    and return a list like
     ['axial', 'radial']
     for example
-    
+
     I HAVE USED EVAL below, but might need a better way for that.
     """
     components_to_plot = {}
@@ -122,25 +122,31 @@ class QCPlotterModule(BaseModule):
 
 
     def get_multiples(self,transformed_args,trace):
-            expected_multiple = get_expected_multiple_times(transformed_args, recipe='J1')
+        """
+        @TODO: Review why we needed the try/Except loop here ... do we still want it???
+        """
+        expected_multiple = get_expected_multiple_times(transformed_args, recipe='J1')
 
 
 
-            try:
-                ax_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial']*1000)
-                ax_2_mult =  (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial_second_multiple']*1000)
+        try:
+            ax_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial']*1000)
+            ax_2_mult =  (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial_second_multiple']*1000)
 
-                tang_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential']*1000)
-                tang_2_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential_second_multiple']*1000)
-            except KeyError:
-                ax_1_mult = (trace.dataframe.axial_primary_peak_time_sample + expected_multiple['axial']*1000)
-                ax_2_mult =  (trace.dataframe.axial_primary_peak_time_sample + expected_multiple['axial_second_multiple']*1000)
+            tang_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential']*1000)
+            tang_2_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential_second_multiple']*1000)
+        except KeyError:
+            print("logger.warning: we should no longer need this try-except loop!!!!!!")
+            #pdb.set_trace()
+            #raise Exception
+            ax_1_mult = (trace.dataframe.axial_primary_max_time + expected_multiple['axial']*1000)
+            ax_2_mult =  (trace.dataframe.axial_primary_max_time + expected_multiple['axial_second_multiple']*1000)
 
-                tang_1_mult = (trace.dataframe.tangential_primary_peak_time_sample + expected_multiple['tangential']*1000)
-                tang_2_mult = (trace.dataframe.tangential_primary_peak_time_sample + expected_multiple['tangential_second_multiple']*1000)
+            tang_1_mult = (trace.dataframe.tangential_primary_max_time + expected_multiple['tangential']*1000)
+            tang_2_mult = (trace.dataframe.tangential_primary_max_time + expected_multiple['tangential_second_multiple']*1000)
 
-            mult_pos = pd.DataFrame({'ax_1_mult':ax_1_mult, 'ax_2_mult':ax_2_mult, 'tang_1_mult':tang_1_mult, 'tang_2_mult':tang_2_mult})
-            return mult_pos
+        mult_pos = pd.DataFrame({'ax_1_mult':ax_1_mult, 'ax_2_mult':ax_2_mult, 'tang_1_mult':tang_1_mult, 'tang_2_mult':tang_2_mult})
+        return mult_pos
 
 
 

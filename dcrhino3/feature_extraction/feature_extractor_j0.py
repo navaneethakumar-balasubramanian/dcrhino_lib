@@ -6,26 +6,10 @@ value from global_config
 import numpy as np
 import pdb
 
-from dcrhino3.feature_extraction.j0_derived_features import J0FeatureDeriver
+from dcrhino3.feature_extraction.intermediate_derived_features import IntermediateFeatureDeriver
 from dcrhino3.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_multiple_wavelet
 from dcrhino3.feature_extraction.supporting_minimal_feature_extraction import extract_features_from_primary_wavelet
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
-
-class WaveletForFeatureExtraction(object):
-    """
-    This is intended to calculate features on individual wavelets.  Actually
-    the data here are "windows".  we think there are wavelets in these windows
-    much of the time.
-
-    """
-    def  __init__(self, data, time_vector, wavelet_features, **kwargs):
-        self.data = data
-        self.time_vector = time_vector
-        self.component = kwargs.get('component', None)
-        self.wavelet_type = kwargs.get('wavelet_type', None)
-        for k in wavelet_features[self.component]:
-            setattr(self, k, np.nan)
-
 
 
 
@@ -40,7 +24,6 @@ class FeatureExtractorJ0():
         """
         try:
             self.sampling_rate = transformed_args.upsample_sampling_rate
-            #pdb.set_trace()
         except AttributeError:
             self.sampling_rate = transformed_args.output_sampling_rate
             pass
@@ -48,25 +31,20 @@ class FeatureExtractorJ0():
         self.primary_window_halfwidth_ms = transformed_args.primary_window_halfwidth_ms
         self.multiple_window_search_width_ms = transformed_args.multiple_window_search_width_ms
         self.sensor_distance_to_source = transformed_args.sensor_distance_to_source
-        #self.sampling_rate = transformed_args.output_sampling_rate
         self.ACOUSTIC_VELOCITY = transformed_args.ACOUSTIC_VELOCITY
         self.n_samples_trimmed_trace = transformed_args.n_samples_trimmed_trace
         self.min_lag_trimmed_trace = transformed_args.min_lag_trimmed_trace
         #self.max_lag_trimmed_trace = np.abs(transformed_args.max_lag_trimmed_trace)
 
         self.COMPONENT_WAVELET_MAP = {}
-        self.COMPONENT_WAVELET_MAP['axial'] = ['primary', 'multiple']
-        self.COMPONENT_WAVELET_MAP['tangential'] = ['primary','multiple']
+        self.COMPONENT_WAVELET_MAP['axial'] = ['primary', 'multiple_1']
+        self.COMPONENT_WAVELET_MAP['tangential'] = ['primary','multiple_1']
         self.COMPONENT_WAVELET_MAP['radial'] = ['primary',]
 
         self.WAVELET_FEATURES = {}
-        self.WAVELET_FEATURES['axial'] = ['peak_amplitude', 'peak_sample', 'peak_time',
-                        'peak_time_sample', 'zero_crossing_prior', 'zero_crossing_after',
-                        'area', 'pk_error', 'zx_error', 'zero_crossing_prior_sample',
-                        'zero_crossing_after_sample', 'left_trough_time', 'left_trough_time_sample']
-
-        self.WAVELET_FEATURES['tangential'] = ['peak_sample','peak_time_sample']
-        self.WAVELET_FEATURES['radial'] = ['peak_sample',]
+        self.WAVELET_FEATURES['axial'] = ['max_amplitude', 'max_time']
+        self.WAVELET_FEATURES['tangential'] = ['max_amplitude', 'max_time']
+        self.WAVELET_FEATURES['radial'] = ['max_amplitude', 'max_time']
 
 
     def get_earliest_expected_mulitple_time(self):
@@ -100,19 +78,20 @@ class FeatureExtractorJ0():
         df_dict = self.create_features_dictionary(component_id)
 
         for wavelet_type in self.COMPONENT_WAVELET_MAP[component_id]:
-
+            wavelet_features = self.WAVELET_FEATURES[component_id]
             packet = SymmetricTrace(component_array, self.sampling_rate)
             #pdb.set_trace()
             if component_id == 'axial':
 
                 if wavelet_type=='primary':
+                    #pdb.set_trace()
                     wffe = extract_features_from_primary_wavelet(packet, self.primary_window_halfwidth_ms,
-                                                                 component_id, wavelet_type)
-                elif wavelet_type=='multiple':
+                                                                 component_id, wavelet_type, wavelet_features)
+                elif wavelet_type=='multiple_1':
                     earliest_multiple_time = self.get_earliest_expected_mulitple_time() - (2.0 * packet.dt)
                     latest_multiple_time =  earliest_multiple_time + self.multiple_window_search_width_ms*1e-3
                     wffe = extract_features_from_multiple_wavelet(packet, packet.time_vector, earliest_multiple_time,
-                                                                  latest_multiple_time, component_id, wavelet_type)
+                                                                  latest_multiple_time, component_id, wavelet_type, wavelet_features)
                 else:
                     #logger.critical("Unsupported Wavelet Type {}".format(wavelet_type))
                     raise Exception
@@ -120,48 +99,34 @@ class FeatureExtractorJ0():
 
                 if wavelet_type=='primary':
                     wffe = extract_features_from_primary_wavelet(packet, self.primary_window_halfwidth_ms,
-                                                                 component_id, wavelet_type)
-                elif wavelet_type=='multiple':
+                                                                 component_id, wavelet_type,
+                                                                 wavelet_features)
+                elif wavelet_type=='multiple_1':
                     earliest_multiple_time = self.get_earliest_expected_mulitple_time() - (2.0 * packet.dt)
                     latest_multiple_time =  earliest_multiple_time + self.multiple_window_search_width_ms*1e-3
                     wffe = extract_features_from_multiple_wavelet(packet, packet.time_vector, earliest_multiple_time,
-                                                                  latest_multiple_time, component_id, wavelet_type)
+                                                                  latest_multiple_time, component_id, wavelet_type,
+                                                                  wavelet_features)
                 else:
                     raise Exception
 
             else :
                 wffe = extract_features_from_primary_wavelet(packet, self.primary_window_halfwidth_ms,
-                                                             component_id, wavelet_type)
+                                                             component_id, wavelet_type,
+                                                             self.WAVELET_FEATURES[component_id])
             #pdb.set_trace()
             for attr in self.WAVELET_FEATURES[component_id]:
                 label = '{}_{}_{}'.format(component_id, wavelet_type, attr)
-
-                    #pdb.set_trace()
                 df_dict[label] = wffe.__getattribute__(attr)
                 #print ("Setting label" + label +  " as " + str(wffe.__getattribute__(attr)))
 
 
 
-        #NOTE THIS IS NOT a very desirable way to do these extracted features,
-        #because array math will do once its in a dataframe ... but for now, lets leave it...
-        print("component_id={}".format(component_id))
-        #pdb.set_trace()
-        j0_deriver = J0FeatureDeriver()
-        j0_deriver.df_dict = df_dict
+        #NOTE these derived features are better suited to a dataframe column-by-column
+        #algebra method, but this will do in a pinch...
+        feature_deriver = IntermediateFeatureDeriver(df_dict=df_dict)
+        df_dict = feature_deriver.derive_features(component_id)
 
-        if component_id == 'axial':
-            j0_deriver.df_dict = df_dict
-            df_dict['pseudo_ucs'] = j0_deriver.pseudo_ucs_sample
-            df_dict['pseudo_velocity'] = j0_deriver.primary_pseudo_velocity_sample
-            df_dict['pseudo_density'] = j0_deriver.primary_pseudo_density_sample
-            df_dict['reflection_coefficient'] = j0_deriver.reflection_coefficient_sample
-            df_dict['axial_delay'] = df_dict['axial_multiple_peak_time_sample'] - df_dict['axial_primary_peak_time_sample']
-            df_dict['axial_velocity_delay'] = 1.0/(df_dict['axial_delay'])**3
-        elif component_id == 'tangential':
-
-            df_dict['tangential_RC'] = j0_deriver.tangential_reflection_coefficient_sample
-            df_dict['tangential_delay'] = df_dict['tangential_multiple_peak_time_sample'] - df_dict['tangential_primary_peak_time_sample']
-            df_dict['tangential_velocity_delay'] = 1.0/(df_dict['tangential_delay'])
 
         for key in df_dict.keys():
             df_dict['J0_{}'.format(key)] = df_dict.pop('{}'.format(key))

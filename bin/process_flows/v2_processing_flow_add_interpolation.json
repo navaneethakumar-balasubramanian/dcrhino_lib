@@ -125,9 +125,9 @@
           "plot": {
             "upper_num_ms": 30,
             "lower_num_ms": -5,
-            "peak_ampl_x_col_name": "K0_axial_primary_max_amplitude",
-            "peak_ampl_y_col_name": "K0_tangential_primary_max_amplitude",
-            "peak_ampl_z_col_name": "K0_radial_primary_max_amplitude",
+            "peak_ampl_x_col_name": "J0_axial_primary_peak_sample",
+            "peak_ampl_y_col_name": "J0_tangential_primary_peak_sample",
+            "peak_ampl_z_col_name": "J0_radial_primary_peak_sample",
             "tangential_RC_col_name": "J0_tangential_RC",
             "ax_vel_del_col_name": "J0_axial_velocity_delay",
             "tang_vel_del_col_name": "J0_tangential_velocity_delay",
@@ -135,16 +135,16 @@
 	     "panels":{
 		"axial_amp_feature_plot":true,
 	    	"axial_delay_feature_plot":false,
-	    	"axial_rc_feature_plot":false,
+	    	"axial_rc_feature_plot":true,
 	    	"tangential_amp_feature_plot":true,
-	    	"tangential_delay_feature_plot":false,
-	    	"tangential_rc_feature_plot":false,
+	    	"tangential_delay_feature_plot":true,
+	    	"tangential_rc_feature_plot":true,
 	    	"radial_amp_feature_plot":false,
 	    	"radial_delay_feature_plot":false,
 	    	"radial_rc_feature_plot":false,
 	    	"axial_heatmap_plot":true,
 	    	"tangential_heatmap_plot":true,
-            "radial_heatmap_plot":false
+            	"radial_heatmap_plot":false
 		},
 		"ax_lim":{
 			"axial_amp_lim":[0,1.5],
