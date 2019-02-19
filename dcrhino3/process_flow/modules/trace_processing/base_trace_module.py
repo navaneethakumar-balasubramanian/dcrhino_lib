@@ -2,7 +2,7 @@
 """
 @TODO: 20190127; rename this to BaseTraceProcessingModule, or just call it
 base.py and that its in trace_processing folder.  THis module is all about
-the action of processing and so processign should figure in its name so
+the action of processing and so processing should figure in its name so
 one knows can reference it easily;
 """
 
