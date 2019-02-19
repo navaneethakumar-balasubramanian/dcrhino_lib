@@ -122,7 +122,7 @@ class TraceData(object):
 
     def save_to_csv(self,path):
         df = self.copy_without_trace_data()
-        first_global_config = self.global_config_by_index(df['acorr_file_id'].values[0])
+        first_global_config = self.global_config_by_index(str(int(df['acorr_file_id'].values[0])))
         df['sensor_id'] = first_global_config.sensor_serial_number
         df['digitizer_id'] = first_global_config.digitizer_serial_number
         df['rhino_sensor_uid'] = str(first_global_config.sensor_type) + "_" + str(first_global_config.sensor_serial_number) + "_" + str(first_global_config.digitizer_serial_number) + "_" + str(first_global_config.sensor_accelerometer_type) + "_" + str(first_global_config.sensor_saturation_g)
@@ -184,6 +184,8 @@ class TraceData(object):
             elif dtype == np.int64:
                 h5f.create_dataset(column_label, data=column_data, dtype='i8')#, compression="gzip", compression_opts=9)
             else:
+                if column_label == "_drop_features":
+                    print (column_label)
                 column_data = column_data.astype(float)
                 h5f.create_dataset(column_label, data=column_data, dtype=float)#, compression="gzip", compression_opts=9)
         #</mwd columns>
@@ -296,7 +298,7 @@ class TraceData(object):
         pass
 
     def global_config_by_index(self,index):
-        return self._global_configs[str(index)]
+        return self._global_configs[str(int(index))]
 
     def component_as_array(self, component_id):
         """
@@ -309,12 +311,7 @@ class TraceData(object):
 
     def copy_without_trace_data(self):
         output_df = self.dataframe.copy(deep=False)
-        for trace_column_label in TRACE_COLUMN_LABELS:
-            try:
-                output_df = output_df.drop([trace_column_label,], axis=1)
-            except ValueError:
-                pass#that column was never there in the first place
-        return output_df
+        return output_df.drop([c for c in output_df.columns if 'traces' in c], axis=1)
 
 def main():
     pass
