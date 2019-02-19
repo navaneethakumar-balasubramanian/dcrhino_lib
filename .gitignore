@@ -7,3 +7,5 @@ dcrhino3/acquisition/logs/*.err
 bin/can_be_deleted
 
 \.idea/workspace\.xml
+
+\.idea/
