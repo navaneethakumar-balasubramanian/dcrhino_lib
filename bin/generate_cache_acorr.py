@@ -67,7 +67,10 @@ def generate_cache_acorr(mine_name):
                 #pdb.set_trace()
                 acor_trace.dataframe = merger.merge_mwd_with_trace(hole_mwd,acor_trace)
                 acor_trace.save_to_h5(temp_h5_path)
-                os.rename(temp_h5_path,h5_path)
+                try:
+                    os.rename(temp_h5_path,h5_path)
+                except:
+                    logger.error("Failed to rename " + str(temp_h5_path) + " to " + str(h5_path))
                 #reloaded_traces = TraceData()
                 #reloaded_traces.load_from_h5(temp)
                 
