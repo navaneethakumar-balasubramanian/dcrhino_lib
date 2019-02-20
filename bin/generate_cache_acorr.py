@@ -40,7 +40,7 @@ def generate_cache_acorr(mine_name):
         merger = MWDRhinoMerger(files,mwd_df)
         matches = merger.observed_blasthole_catalog
         
-        pdb.set_trace()
+        #pdb.set_trace()
     
         for line in matches.itertuples():
     
