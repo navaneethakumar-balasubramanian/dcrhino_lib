@@ -181,16 +181,19 @@ class RhinoDBHelper:
             df = self.query_result_to_pd(result, all_columns)
             #<fix array casts>
             n_rows = len(df)
-            n_observations = len(df[trace_labels_for_db_call[0]][0])#length of a single trace
-            for column_label in trace_labels_for_db_call:
-                data_array = np.full((n_rows, n_observations), np.nan)
-                for i in range(n_rows):
-                    data_array[i,:] = df[column_label][i]
-                list_array = list(data_array)
-                df[column_label] = list_array
-            #</fix array casts>
-            df = self.timestamp_microtime_to_float(df)
-            df['acorr_file_id'] = df['acorr_file_id'].astype("category") 
+            if n_rows > 0:
+                n_observations = len(df[trace_labels_for_db_call[0]][0])#length of a single trace
+                for column_label in trace_labels_for_db_call:
+                    data_array = np.full((n_rows, n_observations), np.nan)
+                    for i in range(n_rows):
+                        data_array[i,:] = df[column_label][i]
+                    list_array = list(data_array)
+                    df[column_label] = list_array
+                #</fix array casts>
+                df = self.timestamp_microtime_to_float(df)
+                df['acorr_file_id'] = df['acorr_file_id'].astype("category")
+            else:
+                logger.error("NO DATA FOR THIS HOLE FROM " + str(min_ts) + " to " + str(max_ts))
             return df
         
         

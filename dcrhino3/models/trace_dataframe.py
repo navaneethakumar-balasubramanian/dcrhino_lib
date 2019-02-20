@@ -145,7 +145,9 @@ class TraceData(object):
         components specified in global_config
         """
         #df_as_dict = dict(self.dataframe)
-
+        if len(self.dataframe) == 0:
+            logger.error("No point on saving an empty h5 file to " +str(path))
+            return
         all_columns = list(self.dataframe.columns)
         folder = os.path.dirname(path)
         create_folders_if_needed(folder)
