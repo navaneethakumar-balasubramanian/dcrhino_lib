@@ -18,6 +18,9 @@ from dcrhino3.helpers.mwd_helper import MWDHelper
 from dcrhino3.helpers.mwd_rhino_merger import MWDRhinoMerger
 from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.models.trace_dataframe import TraceData
+from dcrhino3.helpers.general_helper_functions import init_logging
+
+logger = init_logging(__name__)
 
 
 
