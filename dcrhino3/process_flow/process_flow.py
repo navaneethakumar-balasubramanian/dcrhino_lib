@@ -133,6 +133,7 @@ class ProcessFlow:
 
     def process(self, trace_data):
         process_flow_output_path = os.path.join(self.output_path, self.id)
+        create_folders_if_needed(process_flow_output_path)
         """
         @Thiago: why are we reassigning name in first line?  do you mean .copy?
         @var module: process_flow.modules.trace_processing.base
@@ -155,7 +156,6 @@ class ProcessFlow:
             logger.info("{} ran in {}s ".format(module.id, delta_t))
 
         if self.save_features_to_file:
-            create_folders_if_needed(process_flow_output_path)
             output_trace.save_to_csv(os.path.join(process_flow_output_path, "extracted_features.csv"))
 
         for module in self.plotters_flow:
@@ -175,7 +175,7 @@ class ProcessFlow:
             logger.info("{} ran in {}s ".format(module.id, delta_t))
 
         if self.output_to_file:
-            create_folders_if_needed(process_flow_output_path)
+
             output_trace.save_to_h5(os.path.join(process_flow_output_path, "processed.h5"))
             output_trace.save_to_csv(os.path.join(process_flow_output_path, "processed.csv"))
 

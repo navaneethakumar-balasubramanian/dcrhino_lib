@@ -10,7 +10,7 @@
       },
       {
         "type": "lead_channel_deconvolution",
-        "output_to_file": true,
+        "output_to_file": false,
         "args": {
           "num_taps_in_decon_filter": "|global_config.num_taps_in_decon_filter|"
         }
@@ -21,7 +21,7 @@
       },
         {
         "type": "band_pass_filter",
-        "output_to_file": true,
+        "output_to_file": false,
         "args": {
           "trapezoidal_bpf_corner_1": "|global_config.trapezoidal_bpf_corner_1|",
           "trapezoidal_bpf_corner_2": "|global_config.trapezoidal_bpf_corner_2|",
@@ -33,7 +33,7 @@
       },
       {
         "type": "trim",
-        "output_to_file": true,
+        "output_to_file": false,
         "args": {
           "max_lag_trimmed_trace": "|global_config.max_lag_trimmed_trace|",
           "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
@@ -43,7 +43,7 @@
       },
         {
         "type": "upsample",
-        "output_to_file": true,
+        "output_to_file": false,
         "args": {
           "trimmed_trace_duration": "|global_config.trimmed_trace_duration|",
           "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
@@ -63,7 +63,7 @@
     "modules": [
       {
         "type": "j0",
-        "output_to_file": true,
+        "output_to_file": false,
         "args": {
                 "output_sampling_rate":"|global_config.output_sampling_rate",
                 "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
@@ -77,7 +77,7 @@
       },
        {
         "type": "j1",
-        "output_to_file": true,
+        "output_to_file": false,
         "args": {
                 "acceptable_peak_wander": ["|global_config.acceptable_peak_wander|", 0.003],
                 "dynamic_windows": ["|global_config.dynamic_windows|", true],
@@ -92,28 +92,7 @@
                 "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
                 "window_widths":"|global_config.window_widths"
                 }
-      },
-    {
-       "type": "k0",
-       "output_to_file": true,
-       "args": {
-               "acceptable_peak_wander": ["|global_config.acceptable_peak_wander|", 0.003],
-               "dynamic_windows": ["|global_config.dynamic_windows|", true],
-               "output_sampling_rate":"|global_config.output_sampling_rate",
-               "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
-               "sensor_distance_to_source":"|global_config.sensor_distance_to_source|",
-               "sensor_distance_to_shocksub":"|global_config.sensor_distance_to_shocksub|",
-               "sensor_saturation_g":"|global_config.sensor_saturation_g|",
-               "ACOUSTIC_VELOCITY":"|global_config.ACOUSTIC_VELOCITY|",
-               "SHEAR_VELOCITY":"|global_config.SHEAR_VELOCITY|",
-               "n_samples_trimmed_trace": "|global_config.n_samples_trimmed_trace|",
-               "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
-               "window_widths":"|global_config.window_widths",
-               "apply_primary_rotation": true,
-               "apply_secondary_rotations": true
-               }
-     }
-
+      }
     ]
   },
   "plotters": {

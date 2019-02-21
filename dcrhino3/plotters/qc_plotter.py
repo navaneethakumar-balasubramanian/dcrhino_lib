@@ -90,12 +90,14 @@ class QCLogPlotter():
              show = False,
              output_path = None
         ):
+        font_size = 11
         params = {
-                'legend.fontsize': 'medium',
-                 'axes.labelsize': 'medium',
-                 'axes.titlesize':'medium',
-                 'xtick.labelsize':'medium',
-                 'ytick.labelsize':'medium'}
+                'legend.fontsize': font_size,
+                 'axes.labelsize': font_size,
+                 'axes.titlesize':font_size,
+                 'xtick.labelsize':font_size,
+                 'ytick.labelsize':font_size/1.5
+        }
         plt.rcParams.update(params)
 
         colourbar_type = 'all_one'#'all_one' vsdepth
@@ -135,7 +137,8 @@ class QCLogPlotter():
             n = n+2
         self.legend_box(ax[n])
         if output_path is not None:
-            plt.savefig(output_path)
+            #output_path = output_path.replace(".png",".svg")
+            plt.savefig(output_path,dpi=300)
 
         if show:
             plt.show()
@@ -207,31 +210,31 @@ class QCLogPlotter():
 
 
         if self.plot_panel_comp.axial_amp_feature_plot is True:
-            ax.plot(X, peak_ampl_x, color = 'red')
+            ax.plot(X, peak_ampl_x, color = 'red',linewidth=0.2)
             ax.set_ylim(ax_lim.axial_amp_lim)
             ax.spines['left'].set_color('red')
             ax.set_ylabel('Ax. Amp').set_color('red')
-            ax.spines['left'].set_linewidth(2)
+            ax.spines['left'].set_linewidth(1)
 
 
 #        y_limits = [0,1.0]
         if self.plot_panel_comp.axial_rc_feature_plot is True:
-            ax1.plot(X,reflection_coefficient, color = 'blue')
+            ax1.plot(X,reflection_coefficient, color = 'blue',linewidth=0.2)
             ax1.set_ylim(ax_lim.axial_rc_lim)
             ax1.spines['right'].set_color('blue')
             ax1.set_ylabel('Ax. RC').set_color('blue')
-            ax1.spines['right'].set_linewidth(2)
+            ax1.spines['right'].set_linewidth(1)
 
 
 #        y_limits = [80,250]
         if self.plot_panel_comp.axial_delay_feature_plot is True:
-            ax2.plot(X,ax_vel_del/10000, color = 'greenyellow')
+            ax2.plot(X,ax_vel_del/10000, color = 'greenyellow',linewidth=0.2)
             ax2.set_ylim(ax_lim.axial_delay_lim)
-            ax2.spines['right'].set_color('greenyellow')
+            ax2.spines['right'].set_color('gree300nyellow')
             ax2.set_ylabel('Ax. Delay').set_color('greenyellow')
 
 
-        ax2.spines['right'].set_linewidth(2)
+        ax2.spines['right'].set_linewidth(1)
         ax2.spines['right'].set_position(('outward',60))
         ax.set_xlim(X[0], X[-1])
         x_maj_tick = (np.arange(X[0],X[-1])-X[0])
@@ -264,25 +267,26 @@ class QCLogPlotter():
         #y_limits = [0,1.5]
 #        y_limits = hack_split_ylimits(self.global_config.peak_amplitude_tangential_y_limit)
         if self.plot_panel_comp.tangential_amp_feature_plot is True:
-            ax.plot(X, peak_ampl_y, color = 'magenta')
+
             ax.set_ylim(ax_lim.tangential_amp_lim)
             ax.spines['left'].set_color('magenta')
-            ax.spines['left'].set_linewidth(2)
+            ax.spines['left'].set_linewidth(1)
             ax.set_ylabel('Tang. Amp').set_color('magenta')
+            ax.plot(X, peak_ampl_y, color='magenta',linewidth=0.2)
 
         if self.plot_panel_comp.tangential_rc_feature_plot is True:
             ax1.plot(X, tangential_reflection_coefficient, color = 'cyan')
             ax1.set_ylim(ax_lim.tangential_rc_lim)
             ax1.spines['right'].set_color('cyan')
-            ax1.spines['right'].set_linewidth(2)
+            ax1.spines['right'].set_linewidth(1)
             ax1.set_ylabel('Tang. RC').set_color('cyan')
 
         if self.plot_panel_comp.tangential_delay_feature_plot is True:
 
-            ax2.plot(X,tang_vel_del,color = 'lime')
+            ax2.plot(X,tang_vel_del,color = 'lime',linewidth=0.2)
             ax2.set_ylim(ax_lim.tangential_delay_lim) # for tangential delay
             ax2.spines['right'].set_color('lime')
-            ax2.spines['right'].set_linewidth(2)
+            ax2.spines['right'].set_linewidth(1)
             ax2.set_ylabel('Tang. Delay').set_color('lime')
             ax2.spines['right'].set_position(('outward',60))
 
@@ -364,7 +368,7 @@ class QCLogPlotter():
 
 
         ax1.annotate(self.mult_win_label, xy=(10, 10), xycoords='axes points',
-             size=10, ha='left', va='center',
+             size=11, ha='left', va='center',
              bbox=dict(boxstyle='square', fc='w'))
 
         ax.legend(handles=legend_lines1, loc=2)

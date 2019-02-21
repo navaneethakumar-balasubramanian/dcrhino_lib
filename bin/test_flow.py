@@ -82,11 +82,13 @@ if __name__ == '__main__':
             files_in_file = file_text.split("\n")
             for file_in_file in files_in_file:
                 file_path = os.path.join(txt_folder_path, file_in_file)
-                p = Process(target=process_file, args=(process_json, file_path, env_config))
-                p.start()
-                p.join()
-        if '.h5' in os.path.splitext(file)[1]:
+                if env_config.is_file_blacklisted(file) is False:
+                    p = Process(target=process_file, args=(process_json, file_path, env_config))
+                    p.start()
+                    p.join()
 
+
+        elif '.h5' in os.path.splitext(file)[1]:
             if env_config.is_file_blacklisted(file) is False:
                 p = Process(target=process_file, args=(process_json,file,env_config))
                 p.start()
