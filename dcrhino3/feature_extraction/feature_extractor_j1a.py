@@ -9,6 +9,7 @@ import pdb
 import re
 
 from dcrhino3.feature_extraction.intermediate_derived_features import IntermediateFeatureDeriver
+from dcrhino3.feature_extraction.supporting_j1 import get_expected_multiple_times
 from dcrhino3.helpers.general_helper_functions import flatten
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
@@ -23,26 +24,6 @@ TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION = ['primary', 'multiple_1', 'multiple
                                         'multiple_3', 'noise_1', 'noise_2']
 
 #wavelet_feature_extractor_types = ['sample', 'polynomial', 'ricker',]
-
-
-def get_expected_multiple_times(global_config, recipe='J1'):
-    """
-    calculates the time_intervals between resonances along the pipe for each of P and S
-    waves, axial and tangential components
-    """
-    sensor_distance_to_bit = global_config.sensor_distance_to_source
-    distance_sensor_to_shock_sub_bottom = global_config.sensor_distance_to_shocksub
-    axial_velocity_steel = global_config.ACOUSTIC_VELOCITY
-    shear_velocity_steel = global_config.SHEAR_VELOCITY
-    if recipe=='J1':
-        expected_multiple_periods = {}
-        total_distance = sensor_distance_to_bit + distance_sensor_to_shock_sub_bottom
-        expected_multiple_periods['axial'] = 2 * total_distance / axial_velocity_steel
-        expected_multiple_periods['tangential'] = 2 * total_distance / shear_velocity_steel
-        expected_multiple_periods['axial_second_multiple'] = 4 * total_distance / axial_velocity_steel
-        expected_multiple_periods['tangential_second_multiple'] = 4 * total_distance / shear_velocity_steel
-    return expected_multiple_periods
-
 
 
 
