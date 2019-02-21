@@ -275,7 +275,7 @@ class QCLogPlotter():
             ax.plot(X, peak_ampl_y, color='magenta',linewidth=0.2)
 
         if self.plot_panel_comp.tangential_rc_feature_plot is True:
-            ax1.plot(X, tangential_reflection_coefficient, color = 'cyan')
+            ax1.plot(X, tangential_reflection_coefficient,color = 'cyan',linewidth=0.2)
             ax1.set_ylim(ax_lim.tangential_rc_lim)
             ax1.spines['right'].set_color('cyan')
             ax1.spines['right'].set_linewidth(1)
