@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-import os
+#import os
 import numpy as np
 from matplotlib.ticker import AutoMinorLocator
 from matplotlib.lines import Line2D
 
 import matplotlib.pyplot as plt
 import pdb
-import pandas as pd
-import sys
+#import pandas as pd
+#import sys
 
 from dcrhino3.plotters.colour_bar_axis_limits import ColourBarAxisLimits
 
@@ -85,7 +85,7 @@ class QCLogPlotter():
              ax_vel_del,
              tang_vel_del,
              ax_lim,
-             tangential_RC,
+             tangential_reflection_coefficient,
              noise_threshold,
              show = False,
              output_path = None
@@ -116,10 +116,6 @@ class QCLogPlotter():
         y_tick_locations = dt_ms * np.arange(lowest_y_tick, greatest_y_tick + 1)
         #<sort out yticks every 5 ms>
 
-    	#Generate Axial, Radial, Tangential heatmap plots
-        #pdb.set_trace()
-        #ax[1], heatmap1 = self.plot_hole_as_heatmap(ax[1], cbal.v_min_1, cbal.v_max_1, X, Y, self.axial, cmap_string, y_tick_locations)
-
 
     # THIS CAN ALSO BE CHANGED TO USE THE DICT IN LOOP
 
@@ -129,7 +125,8 @@ class QCLogPlotter():
             ax[n+1], heatmap1 = self.plot_hole_as_heatmap(ax[n+1], cbal.v_min_1, cbal.v_max_1, X, Y, self.axial, cmap_string, y_tick_locations)
             n = n+2
         if self.plot_panel_comp.tangential_heatmap_plot is True and self.tangential is not None:
-            self.tangential_feature_plot(ax[n], X, peak_ampl_y,tangential_RC,tang_vel_del,noise_threshold,ax_lim)
+            self.tangential_feature_plot(ax[n], X, peak_ampl_y, tangential_reflection_coefficient,
+                                         tang_vel_del, noise_threshold, ax_lim)
             ax[n+1], heatmap2 = self.plot_hole_as_heatmap(ax[n+1], cbal.v_min_2, cbal.v_max_2, X, Y,self.tangential, cmap_string, y_tick_locations)
             n = n+2
         if self.plot_panel_comp.radial_heatmap_plot is True and self.radial is not None :
@@ -253,7 +250,8 @@ class QCLogPlotter():
 
         ax.xaxis.set_minor_locator(minor_locator)
 
-    def tangential_feature_plot(self,ax, X, peak_ampl_y,tangential_RC,tang_vel_del,noise_threshold,ax_lim):
+    def tangential_feature_plot(self,ax, X, peak_ampl_y, tangential_reflection_coefficient,
+                                tang_vel_del, noise_threshold, ax_lim):
         """
         	#Tangential peak, RC and axial delay plots
 
@@ -273,7 +271,7 @@ class QCLogPlotter():
             ax.set_ylabel('Tang. Amp').set_color('magenta')
 
         if self.plot_panel_comp.tangential_rc_feature_plot is True:
-            ax1.plot(X, tangential_RC,color = 'cyan')
+            ax1.plot(X, tangential_reflection_coefficient, color = 'cyan')
             ax1.set_ylim(ax_lim.tangential_rc_lim)
             ax1.spines['right'].set_color('cyan')
             ax1.spines['right'].set_linewidth(2)
@@ -319,25 +317,13 @@ class QCLogPlotter():
         if self.plot_panel_comp.radial_amp_feature_plot is True:
 #            y_limits = [0,1.5]
     #        y_limits = hack_split_ylimits(self.global_config.peak_amplitude_tangential_y_limit)
-            ax.plot(X, peak_ampl_z, color = 'magenta')
+            active_colour = 'magenta'
+            ax.plot(X, peak_ampl_z, color=active_colour)
             ax.set_ylim(ax_lim.radial_amp_lim)
-            ax.spines['left'].set_color('magenta')
+            ax.spines['left'].set_color(active_colour)
             ax.spines['left'].set_linewidth(2)
-            ax.set_ylabel('Radial. Amp').set_color('magenta')
-#            y_limits = [0,1.0]
-#            ax1.plot(X, tangential_RC,color = 'cyan')        ax1 = ax.twinx()
-#        ax2 = ax.twinx()
-#            ax1.set_ylim(y_limits)
-#            ax1.spines['right'].set_color('cyan')
-#            ax1.spines['right'].set_linewidth(2)
-#            ax1.set_ylabel('Tang. RC').set_color('cyan')
-#            y_limits = [80,130]
-#            ax2.plot(X,tang_vel_del,color = 'lime')
-#            ax2.set_ylim(y_limits) # for tangential delay
-#            ax2.spines['right'].set_color('lime')
-#            ax2.spines['right'].set_linewidth(2)
-#            ax2.set_ylabel('Tang. Delay').set_color('lime')
-#            ax2.spines['right'].set_position(('outward',60))
+            ax.set_ylabel('Radial. Amp').set_color(active_colour)
+
         if noise_threshold is not None:
             ax.axhline(y = noise_threshold,xmin = 0, xmax = X[-1], color = 'k')
 

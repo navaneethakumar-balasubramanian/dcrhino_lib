@@ -77,7 +77,7 @@ class Config( object ):
         self.axial_vel_del=True
         self.noise_threshold=True
         self.tangential_amp=True
-        self.tangential_RC=True
+        self.tangential_reflection_coefficient=True
         self.tang_vel_del=True
         self.radial_amp=False
         # SET DEFAULT WINDOW WIDTHS
