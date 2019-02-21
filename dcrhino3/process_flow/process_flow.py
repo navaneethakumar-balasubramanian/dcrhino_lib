@@ -73,6 +73,7 @@ class ProcessFlow:
         self.save_features_to_file = False
         self.output_to_file = False
         self.output_to_db = False
+        self.process_json = process_json
 
         self.parse_json(process_json)
 
@@ -175,7 +176,8 @@ class ProcessFlow:
             logger.info("{} ran in {}s ".format(module.id, delta_t))
 
         if self.output_to_file:
-
+            with open(os.path.join(process_flow_output_path, "process_flow.json"), 'w') as outfile:
+                json.dump(self.process_json, outfile)
             output_trace.save_to_h5(os.path.join(process_flow_output_path, "processed.h5"))
             output_trace.save_to_csv(os.path.join(process_flow_output_path, "processed.csv"))
 
