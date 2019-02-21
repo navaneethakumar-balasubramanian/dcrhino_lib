@@ -44,7 +44,7 @@ class QCPlotterModule(BaseModule):
         BaseModule.__init__(self, json, output_path)
         self.id = "qc_log_v1"
 
-    def plot_trace_data(self,trace):
+    def plot_trace_data(self,trace,process_flow_id):
         """
         @note 20190214: Modify this so that it iterates NOT over all three components
         but rather over the components_to_plot
@@ -66,7 +66,7 @@ class QCPlotterModule(BaseModule):
         radial = trace.component_as_array('radial')
 
 
-        plot_title = self.get_plot_title(transformed_args, trace)
+        plot_title = self.get_plot_title(transformed_args, trace,process_flow_id)
 
         noise_threshold = self.get_noise_threshold(transformed_args)
         mult_pos = self.get_multiples(transformed_args,trace)
@@ -149,7 +149,7 @@ class QCPlotterModule(BaseModule):
 
 
 
-    def get_plot_title(self,transformed_args, trace):
+    def get_plot_title(self,transformed_args, trace,process_flow_id):
         drill_type = DrillTypes(transformed_args.drill_type).name
         bit_type = BitTypes(transformed_args.bit_type).name
         sensor_location = SensorInstallationLocations(transformed_args.sensor_installation_location).name
@@ -157,7 +157,7 @@ class QCPlotterModule(BaseModule):
         title_line1 = r"$\bf{"+ "SENSOR"+"}$"+": LOCATION: {}".format(sensor_location) +", SERIAL NUMBER: {}".format(transformed_args.sensor_serial_number)+'\n'+"SENSITIVITY: {}, ORIENTATION: <> ".format(transformed_args.sensor_saturation_g)
         title_line2 = r"$\bf{"+ "RIG/BIT/DRILLSTRING"+"}$"+": RIG TYPE: <>, DRILL TYPE: {},".format(drill_type)+'\n'+"BIT SIZE: {}/".format(transformed_args.bit_size)+" Type:{}".format(bit_type)+"/Model:{}".format(transformed_args.bit_model)+"/Tooth Length:<>,"+'\n'+" DRILL STRING LENGTH:{}".format(transformed_args.drill_string_total_length)
         title_line3 = "DISTANCE FROM BIT TO SENSOR: {}".format(transformed_args.sensor_distance_to_source,transformed_args.rig_id)
-        title_line4 = r"$\bf{"+"MINE"+"}$"+": {},".format(transformed_args.mine_name)+ r"$\bf{"+"DATE:"+"}$"+ "{},".format(pd.to_datetime(trace.dataframe.start_time.iloc[0]),format='%Y%m%d.0')+'\n'+r"$\bf{"+" BENCH:"+"}$"+"{},".format(trace.dataframe.bench_name.iloc[0])+ r"$\bf{"+"HOLE:"+"}$"+ "{}" .format(trace.dataframe.hole_name.iloc[0])
+        title_line4 = r"$\bf{"+"PROCESS_FLOW"+"}$"+": "+process_flow_id+"\n"+r"$\bf{"+"MINE"+"}$"+": {},".format(transformed_args.mine_name)+ r"$\bf{"+"DATE:"+"}$"+ "{},".format(pd.to_datetime(trace.dataframe.start_time.iloc[0]),format='%Y%m%d.0')+'\n'+r"$\bf{"+" BENCH:"+"}$"+"{},".format(trace.dataframe.bench_name.iloc[0])+ r"$\bf{"+"HOLE:"+"}$"+ "{}" .format(trace.dataframe.hole_name.iloc[0])
 
         plot_title = [title_line4, title_line2+' '+title_line3, title_line1]
 
