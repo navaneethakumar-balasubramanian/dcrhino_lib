@@ -89,7 +89,7 @@ class QCPlotterModule(BaseModule):
             peak_ampl_z = False
         reflection_coefficient = trace.dataframe[transformed_args.plot.reflection_coefficient_col_name]
         ax_vel_del = trace.dataframe[transformed_args.plot.ax_vel_del_col_name]
-        tangential_RC = trace.dataframe[transformed_args.plot.tangential_RC_col_name]
+        tangential_reflection_coefficient = trace.dataframe[transformed_args.plot.tangential_RC_col_name]
         tang_vel_del = trace.dataframe[transformed_args.plot.tang_vel_del_col_name]
         # ADD radial_vel_del, radial_rc
 #        pdb.set_trace()
@@ -112,7 +112,7 @@ class QCPlotterModule(BaseModule):
                  ax_vel_del,
                  tang_vel_del,
                  ax_lim,
-                 tangential_RC,
+                 tangential_reflection_coefficient,
                  noise_threshold,
                  show,
                  output_path
@@ -126,8 +126,6 @@ class QCPlotterModule(BaseModule):
         @TODO: Review why we needed the try/Except loop here ... do we still want it???
         """
         expected_multiple = get_expected_multiple_times(transformed_args, recipe='J1')
-
-
 
         try:
             ax_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial']*1000)

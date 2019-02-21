@@ -1,9 +1,17 @@
 """
-20190104: Working on cleaning/organizing the feature extraction ...
-The old QC log plotter had mixed the concepts of generating derived features
-and plotting.  We now want these factored out.  This class is basically a renaming
-of the QCInput() class from the ancient (2018) codebase.
-It is likely to be deprecated but for now lets keep it around
+20190220: The features extracted here are not pulled directly from wavelets, so
+we refer to them as derived features rather than 'direct' features.  THey
+will in future versions of the rhino software be superceded log processing,
+and possibly reinstututed once log-processing and calibrations are better understood.
+
+<old stuff>
+#    @property
+#    def primary_wavelet_width(self):
+#        return (self.df_dict['axial_primary_zero_crossing_after'] - self.df_dict['axial_primary_zero_crossing_prior'])
+#    @property
+#    def multiple_wavelet_width(self):
+#        return (self.df_dict['axial_multiple_zero_crossing_after'] - self.df_dict['axial_multiple_zero_crossing_prior'])
+</old stuff>
 
 """
 import numpy as np
@@ -35,37 +43,47 @@ class IntermediateFeatureDeriver(object):
 
 
     @property
-    def amplitude_ratio(self):
+    def axial_amplitude_ratio_1(self):
         return self.df_dict['axial_multiple_1_max_amplitude'] / self.axial_primary_peak
 
     @property
-    def reflection_coefficient(self):
-        return (1.0 - self.amplitude_ratio) / (1.0 + self.amplitude_ratio)
-
-#    @property
-#    def primary_wavelet_width(self):
-#        return (self.df_dict['axial_primary_zero_crossing_after'] - self.df_dict['axial_primary_zero_crossing_prior'])
-#    @property
-#    def multiple_wavelet_width(self):
-#        return (self.df_dict['axial_multiple_zero_crossing_after'] - self.df_dict['axial_multiple_zero_crossing_prior'])
-
+    def axial_amplitude_ratio_2(self):
+        return self.df_dict['axial_multiple_2_max_amplitude'] / self.df_dict['axial_multiple_1_max_amplitude']
 
     @property
-    def axial_delay(self):
+    def axial_reflection_coefficient_1(self):
+        return (1.0 - self.axial_amplitude_ratio_1) / (1.0 + self.axial_amplitude_ratio_1)
+
+    @property
+    def axial_reflection_coefficient_2(self):
+        return (1.0 - self.axial_amplitude_ratio_2) / (1.0 + self.axial_amplitude_ratio_2)
+
+    @property
+    def axial_delay_1(self):
         return self.df_dict['axial_multiple_1_max_time'] - self.df_dict['axial_primary_max_time']
+
+    @property
+    def axial_delay_2(self):
+        return self.df_dict['axial_multiple_2_max_time'] - self.df_dict['axial_multiple_1_max_time']
+
+    @property
+    def axial_pseudo_velocity_1(self):
+        return 1. / self.axial_delay_1
+        #return 1. / self.primary_wavelet_width
+
+    @property
+    def axial_pseudo_velocity_2(self):
+        return 1. / self.axial_delay_2
+        #return 1. / self.primary_wavelet_width
 
     @property
     def pseudo_ucs(self):
         return np.sqrt(self.axial_primary_peak)
 
-    @property
-    def pseudo_velocity(self):
-        return 1. / self.axial_delay
-        #return 1. / self.primary_wavelet_width
 
     @property
     def pseudo_density(self):
-        return 1e6 * self.reflection_coefficient / self.pseudo_velocity**2
+        return 1e6 * self.axial_reflection_coefficient_1 / self.axial_pseudo_velocity_1**2
 
 
 
@@ -78,35 +96,47 @@ class IntermediateFeatureDeriver(object):
         return self.df_dict['tangential_primary_max_time']
 
     @property
-    def tangential_delay(self):
+    def tangential_delay_1(self):
         return self.df_dict['tangential_multiple_1_max_time'] - self.tangential_primary_peak_time
 
     @property
-    def tangential_amplitude_ratio(self):
+    def tangential_delay_2(self):
+        return self.df_dict['tangential_multiple_2_max_time'] - self.df_dict['tangential_multiple_1_max_time']
+
+    @property
+    def tangential_amplitude_ratio_1(self):
         return self.df_dict['tangential_multiple_1_max_amplitude'] / self.tangential_primary_peak
 
     @property
-    def tangential_reflection_coefficient(self):
-        return (1.0 - self.tangential_amplitude_ratio) / (1.0 + self.tangential_amplitude_ratio)
+    def tangential_amplitude_ratio_2(self):
+        return self.df_dict['tangential_multiple_2_max_amplitude'] / self.df_dict['tangential_multiple_3_max_amplitude']
 
     @property
-    def tangential_velocity_delay(self):
-        return 1.0 / self.tangential_delay
+    def tangential_reflection_coefficient_1(self):
+        return (1.0 - self.tangential_amplitude_ratio_1) / (1.0 + self.tangential_amplitude_ratio_1)
+
+    @property
+    def tangential_reflection_coefficient_2(self):
+        return (1.0 - self.tangential_amplitude_ratio_2) / (1.0 + self.tangential_amplitude_ratio_2)
+
+    @property
+    def tangential_pseudo_velocity_1(self):
+        return 1.0 / self.tangential_delay_1
 
 
 
     def derive_features(self, component_id):
         if component_id == 'axial':
             self.df_dict['pseudo_ucs'] = self.pseudo_ucs
-            self.df_dict['pseudo_velocity'] = self.pseudo_velocity
+            self.df_dict['axial_pseudo_velocity_1'] = self.axial_pseudo_velocity_1
             self.df_dict['pseudo_density'] = self.pseudo_density
-            self.df_dict['reflection_coefficient'] = self.reflection_coefficient
-            self.df_dict['axial_delay'] = self.axial_delay
+            self.df_dict['axial_reflection_coefficient_1'] = self.axial_reflection_coefficient_1
+            self.df_dict['axial_delay_1'] = self.axial_delay_1
 
         elif component_id == 'tangential':
 
-            self.df_dict['tangential_RC'] = self.tangential_reflection_coefficient
-            self.df_dict['tangential_delay'] = self.tangential_delay
-            self.df_dict['tangential_velocity_delay'] = self.tangential_velocity_delay
+            self.df_dict['tangential_reflection_coefficient_1'] = self.tangential_reflection_coefficient_1
+            self.df_dict['tangential_delay_1'] = self.tangential_delay_1
+            self.df_dict['tangential_pseudo_velocity_1'] = self.tangential_pseudo_velocity_1
 
         return self.df_dict

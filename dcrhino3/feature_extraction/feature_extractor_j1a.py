@@ -9,6 +9,7 @@ import pdb
 import re
 
 from dcrhino3.feature_extraction.intermediate_derived_features import IntermediateFeatureDeriver
+from dcrhino3.feature_extraction.supporting_j1 import get_expected_multiple_times
 from dcrhino3.helpers.general_helper_functions import flatten
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
@@ -23,26 +24,6 @@ TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION = ['primary', 'multiple_1', 'multiple
                                         'multiple_3', 'noise_1', 'noise_2']
 
 #wavelet_feature_extractor_types = ['sample', 'polynomial', 'ricker',]
-
-
-def get_expected_multiple_times(global_config, recipe='J1'):
-    """
-    calculates the time_intervals between resonances along the pipe for each of P and S
-    waves, axial and tangential components
-    """
-    sensor_distance_to_bit = global_config.sensor_distance_to_source
-    distance_sensor_to_shock_sub_bottom = global_config.sensor_distance_to_shocksub
-    axial_velocity_steel = global_config.ACOUSTIC_VELOCITY
-    shear_velocity_steel = global_config.SHEAR_VELOCITY
-    if recipe=='J1':
-        expected_multiple_periods = {}
-        total_distance = sensor_distance_to_bit + distance_sensor_to_shock_sub_bottom
-        expected_multiple_periods['axial'] = 2 * total_distance / axial_velocity_steel
-        expected_multiple_periods['tangential'] = 2 * total_distance / shear_velocity_steel
-        expected_multiple_periods['axial_second_multiple'] = 4 * total_distance / axial_velocity_steel
-        expected_multiple_periods['tangential_second_multiple'] = 4 * total_distance / shear_velocity_steel
-    return expected_multiple_periods
-
 
 
 
@@ -127,6 +108,7 @@ class FeatureExtractorJ1(object):
             self.sampling_rate = transformed_args.output_sampling_rate
         #pdb.set_trace()
         self.acceptable_peak_wander = transformed_args.acceptable_peak_wander
+        self.dynamic_windows = transformed_args.dynamic_windows
         self.expected_multiple_periods = get_expected_multiple_times(transformed_args)
         self.sensor_saturation_g = transformed_args.sensor_saturation_g
         self.trace = SymmetricTrace(trimmed_trace, self.sampling_rate, component_id=component_id)
@@ -214,9 +196,7 @@ class FeatureExtractorJ1(object):
         trimmed_time_vector = self.trace.time_vector
         window_widths = self.window_widths
 
-        if dynamic_windows is None:
-            return
-        elif 'primary' in dynamic_windows:
+        if dynamic_windows:
             max_index = np.argmax(trimmed_trace)
             max_time = trimmed_time_vector[max_index]
             applicable_window_width = getattr(window_widths,component).primary

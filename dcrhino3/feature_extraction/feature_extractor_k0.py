@@ -101,6 +101,7 @@ class FeatureExtractorK0(FeatureExtractorJ1):
     def extract_features(self):
         """
         """
+        component_id = self.trace.component_id
         self.set_time_window_boundaries()
         self.convert_time_window_to_indices()
         new_features_dict = {}
@@ -119,7 +120,7 @@ class FeatureExtractorK0(FeatureExtractorJ1):
                                                                     window_time_vector_dict)
         #pdb.set_trace()
         if self.apply_primary_rotation:
-            extracted_features_dict['phi'] = phi
+            extracted_features_dict['primary_phi'.format(component_id)] = phi
             extracted_features_dict['trace'] = self.trace.data
 
         boolean_features_dict = calculate_boolean_features(extracted_features_dict, self.sensor_saturation_g)
@@ -129,7 +130,7 @@ class FeatureExtractorK0(FeatureExtractorJ1):
         #pdb.set_trace()
         unnested_dictionary = flatten(new_features_dict)#print('now dump out with dict keys concatenated')
         feature_deriver = IntermediateFeatureDeriver(df_dict=unnested_dictionary)
-        unnested_dictionary = feature_deriver.derive_features(self.trace.component_id)
+        unnested_dictionary = feature_deriver.derive_features(component_id)
         for key in unnested_dictionary.keys():
             if key == '{}_trace'.format(self.trace.component_id):
                 pass

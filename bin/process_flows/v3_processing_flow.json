@@ -80,6 +80,7 @@
         "output_to_file": true,
         "args": {
                 "acceptable_peak_wander": ["|global_config.acceptable_peak_wander|", 0.003],
+                "dynamic_windows": ["|global_config.dynamic_windows|", true],
                 "output_sampling_rate":"|global_config.output_sampling_rate",
                 "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
                 "sensor_distance_to_source":"|global_config.sensor_distance_to_source|",
@@ -97,6 +98,7 @@
        "output_to_file": true,
        "args": {
                "acceptable_peak_wander": ["|global_config.acceptable_peak_wander|", 0.003],
+               "dynamic_windows": ["|global_config.dynamic_windows|", true],
                "output_sampling_rate":"|global_config.output_sampling_rate",
                "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
                "sensor_distance_to_source":"|global_config.sensor_distance_to_source|",
@@ -126,10 +128,10 @@
             "peak_ampl_x_col_name": "J0_axial_primary_max_amplitude",
             "peak_ampl_y_col_name": "J0_tangential_primary_max_amplitude",
             "peak_ampl_z_col_name": "J0_radial_primary_max_amplitude",
-            "tangential_RC_col_name": "J0_tangential_RC",
-            "ax_vel_del_col_name": "J0_pseudo_velocity",
-            "tang_vel_del_col_name": "J0_tangential_velocity_delay",
-            "reflection_coefficient_col_name": "J0_reflection_coefficient",
+            "tangential_RC_col_name": "J0_tangential_reflection_coefficient_1",
+            "ax_vel_del_col_name": "J0_axial_pseudo_velocity_1",
+            "tang_vel_del_col_name": "J0_tangential_pseudo_velocity_1",
+            "reflection_coefficient_col_name": "J0_axial_reflection_coefficient_1",
 	     "panels":{
 		"axial_amp_feature_plot":true,
 	    	"axial_delay_feature_plot":false,
