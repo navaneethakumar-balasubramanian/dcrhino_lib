@@ -60,7 +60,8 @@
         "type": "j1",
         "output_to_file": true,
         "args": {
-	  "acceptable_peak_wander": ["|global_config.acceptable_peak_wander|", 0.003],
+	     "acceptable_peak_wander": ["|global_config.acceptable_peak_wander|", 0.003],
+         "dynamic_windows": ["|global_config.dynamic_windows|", true],
           "window_widths": "|global_config.window_widths",
           "output_sampling_rate": "|global_config.output_sampling_rate",
           "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",

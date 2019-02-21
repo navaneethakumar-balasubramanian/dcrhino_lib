@@ -80,6 +80,7 @@
         "output_to_file": true,
         "args": {
                 "acceptable_peak_wander": ["|global_config.acceptable_peak_wander|", 0.003],
+                "dynamic_windows": ["|global_config.dynamic_windows|", true],
                 "output_sampling_rate":"|global_config.output_sampling_rate",
                 "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
                 "sensor_distance_to_source":"|global_config.sensor_distance_to_source|",
@@ -97,6 +98,7 @@
        "output_to_file": true,
        "args": {
                "acceptable_peak_wander": ["|global_config.acceptable_peak_wander|", 0.003],
+               "dynamic_windows": ["|global_config.dynamic_windows|", true],
                "output_sampling_rate":"|global_config.output_sampling_rate",
                "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
                "sensor_distance_to_source":"|global_config.sensor_distance_to_source|",
