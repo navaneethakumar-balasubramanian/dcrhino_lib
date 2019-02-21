@@ -19,6 +19,10 @@ import pandas as pd
 import pdb
 
 
+from dcrhino3.helpers.general_helper_functions import init_logging
+
+logger = init_logging(__name__)
+
 
 class IntermediateFeatureDeriver(object):
     """
@@ -131,11 +135,20 @@ class IntermediateFeatureDeriver(object):
             self.df_dict['axial_pseudo_velocity_1'] = self.axial_pseudo_velocity_1
             self.df_dict['pseudo_density'] = self.pseudo_density
             self.df_dict['axial_reflection_coefficient_1'] = self.axial_reflection_coefficient_1
+            try:
+                self.df_dict['axial_reflection_coefficient_2'] = self.axial_reflection_coefficient_2
+            except:
+                logger.warn("Couldnt calculate axial_reflection_coefficient_2")
             self.df_dict['axial_delay_1'] = self.axial_delay_1
 
         elif component_id == 'tangential':
 
             self.df_dict['tangential_reflection_coefficient_1'] = self.tangential_reflection_coefficient_1
+            try:
+                self.df_dict['tangential_reflection_coefficient_2'] = self.tangential_reflection_coefficient_2
+            except:
+                logger.warn("Couldnt calculate tangential_reflection_coefficient_2")
+
             self.df_dict['tangential_delay_1'] = self.tangential_delay_1
             self.df_dict['tangential_pseudo_velocity_1'] = self.tangential_pseudo_velocity_1
 
