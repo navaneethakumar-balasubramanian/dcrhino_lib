@@ -2,6 +2,7 @@
 
 #import os
 import numpy as np
+import math
 from matplotlib.ticker import AutoMinorLocator
 from matplotlib.lines import Line2D
 
@@ -44,6 +45,7 @@ class QCLogPlotter():
 
     def prepare_trace(self,component_trace):
 
+
         data = component_trace
 
         num_traces_in_blasthole, samples_per_trace = data.shape
@@ -59,7 +61,13 @@ class QCLogPlotter():
         samples_fwd = int(np.ceil(samples_fwd))
         half_way = int(n_samples/2)
         component_trace = component_trace[half_way-samples_back:half_way+samples_fwd,:]
-        #pdb.set_trace()
+
+
+        if math.isnan(component_trace.min()) == True and math.isnan(component_trace.min()) == True:
+            return component_trace
+        if component_trace.min() == 0 and component_trace.min() == 0:
+            return component_trace
+
         if self.normalize:
             nans_locations = np.where(np.isnan(component_trace))
             component_trace[nans_locations]=0.0
@@ -139,7 +147,7 @@ class QCLogPlotter():
         if output_path is not None:
             #output_path = output_path.replace(".png",".svg")
             plt.savefig(output_path,dpi=300)
-
+        #show = True
         if show:
             plt.show()
 
@@ -210,7 +218,7 @@ class QCLogPlotter():
 
 
         if self.plot_panel_comp.axial_amp_feature_plot is True:
-            ax.plot(X, peak_ampl_x, color = 'red',linewidth=0.2)
+            ax.plot(X, peak_ampl_x, color = 'red',linewidth=0.4)
             ax.set_ylim(ax_lim.axial_amp_lim)
             ax.spines['left'].set_color('red')
             ax.set_ylabel('Ax. Amp').set_color('red')
@@ -219,7 +227,7 @@ class QCLogPlotter():
 
 #        y_limits = [0,1.0]
         if self.plot_panel_comp.axial_rc_feature_plot is True:
-            ax1.plot(X,reflection_coefficient, color = 'blue',linewidth=0.2)
+            ax1.plot(X,reflection_coefficient, color = 'blue',linewidth=0.4)
             ax1.set_ylim(ax_lim.axial_rc_lim)
             ax1.spines['right'].set_color('blue')
             ax1.set_ylabel('Ax. RC').set_color('blue')
@@ -228,14 +236,18 @@ class QCLogPlotter():
 
 #        y_limits = [80,250]
         if self.plot_panel_comp.axial_delay_feature_plot is True:
-            ax2.plot(X,ax_vel_del/10000, color = 'greenyellow',linewidth=0.2)
-            ax2.set_ylim(ax_lim.axial_delay_lim)
-            ax2.spines['right'].set_color('gree300nyellow')
+            ax2.plot(X,ax_vel_del, color = 'greenyellow',linewidth=0.4)
+            if ax_lim.axial_delay_lim is not False:
+                ax2.set_ylim(ax_lim.axial_delay_lim)
+            else:
+                ax2.set_ylim([ax_vel_del.min(),ax_vel_del.max()])
+            ax2.spines['right'].set_color('greenyellow')
             ax2.set_ylabel('Ax. Delay').set_color('greenyellow')
+            ax2.spines['right'].set_linewidth(1)
+            ax2.spines['right'].set_position(('outward', 60))
 
 
-        ax2.spines['right'].set_linewidth(1)
-        ax2.spines['right'].set_position(('outward',60))
+
         ax.set_xlim(X[0], X[-1])
         x_maj_tick = (np.arange(X[0],X[-1])-X[0])
         x_min_tick = (np.arange(X[0],X[-1],0.5)-X[0])
@@ -272,10 +284,10 @@ class QCLogPlotter():
             ax.spines['left'].set_color('magenta')
             ax.spines['left'].set_linewidth(1)
             ax.set_ylabel('Tang. Amp').set_color('magenta')
-            ax.plot(X, peak_ampl_y, color='magenta',linewidth=0.2)
+            ax.plot(X, peak_ampl_y, color='magenta',linewidth=0.4)
 
         if self.plot_panel_comp.tangential_rc_feature_plot is True:
-            ax1.plot(X, tangential_reflection_coefficient,color = 'cyan',linewidth=0.2)
+            ax1.plot(X, tangential_reflection_coefficient,color = 'cyan',linewidth=0.4)
             ax1.set_ylim(ax_lim.tangential_rc_lim)
             ax1.spines['right'].set_color('cyan')
             ax1.spines['right'].set_linewidth(1)
@@ -283,8 +295,12 @@ class QCLogPlotter():
 
         if self.plot_panel_comp.tangential_delay_feature_plot is True:
 
-            ax2.plot(X,tang_vel_del,color = 'lime',linewidth=0.2)
-            ax2.set_ylim(ax_lim.tangential_delay_lim) # for tangential delay
+            ax2.plot(X,tang_vel_del,color = 'lime',linewidth=0.4)
+            if ax_lim.axial_delay_lim is not False:
+                ax2.set_ylim(ax_lim.tangential_delay_lim)  # for tangential delay
+            else:
+                ax2.set_ylim([tang_vel_del.min(), tang_vel_del.max()])
+
             ax2.spines['right'].set_color('lime')
             ax2.spines['right'].set_linewidth(1)
             ax2.set_ylabel('Tang. Delay').set_color('lime')
