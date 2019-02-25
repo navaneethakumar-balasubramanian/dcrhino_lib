@@ -32,7 +32,7 @@ def decide_what_components_to_plot(transformed_args,axial,tangential,radial):
         if eval(user_option) is True:
             if component_id is not None:
                 var = eval(component_id)
-                if (var[~np.isnan(var)]).size !=0:
+                if (var[~np.isnan(var)]).size !=0 and (var.min() != 0 or var.max() != 0) :
                     components_to_plot[component_id]=var
 #                else:
 #                    components_to_plot[component_id]='False'
