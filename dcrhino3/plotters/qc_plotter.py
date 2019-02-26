@@ -90,10 +90,14 @@ class QCLogPlotter():
              peak_ampl_y,
              peak_ampl_z,
              reflection_coefficient,
+             axial_RC2,
              ax_vel_del,
+             ax_vel_2,
              tang_vel_del,
+             tang_vel_2,
              ax_lim,
              tangential_reflection_coefficient,
+             tang_RC2,
              noise_threshold,
              show = False,
              output_path = None
@@ -131,13 +135,13 @@ class QCLogPlotter():
 
         n = 0
         if self.plot_panel_comp.axial_heatmap_plot is True and self.axial is not None :
-            self.axial_feature_plot(ax[n], X, peak_ampl_x,reflection_coefficient,ax_vel_del,noise_threshold,ax_lim)
-            ax[n+1], heatmap1 = self.plot_hole_as_heatmap(ax[n+1], cbal.v_min_1, cbal.v_max_1, X, Y, self.axial, cmap_string, y_tick_locations)
+            self.axial_feature_plot(ax[n], X, peak_ampl_x,reflection_coefficient,axial_RC2,ax_vel_del,noise_threshold,ax_lim)
+            ax[n+1], heatmap1 = self.plot_hole_as_heatmap(ax[n+1], cbal.v_min_1, cbal.v_max_1, X, Y, self.axial, cmap_string, y_tick_locations,delay=ax_vel_del,delay_2=ax_vel_2)
             n = n+2
         if self.plot_panel_comp.tangential_heatmap_plot is True and self.tangential is not None:
-            self.tangential_feature_plot(ax[n], X, peak_ampl_y, tangential_reflection_coefficient,
+            self.tangential_feature_plot(ax[n], X, peak_ampl_y, tangential_reflection_coefficient,tang_RC2,
                                          tang_vel_del, noise_threshold, ax_lim)
-            ax[n+1], heatmap2 = self.plot_hole_as_heatmap(ax[n+1], cbal.v_min_2, cbal.v_max_2, X, Y,self.tangential, cmap_string, y_tick_locations)
+            ax[n+1], heatmap2 = self.plot_hole_as_heatmap(ax[n+1], cbal.v_min_2, cbal.v_max_2, X, Y,self.tangential, cmap_string, y_tick_locations,delay=tang_vel_del,delay_2=tang_vel_2)
             n = n+2
         if self.plot_panel_comp.radial_heatmap_plot is True and self.radial is not None :
             self.radial_feature_plot(ax[n], X, peak_ampl_z,noise_threshold,ax_lim)
@@ -153,7 +157,7 @@ class QCLogPlotter():
 
     def plot_hole_as_heatmap(self, ax, v_min, v_max, X, Y, Z, cmap_string, y_tick_locations,
                          two_way_travel_time_ms=None, multiple_search_back_ms=None,
-                         multiple_search_forward_ms=None):
+                         multiple_search_forward_ms=None,delay=None,delay_2=None):
         """
         """
         minor_locator = AutoMinorLocator(8)
@@ -197,11 +201,20 @@ class QCLogPlotter():
             ax.axvline(x = x_min_tick, ymin = 0, ymax = 1.5, color = 'k', linestyle = ':')
 #        ax.set_xticklabels()
         ax.xaxis.set_minor_locator(minor_locator)
+        #ax1 = ax.twinx()
+        if delay is not  None and delay is not False :
+            delay = delay * 1000
+            ax.spines['right'].set_color('black')
+            ax.plot(X, delay, color='white', linewidth=0.5)
+        if delay_2 is not  None and delay_2 is not False :
+            delay_2 = delay_2 * 1000
+            ax.spines['right'].set_color('black')
+            ax.plot(X, delay_2, color='white', linewidth=0.5)
 
         return ax, heatmap
 
 
-    def axial_feature_plot(self,ax, X, peak_ampl_x,reflection_coefficient,ax_vel_del,noise_threshold,ax_lim):
+    def axial_feature_plot(self,ax, X, peak_ampl_x,reflection_coefficient,axial_RC2,ax_vel_del,noise_threshold,ax_lim):
         """
         	#Peak axial, radial, tangential and multiple plots
 
@@ -209,23 +222,40 @@ class QCLogPlotter():
         minor_locator = AutoMinorLocator(8)
         ax1 = ax.twinx()
         ax2 = ax.twinx()
+        ax3 = ax.twinx()
 
-        ax.set_title(self.plot_title[0],loc = 'center')
-        ax1.set_title(self.plot_title[1],loc = 'left')
+        ax.set_title(self.plot_title[0],loc = 'left')
+        ax1.set_title(self.plot_title[1],loc = 'center')
         ax2.set_title(self.plot_title[2],loc = 'right')
 
         #pdb.set_trace()
 
 
+
+
         if self.plot_panel_comp.axial_amp_feature_plot is True:
-            ax.plot(X, peak_ampl_x, color = 'red',linewidth=0.4)
+
             ax.set_ylim(ax_lim.axial_amp_lim)
             ax.spines['left'].set_color('red')
             ax.set_ylabel('Ax. Amp').set_color('red')
             ax.spines['left'].set_linewidth(1)
+            ax.plot(X, peak_ampl_x, color='red', linewidth=0.4)
+
+        if self.plot_panel_comp.axial_delay_feature_plot is True:
+
+            if ax_lim.axial_delay_lim is not False:
+                ax2.set_ylim(ax_lim.axial_delay_lim)
+            else:
+                ax2.set_ylim([ax_vel_del.min(), ax_vel_del.max()])
+            ax2.spines['right'].set_color('greenyellow')
+
+            ax2.spines['right'].set_linewidth(1)
+            ax2.set_ylabel('Ax. Delay').set_color('greenyellow')
+            ax2.spines['right'].set_position(('outward', 100))
+            ax2.plot(X, ax_vel_del, color='greenyellow', linewidth=0.4)
 
 
-#        y_limits = [0,1.0]
+
         if self.plot_panel_comp.axial_rc_feature_plot is True:
             ax1.plot(X,reflection_coefficient, color = 'blue',linewidth=0.4)
             ax1.set_ylim(ax_lim.axial_rc_lim)
@@ -234,17 +264,18 @@ class QCLogPlotter():
             ax1.spines['right'].set_linewidth(1)
 
 
+
+        if axial_RC2 is not False:
+            ax3.plot(X, axial_RC2, color='purple', linewidth=0.4)
+
+            ax3.set_ylim([axial_RC2.min(), axial_RC2.max()])
+            ax3.spines['right'].set_color('purple')
+            ax3.set_ylabel('Ax. RC2').set_color('purple')
+            ax3.spines['right'].set_position(('outward', 50))
+
+
 #        y_limits = [80,250]
-        if self.plot_panel_comp.axial_delay_feature_plot is True:
-            ax2.plot(X,ax_vel_del, color = 'greenyellow',linewidth=0.4)
-            if ax_lim.axial_delay_lim is not False:
-                ax2.set_ylim(ax_lim.axial_delay_lim)
-            else:
-                ax2.set_ylim([ax_vel_del.min(),ax_vel_del.max()])
-            ax2.spines['right'].set_color('greenyellow')
-            ax2.set_ylabel('Ax. Delay').set_color('greenyellow')
-            ax2.spines['right'].set_linewidth(1)
-            ax2.spines['right'].set_position(('outward', 60))
+
 
 
 
@@ -265,7 +296,7 @@ class QCLogPlotter():
 
         ax.xaxis.set_minor_locator(minor_locator)
 
-    def tangential_feature_plot(self,ax, X, peak_ampl_y, tangential_reflection_coefficient,
+    def tangential_feature_plot(self,ax, X, peak_ampl_y, tangential_reflection_coefficient,tang_RC2,
                                 tang_vel_del, noise_threshold, ax_lim):
         """
         	#Tangential peak, RC and axial delay plots
@@ -274,6 +305,7 @@ class QCLogPlotter():
         minor_locator = AutoMinorLocator(8)
         ax1 = ax.twinx()
         ax2 = ax.twinx()
+        ax3 = ax.twinx()
 
 #        if self.global_config.tangential_amp == 'True':
         #y_limits = [0,1.5]
@@ -304,7 +336,15 @@ class QCLogPlotter():
             ax2.spines['right'].set_color('lime')
             ax2.spines['right'].set_linewidth(1)
             ax2.set_ylabel('Tang. Delay').set_color('lime')
-            ax2.spines['right'].set_position(('outward',60))
+            ax2.spines['right'].set_position(('outward',100))
+
+        if tang_RC2 is not False:
+            ax3.plot(X, tang_RC2, color='purple', linewidth=0.4)
+
+            ax3.set_ylim([tang_RC2.min(), tang_RC2.max()])
+            ax3.spines['right'].set_color('purple')
+            ax3.set_ylabel('Tang. RC2').set_color('purple')
+            ax3.spines['right'].set_position(('outward', 50))
 
 
         if noise_threshold is not None:

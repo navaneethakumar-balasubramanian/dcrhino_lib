@@ -89,8 +89,23 @@ class QCPlotterModule(BaseModule):
             peak_ampl_z = False
         reflection_coefficient = trace.dataframe[transformed_args.plot.reflection_coefficient_col_name]
         ax_vel_del = trace.dataframe[transformed_args.plot.ax_vel_del_col_name]
+        axial_vel_2 = False
+        if "ax_vel_multiple_2_col_name" in vars(transformed_args.plot):
+            axial_vel_2 = trace.dataframe[transformed_args.plot.ax_vel_multiple_2_col_name]
+
+        axial_RC2 = False
+        if "axial_RC2_col_name" in vars(transformed_args.plot):
+            axial_RC2  = trace.dataframe[transformed_args.plot.axial_RC2_col_name]
+
         tangential_reflection_coefficient = trace.dataframe[transformed_args.plot.tangential_RC_col_name]
+
+        tang_RC2 = False
+        if "tangential_RC2_col_name" in vars(transformed_args.plot):
+            tang_RC2  = trace.dataframe[transformed_args.plot.tangential_RC2_col_name]
         tang_vel_del = trace.dataframe[transformed_args.plot.tang_vel_del_col_name]
+        tang_vel_2 = False
+        if "tang_vel_multiple_2_col_name" in vars(transformed_args.plot):
+            tang_vel_2 = trace.dataframe[transformed_args.plot.tang_vel_multiple_2_col_name]
         # ADD radial_vel_del, radial_rc
 #        pdb.set_trace()
         components_to_plot = decide_what_components_to_plot(transformed_args,axial,tangential,radial)
@@ -109,10 +124,14 @@ class QCPlotterModule(BaseModule):
                  peak_ampl_y,
                  peak_ampl_z,
                  reflection_coefficient,
+                 axial_RC2,
                  ax_vel_del,
+                 axial_vel_2,
                  tang_vel_del,
+                 tang_vel_2,
                  ax_lim,
                  tangential_reflection_coefficient,
+                 tang_RC2,
                  noise_threshold,
                  show,
                  output_path
