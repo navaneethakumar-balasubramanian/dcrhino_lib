@@ -139,7 +139,8 @@ class FeatureExtractorJ1(object):
                 window_bounds = np.array([primary_shift, primary_shift + width])
             elif bool(re.match('multiple', window_label)):
                 n_multiple = int(window_label[-1])
-                delay = n_multiple * self.expected_multiple_periods[component_id]
+                component_var = '{}-multiple_1'.format(component_id)
+                delay = n_multiple * self.expected_multiple_periods[component_var]
                 #delay += primary_shift
                 #width = window_widths[component][window_label]
                 width = getattr(getattr(self.window_widths,component_id),window_label)

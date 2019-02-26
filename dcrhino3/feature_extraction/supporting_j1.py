@@ -42,10 +42,10 @@ def get_expected_multiple_times(global_config, recipe='J1'):
     if recipe=='J1':
         expected_multiple_periods = {}
         total_distance = sensor_distance_to_bit + distance_sensor_to_shock_sub_bottom
-        expected_multiple_periods['axial'] = 2 * total_distance / axial_velocity_steel
-        expected_multiple_periods['tangential'] = 2 * total_distance / shear_velocity_steel
-        expected_multiple_periods['axial_second_multiple'] = 4 * total_distance / axial_velocity_steel
-        expected_multiple_periods['tangential_second_multiple'] = 4 * total_distance / shear_velocity_steel
+        expected_multiple_periods['axial-multiple_1'] = 2 * total_distance / axial_velocity_steel
+        expected_multiple_periods['tangential-multiple_1'] = 2 * total_distance / shear_velocity_steel
+        expected_multiple_periods['axial-multiple_2'] = 4 * total_distance / axial_velocity_steel
+        expected_multiple_periods['tangential-multiple_2'] = 4 * total_distance / shear_velocity_steel
     return expected_multiple_periods
 
 

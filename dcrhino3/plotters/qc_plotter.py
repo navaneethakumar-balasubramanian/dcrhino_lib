@@ -251,7 +251,7 @@ class QCLogPlotter():
 
             ax2.spines['right'].set_linewidth(1)
             ax2.set_ylabel('Ax. Delay').set_color('greenyellow')
-            ax2.spines['right'].set_position(('outward', 100))
+            ax2.spines['right'].set_position(('outward', 80))
             ax2.plot(X, ax_vel_del, color='greenyellow', linewidth=0.4)
 
 
@@ -268,10 +268,10 @@ class QCLogPlotter():
         if axial_RC2 is not False:
             ax3.plot(X, axial_RC2, color='purple', linewidth=0.4)
 
-            ax3.set_ylim([axial_RC2.min(), axial_RC2.max()])
+            ax3.set_ylim(ax_lim.axial_rc_lim)
             ax3.spines['right'].set_color('purple')
             ax3.set_ylabel('Ax. RC2').set_color('purple')
-            ax3.spines['right'].set_position(('outward', 50))
+            ax3.spines['right'].set_position(('outward', 40))
 
 
 #        y_limits = [80,250]
@@ -336,15 +336,15 @@ class QCLogPlotter():
             ax2.spines['right'].set_color('lime')
             ax2.spines['right'].set_linewidth(1)
             ax2.set_ylabel('Tang. Delay').set_color('lime')
-            ax2.spines['right'].set_position(('outward',100))
+            ax2.spines['right'].set_position(('outward',80))
 
         if tang_RC2 is not False:
             ax3.plot(X, tang_RC2, color='purple', linewidth=0.4)
 
-            ax3.set_ylim([tang_RC2.min(), tang_RC2.max()])
+            ax3.set_ylim(ax_lim.tangential_rc_lim)
             ax3.spines['right'].set_color('purple')
             ax3.set_ylabel('Tang. RC2').set_color('purple')
-            ax3.spines['right'].set_position(('outward', 50))
+            ax3.spines['right'].set_position(('outward', 40))
 
 
         if noise_threshold is not None:
@@ -406,15 +406,15 @@ class QCLogPlotter():
         ax1 = ax.twinx()
         ax2 = ax.twinx()
         sub_line1 = Line2D([0],[0], color = 'r',label = 'Axial_amplitude')
-        sub_line2 = Line2D([0],[0], color = 'b',label = 'Axial RC')
+        sub_line2 = Line2D([0],[0], color = 'b',label = 'Axial RC 1')
         sub_line3 = Line2D([0],[0], color = 'g',label = 'Axial 1/delay')
-        sub_line4 = None
+        sub_line4 = Line2D([0],[0], color = 'purple',label = 'Axial RC 2')
         legend_lines1 = [sub_line1,sub_line2,sub_line3,sub_line4]
         legend_lines1 = [x for x in legend_lines1 if x is not None]
         sub_line5 = Line2D([0],[0],color = 'magenta',label = 'Tangential_amplitude' )
-        sub_line6 = Line2D([0],[0],color = 'cyan',label = 'Tangential RC')
+        sub_line6 = Line2D([0],[0],color = 'cyan',label = 'Tangential RC 1')
         sub_line7 = Line2D([0],[0],color = 'lime',label = 'Tangential 1/delay')
-        sub_line8 = None
+        sub_line8 = Line2D([0],[0], color = 'purple',label = 'Tangential RC 2')
 
         legend_lines2 = [sub_line5,sub_line6,sub_line7, sub_line8]
         legend_lines2 = [x for x in legend_lines2 if x is not None]
@@ -423,7 +423,7 @@ class QCLogPlotter():
                         Line2D([0],[0],color = 'k',linestyle = '-', linewidth = 2,label = 'Tangential Multiples')]
 
 
-        ax1.annotate(self.mult_win_label, xy=(10, 10), xycoords='axes points',
+        ax1.annotate(self.mult_win_label, xy=(880, 25), xycoords='axes points',
              size=11, ha='left', va='center',
              bbox=dict(boxstyle='square', fc='w'))
 

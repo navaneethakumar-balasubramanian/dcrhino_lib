@@ -147,20 +147,20 @@ class QCPlotterModule(BaseModule):
         expected_multiple = get_expected_multiple_times(transformed_args, recipe='J1')
 
         try:
-            ax_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial']*1000)
-            ax_2_mult =  (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial_second_multiple']*1000)
+            ax_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial-multiple_1']*1000)
+            ax_2_mult =  (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial-multiple_2']*1000)
 
-            tang_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential']*1000)
-            tang_2_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential_second_multiple']*1000)
+            tang_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential-multiple_1']*1000)
+            tang_2_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential-multiple_2']*1000)
         except KeyError:
             print("logger.warning: we should no longer need this try-except loop!!!!!!")
             #pdb.set_trace()
             #raise Exception
-            ax_1_mult = (trace.dataframe.axial_primary_max_time + expected_multiple['axial']*1000)
-            ax_2_mult =  (trace.dataframe.axial_primary_max_time + expected_multiple['axial_second_multiple']*1000)
+            ax_1_mult = (trace.dataframe.axial_primary_max_time + expected_multiple['axial-multiple_1']*1000)
+            ax_2_mult =  (trace.dataframe.axial_primary_max_time + expected_multiple['axial-multiple_2']*1000)
 
-            tang_1_mult = (trace.dataframe.tangential_primary_max_time + expected_multiple['tangential']*1000)
-            tang_2_mult = (trace.dataframe.tangential_primary_max_time + expected_multiple['tangential_second_multiple']*1000)
+            tang_1_mult = (trace.dataframe.tangential_primary_max_time + expected_multiple['tangential-multiple_1']*1000)
+            tang_2_mult = (trace.dataframe.tangential_primary_max_time + expected_multiple['tangential-multiple_2']*1000)
 
         mult_pos = pd.DataFrame({'ax_1_mult':ax_1_mult, 'ax_2_mult':ax_2_mult, 'tang_1_mult':tang_1_mult, 'tang_2_mult':tang_2_mult})
         return mult_pos
