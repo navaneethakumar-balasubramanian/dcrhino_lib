@@ -23,7 +23,7 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 
 logger = init_logging(__name__)
 
-def process_file(process_json,acorr_h5_file_path,env_config):
+def process_file(process_json, acorr_h5_file_path, env_config):
     logger.info("PROCESSING FILE:" + str(acorr_h5_file_path))
     #process_flow_path = "/home/thiago/Documents/Projects/Dc_rhino/v3/bin/process_flows/example_simple_flow.json"
     #holes_selection_path = "/home/thiago/Documents/Projects/Dc_rhino/v3/bin/process_flows/holes_selection/example_hole_selection.json"
@@ -58,22 +58,23 @@ if __name__ == '__main__':
         help="Path to files to be processed; enclose in quotes, accepts * as wildcard for directories or filenames" )
         args = argparser.parse_args()
         process_flow_path = args.flow_path
+        h5_path = args.h5_path
     else:
-        home = os.path.expanduser()
-        process_flow_dir = os.path.join(home, 'tmp/v3_reference_checkout/dcrhino_lib/bin/process_flows')
-        process_flow_json_filehandle = 'v2_processing_flow_add_interpolation.json'
+        home = os.path.expanduser('~/')
+        process_flow_dir = os.path.join(home, 'software/datacloud/dcrhino_lib/bin/process_flows')
+        process_flow_json_filehandle = 'v3.1_processing_flow_cf_bob.json'
         process_flow_path = os.path.join(process_flow_dir, process_flow_json_filehandle)
-
+        h5_path = os.path.join(home, '.cache/datacloud/line_creek/acorr/23831_5208_5208.h5')
     env_config = EnvConfig()
 
     with open(process_flow_path) as f:
         process_json = json.load(f)
 
 
-    files = glob2.glob(args.h5_path)
+    files = glob2.glob(h5_path)
 
     if not files:
-        print  'File does not exist: ' + args.h5_path
+        print  'File does not exist: ' + h5_path
     for file in files:
 
         if ".txt" in os.path.splitext(file)[1]:
