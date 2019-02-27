@@ -11,6 +11,7 @@ import os
 
 import glob2
 import json
+import pdb
 
 from multiprocessing import Process
 
@@ -37,7 +38,7 @@ def process_file(process_json,acorr_h5_file_path,env_config):
 
     acorr_trace = TraceData()
     acorr_trace.load_from_h5(acorr_h5_file_path)
-    acorr_trace.dataframe = acorr_trace.dataframe[:100]
+    acorr_trace.dataframe = acorr_trace.dataframe[:10]
     filename = os.path.basename(acorr_h5_file_path)
     filename_without_ext = filename.replace(".h5","")
 
@@ -90,7 +91,7 @@ if __name__ == '__main__':
 
         elif '.h5' in os.path.splitext(file)[1]:
             if env_config.is_file_blacklisted(file) is False:
-                #p = Process(target=process_file, args=(process_json,file,env_config))
-                #p.start()
-                #p.join()
-                process_file(process_json, file, env_config)
+                p = Process(target=process_file, args=(process_json,file,env_config))
+                p.start()
+                p.join()
+                #process_file(process_json,file,env_config)
