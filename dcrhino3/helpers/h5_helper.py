@@ -14,6 +14,9 @@ import pandas as pd
 import pdb
 
 class H5Helper:
+    """
+    Facilitates extraction of data from .h5 files.
+    """
 
     def __init__(self, h5f,load_xyz=True):
         self.h5f = h5f
@@ -46,13 +49,30 @@ class H5Helper:
 
 
     def load_xyz(self):
+        """
+        Load 3D data
+        """
         return [self.load_axis('x'), self.load_axis('y'), self.load_axis('z')]
 
     def load_axis(self,axis):
+        """
+        Load single axis as array
+        """
         return np.asarray(self.h5f.get(axis))
 
     def load_axis_boundaries(self,axis,min_index,max_index):
-
+        """
+        Load a snippet of axis without loading the whole thing
+        
+        Parameters:
+            axis (str): axis to load a portion of
+            min_index (int): limit to start loading
+            max_index (int): limit to stop loading
+            
+        Returns:
+            Slice of axis between min/max_index
+            
+        """
         #arr = np.zeros((max_index-min_index,), dtype='float64')
         #self.h5f[axis].read_direct(arr,np.s_[min_index:max_index])
         return self.h5f[axis][min_index:max_index]
@@ -79,6 +99,12 @@ class H5Helper:
             return True
 
     def _get_sensitivity_xyz(self):
+        """
+        Get sensitivity values, may be axis dependent or the same for all 3
+        
+        Returns:
+            (list): sensitivity values [x,y,z]
+        """
         self._sensitivity = self.h5f.get('sensitivity')
         if len(self._sensitivity) > 1:
             self.x_sensitivity = self._sensitivity[0]
@@ -94,6 +120,15 @@ class H5Helper:
 
 
     def _extract_metadata_from_h5_file(self):
+        """ 
+        Extract metadata from h5 file adds section if necessary
+        
+        Other Parameters
+            h5 file with key, value pair
+            
+        Returns
+            Metadata() with sections/names/values
+        """
         config = ConfigParser.ConfigParser()
         for key, value in self.h5f.attrs.iteritems():
             # print(key,value)
