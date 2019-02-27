@@ -38,7 +38,7 @@ def process_file(process_json,acorr_h5_file_path,env_config):
 
     acorr_trace = TraceData()
     acorr_trace.load_from_h5(acorr_h5_file_path)
-    acorr_trace.dataframe = acorr_trace.dataframe[:10]
+    #acorr_trace.dataframe = acorr_trace.dataframe[:10]
     filename = os.path.basename(acorr_h5_file_path)
     filename_without_ext = filename.replace(".h5","")
 
