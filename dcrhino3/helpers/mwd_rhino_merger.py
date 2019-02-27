@@ -17,6 +17,9 @@ from sklearn.neighbors.classification import KNeighborsClassifier
 logger = init_logging(__name__)
 
 class MWDRhinoMerger():
+    """
+    Merges MWD with trace data by demarcating timestamps, retrieving data, matching and merging.
+    """
     def __init__(self,file_list,mwd_dc_df):
         self.file_list = file_list
         self.mwd_dc_df = mwd_dc_df
@@ -31,6 +34,15 @@ class MWDRhinoMerger():
     
     
     def get_min_max_time(self,hole_id):
+        """
+        Get the min and max timestamps for each hole id
+        
+        Parameters:
+            hole_id(str): hole identifier
+            
+        Returns:
+            minimum and maximum timestamps
+        """
         hole_mwd = self.mwd_dc_df[self.mwd_dc_df['hole_id']== str(hole_id)]
         min_ts = hole_mwd['start_time'].astype(int).min()/1000000000
         max_ts = hole_mwd['start_time'].astype(int).max()/1000000000
@@ -42,6 +54,14 @@ class MWDRhinoMerger():
         
         
     def _generate_matches_list(self):
+        """
+        Finds matches in pre_filtered_mwd DataFrame, creates holes where none found,
+        and makes DataFrame listing holes for the file list specified in this class.
+        
+        Returns:
+            (DataFrame): DataFrame of holes created/found for the file list specified
+            in MWDRHINOMERGER class.
+        """
         file_list = self.file_list
         pre_filtered_mwd = self.pre_filtered_mwd
         columns_sort_group = ['bench_name','pattern_name','hole_name','hole_id']
@@ -95,6 +115,12 @@ class MWDRhinoMerger():
         return files_holes_df
     
     def merge_mwd_with_trace(self,hole_mwd,trace_data):
+        """
+        Concatenate rhino traces and interpolated hole mwd data.
+        
+        Return:
+            (DataFrame): dataframe from merging the variables' dataframes
+        """
         rhino_traces_df = trace_data.dataframe
         time_vector = (rhino_traces_df['timestamp'].values*1000000000).astype(np.int64)
         
@@ -108,6 +134,16 @@ class MWDRhinoMerger():
         
     
     def get_mwd_interpolated_by_second(self,hole_mwd,time_vector):
+        """
+        Retrieve interpolated mwd values from dataframe only for a specific time vector.
+        
+        Parameters:
+            hole_mwd (DataFrame): mwd dataframe
+            tme_vector (Pandas Date Range): time to take snippet from
+            
+        Returns:
+            (DataFrame): interpolated mwd from time specified
+        """
         interpolated_mwd = pd.DataFrame()
         for col in hole_mwd.columns:
             if len(np.unique(hole_mwd[col])) == 1:
@@ -141,13 +177,14 @@ class MWDRhinoMerger():
     
     def get_interpolated_column(self,time_vector, mwd_hole_df, column_label,
                             end_time_column_label='start_time'):
-        """
-        time_vector is actually a pandas date_range, for example:
-        time_vector = pd.date_range(start=row.time_start, periods=num_traces_in_blasthole, freq='1S')
-    
-        column_label: what to interp ... for example 'computed_elevation'
-    
-        @returns interped data, for example the depths of the traces
+        """    
+        Parameters:
+            column_label (str): what to interp ... for example 'computed_elevation'
+            time_vector (Pandas Date Range): period of interest, for example: 
+                pd.date_range(start=row.time_start, periods=num_traces_in_blasthole, freq='1S')
+            
+        Returns:
+            Interped data, for example the depths of the traces
         """
         t_mwd = pd.DatetimeIndex(mwd_hole_df[end_time_column_label])
         t_mwd = t_mwd.astype(np.int64)
@@ -161,6 +198,12 @@ class MWDRhinoMerger():
 
         
     def _pre_filter_mwd(self):
+        """
+        Do some basic filtering to avoid sending/keeping too much data.
+        
+        Returns:
+            MWD DataFrame snipped to within timestamed limits
+        """
         min_ts_date = datetime.utcfromtimestamp(self.file_list['min_ts'].min())
         max_ts_date = datetime.utcfromtimestamp(self.file_list['max_ts'].max())
         rig_ids = self.file_list['rig_id'].unique()

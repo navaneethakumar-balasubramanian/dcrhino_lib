@@ -18,6 +18,12 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 logger = init_logging(__name__)
 
 class RhinoDBHelper:
+        """
+        Facilitates connection to DB for retrieval of mine data, requires:
+            
+            + clickhouse-driver with lz4 compression option
+            + credentials for accessing the database
+        """
         def __init__(self,host='localhost',user='default',password='',database='test',compression='lz4',conn=False):
             
             if conn is False:
@@ -34,6 +40,13 @@ class RhinoDBHelper:
             
             
         def get_file_id_from_file_path(self,file_path):
+            """
+            Parameters:
+                file_path (str): find file id from the path provided
+                
+            Returns:
+                Client-selected id from a table of possible files
+            """
             query_vars={
                         'file_path':file_path
                         }
@@ -46,6 +59,22 @@ class RhinoDBHelper:
             return self.client.execute("SELECT max(id) + 1 FROM "+ self.acorr_files_table_name )[0][0]
 
         def create_acorr_file(self,file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts):
+            """
+            Parameters:
+                file_path (str): where the file should go
+                rig_id (str): rig identifier
+                sensor_id (str): sensor that took the data identifier
+                digitizer_id (str): digitizer that recorded data id
+                min_ts:  
+                max_ts:
+                    
+            Returns:
+                (str): file_id with saved variables
+                
+            .. todo:: figure out what min/max ts is
+            
+            """
+            
             file_id = self.get_next_file_id()
             vars_to_save = {
                         'id':file_id,
@@ -61,6 +90,16 @@ class RhinoDBHelper:
             return file_id
 
         def create_new_acorr_file_conf(self,file_id,config_str):
+            """
+            Create new file configuration
+            
+            Parameters:
+                file_id (str): file to configure
+                config_str (str): configuration options
+                
+            Returns
+                file confguration string after having been updated
+            """
             version = self.get_last_version_file_config(file_id)
             last_version_config = self.get_file_config(file_id,version)
             if last_version_config == config_str:
@@ -76,6 +115,9 @@ class RhinoDBHelper:
             return version+1
 
         def get_file_config(self,file_id,version):
+            """
+            Ask for file configuration if present
+            """
             query_vars = { 'version':version}
             q = self.client.execute('select json_str from '+self.acorr_configs_table_name+" where acorr_file_id = "+str(file_id)+" and version= " + str(version) )
             if len(q) > 0:
@@ -83,10 +125,16 @@ class RhinoDBHelper:
             return False
         
         def get_last_file_config_from_file_id(self,file_id):
+            """
+            Ask for file configuration from the file before this
+            """
             version = self.get_last_version_file_config(file_id)
             return self.get_file_config(file_id,version)
 
         def get_last_version_file_config(self,file_id):
+            """
+            Ask for file configuration before this file
+            """
             return int(self.client.execute('select max(version) from '+self.acorr_configs_table_name+" where acorr_file_id = "+str(file_id))[0][0])
 
 
@@ -95,6 +143,16 @@ class RhinoDBHelper:
 
 
         def save_autocorr_traces(self,file_id,timestamps,axial,tangential,radial):
+            """
+            Insert data into *acorr_traces_table_name* for each chunk.
+            
+            Parameters
+                file_id (str): where to save
+                timestamps: to be saved
+                axial: axial wave readings
+                tangential: tangential wave readings
+                radial: radial wave readings
+            """
             df = pd.DataFrame()
             df['timestamps'] = np.array(timestamps).astype(int)
             df['microtime'] = 0
@@ -109,6 +167,9 @@ class RhinoDBHelper:
                 self.client.execute('insert into '+self.acorr_traces_table_name+' values',chunk.values.tolist())
 
         def check_for_pre_saved_acorr_traces(self,timestamps,sensor_id):
+            """
+            Check the directory for saved acorr traces and prevent duplicates
+            """
             if len(timestamps) == 0 :
                 return np.array([])
             files_ids = self.get_files_id_from_sensor_id(sensor_id)
@@ -127,6 +188,15 @@ class RhinoDBHelper:
             return np.unique(np.array(duplicate).flatten())
             
         def get_files_id_from_sensor_id(self,sensor_id):
+            """
+            Get files containing data from a certain sensor id.
+            
+            Parameters:
+                sensor_id (str): identifier for the sensor
+                
+            Returns:
+                (array): Array of file_id's (str)
+            """
             query = "select distinct(id) from %s where sensor_id = '%s'" % (self.acorr_files_table_name,str(sensor_id))
 
             files_ids = self.client.execute(query)
@@ -134,6 +204,9 @@ class RhinoDBHelper:
             return files_ids
 
         def get_files_list(self):
+            """
+            Get all files containing query string of metadata, and return them in a DataFrame
+            """
             query_str = "select id,file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts from %s order by id" % (self.acorr_files_table_name)
             result = self.client.execute(query_str)
             df = self.query_result_to_pd(result,columns=['id','file_path','rig_id','sensor_id','digitizer_id','min_ts','max_ts'])
@@ -143,6 +216,17 @@ class RhinoDBHelper:
 
         def get_autocor_traces_from_sensor_id(self, sensor_id, min_ts=0, max_ts=9999999999):
             """
+            Get traces, instead of files, from sensor id.
+            
+            Parameters:
+                sensor_id (str): indentifier for the sensor
+                
+            Other Parameters:
+                min_ts: 0, want to keep our search broad
+                max_ts: 999999999999999, want to keep our search broad
+                
+            Returns:
+                (DataFrame): All traces from a specific sensor
             """
             files_ids = self.get_files_id_from_sensor_id(sensor_id)
             df = self.get_autocor_traces_from_files_ids(files_ids, min_ts, max_ts)
@@ -151,16 +235,24 @@ class RhinoDBHelper:
 
         def get_autocor_traces_from_files_ids(self, files_ids, min_ts=0, max_ts=9999999999):
             """
-            @TODO: add functionality so that we can ask for any subset of components
-            not forcing user to get all components
-            @var result: type is list, with one element per row of the database matching query;
-
-            @var all_columns: list, for example: ['timestamp','microtime',
-            'axial_trace', 'tangential_trace', 'radial_trace']
-            @note: 20190122; modified assignment of df columns which contain
-            tupples so that 2d arrays can be accessed by calling
-            my_2darray = np.atleast_2d(list(df[column_label])) where column label
-            is for example 'axial_trace'
+            Parameters
+                files_ids (str): files to take autocor traces from
+                
+            Other Parameters:
+                min_ts: 0, want to keep our search broad
+                max_ts: 999999999999999, want to keep our search broad
+                all_columns (list): for example: ['timestamp','microtime,
+                            'axial_trace', 'tangential_trace', 'radial_trace']
+                result (list): One element per row of the database matching query
+            
+            .. note:: 20190122; modified assignment of df columns which contain
+                tupples so that 2d arrays can be accessed by calling
+                my_2darray = np.atleast_2d(list(df[column_label])) where column label
+                is for example 'axial_trace'
+            
+            .. todo:: add functionality so that we can ask for any subset of components
+                not forcing user to get all components
+                
             """
             
             if type(files_ids) == int:
@@ -198,12 +290,31 @@ class RhinoDBHelper:
         
         
         def timestamp_microtime_to_float(self,df):
+            """
+            Copy dataframe, move timestamp to float, kill "microtime"
+            
+            Parameters:
+                df (DataFrame): with timestamp needing conversion
+            
+            Returns:
+                (DataFrame): df with timestamp as float and microtime deleted
+            """
             df = df.copy()
             df['timestamp'] = (df['timestamp'].astype(str) + "." + df['microtime'].astype(str)).astype(float)
             df.drop(['microtime', ], axis=1, inplace=True)
             return df
 
         def query_result_to_pd(self,result,columns):
+            """
+            Convert your query result to a pandas DataFrame
+            
+            Parameters:
+                result: data values
+                columns: data keys
+                
+            Returns:
+                (DataFrame): *result* in the form of a dataframe
+            """
             return pd.DataFrame(result,columns=columns)
 
 
