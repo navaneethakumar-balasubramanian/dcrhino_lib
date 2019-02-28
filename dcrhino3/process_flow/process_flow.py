@@ -14,6 +14,7 @@ from dcrhino3.process_flow.modules.trace_processing.add_one import AddOneModule
 from dcrhino3.process_flow.modules.trace_processing.add_n import AddNModule
 from dcrhino3.process_flow.modules.trace_processing.lead_channel_decon import LeadChannelDeconvolutionModule
 from dcrhino3.process_flow.modules.trace_processing.trim_trace import TrimTraceModule
+from dcrhino3.process_flow.modules.trace_processing.trim_trace_array import TrimTraceArrayModule
 from dcrhino3.process_flow.modules.trace_processing.unfold_autocorrelation import UnfoldAutocorrelationModule
 from dcrhino3.process_flow.modules.trace_processing.upsample import UpsampleModule
 from dcrhino3.process_flow.modules.trace_processing.export_segy import ExportSEGYModule
@@ -58,6 +59,7 @@ class ProcessFlow:
             "add_n": AddNModule,
             "lead_channel_deconvolution": LeadChannelDeconvolutionModule,
             "trim": TrimTraceModule,
+            "trim_array": TrimTraceArrayModule,
             "unfold": UnfoldAutocorrelationModule,
             "upsample": UpsampleModule,
             "upsample_sinc": UpsampleSincModule,
