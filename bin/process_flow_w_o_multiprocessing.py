@@ -11,6 +11,7 @@ import os
 
 import glob2
 import json
+import pdb
 
 from multiprocessing import Process
 
@@ -22,7 +23,7 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 
 logger = init_logging(__name__)
 
-def process_file(process_json,acorr_h5_file_path,env_config):
+def process_file(process_json, acorr_h5_file_path, env_config):
     logger.info("PROCESSING FILE:" + str(acorr_h5_file_path))
     #process_flow_path = "/home/thiago/Documents/Projects/Dc_rhino/v3/bin/process_flows/example_simple_flow.json"
     #holes_selection_path = "/home/thiago/Documents/Projects/Dc_rhino/v3/bin/process_flows/holes_selection/example_hole_selection.json"
@@ -37,7 +38,7 @@ def process_file(process_json,acorr_h5_file_path,env_config):
 
     acorr_trace = TraceData()
     acorr_trace.load_from_h5(acorr_h5_file_path)
-    acorr_trace.dataframe = acorr_trace.dataframe[:100]
+    acorr_trace.dataframe = acorr_trace.dataframe[:10]
     filename = os.path.basename(acorr_h5_file_path)
     filename_without_ext = filename.replace(".h5","")
 
@@ -49,7 +50,7 @@ def process_file(process_json,acorr_h5_file_path,env_config):
 
 
 if __name__ == '__main__':
-    use_argparse = True
+    use_argparse = False#True
     if use_argparse:
         argparser = argparse.ArgumentParser(description="Copyright (c) 2018 DataCloud")
         argparser.add_argument('-f', '--flow-path', help="JSON File Path", required=True)
@@ -57,22 +58,24 @@ if __name__ == '__main__':
         help="Path to files to be processed; enclose in quotes, accepts * as wildcard for directories or filenames" )
         args = argparser.parse_args()
         process_flow_path = args.flow_path
+        h5_path = args.h5_path
     else:
-        home = os.path.expanduser()
-        process_flow_dir = os.path.join(home, 'tmp/v3_reference_checkout/dcrhino_lib/bin/process_flows')
-        process_flow_json_filehandle = 'v2_processing_flow_add_interpolation.json'
+        home = os.path.expanduser('~/')
+        process_flow_dir = os.path.join(home, 'software/datacloud/dcrhino_lib/bin/process_flows')
+        process_flow_json_filehandle = 'v3.1_processing_flow_cf_bob.json'
         process_flow_path = os.path.join(process_flow_dir, process_flow_json_filehandle)
-
+        h5_path = os.path.join(home, '.cache/datacloud/line_creek/acorr/23831_5208_5208.h5')
+        #h5_path = os.path.join(home, '.cache/datacloud/mont_wright/acorr/147187_6243_6243.h5')
     env_config = EnvConfig()
 
     with open(process_flow_path) as f:
         process_json = json.load(f)
 
 
-    files = glob2.glob(args.h5_path)
+    files = glob2.glob(h5_path)
 
     if not files:
-        print  'File does not exist: ' + args.h5_path
+        print  'File does not exist: ' + h5_path
     for file in files:
 
         if ".txt" in os.path.splitext(file)[1]:
@@ -94,3 +97,4 @@ if __name__ == '__main__':
                 #p.start()
                 #p.join()
                 process_file(process_json, file, env_config)
+    print('success!')

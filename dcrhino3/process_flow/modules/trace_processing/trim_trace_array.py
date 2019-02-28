@@ -11,18 +11,24 @@ and max_lag_trimmed_trace; These were set to -0.1 (min) and +0.1 (max).
 We need to make sure that the traces have enough 'slop' on the
 edges that the filtering edge effects do not create artefacts in the data.
 
-The code here is modified from the dev branch of dchrino_lib
-dcrhino/analysis/unstable/v03/test_can_process_acorr_to_features.py
+default_json =
+{
+        "type": "trim_array",
+        "output_to_file": false,
+        "args": {
+          "max_lag_trimmed_trace": "|global_config.max_lag_trimmed_trace|",
+          "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
+          "sampling_rate": "|global_config.sampling_rate|"
+        }
+      },
 """
 
 # -*- coding: utf-8 -*-
 
 import numpy as np
 import pdb
-import scipy.linalg
 
 from dcrhino3.helpers.general_helper_functions import init_logging
-#from dcrhino3.process_flow.modules.trace_processing.base_trace_module import BaseTraceModule
 from dcrhino3.process_flow.modules.trace_processing.base_trace_array_module import BaseTraceArrayModule
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
 
