@@ -127,7 +127,10 @@ class RawTraceData(TraceData):
         output = component_array
         is_ide_file = not int(global_config.sensor_type) == 2
 
-        if is_ide_file or "rhino_version" not in vars(global_config) or global_config.rhino_version == None:
+        if "rhino_version" not in vars(global_config):
+           global_config.rhino_version = 1.0
+
+        if is_ide_file or global_config.rhino_version == None:
             return output / sensitivity
         else:
             if float(global_config.rhino_version) == 1.0:
