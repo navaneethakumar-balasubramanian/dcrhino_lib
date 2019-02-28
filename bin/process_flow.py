@@ -6,6 +6,10 @@ Created on Fri Jan 25 11:44:16 2019
 @author: thiago
 """
 
+## HACK TO WORK ON SERVERS NON INTERACTIVE MODE
+import matplotlib
+matplotlib.use('Agg')
+
 import argparse
 import os
 
