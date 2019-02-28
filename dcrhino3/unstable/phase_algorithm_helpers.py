@@ -11,7 +11,6 @@ from __future__ import absolute_import, division, print_function
 import datetime
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 import pdb
 
 from dcrhino3.feature_extraction.supporting_j1 import get_expected_multiple_times
@@ -30,7 +29,7 @@ def identify_primary_neighbourhood(symmetric_trace_in, global_config):
     symmetric_trace = symmetric_trace_in._clone()
     qq = get_expected_multiple_times(global_config)
     #n_steps_keep = int(qq[symmetric_trace.component_id] / symmetric_trace.dt)
-    n_steps_keep = int(qq['axial'] / symmetric_trace.dt)
+    n_steps_keep = int(qq['axial-multiple_1'] / symmetric_trace.dt)
     #mrs_trace.plot()
     symmetric_trace.trim_to_num_points_lr(n_steps_keep)
     signs = np.sign(symmetric_trace.data)
