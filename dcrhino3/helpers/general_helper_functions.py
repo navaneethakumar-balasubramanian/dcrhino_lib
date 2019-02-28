@@ -2,9 +2,9 @@
 """
 Created on Sat Apr 26 13:59:10 2014
 
-@author: kkappler
+Author: kkappler
 
-Basic tools, mostly taken from websites
+Basic tools to help write Python script, mostly taken from websites
 """
 import json
 import collections
@@ -23,6 +23,15 @@ from collections import namedtuple
 import logging
 
 def init_logging(name):
+    """
+    Start a basic logger.
+    
+    Parameters:
+        name (str): name of logger
+        
+    Returns:
+        logger to record DataCloud-specific warnings, errors, and steps.
+    """
     logger = logging.getLogger(name)
     logging.basicConfig(level = logging.INFO,format='%(asctime)s %(name)-12s \
                         %(levelname)-8s line:%(lineno)d %(funcName)s %(message)s', \
@@ -34,10 +43,16 @@ logger = init_logging(__name__)
 home = os.path.expanduser('~/')
 
 def create_folders_if_needed(path):
+    """
+    Creates a folder if one does not already exist
+    """
     if not os.path.exists(path):
         os.makedirs(path)
 
 def var_or_dict_from_json_str(var):
+    """
+    Convert json string to variable or dictionary, returns them.
+    """
     try:
         loaded = json.loads(var)
         pdb.set_trace()
@@ -50,6 +65,9 @@ def var_or_dict_from_json_str(var):
         return var
 
 def dict_to_object(var):
+    """
+    Converts dictionary to namedtuple object.
+    """
     if type(var) == dict:
         return namedtuple("obj",var.keys())(*var.values())
     return var
@@ -67,6 +85,16 @@ def json_string_to_object(_str):
     return dict_json
 
 def splitDataFrameIntoSmaller(df, chunk_size = 10000):
+    """
+    Slices up DataFrame into small "chunks"
+    
+    Parameters
+        df (DataFrame): to be sliced up
+        chunk_size (positive integer): max index length of each slice
+        
+    Returns
+        (list): list of DataFrames (1 DataFrame = 1 slice)
+    """
     listOfDf = list()
     number_of_chunks = len(df) // chunk_size + 1
     listOfDf = number_of_chunks * [None]
@@ -80,10 +108,12 @@ def splitDataFrameIntoSmaller(df, chunk_size = 10000):
 
 def count_lines(fileName):
     """
-    acts like wc -l in unix
-    @rtype: int
-    @return: Number of lines present in fileName or -1 if file does not exist
-    @raise IOError: if fileName does not exist.
+    Acts like wc -l in unix
+    Returns:
+        (int): Number of lines present in fileName or -1 if file does not exist
+        
+    Raises:
+        IOError: if fileName does not exist.
     """
     i = -1
     with open(fileName) as f:
@@ -94,8 +124,12 @@ def count_lines(fileName):
 
 def count_directories(directory, **kwargs):
     """
-    @type directory: string
-    @returns: integer; number of subdirectories in directory
+    Count number of subdirectories
+    
+    Parameters
+        directory (str): directory whose contents to count
+    Returns
+        (int): number of subdirectories in directory
     """
     recursive = kwargs.get('recursive', True)
     count = 0
@@ -116,16 +150,20 @@ def count_directories(directory, **kwargs):
 
 def execute_command(cmd,**kwargs):
     """
-    @type cmd: string
-    @param cmd: a command to execute from a terminal
-    @kwarg exec_dir: string
-    @param exec_dir: the directory from which to execute
-    @kwarg no_exception: sometimes we dont want to raise an exception.
-    @note: When executing "rm *" this crashes if the directory we are removing
-    from is empty,
-
-    @var: exit_status: 0 is good, otherwise there is some problem
-    @Note: if you can you should probably use execute_subprocess() instead
+    Executes command in terminal from script
+    
+    Parameters:
+        cmd (str): command to exectute from a terminal
+        kwargs: exec_dir (str): the directory from which to execute
+        kwargs: no_exception: suppress output if exception
+        
+    Other Parameters:
+        exit_status: 0 is good, otherwise there is some problem
+        
+    .. note:: When executing :code:`rm *` this crashes if the directory we are removing
+        from is empty
+    
+    .. note:: if you can you should probably use execute_subprocess() instead
     """
     exec_dir = kwargs.get('exec_dir',os.path.expanduser('~/'))
     allow_exception = kwargs.get('allow_exception', True)
@@ -142,11 +180,14 @@ def execute_command(cmd,**kwargs):
 
 def execute_subprocess(cmd,**kwargs):
     """
-    @type cmd: string
-    @param cmd: a command to execute from a terminal
-
-    @var: exit_status: 0 is good, otherwise there is some problem
-    @Note: if you can you should probably use execute_subprocess() instead
+    Parameters:
+        cmd (str): command to exectute from a terminaln
+        
+    Other Parameters:
+        exit_status: 0 is good, otherwise there is some problem
+        
+    .. note:: When executing :code:`rm *` this crashes if the directory we are removing
+        from is empty
     """
     allow_exception = kwargs.get('allow_exception', False)
     exit_status = subprocess.call([cmd], shell=True)
@@ -158,7 +199,10 @@ def execute_subprocess(cmd,**kwargs):
 
 def expound(someObj):
     """
-    This function dumps the contents of an object so a user can see values
+    This function prints the contents of an object so a user can see values.
+    
+    Parameters:
+        someObj (object): object to explore
     """
     #attributes = dir(someObj)
     fields =  dir(someObj)
@@ -272,8 +316,8 @@ def find_files(directory, pattern, **kwargs):
 
 def generate_enumerated_folder(target_dir, **kwargs):
     """
-    @toDo: change count_directories() function here to support using
-    glob.glob and allowing a particular directory string to be matched
+    .. todo:: change count_directories() function here to support using
+        glob.glob and allowing a particular directory string to be matched
     """
     dir_to_create = kwargs.get('dir_to_create',None)
     str_to_match = kwargs.get('str_to_match', '*')
@@ -327,12 +371,11 @@ def pretty_print_array(RA):
 
 def check_timestamp(filename,**kwargs):
     """
-    check if a file was recently updated/created
-    @type filename: string
-    @param filename: the file in question
-    @kwarg: ageThreshold: float
-    @pkwarg age_threshold: how old a file can it be before warn/raise exception.
-
+    Check if a file was recently updated/created
+    
+    Parameters
+        filename (str): the file in quesion
+        ** kwargs ageThreshold (float): how old a file can be before warn/raises exception
     """
     age_threshold = kwargs.get('age',5.0)
     #<Check file is created recently>
@@ -356,10 +399,11 @@ def check_timestamp(filename,**kwargs):
 
 def get_modification_date(filename):
     """
-    @type filename: string
-    @param filename: a file you want to know when it was modified
-    @rtype datetime.datetime
-    returns the last time a file was modified
+    Parameters:
+        filename (str): the file in question
+        
+    Returns 
+        (datetime): the last time the file was modified
     """
     t = os.path.getmtime(filename)
     return datetime.datetime.fromtimestamp(t)
@@ -367,8 +411,9 @@ def get_modification_date(filename):
 
 def check_if_sequence_log_lin_orother(seq):
     """
-    this should work for lin or log progressions
-    @note: taken from some calibration file development stuff, not sure if needed
+    This should work for lin or log progressions
+    
+    .. note:: taken from some calibration file development stuff, not sure if needed
     """
     d2seq = np.diff(np.diff(seq))
     if np.sum(d2seq) == 0.0:
@@ -381,8 +426,8 @@ def check_if_sequence_log_lin_orother(seq):
 
 def merge_two_dicts(x, y):
     """
-    From https://stackoverflow.com/questions/38987/how-to-merge-two-dictionaries-in-a-single_expression
-    In python 3.5 and higher use z = {**x, **y}
+    From stackoverflow https://stackoverflow.com/questions/38987/how-to-merge-two-dictionaries-in-a-single_expression
+    In python 3.5 and higher use :code:`z = {**x, **y}`
     But for now use this
     """
     z = x.copy() #start with x's keys and values
@@ -391,7 +436,7 @@ def merge_two_dicts(x, y):
 
 def flatten(d, parent_key='', sep='_'):
     """
-    https://stackoverflow.com/questions/6027558/flatten-nested-python-dictionaries-compressing-keys
+    From https://stackoverflow.com/questions/6027558/flatten-nested-python-dictionaries-compressing-keys
 
     """
     items = []

@@ -32,7 +32,7 @@ def decide_what_components_to_plot(transformed_args,axial,tangential,radial):
         if eval(user_option) is True:
             if component_id is not None:
                 var = eval(component_id)
-                if (var[~np.isnan(var)]).size !=0:
+                if (var[~np.isnan(var)]).size !=0 and (var.min() != 0 or var.max() != 0) :
                     components_to_plot[component_id]=var
 #                else:
 #                    components_to_plot[component_id]='False'
@@ -89,8 +89,23 @@ class QCPlotterModule(BaseModule):
             peak_ampl_z = False
         reflection_coefficient = trace.dataframe[transformed_args.plot.reflection_coefficient_col_name]
         ax_vel_del = trace.dataframe[transformed_args.plot.ax_vel_del_col_name]
+        axial_vel_2 = False
+        if "ax_vel_multiple_2_col_name" in vars(transformed_args.plot):
+            axial_vel_2 = trace.dataframe[transformed_args.plot.ax_vel_multiple_2_col_name]
+
+        axial_RC2 = False
+        if "axial_RC2_col_name" in vars(transformed_args.plot):
+            axial_RC2  = trace.dataframe[transformed_args.plot.axial_RC2_col_name]
+
         tangential_reflection_coefficient = trace.dataframe[transformed_args.plot.tangential_RC_col_name]
+
+        tang_RC2 = False
+        if "tangential_RC2_col_name" in vars(transformed_args.plot):
+            tang_RC2  = trace.dataframe[transformed_args.plot.tangential_RC2_col_name]
         tang_vel_del = trace.dataframe[transformed_args.plot.tang_vel_del_col_name]
+        tang_vel_2 = False
+        if "tang_vel_multiple_2_col_name" in vars(transformed_args.plot):
+            tang_vel_2 = trace.dataframe[transformed_args.plot.tang_vel_multiple_2_col_name]
         # ADD radial_vel_del, radial_rc
 #        pdb.set_trace()
         components_to_plot = decide_what_components_to_plot(transformed_args,axial,tangential,radial)
@@ -109,10 +124,14 @@ class QCPlotterModule(BaseModule):
                  peak_ampl_y,
                  peak_ampl_z,
                  reflection_coefficient,
+                 axial_RC2,
                  ax_vel_del,
+                 axial_vel_2,
                  tang_vel_del,
+                 tang_vel_2,
                  ax_lim,
                  tangential_reflection_coefficient,
+                 tang_RC2,
                  noise_threshold,
                  show,
                  output_path
@@ -128,20 +147,20 @@ class QCPlotterModule(BaseModule):
         expected_multiple = get_expected_multiple_times(transformed_args, recipe='J1')
 
         try:
-            ax_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial']*1000)
-            ax_2_mult =  (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial_second_multiple']*1000)
+            ax_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial-multiple_1']*1000)
+            ax_2_mult =  (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial-multiple_2']*1000)
 
-            tang_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential']*1000)
-            tang_2_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential_second_multiple']*1000)
+            tang_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential-multiple_1']*1000)
+            tang_2_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential-multiple_2']*1000)
         except KeyError:
             print("logger.warning: we should no longer need this try-except loop!!!!!!")
             #pdb.set_trace()
             #raise Exception
-            ax_1_mult = (trace.dataframe.axial_primary_max_time + expected_multiple['axial']*1000)
-            ax_2_mult =  (trace.dataframe.axial_primary_max_time + expected_multiple['axial_second_multiple']*1000)
+            ax_1_mult = (trace.dataframe.axial_primary_max_time + expected_multiple['axial-multiple_1']*1000)
+            ax_2_mult =  (trace.dataframe.axial_primary_max_time + expected_multiple['axial-multiple_2']*1000)
 
-            tang_1_mult = (trace.dataframe.tangential_primary_max_time + expected_multiple['tangential']*1000)
-            tang_2_mult = (trace.dataframe.tangential_primary_max_time + expected_multiple['tangential_second_multiple']*1000)
+            tang_1_mult = (trace.dataframe.tangential_primary_max_time + expected_multiple['tangential-multiple_1']*1000)
+            tang_2_mult = (trace.dataframe.tangential_primary_max_time + expected_multiple['tangential-multiple_2']*1000)
 
         mult_pos = pd.DataFrame({'ax_1_mult':ax_1_mult, 'ax_2_mult':ax_2_mult, 'tang_1_mult':tang_1_mult, 'tang_2_mult':tang_2_mult})
         return mult_pos
