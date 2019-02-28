@@ -59,7 +59,7 @@ def identify_phase_rotation(data):
     tolerate_90_degree_plus_rotations = True
     trough_search_width = (len(data) - 1) // 2
     phase_state = determine_phase_state(data, trough_search_width)
-    print('inital phase state = {}'.format(phase_state))
+    #print('inital phase state = {}'.format(phase_state))
     degrees_advance = 0.0
     if phase_state == 'left_low':
         while phase_state=='left_low':
