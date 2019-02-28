@@ -24,6 +24,7 @@ def identify_primary_neighbourhood(symmetric_trace_in, global_config):
     This means the trace is now small (for math operations)
 
     @note 20190209: need to decide to keep +1 or +2 regions to either side of zero_crossing
+    @note 20190228: could make this a method of SymmetricTrace()
     """
     n_regions = 2 #2 number of same-sign regions to keep L and R of center
     symmetric_trace = symmetric_trace_in._clone()
