@@ -168,7 +168,7 @@ class ProcessFlow:
         for module in self.plotters_flow:
             t0 = time.time()
             logger.info("Plotting using module: " + str(module.id) + " with: " + str(module.args))
-            pdb.set_trace()
+            # pdb.set_trace()
             module.plot_trace_data(output_trace,process_flow_id=self.id)
             delta_t = time.time() - t0
             logger.info("{} ran in {}s ".format(module.id, delta_t))
