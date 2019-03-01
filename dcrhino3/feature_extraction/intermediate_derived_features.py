@@ -1,18 +1,19 @@
 """
-20190220: The features extracted here are not pulled directly from wavelets, so
-we refer to them as derived features rather than 'direct' features.  THey
-will in future versions of the rhino software be superceded log processing,
-and possibly reinstututed once log-processing and calibrations are better understood.
+Author: kkappler
 
-<old stuff>
-#    @property
-#    def primary_wavelet_width(self):
-#        return (self.df_dict['axial_primary_zero_crossing_after'] - self.df_dict['axial_primary_zero_crossing_prior'])
-#    @property
-#    def multiple_wavelet_width(self):
-#        return (self.df_dict['axial_multiple_zero_crossing_after'] - self.df_dict['axial_multiple_zero_crossing_prior'])
-</old stuff>
+.. todo:: 20190220: The features extracted here are not pulled directly from wavelets, so
+    we refer to them as derived features rather than 'direct' features.  THey
+    will in future versions of the rhino software be superceded log processing,
+    and possibly reinstututed once log-processing and calibrations are better understood.
 
+.. <old stuff>
+    #    @property
+    #    def primary_wavelet_width(self):
+    #        return (self.df_dict['axial_primary_zero_crossing_after'] - self.df_dict['axial_primary_zero_crossing_prior'])
+    #    @property
+    #    def multiple_wavelet_width(self):
+    #        return (self.df_dict['axial_multiple_zero_crossing_after'] - self.df_dict['axial_multiple_zero_crossing_prior'])
+    </old stuff>
 """
 import numpy as np
 import pandas as pd
@@ -26,6 +27,29 @@ logger = init_logging(__name__)
 
 class IntermediateFeatureDeriver(object):
     """
+    Derives the following features:
+        
+        + axial_primary_peak
+        + axial_amplitude_ratio_1
+        + axial_amplitude_ratio_2
+        + axial_reflection_coefficient_1
+        + axial_reflection_coefficient_2
+        + axial_delay_1
+        + axial_delay_2
+        + axial_pseudo_velocity_1
+        + axial_pseudo_velocity_2
+        + pseudo_ucs
+        + pseudo_density
+        + tangential_primary_peak
+        + tangential_primary_peak_time
+        + tangential_delay_1
+        + tangential_delay_2
+        + tangential_amplitude_ratio_1
+        + tangential_amplitude_ratio_2
+        + tangential_reflection_coefficient_1
+        + tangential_reflection_coefficient_2
+        + tangential_pseudo_velocity_1
+        
     """
     def __init__(self, df_dict=None):#, df):
         """
@@ -130,6 +154,29 @@ class IntermediateFeatureDeriver(object):
 
 
     def derive_features(self, component_id):
+        """
+        Store certain features in dictionary, based on component_id.
+        
+        Parameters:
+            component_id (str): axial/tangential
+            
+        Returns:
+            (dict): derived features
+            
+                For axial:
+                    
+                    + pseudo ucs
+                    + axial pseudo velocity 1
+                    + pseudo density
+                    + axial reflection coeff
+                    
+                For tangential:
+                    
+                    + tangential reflection coeff 1
+                    + tangential reflection coeff 2
+                    + tangential delay 1
+                    + tangential pseudo velocity 1
+        """
         if component_id == 'axial':
             self.df_dict['pseudo_ucs'] = self.pseudo_ucs
             self.df_dict['axial_pseudo_velocity_1'] = self.axial_pseudo_velocity_1

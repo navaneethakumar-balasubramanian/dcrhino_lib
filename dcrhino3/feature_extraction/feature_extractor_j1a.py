@@ -1,7 +1,8 @@
 """
-@TODO: remove explicit declaration of ACOUSTIC_VELOCITY, and replace with
-value from global_config
+Author kkapler
 
+.. todo:: remove explicit declaration of ACOUSTIC_VELOCITY, and replace with
+    value from global_config
 """
 import json
 import numpy as np
@@ -32,7 +33,13 @@ TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION = ['primary', 'multiple_1', 'multiple
 def test_populate_window_data_dict(trace_data_window_dict, trace_time_vector_dict,
                                    trimmed_trace, trimmed_time_vector):
     """
-    plot the trace
+    Plot the trace in black line and multicolor scatter, label axis/legend, show.
+    
+    Parameters:
+        trace_data_window_dict (dict): trace data
+        trace_time_vector_dict (dict): trace time data
+        trimmed_trace: 1D trace data (to be plotted)
+        trimmed_time_vector: 1D trace time data (to be plotted)
     """
     color_cycle = ['red', 'orange', 'cyan', 'green', 'blue', 'violet']
     fig, ax = plt.subplots(nrows=2)
@@ -58,12 +65,26 @@ def test_populate_window_data_dict(trace_data_window_dict, trace_time_vector_dic
 
 def calculate_boolean_features(feature_dict, sensor_saturation_g):
     """
-    note feature_dict here is a subdictionary, we are working with a single component
-    Create Boolean
-    1:Min = sensitivity (g) /2000
-    2: S/N 1st Multiple > 1
+    Create Boolean and configure calculation for feature extraction, Output dictionary
+    contains the following boolean values:
+        
+        + mask_system_noise_level
+        + mask_snr_mult1
+        
+    Based on:   
+        
+    | 1 Min = sensitivity (g) /2000
+    | 2 S/N 1st Multiple > 1
+    
+    Parameters:
+        feature_dict (dict):  feature dictionary
+        sensor_saturation_g (float): sensor saturation value
+    
+    Returns:
+        (dict): dictionary of booleans to be usedin feature extraction
+    
+    .. note:: feature_dict here is a subdictionary, we are working with a single component
 
-    @rtype: dictionary, keyed by the boolean feature labels
     """
     system_noise_level = sensor_saturation_g / 2000.0
     output_dict = {}
@@ -82,7 +103,7 @@ def calculate_boolean_features(feature_dict, sensor_saturation_g):
 class WindowBoundaries(object):
     def __init__(self):#, component_id, trimmed_trace, transformed_args, timestamp):
         """
-        @TODO: window_boundaries time should just have a .to_index(sampling_rate) method
+        .. todo:: window_boundaries time should just have a .to_index(sampling_rate) method
         """
         self.window_boundaries_time = {}
 #        self.window_boundaries_time['axial'] = {}
@@ -97,9 +118,9 @@ class FeatureExtractorJ1(object):
     """
     def __init__(self, component_id, trimmed_trace, transformed_args, timestamp):
         """
-        @TODO: window_boundaries time should just have a .to_index() method
-        @note: given this is run component-by-component we can simplify window_boundaries
-        to a simple dict {} rather than having 'axial', 'tangential',
+        .. todo:: window_boundaries time should just have a .to_index() method
+        .. note:: given this is run component-by-component we can simplify window_boundaries
+            to a simple dict {} rather than having 'axial', 'tangential',
         """
         try:
             self.sampling_rate = transformed_args.upsample_sampling_rate
@@ -122,13 +143,18 @@ class FeatureExtractorJ1(object):
 
     def set_time_window_boundaries(self, primary_shift=0.0):
         """
-        based on window widths and the expected multiple periods, associate
-        the start and end times of each window with a label in a dictionary
-        @requires that primary and multiple be defined BEFORE noise
-        i.e. the order of  elements in TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION
-        is important!!!
+        Set times based on window widths and the expected multiple periods, associate
+        the start and end times of each window with a label in a dictionary.
+        
+        .. warning:: **Requires** that primary and multiple be defined BEFORE noise
+            i.e. the order of  elements in TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION
+            is important!!!
 
-        @TODO Test assignments working properly through window_boundaries_time_dict
+        .. todo:: Test assignments working properly through window_boundaries_time_dict
+        
+        Other Parameters:
+            primary_shift (float): offset of primary wave
+        
         """
         #pdb.set_trace()
         component_id = self.trace.component_id
@@ -158,7 +184,9 @@ class FeatureExtractorJ1(object):
 
     def convert_time_window_to_indices(self):
         """
-        note, this seems to work for +ve and -ve times
+        Converts time window to set of indices containing values in for that time.
+        
+        .. note:: this seems to work for +ve and -ve times
         """
         component_id = self.trace.component_id
         time_window_boundaries_dict = self.window_boundaries_time[component_id]
@@ -178,18 +206,20 @@ class FeatureExtractorJ1(object):
 
     def update_window_boundaries_in_time(self, dynamic_windows=['primary',]):
         """
-         #<dynamic window allocation>: idea is that the primary window will depend on
-         the data, not an predetermined expected window assignment
+        Update the window boundaries if dynamic windows is true. Grab the primary 
+        trace and find its max, make sure this is no more than a few samples from
+        t=0, adjust window_boundaries_time to new times, then adjust the indices
+                  
+        **Dynamic Window Allocation** idea is that the primary window will depend on
+        the data, not an predetermined expected window assignment
         window_boundaries_time, window_boundaries_indices = update_window_boundaries(trimmed_trace,
         trimmed_time_vector, window_boundaries_time, window_boundaries_indices)
 
-        acceptable_peak_wander = .003 #3ms
-        need:
-            applicable_window_width, for which I need to know what component I am on
+        .. note:: acceptable_peak_wander = .003 #3ms
 
-        print("grab the primary trace and find its max, make sure this is no more than\
-                  a few samples from t=0, adjust window_boundaries_time to new times\
-                  then adjust the indices")
+        
+        .. note:: *Requires* applicable_window_width, for which I need to know what component I am on
+
         """
         component = self.trace.component_id
         trimmed_trace = self.trace.data
@@ -214,11 +244,14 @@ class FeatureExtractorJ1(object):
 
     def populate_window_data_dict(self):#component, trimmed_trace, trimmed_time_vector):
         """
-        associate with each window_label, the data in that window, and the time
-        takes a dictionary of times as input
-        Returns a dictioanry of same keys, but [ndx0, ndx1] replaced by data_series from
-        @TODO: Spruce this up by using iterative dictionary comprehension
-        @TODO: time vector splitting is redundant -  calulate once outside here?
+        Associate with each window_label, the data in that window, and the time
+        takes a dictionary of times as input.
+        
+        Returns:
+            (dict): a dictionary of same keys, but [ndx0, ndx1] replaced by data_series
+            
+        .. todo:: Spruce this up by using iterative dictionary comprehension
+        .. todo:: time vector splitting is redundant -  calulate once outside here?
         """
         component = self.trace.component_id
         trimmed_trace = self.trace.data
@@ -237,6 +270,22 @@ class FeatureExtractorJ1(object):
 
     def extract_features_from_each_window(self, window_data_dict, time_vector_dict):
         """
+        Feature extractor that moves window by window, finds features, and 
+        stores them under window label. Calc's the following and gives them to 
+        :class:`~intermediate_derived_features.IntermediateFeatureDeriver`.
+            
+            + max_amplitude
+            + max_time
+            + min_amplitude
+            + min_time
+            + integrated_absolute_amplitude
+        
+        Parameters:
+            window_data_dict (dict): window labels, time_boundaries dictionary
+            time_vector_dict (dict): dictionary of time_vectors for each window_label
+            
+        Returns:
+            (dict): dictionary (unnested) from :class:`~intermediate_derived_features.IntermediateFeatureDeriver`
         """
         new_features_dict = {}
         for window_label in window_data_dict.keys():
@@ -265,8 +314,14 @@ class FeatureExtractorJ1(object):
 
     def extract_features(self):
         """
-        @note: now that we are operating by component we could skip the new_features_dict
-        and flatten step, and instead add the component id explicity in L303...
+        Conducts the feature_extractor_j1a to set_window_boundaries, extract features,
+        and output a dictionary of extracted features.
+        
+        Returns:
+            (dict): dictionary of extracted features from :func:`extract_features_from_each_window`
+            
+        .. note:: now that we are operating by component we could skip the new_features_dict
+            and flatten step, and instead add the component id explicity in L303...
         """
         self.set_time_window_boundaries()
         self.convert_time_window_to_indices()

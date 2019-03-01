@@ -2,7 +2,8 @@
 """
 Created on Tue Dec 11 in Houston at #206 - 300 St. Joseph's Parkway
 Based on earlier versions from Dec 5, Dec 6
-@author: kkappler
+
+Author: kkappler
 """
 
 from __future__ import absolute_import, division, print_function
@@ -32,8 +33,17 @@ TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION = ['primary', 'multiple_1', 'multiple
 
 def get_expected_multiple_times(global_config, recipe='J1'):
     """
-    calculates the time_intervals between resonances along the pipe for each of P and S
-    waves, axial and tangential components
+    Calculates the time_intervals between resonances along the pipe for each of P and S
+    waves, axial and tangential components.
+    
+    Parameters:
+        global_config (Dataframe): metadata on drilling apparatus (distances etc.)
+    
+    Other Parameters:
+        recipe (str): set to 'J1' to use j1 extractor
+        
+    Returns:
+        (dict): expected multiple periods (only first and second) and their locations
     """
     sensor_distance_to_bit = global_config.sensor_distance_to_source
     distance_sensor_to_shock_sub_bottom = global_config.sensor_distance_to_shocksub
@@ -53,14 +63,21 @@ def get_expected_multiple_times(global_config, recipe='J1'):
 def set_window_boundaries_in_time(expected_multiple_periods, window_widths, component,
                                   primary_shift=0.0):
     """
-    sets t0, t1, returns window bounds in seconds
-    primary extends from primary_shift=0.0 to
+    Sets t0, t1, returns window bounds in seconds. Primary period
+    extends from primary_shift=0.0 to ?[start of first multiple's period]
+    
+    Parameters:
+        expected_multiple_periods (dict): calculated in :func:`get_expected_multiple_times`
+        window_widths: with (dict) component containing (key) window_lable
+        component(str): axial/tangential
+        
+    Other Parameters: 
+        primary_shift (float): offset of primary peak
 
-    note: the noise_1 and noise_2 windows depend on that the multiple windows have
-    been defined previously, this is handled by trace_window_labels_for_feature_extraction
-    giving the multiples before the noise variables ... this is not robust.  I'm not
-    sure of a better way to do this right now;
-
+    .. note:: the noise_1 and noise_2 windows depend on that the multiple windows have
+        been defined previously, this is handled by trace_window_labels_for_feature_extraction
+        giving the multiples before the noise variables ... this is not robust.  I'm not
+        sure of a better way to do this right now
     """
     for window_label in TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION:
         if window_label == 'primary':
@@ -91,18 +108,19 @@ def update_window_boundaries_in_time(component, trimmed_trace, trimmed_time_vect
                                      window_widths, expected_multiple_periods,
                                      global_config, dynamic_windows=['primary',]):
     """
-     #<dynamic window allocation>: idea is that the primary window will depend on
-     the data, not an predetermined expected window assignment
+    Update the window boundaries if dynamic windows is true. Grab the primary 
+    trace and find its max, make sure this is no more than a few samples from
+    t=0, adjust window_boundaries_time to new times, then adjust the indices
+              
+    **Dynamic Window Allocation** idea is that the primary window will depend on
+    the data, not an predetermined expected window assignment
     window_boundaries_time, window_boundaries_indices = update_window_boundaries(trimmed_trace,
     trimmed_time_vector, window_boundaries_time, window_boundaries_indices)
 
-    acceptable_peak_wander = .003 #3ms
-    need:
-        applicable_window_width, for which I need to know what component I am on
+    .. note:: acceptable_peak_wander = .003 #3ms
 
-    print("grab the primary trace and find its max, make sure this is no more than\
-              a few samples from t=0, adjust window_boundaries_time to new times\
-              then adjust the indices")
+    .. note:: *Requires* applicable_window_width, for which I need to know what component I am on
+
     """
 
     if dynamic_windows is None:
@@ -130,10 +148,18 @@ def update_window_boundaries_in_time(component, trimmed_trace, trimmed_time_vect
 
 def convert_window_boundaries_to_sample_indices(component_label, global_config):
     """
-    takes a dictionary of times as input
-    Returns a dictioanry of same shape, but [t0, t1] replaced by [ndx0, ndx1]
-    @ToDo: Spruce this up by using iterative dictionary comprehension
-    @change: 20181226, removed window_boundaries_time from imput, replaced with global WINDOW_BOUNDARIES_TIME
+    Takes a dictionary of times as input, returns modified dictionary of same shape.
+    
+    Parameters:
+        component_label
+        global_config (Dataframe): metadata on drilling apparatus (distances etc.)
+        
+    
+    Returns:
+        (dict): a dictioanry of same shape, but [t0, t1] replaced by [ndx0, ndx1]
+    
+    .. todo:: Spruce this up by using iterative dictionary comprehension
+    .. todo:: 20181226, removed window_boundaries_time from input, replaced with global WINDOW_BOUNDARIES_TIME
     """
     sampling_rate = global_config.output_sampling_rate
     dt = 1./sampling_rate
@@ -156,11 +182,15 @@ def convert_window_boundaries_to_sample_indices(component_label, global_config):
 
 def populate_window_data_dict(component, trimmed_trace, trimmed_time_vector):
     """
-    associate with each window_label, the data in that window, and the time
-    takes a dictionary of times as input
-    Returns a dictioanry of same keys, but [ndx0, ndx1] replaced by data_series from
-    @TODO: Spruce this up by using iterative dictionary comprehension
-    @TODO: time vector splitting is redundant -  calulate once outside here?
+    Associate with each window_label, the data in that window, and the time
+    takes a dictionary of times as input.
+    
+    Returns:
+        (dict): a dictionary of same keys, but [ndx0, ndx1] replaced by data_series
+        
+    .. todo:: Spruce this up by using iterative dictionary comprehension
+    .. todo:: time vector splitting is redundant -  calulate once outside here?
+    
     """
 
     trace_data_window_dict = {}
@@ -177,7 +207,13 @@ def populate_window_data_dict(component, trimmed_trace, trimmed_time_vector):
 def test_populate_window_data_dict(trace_data_window_dict, trace_time_vector_dict,
                                    trimmed_trace, trimmed_time_vector):
     """
-    plot the trace
+    Plot the trace in black line and multicolor scatter, label axis/legend, show.
+    
+    Parameters:
+        trace_data_window_dict (dict): trace data
+        trace_time_vector_dict (dict): trace time data
+        trimmed_trace: 1D trace data (to be plotted)
+        trimmed_time_vector: 1D trace time data (to be plotted)
     """
     color_cycle = ['red', 'orange', 'cyan', 'green', 'blue', 'violet']
     fig, ax = plt.subplots(nrows=2)
@@ -201,6 +237,22 @@ def test_populate_window_data_dict(trace_data_window_dict, trace_time_vector_dic
 
 def extract_features_from_each_window(window_data_dict, time_vector_dict):
     """
+    Feature extractor that moves window by window, finds features, and 
+    stores them under window label. Calc's the following and gives them to 
+    intermediate feature deriver.
+        
+        + max_amplitude
+        + max_time
+        + min_amplitude
+        + min_time
+        + integrated_absolute_amplitude
+    
+    Parameters:
+        window_data_dict (dict): window labels, time_boundaries dictionary
+        time_vector_dict (dict): dictionary of time_vectors for each window_label
+        
+    Returns:
+        (dict): dictionary (unnested) from IntermediateFeatureDeriver
     """
     new_feature_dict = {}
     for window_label in window_data_dict.keys():
@@ -219,12 +271,26 @@ def extract_features_from_each_window(window_data_dict, time_vector_dict):
 
 def calculate_boolean_features(feature_dict, global_config):
     """
-    note feature_dict here is a subdictionary, we are working with a single component
-    Create Boolean
-    1:Min = sensitivity (g) /2000
-    2: S/N 1st Multiple > 1
+    Create Boolean and configure calculation for feature extraction, Output dictionary
+    contains the following boolean values:
+        
+        + mask_system_noise_level
+        + mask_snr_mult1
+        
+    Based on:   
+        
+    | 1 Min = sensitivity (g) /2000
+    | 2 S/N 1st Multiple > 1
+    
+    Parameters:
+        feature_dict (dict):  feature dictionary
+        sensor_saturation_g (float): sensor saturation value
+    
+    Returns:
+        (dict): dictionary of booleans to be usedin feature extraction
+    
+    .. note:: feature_dict here is a subdictionary, we are working with a single component
 
-    @rtype: dictionary, keyed by the boolean feature labels
     """
     sensor_saturation_g = global_config.sensor_saturation_g
     system_noise_level = sensor_saturation_g / 2000.0

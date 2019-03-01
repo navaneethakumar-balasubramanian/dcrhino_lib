@@ -1,7 +1,9 @@
 """
-@TODO: remove explicit declaration of ACOUSTIC_VELOCITY, and replace with
-value from global_config
+Author: kkappler
 
+.. todo:: remove explicit declaration of ACOUSTIC_VELOCITY, and replace with
+    value from global_config
+    
 """
 import matplotlib.pyplot as plt #for debug
 import numpy as np
@@ -49,11 +51,14 @@ class FeatureExtractorK0(FeatureExtractorJ1):
 
     def populate_window_data_dict(self):
         """
-        associate with each window_label, the data in that window, and the time
-        takes a dictionary of times as input
-        Returns a dictioanry of same keys, but [ndx0, ndx1] replaced by data_series from
-        @TODO: Spruce this up by using iterative dictionary comprehension
-        @TODO: time vector splitting is redundant -  calulate once outside here?
+        Associate with each window_label, the data in that window, and the time
+        takes a dictionary of times as input.
+        
+        Returns:
+            (dict): a dictionary of same keys, but [ndx0, ndx1] replaced by data_series
+            
+        .. todo:: Spruce this up by using iterative dictionary comprehension
+        .. todo:: time vector splitting is redundant -  calulate once outside here?
         """
         component = self.trace.component_id
         trimmed_trace = self.trace.data
@@ -80,7 +85,24 @@ class FeatureExtractorK0(FeatureExtractorJ1):
 
     def extract_features_from_each_window(self, window_data_dict, time_vector_dict):
         """
-        @change 20190218: this is the old way to handle this ...
+        Feature extractor that moves window by window, finds features, and 
+        stores them under window label. Calc's the following and gives them to 
+        :class:`~intermediate_derived_features.IntermediateFeatureDeriver`.
+            
+            + max_amplitude
+            + max_time
+            + min_amplitude
+            + min_time
+            + integrated_absolute_amplitude
+        
+        Parameters:
+            window_data_dict (dict): window labels, time_boundaries dictionary
+            time_vector_dict (dict): dictionary of time_vectors for each window_label
+            
+        Returns:
+            (dict): dictionary (unnested) from :class:`~intermediate_derived_features.IntermediateFeatureDeriver`
+            
+        .. todo:: 20190218: this is the old way to handle this ...
         """
         new_feature_dict = {}
         for window_label in window_data_dict.keys():
@@ -100,6 +122,11 @@ class FeatureExtractorK0(FeatureExtractorJ1):
 
     def extract_features(self):
         """
+        Conducts the feature_extractor_k0 to set_window_boundaries, extract features,
+        and output a dictionary of extracted features.
+        
+        Returns:
+            (dict): unnested dictionary of extracted/derived features from :class:`~intermediate_derived_features.IntermediateFeatureDeriver`
         """
         component_id = self.trace.component_id
         self.set_time_window_boundaries()
