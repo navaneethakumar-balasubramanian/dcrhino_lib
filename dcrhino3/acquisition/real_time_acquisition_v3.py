@@ -762,13 +762,13 @@ def main_run(run=True):
 
     length = config.getint("SYSTEM_HEALTH_PLOTS","x_axis_length_in_seconds")
     q_timeout_wait = 2
-    rssi = [-100]*length
-    temp = [999]*length
-    batt = [0] *length
+    rssi = [np.nan]*length
+    temp = [np.nan]*length
+    batt = [np.nan] *length
     packets = [config.getfloat("COLLECTION","output_sampling_rate")]*length
-    delay = [0]*length
-    trace_time_array = [0]*length
-    now_array = [0]*length
+    delay = [np.nan]*length
+    trace_time_array = [np.nan]*length
+    now_array = [np.nan]*length
     traces_for_plot = []
     last_tracetime = time.time()
     counterchanges = 0
@@ -986,10 +986,10 @@ def add_empty_health_row_to_Q(rssi,temp,batt,packets,delay,trace_time_array,now_
     now_array.pop(0)
 
     if tx_status == 1:
-        rssi.append(-100)
-        temp.append(999)
-        batt.append(0)
-        packets.append(0)
+        rssi.append(np.nan)
+        temp.append(np.nan)
+        batt.append(np.nan
+        packets.append(np.nan)
     elif tx_status == 0:
         rssi.append(rssi[-1])
         temp.append(temp[-1])
