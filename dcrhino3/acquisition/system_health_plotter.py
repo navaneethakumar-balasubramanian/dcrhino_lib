@@ -161,5 +161,6 @@ while True:
         time.sleep(.05)
         plt.clf()
     except:
+        time.sleep(.1)
         pass
         # print(sys.exc_info())
