@@ -152,18 +152,18 @@ while True:
         plt.suptitle("Y - " + tracetime.strftime('%H:%M:%S') + " plotted at " + datetime.utcfromtimestamp(now).strftime('%H:%M:%S') + " delay of " + str(sec_delay))
 
         # pdb.set_trace()
-        rssi_plot.hist(rssi, bins="sqrt")#2
+        rssi_plot.hist(rssi)#2
         # rssi_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS","rssi_upper_limit"),0,length,"y","dashed",label="rssi upper limit")
         # rssi_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS","rssi_lower_limit"),0,length,"r","dashed",label="rssi lower limit")
-        packets_plot.hist(packets, bins="sqrt")
+        packets_plot.hist(packets)
         # packets_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS","packets_upper_limit"),0,length,"y","dashed",label="packets upper limit")
         # packets_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS","packets_lower_limit"),0,length,"r","dashed",label="packets lower limit")
-        temp_plot.hist(temp, bins="sqrt")#3
+        temp_plot.hist(temp)#3
         # temp_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS","temp_positive_upper_limit"),0,length,"y","dashed")
         # temp_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS","temp_positive_lower_limit"),0,length,"r","dashed")
         # temp_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS","temp_negative_upper_limit"),0,length,"y","dashed")
         # temp_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS","temp_negative_lower_limit"),0,length,"r","dashed")
-        batt_plot.hist(batt, bins="sqrt")#3
+        batt_plot.hist(batt)#3
         # batt_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS","battery_upper_limit"),0,length,"y","dashed")
         # batt_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS","battery_lower_limit"),0,length,"r","dashed")
         # delay_plot.hist(delay)
