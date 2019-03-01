@@ -2,7 +2,7 @@
 """
 Created on Thu Aug  2 16:25:58 2018
 
-@author: kkappler
+Author: kkappler
 """
 
 from __future__ import absolute_import, division, print_function
@@ -22,8 +22,8 @@ logger = init_logging(__name__)
 
 def get_wavelet_window_indices(time_vector, start_time, end_time):
     """
-    20170823: this intended to replace variations on method from primary, multiple_peak_finder, multiple_refined,
-    Here start and end times are intended to be floats
+    .. todo:: 20170823: this intended to replace variations on method from primary, multiple_peak_finder, multiple_refined,
+        Here start and end times are intended to be floats
     """
     indices = np.where( (time_vector > start_time) & (time_vector < end_time) )[0]
     return indices
@@ -32,10 +32,9 @@ def get_wavelet_window_indices(time_vector, start_time, end_time):
 
 class WaveletForFeatureExtraction(object):
     """
-    This is intended to calculate features on individual wavelets.  Actually
+    Calculates features on individual wavelets.  Actually
     the data here are "windows".  we think there are wavelets in these windows
     much of the time.
-
     """
     def  __init__(self, data, time_vector, wavelet_features, **kwargs):
         self.data = data
@@ -54,17 +53,28 @@ class WaveletForFeatureExtraction(object):
 def extract_features_from_primary_wavelet(tr, primary_window_halfwidth_ms,
                                           component, wavelet_type, wavelet_features):
     """
-    TODO: migrate this to seismic processing eventually
-    tr: TrimmedCorrelatedTracePacket()
-*    search a region near lag=0 (t=0) for the primary-peak, in two steps,
-step 1 find a local maxima
-step 2: center on the local maxima
-
-    ::primary_window_halfwidth:: float, (~3ms) this is the expected half width of the primary
-    peak, it can be approximate, we use it to define a chunk of the trace_data
-    where we expect the primary peak to live.
-    ::primary_wavelet_indices_1 :: these are the indices of the data array used to extract
-    the primary wavelet search region
+    Search a region near lag=0 (t=0) for the primary-peak, in two steps:
+        
+        + step 1: find a local maxima
+        + step 2: center on the local maxima
+    
+    Parameters:
+        tr(Dataframe): TrimmedCorrelatedTracePacket()
+        primary_window_halfwidth_ms (float): (~3ms) this is the expected half width of the primary
+            peak, it can be approximate, we use it to define a chunk of the trace_data
+            where we expect the primary peak to live.
+        component (str): axial/tangential (to save values)
+        wavelet_type (str):
+        wavelet_features:
+        
+    Other Parameters:
+        primary_wavelet_indices_1 (list): these are the indices of the data array used to extract
+            the primary wavelet search region
+        
+    Returns:
+        (Dataframe): Dataframe 'waveletforfeatureextraction'
+    
+    .. todo:: migrate this to seismic processing eventually
 
     """
     time_vector = tr.time_vector
@@ -91,13 +101,10 @@ step 2: center on the local maxima
     primary_time_vector = time_vector[primary_wavelet_indices_2]
     #</Get a window of data having duration ~2*primary_window_halfwidth, centered
     #on teh maximum value>
-    #pdb.set_trace()
     wffe = WaveletForFeatureExtraction(primary_wavelet,primary_time_vector, wavelet_features,
                                        component=component, wavelet_type=wavelet_type)
-   #pdb.set_trace()
     wffe.max_amplitude = np.max(window_to_search_for_primary_1)
     wffe.max_time = hopefully_prim_center_time
-    #pdb.set_trace()
 
 
     return wffe
@@ -107,8 +114,29 @@ def extract_features_from_multiple_wavelet(tr, time_vector, earliest_multiple_ti
                                            latest_multiple_time, component,
                                            wavelet_type, wavelet_features):
     """
-    TODO: migrate this to seismic processing eventually
-    TODO: Once ROBUST can PRoBaBlY use same routine for PRIM and MULT
+    Search a region near lag=0 (t=0) for the primary-peak, in two steps:
+        
+        + step 1: find a local maxima
+        + step 2: center on the local maxima
+    
+    Parameters:
+        tr(Dataframe): TrimmedCorrelatedTracePacket()
+        earliest_multiple_time (float): the earliest time expected to contain the multiple peak
+        latest_multiple_time (float): the latest time expected to contain the multiple peak
+        component (str): axial/tangential (to save values)
+        wavelet_type (str):
+        wavelet_features:
+        
+    Other Parameters:
+        multiple_wavelet_indices_1 (list): these are the indices of the data array used to extract
+            the multiple wavelet search region
+        
+    Returns:
+        (Dataframe): Dataframe 'waveletforfeatureextraction'
+        
+    .. todo:: migrate this to seismic processing eventually
+    .. todo:: Once ROBUST can probably use same routine for PRIM and MULT
+    
     """
     #Two Step Identification of mmultiple window, find max in some guess window, then center on that ma
     #when it comes to the multiple, I want to pick the maximum in that window and then

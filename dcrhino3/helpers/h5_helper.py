@@ -3,7 +3,7 @@
 """
 Created on Fri Sep 28 17:05:30 2018
 
-@author: thiago
+Author: thiago
 """
 
 import numpy as np
@@ -16,6 +16,12 @@ import pdb
 class H5Helper:
     """
     Facilitates extraction of data from .h5 files.
+    
+    Parameters:
+        h5f (str): path to h5f
+        
+    Other Parameters:
+        load_xyz (boolean): true to load xyz data
     """
 
     def __init__(self, h5f,load_xyz=True):
@@ -50,13 +56,19 @@ class H5Helper:
 
     def load_xyz(self):
         """
-        Load 3D data
+        Load 3D data from h5 file using :func:`load_axis` to store data as an np array.
+        
+        Returns:
+            (list): list of three arrays, one for each axis
         """
         return [self.load_axis('x'), self.load_axis('y'), self.load_axis('z')]
 
     def load_axis(self,axis):
         """
-        Load single axis as array
+        Load single axis as a Numpy array.
+        
+        Returns:
+            (array): axis from h5 file in array format
         """
         return np.asarray(self.h5f.get(axis))
 
@@ -85,12 +97,30 @@ class H5Helper:
 
     @property
     def ts(self):
+        """
+        Timestamp retrieval function. Can be set manually with clock_ts value 
+        found in __init__(). Defaults to return:
+        ::
+            
+            self._ts = np.asarray(self.h5f.get('ts'))
+        
+        
+        Returns:
+            self._ts or self.clock_ts if it exists
+        """
         #pdb.set_trace()
         if self.clock_ts is None:
             return self._ts
         return self.clock_ts
 
     def _is_ide_file(self):
+        """ 
+        Check if sensitivity value is larger than 1, indicating sensitivity
+        values that are axis-specific.
+        
+        Returns:
+            (boolean): False if len(self.sensitivity)>1, True otherwise
+        """
         if len(self._sensitivity) > 1:
             # self.is_ide_file = False
             return False
@@ -103,7 +133,7 @@ class H5Helper:
         Get sensitivity values, may be axis dependent or the same for all 3
         
         Returns:
-            (list): sensitivity values [x,y,z]
+            (list): sensitivity values [x,y,z] (may not be axis-specific)
         """
         self._sensitivity = self.h5f.get('sensitivity')
         if len(self._sensitivity) > 1:
@@ -121,12 +151,12 @@ class H5Helper:
 
     def _extract_metadata_from_h5_file(self):
         """ 
-        Extract metadata from h5 file adds section if necessary
+        Extract metadata from h5 file adds section if necessary.
         
-        Other Parameters
+        Other Parameters:
             h5 file with key, value pair
             
-        Returns
+        Returns:
             Metadata() with sections/names/values
         """
         config = ConfigParser.ConfigParser()
