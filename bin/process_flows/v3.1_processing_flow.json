@@ -102,7 +102,9 @@
         "type": "qc_log_v1",
         "output_to_file": true,
         "args": {
+          "show" : false,
           "plot": {
+
             "upper_num_ms": 30,
             "lower_num_ms": -5,
             "peak_ampl_x_col_name": "J0_axial_primary_max_amplitude",

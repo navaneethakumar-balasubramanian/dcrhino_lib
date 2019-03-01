@@ -132,8 +132,8 @@ class FeatureExtractorK0(FeatureExtractorJ1):
         self.set_time_window_boundaries()
         self.convert_time_window_to_indices()
         new_features_dict = {}
-        print("update_window_boundaries_in_time should not be needed for phase rotated data\
-              needs testing to confirm its really true")
+        #print("update_window_boundaries_in_time should not be needed for phase rotated data\
+        #      needs testing to confirm its really true")
         self.update_window_boundaries_in_time()
         if self.apply_primary_rotation:
             mini_trace = identify_primary_neighbourhood(self.trace, self.transformed_args)
