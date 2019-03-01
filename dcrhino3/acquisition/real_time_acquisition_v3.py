@@ -988,7 +988,7 @@ def add_empty_health_row_to_Q(rssi,temp,batt,packets,delay,trace_time_array,now_
     if tx_status == 1:
         rssi.append(np.nan)
         temp.append(np.nan)
-        batt.append(np.nan
+        batt.append(np.nan)
         packets.append(np.nan)
     elif tx_status == 0:
         rssi.append(rssi[-1])
