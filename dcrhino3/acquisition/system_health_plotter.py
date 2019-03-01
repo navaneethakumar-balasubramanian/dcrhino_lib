@@ -111,7 +111,11 @@ while True:
         batt_plot.tick_params(labelsize=tick_font_size)
         batt_plot.set_title("Battery Status", **title_font)
         batt_plot.set_xlabel("time (sec)", **axis_font)
-        batt_plot.set_ylabel("%", **axis_font)
+        if config.getboolean("SYSTEM_HEALTH_PLOTS","battery_plot_display_percentage"):
+            batt_label = "V"
+        else:
+            batt_label ="%"
+        batt_plot.set_ylabel(batt_label, **axis_font)
         min,max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS","battery_y_lim"))
         batt_plot.set_ylim(min,max)
         batt_plot.yaxis.tick_right()

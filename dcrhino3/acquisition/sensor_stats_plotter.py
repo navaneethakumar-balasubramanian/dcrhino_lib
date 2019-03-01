@@ -68,9 +68,9 @@ while True:
         # time_axis_values = np.arange(int(length/step)+1)*step
 
         packets_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1)
-        # packets_plot.tick_params(labelsize=tick_font_size)
-        # packets_plot.set_title("Packets", **title_font)
-        # packets_plot.set_ylabel("samples", **axis_font)
+        packets_plot.tick_params(labelsize=tick_font_size)
+        packets_plot.set_title("Packets", **title_font)
+        packets_plot.set_xlabel("samples", **axis_font)
         # packets_plot.set_xlabel("Elapsed Time (sec)", **axis_font)
         # min,max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS","packets_y_lim"))
         # packets_plot.set_ylim(min,max)
@@ -93,9 +93,9 @@ while True:
         # row +=1
         #
         rssi_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1)
-        # rssi_plot.tick_params(labelsize=tick_font_size)
-        # rssi_plot.set_title("RSSI", **title_font)
-        # rssi_plot.set_ylabel("Signal Strength", **axis_font)
+        rssi_plot.tick_params(labelsize=tick_font_size)
+        rssi_plot.set_title("RSSI", **title_font)
+        rssi_plot.set_xlabel("Signal Strength", **axis_font)
         # min,max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS","rssi_y_lim"))
         # rssi_plot.set_ylim(min,max)
         # rssi_plot.yaxis.tick_right()
@@ -106,10 +106,10 @@ while True:
         column = 1
         row = 0
         temp_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1)
-        # temp_plot.tick_params(labelsize=tick_font_size)
-        # temp_plot.set_title("Board Temperature", **title_font)
+        temp_plot.tick_params(labelsize=tick_font_size)
+        temp_plot.set_title("Board Temperature", **title_font)
+        temp_plot.set_xlabel("degC", **axis_font)
         # temp_plot.set_xlabel("time (sec)", **axis_font)
-        # temp_plot.set_ylabel("degC", **axis_font)
         # min,max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS","temperature_y_lim"))
         # temp_plot.set_ylim(min,max)
         # temp_plot.yaxis.tick_right()
@@ -117,10 +117,10 @@ while True:
         row +=1
         #
         batt_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1)
-        # batt_plot.tick_params(labelsize=tick_font_size)
-        # batt_plot.set_title("Battery Status", **title_font)
+        batt_plot.tick_params(labelsize=tick_font_size)
+        batt_plot.set_title("Battery Status", **title_font)
+        batt_plot.set_xlabel("V", **axis_font)
         # batt_plot.set_xlabel("time (sec)", **axis_font)
-        # batt_plot.set_ylabel("%", **axis_font)
         # min,max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS","battery_y_lim"))
         # batt_plot.set_ylim(min,max)
         # batt_plot.yaxis.tick_right()
