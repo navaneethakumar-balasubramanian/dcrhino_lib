@@ -11,10 +11,10 @@ import pdb
 import re
 
 from dcrhino3.feature_extraction.intermediate_derived_features import IntermediateFeatureDeriver
-from dcrhino3.feature_extraction.supporting_j1 import get_expected_multiple_times
 from dcrhino3.helpers.general_helper_functions import flatten
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
+from dcrhino3.physics.util import get_expected_multiple_times
 
 logger = init_logging(__name__)
 

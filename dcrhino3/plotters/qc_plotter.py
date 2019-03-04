@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-#import os
 import numpy as np
 import math
 from matplotlib.ticker import AutoMinorLocator
@@ -8,19 +7,22 @@ from matplotlib.lines import Line2D
 
 import matplotlib.pyplot as plt
 import pdb
-#import pandas as pd
-#import sys
 
 from dcrhino3.plotters.colour_bar_axis_limits import ColourBarAxisLimits
 
 class QCLogPlotter():
 
-    def __init__(self,axial,tangential,radial,depth,plot_title,output_sampling_rate,mult_pos,mult_win_label,
-                 plot_panel_comp, components_to_plot, normalize=True,lower_num_ms=-5.0,upper_num_ms=30.0,dt_ms=5,plot_by_depth=True):
-
+    def __init__(self, axial, tangential, radial, depth, plot_title,
+                 sampling_rate, mult_pos, mult_win_label, plot_panel_comp,
+                 components_to_plot, normalize=True, lower_num_ms=-5.0,
+                 upper_num_ms=30.0, dt_ms=5, plot_by_depth=True, transformed_args=None):
+        """
+        todo: replace output_sampling_rate with sampling_rate;
+        Note: There is a built-in assumption that the axial component exists
+        """
         self.plot_title = plot_title
 
-        self.output_sampling_rate = output_sampling_rate
+        self.sampling_rate = sampling_rate
         self.dt_ms = dt_ms
         self.lower_num_ms = lower_num_ms
         self.upper_num_ms = upper_num_ms
@@ -34,6 +36,7 @@ class QCLogPlotter():
         self.axial = None
         self.tangential = None
         self.radial = None
+        self.transformed_args = transformed_args
         for component_id in components_to_plot.keys():
             if component_id == 'axial':
                 self.axial = self.prepare_trace(components_to_plot['axial'])
@@ -44,17 +47,21 @@ class QCLogPlotter():
         self.num_traces_per_component, self.num_samples = self.axial.T.shape
 
     def prepare_trace(self,component_trace):
+        """
+        note here the 0.2 is hard-coded but should actually be taken from the
 
 
-        data = component_trace
+        """
+
+
+        data = component_trace#.copy()
 
         num_traces_in_blasthole, samples_per_trace = data.shape
         component_trace = data.T
-        #component_trace = data
-        n_samples = int(0.2*self.output_sampling_rate)
+        n_samples = int(0.2*self.sampling_rate)
 
 #            n_samples = self.global_config.n_samples_trimmed_trace
-        dt = 1./self.output_sampling_rate
+        dt = 1./self.sampling_rate
         samples_back = (np.abs(self.lower_num_ms))/1000./dt
         samples_back = int(np.ceil(samples_back))
         samples_fwd = self.upper_num_ms/1000./dt
@@ -132,6 +139,10 @@ class QCLogPlotter():
 
 
     # THIS CAN ALSO BE CHANGED TO USE THE DICT IN LOOP
+        #It is klugey here that there are two conditions to check.  The not-None
+        #can be handled in self.__init__()
+        #components_to_plot and plot_panel_comp.axial_heatmap_plot are redundant
+        #in the 'already pretty busy' json
 
         n = 0
         if self.plot_panel_comp.axial_heatmap_plot is True and self.axial is not None :
