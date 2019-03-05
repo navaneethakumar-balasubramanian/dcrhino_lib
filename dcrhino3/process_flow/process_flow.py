@@ -202,16 +202,15 @@ class ProcessFlow:
         return output_trace
 
 
-    def process_file(self,process_json, acorr_h5_file_path, env_config = False,seconds_to_process=False):
+    def process_file(self,process_json, acorr_h5_file_path, env_config = False, seconds_to_process = False):
         logger.info("PROCESSING FILE:" + str(acorr_h5_file_path))
         acorr_trace = TraceData()
         acorr_trace.load_from_h5(acorr_h5_file_path)
         if seconds_to_process is not False:
             acorr_trace.dataframe = acorr_trace.dataframe[:seconds_to_process]
-        filename = os.path.basename(acorr_h5_file_path)
+        #filename = os.path.basename(acorr_h5_file_path)
+        filename = acorr_trace.hole_h5_filename
         filename_without_ext = filename.replace(".h5","")
-
-
 
         if env_config is not False:
             self.output_path = env_config.get_hole_h5_processed_cache_folder(acorr_trace.mine_name)

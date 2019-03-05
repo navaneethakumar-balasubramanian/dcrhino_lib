@@ -56,7 +56,13 @@ if __name__ == '__main__':
     process_flow = ProcessFlow()
 
     files = glob2.glob(h5_path)
-    seconds_to_process = 10
+
+    #seconds_to_process = 10
+
+
+
+    output_path = False
+
     if not files:
         print  'File does not exist: ' + h5_path
     for file in files:
