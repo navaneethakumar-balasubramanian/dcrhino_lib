@@ -2,9 +2,11 @@
 
 import pdb
 #import json
+from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.process_flow.modules.base_module import BaseModule
 from dcrhino3.models.trace_dataframe import COMPONENT_IDS, TRACE_COLUMN_LABELS
 
+logger = init_logging(__name__)
 
 class BaseTraceArrayModule(BaseModule):
     def __init__(self, json, output_path):
@@ -12,7 +14,7 @@ class BaseTraceArrayModule(BaseModule):
         self.id = "base_trace_array_module"
 
 
-    def process_trace_data_as_array(self,trace,args=None):
+    def process_trace_data(self, trace, args=None):
         """
         works with a TraceData() class, typically an entire hole, or
         dataframe spanning a time interval comprising many traces
@@ -20,17 +22,19 @@ class BaseTraceArrayModule(BaseModule):
         This is the complement to base_trae module, reserved for operations
         like slicing which are inefficient trace-by-trace;
         """
-
-        output_df = trace.copy_without_trace_data()
-        n_rows = len(output_df)
-        #acorr_column = output_df['acorr_file_id'].values
-
+        output_df = trace.dataframe.copy()#deep=False)
+        #output_df = trace.copy_without_trace_data()
+        logger.warning("using zeroth row of df to dictate acorr_file_id - \
+                       add a check to confirm all rows are same config")
+        row_of_df = trace.dataframe.iloc[0]
+        trace_config = trace.global_config_by_index(row_of_df['acorr_file_id'])
+        transformed_args = self.get_transformed_args(trace_config)
         for component_id in COMPONENT_IDS:
-            component_column_label = component_id+"_trace"
-            #print(component_id)
-            data_array = trace.component_as_array(component_column_label)
-            processed_array = self.process_component(component_id, data_array, trace_config)
-                output_df.at[line_idx,component_column_on_df] = processed_trace
+            component_column_on_df = component_id+"_trace"
+            data_array = trace.component_as_array(component_id)
+            processed_array = self.process_component(component_id, data_array, transformed_args)
+            processed_array = list(processed_array)
+            output_df[component_column_on_df] = processed_array
 
         trace.dataframe = output_df
         trace.add_applied_module(self.applied_module_string(args))
@@ -40,7 +44,7 @@ class BaseTraceArrayModule(BaseModule):
 
         return trace
 
-    def process_component(self,component_id,component_array,global_config):
+    def process_component(self,component_id, component_array, global_config):
         """
         this function is to be overwritten on each Module class.  It is basically
         the "make" method for the data processing

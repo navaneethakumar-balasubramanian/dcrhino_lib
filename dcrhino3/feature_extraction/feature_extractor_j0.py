@@ -1,6 +1,8 @@
 """
-@TODO: remove explicit declaration of ACOUSTIC_VELOCITY, and replace with
-value from global_config
+Author: kkapler
+
+.. todo:: remove explicit declaration of ACOUSTIC_VELOCITY, and replace with
+    value from global_config
 
 """
 import numpy as np
@@ -15,13 +17,19 @@ from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
 
 
 class FeatureExtractorJ0():
+    
+    """
+    Extracts features from trace to make predictions downstream.
+    
+    Parameters:
+        transformed_args (Dataframe): contains drilling values (ex. 'output_sampling_rate')
+    
+    .. warning:: The declaration of min_lag_trimmed_trace as its absolute
+        value is not good form:  np.abs(transformed_args.min_lag_trimmed_trace)
+    """
 
     def __init__(self, transformed_args):#output_sampling_rate, primary_window_halfwidth_ms,
                  #multiple_window_search_width_ms, sensor_distance_to_source):
-        """
-        @warning: The declaration of min_lag_trimmed_trace as its absolute
-        value is not good form:  np.abs(transformed_args.min_lag_trimmed_trace)
-        """
         try:
             self.sampling_rate = transformed_args.upsample_sampling_rate
         except AttributeError:
@@ -49,7 +57,13 @@ class FeatureExtractorJ0():
 
     def get_earliest_expected_mulitple_time(self):
         """
-        TODO to be deprecated and replaced by supporting_j1.get_expected_multiple_times()
+        Use idealized, theoretical two way travel time to find the *earliest time* 
+        a multiple wave could arrive at the sensor.
+        
+        Returns:
+            (float): the earliest multiple arrival time (relative to primary peak time)
+        
+        .. note:: to be deprecated and replaced by supporting_j1.get_expected_multiple_times()
         """
         travel_distance = 2 * self.sensor_distance_to_source
         theoretical_two_way_travel_time = travel_distance / self.ACOUSTIC_VELOCITY
@@ -59,6 +73,13 @@ class FeatureExtractorJ0():
 
     def create_features_dictionary(self, component_id):
         """
+        Create dictionary of features for component_id (axial/tangential).
+        
+        Parameters:
+            component_id (str): axial/tangential
+        
+        Returns:
+            (dict): Dictionary with feature_string to be filled with feature values
         """
         feature_dict = {}
 
@@ -73,7 +94,18 @@ class FeatureExtractorJ0():
     def extract_features(self, component_id, component_array, trace_timestamp,
                          transformed_args):
         """
-        @note: min lag has an ambiguity in sign
+        Create features dictionary, extract features, derive features, output dictionary
+        of derived features. Requires :class:`IntermediateFeatureDeriver`
+        
+        Parameters:
+            component_id (str): axial/tangential
+            component_array (array): trace data on along one component
+            transformed_args (Dataframe): contains drilling values (ex. 'output_sampling_rate')
+       
+        Returns:
+            (dict): dictionary of derived features from intermediate feature deriver            
+        
+        .. note:: min lag has an ambiguity in sign
         """
         df_dict = self.create_features_dictionary(component_id)
 

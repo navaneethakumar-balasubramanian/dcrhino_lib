@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pdb
 
-from dcrhino3.feature_extraction.supporting_j1 import get_expected_multiple_times
+from dcrhino3.physics.util import get_expected_multiple_times
 from dcrhino3.signal_processing.phase_rotation import rotate_phase
 from dcrhino3.signal_processing.phase_rotation import determine_phase_state
 
@@ -24,6 +24,7 @@ def identify_primary_neighbourhood(symmetric_trace_in, global_config):
     This means the trace is now small (for math operations)
 
     @note 20190209: need to decide to keep +1 or +2 regions to either side of zero_crossing
+    @note 20190228: could make this a method of SymmetricTrace()
     """
     n_regions = 2 #2 number of same-sign regions to keep L and R of center
     symmetric_trace = symmetric_trace_in._clone()
@@ -58,7 +59,7 @@ def identify_phase_rotation(data):
     tolerate_90_degree_plus_rotations = True
     trough_search_width = (len(data) - 1) // 2
     phase_state = determine_phase_state(data, trough_search_width)
-    print('inital phase state = {}'.format(phase_state))
+    #print('inital phase state = {}'.format(phase_state))
     degrees_advance = 0.0
     if phase_state == 'left_low':
         while phase_state=='left_low':

@@ -1,5 +1,9 @@
+"""
+Author kkappler
+"""
+
 import numpy as np
-from bruges.filters.wavelets import rotate_phase
+#from bruges.filters.wavelets import rotate_phase
 from skimage.feature import peak_local_max
 from scipy.signal import ricker, cwt
 from dcrhino3.helpers.general_helper_functions import init_logging
@@ -7,7 +11,22 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 logger = init_logging(__name__)
 
 def feature_extractor_b0(component_id, trimmed_trace, transformed_args, timestamp):
-
+    """
+    Most basic feature extractor, which outputs a dictionary with values for the keys:
+        
+        + rotation_angle
+        + max_amplitude
+        + max_time
+    
+    Parameters:
+        component_id (str): axial/tangential
+        trimmed_trace (array): trace data (trimmed by amount of time from primary peak)
+        transformed_args (Dataframe): contains drilling values (ex. 'output_sampling_rate')
+        timestamp: used for logger.error if no peaks detected
+        
+    Returns:
+        (dict): outputs dictionary with keys=feature names : values=location of features
+    """
     t = trimmed_trace
     samples_per_trace = len(trimmed_trace)
     sampling_rate = transformed_args.output_sampling_rate

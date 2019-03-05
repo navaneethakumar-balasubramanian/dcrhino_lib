@@ -13,7 +13,7 @@ from dcrhino3.plotters.qc_plotter import QCLogPlotter
 from dcrhino3.models.drill_types import DrillTypes
 from dcrhino3.models.bit_types import BitTypes
 from dcrhino3.models.sensor_installation_locations import SensorInstallationLocations
-from dcrhino3.feature_extraction.supporting_j1 import get_expected_multiple_times
+from dcrhino3.physics.util import get_expected_multiple_times
 
 def decide_what_components_to_plot(transformed_args,axial,tangential,radial):
     """
@@ -48,7 +48,8 @@ class QCPlotterModule(BaseModule):
         """
         @note 20190214: Modify this so that it iterates NOT over all three components
         but rather over the components_to_plot
-
+        todo: factor out all the assignments and header plot into a separate
+        routine self.sort_out_what_to_plot_in_header()
         """
 
         row_of_df = trace.dataframe.iloc[0]
@@ -88,7 +89,11 @@ class QCPlotterModule(BaseModule):
         else:
             peak_ampl_z = False
         reflection_coefficient = trace.dataframe[transformed_args.plot.reflection_coefficient_col_name]
-        ax_vel_del = trace.dataframe[transformed_args.plot.ax_vel_del_col_name]
+        #pdb.set_trace()
+        if transformed_args.plot.ax_vel_del_col_name:
+            ax_vel_del = trace.dataframe[transformed_args.plot.ax_vel_del_col_name].copy()
+        else:
+            ax_vel_del = None
         axial_vel_2 = False
         if "ax_vel_multiple_2_col_name" in vars(transformed_args.plot):
             axial_vel_2 = trace.dataframe[transformed_args.plot.ax_vel_multiple_2_col_name]
@@ -109,15 +114,16 @@ class QCPlotterModule(BaseModule):
         # ADD radial_vel_del, radial_rc
 #        pdb.set_trace()
         components_to_plot = decide_what_components_to_plot(transformed_args,axial,tangential,radial)
-        plotter = QCLogPlotter(axial,tangential,radial,depth,plot_title,
-                               sampling_rate,mult_pos,mult_win_label,
-                               plot_panel_comp, components_to_plot)
+        plotter = QCLogPlotter(axial,tangential, radial, depth, plot_title,
+                               sampling_rate, mult_pos, mult_win_label,
+                               plot_panel_comp, components_to_plot,
+                               transformed_args=transformed_args)
 
         output_path = None
         if self.output_to_file:
             output_path = self.output_path
 
-        show = False
+        show = transformed_args.show
 
         plotter.plot(
                  peak_ampl_x,

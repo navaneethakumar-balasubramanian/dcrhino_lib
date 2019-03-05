@@ -4,7 +4,7 @@ Created on Sat Apr 26 13:59:10 2014
 
 Author: kkappler
 
-Basic tools to help write Python script, mostly taken from websites
+Basic tools to help write Python script, mostly taken from websites.
 """
 import json
 import collections
@@ -44,7 +44,10 @@ home = os.path.expanduser('~/')
 
 def create_folders_if_needed(path):
     """
-    Creates a folder if one does not already exist
+    Creates a folder if one does not already exist.
+    
+    Parameters:
+        path(str): path to place folder
     """
     if not os.path.exists(path):
         os.makedirs(path)
@@ -52,6 +55,12 @@ def create_folders_if_needed(path):
 def var_or_dict_from_json_str(var):
     """
     Convert json string to variable or dictionary, returns them.
+    
+    Parameters:
+        var (var): json serialized string to be decoded
+        
+    Returns:
+        dictionary from json string or (var) if json.load(var) raises exception
     """
     try:
         loaded = json.loads(var)
@@ -66,13 +75,27 @@ def var_or_dict_from_json_str(var):
 
 def dict_to_object(var):
     """
-    Converts dictionary to namedtuple object.
+    Converts dictionary to object.
+    
+    Raises:
+        :code:`NameError: name 'namedtuple' is not defined`
+        
+    .. warning:: Does not plug and play.
     """
     if type(var) == dict:
         return namedtuple("obj",var.keys())(*var.values())
     return var
 
 def json_string_to_object(_str):
+    """
+    Converts json string to object using json.loads()
+    
+    Parameters:
+        _str: Json string to be converted
+        
+    Returns:
+        (dict): dictionary created from json string
+    """
     try:
         dict_json  = json.loads(_str)
     except:
@@ -88,11 +111,11 @@ def splitDataFrameIntoSmaller(df, chunk_size = 10000):
     """
     Slices up DataFrame into small "chunks"
     
-    Parameters
+    Parameters:
         df (DataFrame): to be sliced up
         chunk_size (positive integer): max index length of each slice
         
-    Returns
+    Returns:
         (list): list of DataFrames (1 DataFrame = 1 slice)
     """
     listOfDf = list()
@@ -108,7 +131,8 @@ def splitDataFrameIntoSmaller(df, chunk_size = 10000):
 
 def count_lines(fileName):
     """
-    Acts like wc -l in unix
+    Counts lines in file specified. (Acts like wc -l in unix)
+    
     Returns:
         (int): Number of lines present in fileName or -1 if file does not exist
         
@@ -124,11 +148,11 @@ def count_lines(fileName):
 
 def count_directories(directory, **kwargs):
     """
-    Count number of subdirectories
+    Count number of subdirectories in deirectory specified.
     
-    Parameters
+    Parameters:
         directory (str): directory whose contents to count
-    Returns
+    Returns:
         (int): number of subdirectories in directory
     """
     recursive = kwargs.get('recursive', True)
@@ -150,7 +174,7 @@ def count_directories(directory, **kwargs):
 
 def execute_command(cmd,**kwargs):
     """
-    Executes command in terminal from script
+    Executes command in terminal from script.
     
     Parameters:
         cmd (str): command to exectute from a terminal
@@ -158,7 +182,7 @@ def execute_command(cmd,**kwargs):
         kwargs: no_exception: suppress output if exception
         
     Other Parameters:
-        exit_status: 0 is good, otherwise there is some problem
+        exit_status: :code:`0` is good, otherwise there is some problem
         
     .. note:: When executing :code:`rm *` this crashes if the directory we are removing
         from is empty
@@ -181,7 +205,7 @@ def execute_command(cmd,**kwargs):
 def execute_subprocess(cmd,**kwargs):
     """
     Parameters:
-        cmd (str): command to exectute from a terminaln
+        cmd (str): command to exectute from a terminal
         
     Other Parameters:
         exit_status: 0 is good, otherwise there is some problem
@@ -218,8 +242,9 @@ def expound(someObj):
 
 def find_files(directory, pattern, **kwargs):
     """
-    http://stackoverflow.com/questions/2186525/use-a-glob-to-find-files-recursively-in-python
-    recursively search for files matching pattern in directory
+    Recursively search for files matching pattern in directory:
+        
+        `Stackoverflow find files <http://stackoverflow.com/questions/2186525/use-a-glob-to-find-files-recursively-in-python>`_
     """
     sort_list = kwargs.get('sort', True)
     matches = []
@@ -357,7 +382,7 @@ def generate_enumerated_folder(target_dir, **kwargs):
 
 def pretty_print_array(RA):
     """
-    20151223: need this to compare arrays
+    .. todo:: 20151223: need this to compare arrays
     """
     nrows, ncols = RA.shape
     for i_row in range(nrows):
@@ -371,9 +396,9 @@ def pretty_print_array(RA):
 
 def check_timestamp(filename,**kwargs):
     """
-    Check if a file was recently updated/created
+    Check if a file was recently updated/created.
     
-    Parameters
+    Parameters:
         filename (str): the file in quesion
         ** kwargs ageThreshold (float): how old a file can be before warn/raises exception
     """
@@ -402,7 +427,7 @@ def get_modification_date(filename):
     Parameters:
         filename (str): the file in question
         
-    Returns 
+    Returns:
         (datetime): the last time the file was modified
     """
     t = os.path.getmtime(filename)
@@ -411,9 +436,16 @@ def get_modification_date(filename):
 
 def check_if_sequence_log_lin_orother(seq):
     """
-    This should work for lin or log progressions
+    Check if sequence is logarithmic, linear, or other.
     
-    .. note:: taken from some calibration file development stuff, not sure if needed
+    Parameters:
+        seq (list): sequence to be checked
+        
+    Yields:
+        prints an answer string
+        
+    .. note:: Taken from some calibration file development stuff, not sure if 
+        needed. This should work for lin or log progressions.
     """
     d2seq = np.diff(np.diff(seq))
     if np.sum(d2seq) == 0.0:
@@ -426,9 +458,11 @@ def check_if_sequence_log_lin_orother(seq):
 
 def merge_two_dicts(x, y):
     """
-    From stackoverflow https://stackoverflow.com/questions/38987/how-to-merge-two-dictionaries-in-a-single_expression
-    In python 3.5 and higher use :code:`z = {**x, **y}`
-    But for now use this
+    Merge two dictionaries.
+        
+        `Stackoverflow Merge <https://stackoverflow.com/questions/38987/how-to-merge-two-dictionaries-in-a-single_expression>`_
+    
+    .. note:: In python 3.5 and higher use :code:`z = {**x, **y}` But for now use this
     """
     z = x.copy() #start with x's keys and values
     z.update(y) #modifies z with y's keys and values and returns None
@@ -436,8 +470,9 @@ def merge_two_dicts(x, y):
 
 def flatten(d, parent_key='', sep='_'):
     """
-    From https://stackoverflow.com/questions/6027558/flatten-nested-python-dictionaries-compressing-keys
-
+    Flatten nested python dictionaries to unindent.
+    
+        `Stackoverflow Flatten <https://stackoverflow.com/questions/6027558/flatten-nested-python-dictionaries-compressing-keys>`_
     """
     items = []
     for k, v in d.items():

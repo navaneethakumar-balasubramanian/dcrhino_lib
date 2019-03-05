@@ -3,7 +3,7 @@
 """
 Created on Tue Jan 22 14:54:20 2019
 
-@author: thiago
+Author: thiago
 """
 import pdb
 from datetime import datetime
@@ -49,6 +49,16 @@ class MWDRhinoMerger():
         return min_ts, max_ts
         
     def get_acorr_trace_data_from_index(self,idx):
+        """
+        Pick out line using from matches_list.iloc (created by :func:`_generate_matches_list`),
+        then pull hole dataframe using :func:`get_hole_df`
+        
+        Parameters:
+            idx (int): line no. of hole for acorr trace data to be pulled
+        
+        Returns:
+            none
+        """
         line = self.matches_list.iloc[idx]
         hole_mwd = self.get_hole_df(line.bench_name,line.pattern_name,line.hole_name,line.hole_id)        
         
@@ -116,10 +126,15 @@ class MWDRhinoMerger():
     
     def merge_mwd_with_trace(self,hole_mwd,trace_data):
         """
-        Concatenate rhino traces and interpolated hole mwd data.
+        Concatenate (along columns) rhino traces and interpolated hole mwd data from 
+        :func:`get_mwd_interpolated_by_second`
         
-        Return:
-            (DataFrame): dataframe from merging the variables' dataframes
+        Parameters:
+            hole_mwd (Dataframe): hole mwd data
+            trace_data (Dataframe): trace data
+        
+        Returns:
+            (DataFrame): dataframe combining the two dataframes' columns
         """
         rhino_traces_df = trace_data.dataframe
         time_vector = (rhino_traces_df['timestamp'].values*1000000000).astype(np.int64)
@@ -162,6 +177,23 @@ class MWDRhinoMerger():
     
     def get_interpolated_categorical_column(self,time_vector, mwd_hole_df, column_label,
                     end_time_column_label='start_time'):
+        """    
+        Parameters:
+            time_vector (Pandas Date Range): period of interest, for example: 
+                pd.date_range(start=row.time_start, periods=num_traces_in_blasthole, freq='1S')
+            mwd_hole_df (Dataframe): dataframe containing column_label, to be interpolated
+            column_label (str): what to interp ... for example 'computed_elevation'
+            
+        Other Parameters:
+            end_time_column_label (str): 'start_time' to select timeframe to interp
+            
+        Returns:
+            Interped data, for example the depths of the traces
+            
+        .. note:: Uses kneigbors nearest vote interp function instead of the
+            1D, linear interpolation method used in :func:`get_interpolated_column`
+            
+        """
         
         time_vector = pd.DatetimeIndex(time_vector).astype(np.int64)
         
@@ -179,12 +211,19 @@ class MWDRhinoMerger():
                             end_time_column_label='start_time'):
         """    
         Parameters:
-            column_label (str): what to interp ... for example 'computed_elevation'
             time_vector (Pandas Date Range): period of interest, for example: 
                 pd.date_range(start=row.time_start, periods=num_traces_in_blasthole, freq='1S')
+            mwd_hole_df (Dataframe): dataframe containing column_label, to be interpolated
+            column_label (str): what to interp ... for example 'computed_elevation'
+            
+        Other Parameters:
+            end_time_column_label (str): 'start_time' to select timeframe to interp
             
         Returns:
             Interped data, for example the depths of the traces
+            
+        .. note:: Uses 1D, linear interpolation function instead of the kneighbors
+            method used in :func:`get_interpolated_categorical_column`
         """
         t_mwd = pd.DatetimeIndex(mwd_hole_df[end_time_column_label])
         t_mwd = t_mwd.astype(np.int64)
@@ -202,7 +241,7 @@ class MWDRhinoMerger():
         Do some basic filtering to avoid sending/keeping too much data.
         
         Returns:
-            MWD DataFrame snipped to within timestamed limits
+            MWD DataFrame snipped to within timestamed limits and `shallow-copied <https://docs.python.org/2/library/copy.html#copy.copy>_`
         """
         min_ts_date = datetime.utcfromtimestamp(self.file_list['min_ts'].min())
         max_ts_date = datetime.utcfromtimestamp(self.file_list['max_ts'].max())

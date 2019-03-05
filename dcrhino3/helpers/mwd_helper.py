@@ -3,7 +3,7 @@
 """
 Created on Tue Jan 22 12:50:55 2019
 
-@author: thiago
+Author: thiago
 """
 
 import pandas as pd
@@ -20,7 +20,10 @@ class MWDHelper():
     """
     Facilitates the use of mwd data downstream by managing mine selection, naming, and formatting.
     
-    **Uses** env_config.json file that is mine-specific and computer specific (for now)
+    References: 
+        local env_config.json file in ..dcrhino_lib/bin
+        
+    .. warning:: **Requires** local env_config.json file that is mine-specific
     """
     
     def __init__ (self,env_config):
@@ -43,7 +46,7 @@ class MWDHelper():
             hole_name (str): Name of hole (sometimes interchangeable with hole_id)
             hole_id str): Numerical id for hole (sometimes used in place for hole_name)
 
-        Returns
+        Returns:
             (Series): mine_mwd['bench_name', 'pattern_name', 'hole_name', 'hole_id'], the data for a specific hole.
         """
         cond1 = mine_mwd['bench_name'].astype(str) == str(bench_name)
@@ -59,7 +62,7 @@ class MWDHelper():
         Parameters:
             file_path (str): Path to .csv file containing mwd data.
 
-        Returns
+        Returns:
             (DataFrame): The contents of the .csv file in a 2D data structure
         """
         logger.info("Loading mwd csv from:" + file_path)
@@ -73,10 +76,10 @@ class MWDHelper():
             mine_domain (str): Database domain name for the mine.
             dataset_name (str): Dataset inside mine_domain Database.
 
-        Returns
+        Returns:
             (DataFrame): The contents of the dataset_name
             
-        ... todo:: Ask for user credentials and input them in all database-connecting functions
+        .. todo:: Ask for user credentials and input them in all database-connecting functions
         
         """
         conn_dict = self.get_db_conn(mine_domain)
@@ -226,7 +229,14 @@ class MWDHelper():
 
     def remap_mwd_df(self,mwd_df,mapping):
         """
-        .. todo:: document this function
+        Deep-copies mwd dataframe, creates a new dataframe with columns from mapping dict.
+        
+        Parameters:
+            mwd_df (dataframe): dataframe from which copy is made
+            mapping (dict): dictionary with 'column' key and column name values
+            
+        Returns:
+            (Dataframe): remapped mwd dataframe with empty columns dropped
         """
         #temp = mwd_df
         remaped = pd.DataFrame()
@@ -301,7 +311,7 @@ class MWDHelper():
         Retrieves mwd from .csv or database connection, remaps,
         adds columns, standardizes format/names for downstream functions.
         
-        Parameters
+        Parameters:
             mine_name (str): name of the mine you are working on
             
         Returns:

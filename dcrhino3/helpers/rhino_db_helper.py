@@ -3,7 +3,7 @@
 """
 Created on Mon Jan 14 20:56:19 2019
 
-@author: thiago
+Author: thiago
 """
 
 from clickhouse_driver import Client
@@ -19,8 +19,10 @@ logger = init_logging(__name__)
 
 class RhinoDBHelper:
         """
-        Facilitates connection to DB for retrieval of mine data, requires:
-            
+        Facilitates connection to DB for retrieval of mine data.
+        
+        **Requires:**
+        
             + clickhouse-driver with lz4 compression option
             + credentials for accessing the database
         """
@@ -41,6 +43,10 @@ class RhinoDBHelper:
             
         def get_file_id_from_file_path(self,file_path):
             """
+            Retrieves file id from path using clichouse driver execute function, 
+            executes the query to the database. `"Execute" documentaton found here.
+            <https://clickhouse-driver.readthedocs.io/en/latest/api.html#client>`_
+            
             Parameters:
                 file_path (str): find file id from the path provided
                 
@@ -60,13 +66,16 @@ class RhinoDBHelper:
 
         def create_acorr_file(self,file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts):
             """
+            Creates acorr file and inserts mine info, using execute and clickhouse.
+            `"Execute" documentaton found here. <https://clickhouse-driver.readthedocs.io/en/latest/api.html#client>`_
+            
             Parameters:
                 file_path (str): where the file should go
                 rig_id (str): rig identifier
                 sensor_id (str): sensor that took the data identifier
                 digitizer_id (str): digitizer that recorded data id
-                min_ts:  
-                max_ts:
+                min_ts: minimum time value (will be converted to int)
+                max_ts: maximum time value (will be converted to int)
                     
             Returns:
                 (str): file_id with saved variables
@@ -91,13 +100,14 @@ class RhinoDBHelper:
 
         def create_new_acorr_file_conf(self,file_id,config_str):
             """
-            Create new file configuration
+            Create new file configuration string, insert into acorr file variable,
+            'vars_to_save' using clickhouse (client) `excecute. <https://clickhouse-driver.readthedocs.io/en/latest/api.html#client>`_
             
             Parameters:
                 file_id (str): file to configure
                 config_str (str): configuration options
                 
-            Returns
+            Returns:
                 file confguration string after having been updated
             """
             version = self.get_last_version_file_config(file_id)
@@ -146,7 +156,7 @@ class RhinoDBHelper:
             """
             Insert data into *acorr_traces_table_name* for each chunk.
             
-            Parameters
+            Parameters:
                 file_id (str): where to save
                 timestamps: to be saved
                 axial: axial wave readings
@@ -235,7 +245,7 @@ class RhinoDBHelper:
 
         def get_autocor_traces_from_files_ids(self, files_ids, min_ts=0, max_ts=9999999999):
             """
-            Parameters
+            Parameters:
                 files_ids (str): files to take autocor traces from
                 
             Other Parameters:
@@ -244,14 +254,17 @@ class RhinoDBHelper:
                 all_columns (list): for example: ['timestamp','microtime,
                             'axial_trace', 'tangential_trace', 'radial_trace']
                 result (list): One element per row of the database matching query
+                
+            Returns:
+                (Dataframe): autocor traces from specified file ids
             
-            .. note:: 20190122; modified assignment of df columns which contain
+            .. todo:: 20190122; modified assignment of df columns which contain
                 tupples so that 2d arrays can be accessed by calling
                 my_2darray = np.atleast_2d(list(df[column_label])) where column label
                 is for example 'axial_trace'
             
             .. todo:: add functionality so that we can ask for any subset of components
-                not forcing user to get all components
+                not forcing user to get all components.
                 
             """
             

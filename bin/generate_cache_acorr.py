@@ -32,6 +32,7 @@ def generate_cache_acorr(mine_name):
     
     conn = envConfig.get_rhino_db_connection_from_mine_name(mine_name)
     mwd_helper = MWDHelper(envConfig)
+    logger.info("Generating cache for mine: " + str(mine_name))
     
     
     #CFG_VERSION = 1 #we need to discuss cases when this could be different from 1
@@ -47,7 +48,8 @@ def generate_cache_acorr(mine_name):
     
         for line in matches.itertuples():
     
-            h5_filename = str(line.hole_id)+"_"+str(line.sensor_id)+"_"+str(line.digitizer_id) + ".h5"
+            h5_filename = str(line.bench_name) + "_" + str(line.pattern_name) + "_" + str(line.hole_name) + "_" + str(line.hole_id)+"_"+str(line.sensor_id)+"_"+str(line.digitizer_id) + ".h5"
+
             
             h5_path = os.path.join(holes_cached_folder, h5_filename)
             temp_h5_path = h5_path.replace(".h5","temp.h5")
@@ -76,12 +78,9 @@ def generate_cache_acorr(mine_name):
                     logger.error("Failed to rename " + str(temp_h5_path) + " to " + str(h5_path))
                 #reloaded_traces = TraceData()
                 #reloaded_traces.load_from_h5(temp)
-                
-
 
     
 if __name__ == '__main__':
-    mine_name = 'mont_wright'
     use_argparse = True
     if use_argparse:
         argparser = argparse.ArgumentParser(description="Copyright (c) 2018 DataCloud")

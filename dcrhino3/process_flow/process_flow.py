@@ -9,11 +9,14 @@ import os
 
 from dcrhino3.helpers.general_helper_functions import init_logging, create_folders_if_needed
 
+from dcrhino3.process_flow.modules.trace_processing.balance_trace import BalanceModule
 from dcrhino3.process_flow.modules.trace_processing.band_pass_filter import BandPassFilterModule
 from dcrhino3.process_flow.modules.trace_processing.add_one import AddOneModule
 from dcrhino3.process_flow.modules.trace_processing.add_n import AddNModule
 from dcrhino3.process_flow.modules.trace_processing.lead_channel_decon import LeadChannelDeconvolutionModule
 from dcrhino3.process_flow.modules.trace_processing.trim_trace import TrimTraceModule
+from dcrhino3.process_flow.modules.trace_processing.trim_trace_array import TrimTraceArrayModule
+from dcrhino3.process_flow.modules.trace_processing.mix_trace_array import TraceMixingArrayModule
 from dcrhino3.process_flow.modules.trace_processing.unfold_autocorrelation import UnfoldAutocorrelationModule
 from dcrhino3.process_flow.modules.trace_processing.upsample import UpsampleModule
 from dcrhino3.process_flow.modules.trace_processing.export_segy import ExportSEGYModule
@@ -53,11 +56,14 @@ class ProcessFlow:
         }
 
         self.trace_processing_modules = {
+            "balance": BalanceModule,
             "band_pass_filter": BandPassFilterModule,
             "add_one": AddOneModule,
             "add_n": AddNModule,
             "lead_channel_deconvolution": LeadChannelDeconvolutionModule,
             "trim": TrimTraceModule,
+            "trim_array": TrimTraceArrayModule,
+            "trace_mixing": TraceMixingArrayModule,
             "unfold": UnfoldAutocorrelationModule,
             "upsample": UpsampleModule,
             "upsample_sinc": UpsampleSincModule,

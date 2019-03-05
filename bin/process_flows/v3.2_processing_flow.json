@@ -62,7 +62,8 @@
         "args": {
 	     "acceptable_peak_wander": ["|global_config.acceptable_peak_wander|", 0.003],
          "dynamic_windows": ["|global_config.dynamic_windows|", true],
-         "window_widths": "|global_config.window_widths",
+         "window_widths": "|global_config.window_widths|",
+
           "output_sampling_rate": "|global_config.output_sampling_rate",
           "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
           "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
@@ -88,7 +89,7 @@
                "n_samples_trimmed_trace": "|global_config.n_samples_trimmed_trace|",
                "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
                "window_widths":"|global_config.window_widths",
-               "apply_primary_rotation": false,
+               "apply_primary_rotation": true,
                "apply_secondary_rotations": true
                }
      }
@@ -102,7 +103,9 @@
         "type": "qc_log_v1",
         "output_to_file": true,
         "args": {
+          "show" : false,
           "plot": {
+
             "upper_num_ms": 30,
             "lower_num_ms": -5,
             "peak_ampl_x_col_name": "K0_axial_primary_max_amplitude",
@@ -128,7 +131,7 @@
 	    	"radial_rc_feature_plot":false,
 	    	"axial_heatmap_plot":true,
 	    	"tangential_heatmap_plot":true,
-            "radial_heatmap_plot":true
+            "radial_heatmap_plot":false
 		},
 		"ax_lim":{
 			"axial_amp_lim":[0,1.5],
@@ -146,7 +149,7 @@
 	  "components_to_process":"|global_config.components_to_process|",
           "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
           "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|",
-          "noise_threshold": "|global_config.noise_threshold|",
+          "noise_threshold": ["|global_config.noise_threshold|",true],
           "rig_id": "|global_config.rig_id|",
           "drill_type": "|global_config.drill_type|",
           "drill_string_total_length": "|global_config.drill_string_total_length|",
