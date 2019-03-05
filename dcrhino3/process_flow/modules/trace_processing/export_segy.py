@@ -106,7 +106,7 @@ class ExportSEGYModule(BaseTraceModule):
                 self.global_config.drill_string_total_length)
             trace.stats.segy.trace_header.drill_string_steel_od = float(self.global_config.drill_string_steel_od)
 
-            trace.stats.segy.trace_header.hole_id = float(row["hole_id"])
+            trace.stats.segy.trace_header.hole_id = float(row["hole_name"])
             trace.stats.segy.trace_header.easting = row["easting"]
             trace.stats.segy.trace_header.northing = row["northing"]
             trace.stats.segy.trace_header.collar_elevation = row["collar_elevation"]

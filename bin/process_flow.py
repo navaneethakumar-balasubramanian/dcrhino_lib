@@ -58,6 +58,7 @@ if __name__ == '__main__':
     if use_argparse:
         argparser = argparse.ArgumentParser(description="Copyright (c) 2018 DataCloud")
         argparser.add_argument('-f', '--flow-path', help="JSON File Path", required=True)
+        argparser.add_argument('-env', '--env-path', help="ENV CONFIG File Path", default="env_config.json")
         argparser.add_argument("h5_path", metavar="path", type=str,
         help="Path to files to be processed; enclose in quotes, accepts * as wildcard for directories or filenames" )
         args = argparser.parse_args()
@@ -69,7 +70,9 @@ if __name__ == '__main__':
         process_flow_json_filehandle = 'v3.1_processing_flow_cf_bob.json'
         process_flow_path = os.path.join(process_flow_dir, process_flow_json_filehandle)
         h5_path = os.path.join(home, '.cache/datacloud/line_creek/acorr/23831_5208_5208.h5')
-    env_config = EnvConfig()
+
+    env_config = EnvConfig(args.env_path)
+    logger.info("Using env_config :" + args.env_path)
 
     with open(process_flow_path) as f:
         process_json = json.load(f)
