@@ -33,11 +33,13 @@ from dcrhino3.process_flow.modules.log_processing.rhino_physics import RhinoPhys
 
 from dcrhino3.process_flow.modules.plotters.qc_plotter_module import QCPlotterModule
 
+from dcrhino3.models.trace_dataframe import TraceData
+
 logger = init_logging(__name__)
 
 
 class ProcessFlow:
-    def __init__(self, process_json, output_path=""):
+    def __init__(self, output_path=""):
         self.id = "process_flow"
 
         self.lp_modules = {
@@ -71,12 +73,17 @@ class ProcessFlow:
             "upsample_sinc": UpsampleSincModule,
             "export_segy": ExportSEGYModule
         }
+
+        self.output_path = output_path
+
+
+    def set_process_flow(self,process_json):
         self.trace_flow = []
         self.features_flow = []
         self.plotters_flow = []
         self.lp_flow = []
 
-        self.output_path = output_path
+
 
         self.save_features_to_file = False
         self.output_to_file = False
@@ -142,6 +149,7 @@ class ProcessFlow:
 
     def process(self, trace_data):
         process_flow_output_path = os.path.join(self.output_path, self.id)
+        logger.info("Processing files to :" + process_flow_output_path)
         create_folders_if_needed(process_flow_output_path)
         """
         @Thiago: why are we reassigning name in first line?  do you mean .copy?
@@ -194,3 +202,23 @@ class ProcessFlow:
         #    output_trace.save_to_db(self.rhino_db_helper,self.id)
 
         return output_trace
+
+
+    def process_file(self,process_json, acorr_h5_file_path, env_config = False, seconds_to_process = False):
+        logger.info("PROCESSING FILE:" + str(acorr_h5_file_path))
+        acorr_trace = TraceData()
+        acorr_trace.load_from_h5(acorr_h5_file_path)
+        if seconds_to_process is not False:
+            acorr_trace.dataframe = acorr_trace.dataframe[:seconds_to_process]
+        #filename = os.path.basename(acorr_h5_file_path)
+        filename = acorr_trace.hole_h5_filename
+        filename_without_ext = filename.replace(".h5","")
+
+        if env_config is not False:
+            self.output_path = env_config.get_hole_h5_processed_cache_folder(acorr_trace.mine_name)
+            self.output_path = os.path.join(self.output_path,filename_without_ext)
+
+        self.set_process_flow(process_json)
+
+        acorr_trace = self.process(acorr_trace)
+        return acorr_trace

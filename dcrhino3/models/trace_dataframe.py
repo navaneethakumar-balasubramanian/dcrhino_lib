@@ -88,6 +88,20 @@ class TraceData(object):
         return self.first_global_config.mine_name
 
     @property
+    def sensor_id(self):
+        return self.first_global_config.sensor_serial_number
+
+    @property
+    def digitizer_id(self):
+        return self.first_global_config.digitizer_serial_number
+
+    @property
+    def hole_h5_filename(self):
+        line = self.dataframe.iloc[0]
+        return  str(line.bench_name) + "_" + str(line.pattern_name) + "_" + str(line.hole_name) + "_" + str(
+            line.hole_id) + "_" + str(self.sensor_id) + "_" + str(self.digitizer_id) + ".h5"
+
+    @property
     def first_global_config(self):
         return self.global_config_by_index(self.dataframe["acorr_file_id"].values[0])
 

@@ -27,30 +27,6 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 
 logger = init_logging(__name__)
 
-def process_file(process_json, acorr_h5_file_path, env_config):
-    logger.info("PROCESSING FILE:" + str(acorr_h5_file_path))
-    #process_flow_path = "/home/thiago/Documents/Projects/Dc_rhino/v3/bin/process_flows/example_simple_flow.json"
-    #holes_selection_path = "/home/thiago/Documents/Projects/Dc_rhino/v3/bin/process_flows/holes_selection/example_hole_selection.json"
-    #acorr_h5_file_path = "/home/thiago/milligan_cache/interpolated/32555_2235_2235.h5"
-
-    #with open(holes_selection_path) as f:
-    #    hole_selection_json = json.load(f)
-
-    #hole_selector = HoleSelector(hole_selection_json)
-
-
-
-    acorr_trace = TraceData()
-    acorr_trace.load_from_h5(acorr_h5_file_path)
-    #acorr_trace.dataframe = acorr_trace.dataframe[:10]
-    filename = os.path.basename(acorr_h5_file_path)
-    filename_without_ext = filename.replace(".h5","")
-
-    output_folder = env_config.get_hole_h5_processed_cache_folder(acorr_trace.mine_name)
-    output_folder = os.path.join(output_folder,filename_without_ext)
-    process_flow = ProcessFlow(process_json,output_folder)
-    acorr_trace = process_flow.process(acorr_trace)
-
 
 
 if __name__ == '__main__':
@@ -58,6 +34,7 @@ if __name__ == '__main__':
     if use_argparse:
         argparser = argparse.ArgumentParser(description="Copyright (c) 2018 DataCloud")
         argparser.add_argument('-f', '--flow-path', help="JSON File Path", required=True)
+        argparser.add_argument('-env', '--env-path', help="ENV CONFIG File Path", default="env_config.json")
         argparser.add_argument("h5_path", metavar="path", type=str,
         help="Path to files to be processed; enclose in quotes, accepts * as wildcard for directories or filenames" )
         args = argparser.parse_args()
@@ -69,13 +46,22 @@ if __name__ == '__main__':
         process_flow_json_filehandle = 'v3.1_processing_flow_cf_bob.json'
         process_flow_path = os.path.join(process_flow_dir, process_flow_json_filehandle)
         h5_path = os.path.join(home, '.cache/datacloud/line_creek/acorr/23831_5208_5208.h5')
-    env_config = EnvConfig()
+
+    env_config = EnvConfig(args.env_path)
+    logger.info("Using env_config :" + args.env_path)
 
     with open(process_flow_path) as f:
         process_json = json.load(f)
 
+    process_flow = ProcessFlow()
 
     files = glob2.glob(h5_path)
+
+    #seconds_to_process = 10
+
+
+
+    output_path = False
 
     if not files:
         print  'File does not exist: ' + h5_path
@@ -89,14 +75,14 @@ if __name__ == '__main__':
             for file_in_file in files_in_file:
                 file_path = os.path.join(txt_folder_path, file_in_file)
                 if env_config.is_file_blacklisted(file) is False and file_in_file != '':
-                    p = Process(target=process_file, args=(process_json, file_path, env_config))
+                    p = Process(target=process_flow.process_file, args=(process_json, file_path, env_config,seconds_to_process))
                     p.start()
                     p.join()
 
 
         elif '.h5' in os.path.splitext(file)[1]:
             if env_config.is_file_blacklisted(file) is False:
-                p = Process(target=process_file, args=(process_json,file,env_config))
+                p = Process(target=process_flow.process_file, args=(process_json,file,env_config,seconds_to_process))
                 p.start()
                 p.join()
                 #process_file(process_json,file,env_config)
