@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pdb
 
-from dcrhino3.feature_extraction.supporting_j1 import get_expected_multiple_times
+from dcrhino3.physics.util import get_expected_multiple_times
 from dcrhino3.signal_processing.phase_rotation import rotate_phase
 from dcrhino3.signal_processing.phase_rotation import determine_phase_state
 
