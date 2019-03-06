@@ -249,7 +249,7 @@ class FileFlusher(threading.Thread):
         self.sequence = packet.tx_sequence
 
 
-        index = np.where(self.sequence_array == packet.tx_sequence)[0]
+        index = np.where(self.sequence_array == packet.tx_sequence)[0][0]
         print(index)
         self.current_timestamp = self.timestamp_array[index]
         diff = int(self.current_timestamp-reference)
