@@ -238,25 +238,25 @@ class FileFlusher(threading.Thread):
 
 
 
-        print(timestamp-int(timestamp))
-
-        self.timestamp_array = np.arange(samples_to_next_trace)*delta_t + timestamp
-        np.delete(self.timestamp_array, 0)
-
-        print("number of samples until next second", samples_to_next_trace)
-        self.last_rollback = timestamp
-        # self.sequence = packet.tx_clock_ticks
-        # self.previous_timestamp = packet.tx_clock_ticks
-        self.sequence = packet.tx_sequence
-        self.previous_timestamp = packet.tx_sequence
-        self.previous_second = int(self.current_timestamp)
+        # print(timestamp-int(timestamp))
+        #
+        # self.timestamp_array = np.arange(samples_to_next_trace)*delta_t + timestamp
+        # np.delete(self.timestamp_array, 0)
+        #
+        # print("number of samples until next second", samples_to_next_trace)
+        # self.last_rollback = timestamp
+        # # self.sequence = packet.tx_clock_ticks
+        # # self.previous_timestamp = packet.tx_clock_ticks
+        # self.sequence = packet.tx_sequence
+        # self.previous_timestamp = packet.tx_sequence
+        # self.previous_second = int(self.current_timestamp)
+        # # m = "{}: START SEQUENCE = {}\n".format(datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S"),
+        # #                                        packet.tx_clock_ticks)
         # m = "{}: START SEQUENCE = {}\n".format(datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S"),
-        #                                        packet.tx_clock_ticks)
-        m = "{}: START SEQUENCE = {}\n".format(datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S"),
-                                               packet.tx_sequence)
-        self.logQ.put(m)
-        self.displayQ.put(m)
-        print(m)
+        #                                        packet.tx_sequence)
+        # self.logQ.put(m)
+        # self.displayQ.put(m)
+        # print(m)
 
     def get_data_from_q(self):
         return self.flushq.get(False, 0.001)
