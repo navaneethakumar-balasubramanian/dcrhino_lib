@@ -89,14 +89,14 @@ def main(args):
 
     sequence_diff = np.diff(tx_sequence)
     missed_samples = sequence_diff[sequence_diff > 1]
-    plt.hist(missed_samples)
+    plt.hist(missed_samples,bins="sqrt")
     plt.title("Distribution of Missed Samples")
 
     plt.show()
 
-    missed_samples_indices = np.where(missed_samples > 1)
-    good_samples_in_a_row = np.insert(np.diff(missed_samples_indices)-1, 0, missed_samples_indices[0][0])
-    plt.hist(good_samples_in_a_row)
+    missed_samples = np.where(sequence_diff > 1)
+    good_samples_in_a_row = np.insert(np.diff(missed_samples_indices[0]))
+    plt.hist(good_samples_in_a_row,bins="sqrt")
     plt.title("Distribution of good samples in a row")
     plt.show()
 
