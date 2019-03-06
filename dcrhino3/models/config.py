@@ -150,6 +150,10 @@ class Config( object ):
 
     @property
     def n_spiking_decon_filter_taps(self):
+        """
+        .. todo::  20190305: this method looks like it should be deprecated, it
+        duplicates _get_num_decon_taps() whcih itself belongs in a separte module (KK)
+        """
         return int(self.sampling_rate * self.spiking_decon_filter_duration)
 
     @property
@@ -165,6 +169,12 @@ class Config( object ):
         return json_str
 
     def _get_num_decon_taps(self,deconvolution_filter_duration,sampling_rate):
+        """
+        this no longer belongs in global config; it is a filter property
+        To control the process flow intuitively we work in terms of the filter
+        duration, and sampling rate is already defined.  So the json should
+        accept filter_duration as an argument rather than number of taps.
+        """
         dt = 1. / sampling_rate
         decon_filter_length_taps = int(deconvolution_filter_duration / dt)
         if np.remainder(decon_filter_length_taps, 2)==1:
@@ -189,6 +199,11 @@ class Config( object ):
 
     @property
     def n_samples_trimmed_trace(self):
+        """
+        .. todo::  this looks like it should be deprecated as well - unless
+        it is used in v2,but the fewer operators we keep around to do the
+        same thing the better.
+        """
         sampling_rate = float(self.output_sampling_rate)
         n_samples_back = int(sampling_rate * np.abs(self.min_lag_trimmed_trace))
         n_samples_fwd = int(sampling_rate * self.max_lag_trimmed_trace)
