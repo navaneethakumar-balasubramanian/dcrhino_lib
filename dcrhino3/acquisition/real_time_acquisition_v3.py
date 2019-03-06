@@ -220,6 +220,7 @@ class FileFlusher(threading.Thread):
         print("t0",int(timestamp),timestamp-int(timestamp))
         samples_to_next_trace = int(ceil((int(timestamp) + 1 - timestamp) / delta_t))
         self.packet_index_in_trace = int(sampling_rate) - samples_to_next_trace - 1
+        print("Initial Index", self.packet_index_in_trace)
         self.current_timestamp = timestamp
         self.sequence = packet.tx_sequence
         self.previous_timestamp = packet.tx_sequence
@@ -243,11 +244,12 @@ class FileFlusher(threading.Thread):
         self.current_timestamp += self.elapsed_tx_sequences * delta_t
         self.sequence = packet.tx_sequence
 
-        if int(self.current_timestamp) > self.previous_second:
-            print("index", self.packet_index_in_trace)
-
         if self.packet_index_in_trace >= sampling_rate:
+            print("more samples than SR", self.packet_index_in_trace)
             self.packet_index_in_trace -= sampling_rate
+            print("reset to", self.packet_index_in_trace)
+            print(int(self.current_timestamp), (self.current_timestamp-int(
+                    self.current_timestamp)))
             diff = round(self.current_timestamp - reference, 6)
             if diff > (delta_t*(self.packet_index_in_trace+1)):
                 m = "updated time from {}.{} to {}.{}".format(int(self.current_timestamp), (self.current_timestamp-int(
