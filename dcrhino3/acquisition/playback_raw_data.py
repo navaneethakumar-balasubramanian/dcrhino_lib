@@ -86,6 +86,11 @@ def main(args):
     seq = np.asarray(hf.get('seq'), dtype=np.int32)
     tx_sequence = np.asarray(hf.get('cticks'), dtype=np.int32)
 
+
+
+
+
+
     sequence_diff = np.diff(tx_sequence)
     missed_samples = sequence_diff[sequence_diff > 1]
     plt.hist(missed_samples)
@@ -95,6 +100,11 @@ def main(args):
     good_samples_in_a_row = np.insert(np.diff(missed_samples_indices)-1, 0, missed_samples_indices[0][0])
     plt.hist(good_samples_in_a_row)
     plt.show()
+
+    # performance_df = pd.DataFrame(columns=["ts", "good", "missed"])
+    # performance_df["ts"] = ts[1:]
+    # performance_df["good"] = good_samples_in_a_row
+    # performance_df["missed"] = missed_samples
 
     pdb.set_trace()
 

@@ -235,7 +235,7 @@ class FileFlusher(threading.Thread):
         self.elapsed_tx_sequences = packet.tx_sequence - self.sequence
         # print(self.elapsed_tx_clock_cycles)
         # self.current_timestamp += self.elapsed_tx_clock_cycles * 10/1000000.0
-        self.current_timestamp += self.elapsed_tx_sequences * 0.000250
+        self.current_timestamp += self.elapsed_tx_sequences * 10/1000000.0
         # self.sequence = packet.tx_clock_ticks
         self.sequence = packet.tx_sequence
 
@@ -243,8 +243,8 @@ class FileFlusher(threading.Thread):
 
 
         diff = int(self.current_timestamp-reference)
-        if self.current_timestamp > reference:
-            print("JUMPED INTO THE FUTURE AND ADJUSTED TIME")
+        if self.current_timestamp - reference > 1:
+            print("JUMPED INTO THE FUTURE AND ADJUSTED TIME", (self.current_timestamp-reference)*1000000.0)
             self.current_timestamp = reference
 
         if int(self.current_timestamp) - self.previous_second > 0:
