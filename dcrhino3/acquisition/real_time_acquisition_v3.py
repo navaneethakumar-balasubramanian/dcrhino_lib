@@ -67,6 +67,7 @@ rhino_version = config.getfloat("COLLECTION","rhino_version")
 run_start_time = time.time()
 battery_max_voltage = config.getfloat("INSTALLATION","battery_max_voltage")
 battery_lower_limit = config.getfloat("INSTALLATION","battery_min_voltage")
+sampling_rate = config.getfloat("COLLECTION", "output_sampling_rate")
 
 
 local_folder = config.get("DATA_TRANSMISSION","local_folder",DATA_PATH)
@@ -231,11 +232,12 @@ class FileFlusher(threading.Thread):
 
     def calculate_packet_timestamp(self, packet):
         reference = time.time()
+        delta_t = 1.0/sampling_rate
         # self.elapsed_tx_clock_cycles = packet.tx_clock_ticks - self.sequence
         self.elapsed_tx_sequences = packet.tx_sequence - self.sequence
         # print(self.elapsed_tx_clock_cycles)
         # self.current_timestamp += self.elapsed_tx_clock_cycles * 10/1000000.0
-        self.current_timestamp += self.elapsed_tx_sequences * 10/1000000.0
+        self.current_timestamp += self.elapsed_tx_sequences * sampling_rate
         # self.sequence = packet.tx_clock_ticks
         self.sequence = packet.tx_sequence
 
@@ -243,12 +245,14 @@ class FileFlusher(threading.Thread):
 
 
         diff = int(self.current_timestamp-reference)
-        if self.current_timestamp - reference > 1:
-            print("JUMPED INTO THE FUTURE AND ADJUSTED TIME", (self.current_timestamp-reference)*1000000.0)
-            self.current_timestamp = reference
+        # if self.current_timestamp - reference > 1:
+        #     print("JUMPED INTO THE FUTURE AND ADJUSTED TIME", (self.current_timestamp-reference)*1000000.0)
+        #     self.current_timestamp = reference
 
         if int(self.current_timestamp) - self.previous_second > 0:
-            self.previous_timestamp = packet.tx_clock_ticks
+            print("Synced timestamp as ", reference)
+            self.current_timestamp = reference
+            self.previous_timestamp = packet.tx_sequence
             self.previous_second = int(self.current_timestamp)
             self.counter_changes += 1
             m = "('Changed', {},{},{},{})\n".format(int(self.current_timestamp), int(reference), diff,
