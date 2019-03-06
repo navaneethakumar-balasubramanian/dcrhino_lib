@@ -250,7 +250,7 @@ class FileFlusher(threading.Thread):
         #     self.current_timestamp = reference
 
         if int(self.current_timestamp) - self.previous_second > 0:
-            if self.current_timestamp > reference:
+            if self.current_timestamp - reference > 1:
                 print("JUMPED INTO THE FUTURE AND ADJUSTED TIME", (self.current_timestamp - reference) * 1000000.0)
                 self.current_timestamp = reference
                 print(diff)
