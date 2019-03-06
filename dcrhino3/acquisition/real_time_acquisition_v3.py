@@ -248,7 +248,7 @@ class FileFlusher(threading.Thread):
         self.current_timestamp += self.elapsed_tx_sequences * delta_t
         self.sequence = packet.tx_sequence
 
-        if self.packet_index_in_trace >= sampling rate:
+        if self.packet_index_in_trace >= sampling_rate:
             self.packet_index_in_trace -= sampling_rate
             if self.current_timestamp - reference > delta_t:
                 self.current_timestamp = reference
