@@ -243,9 +243,7 @@ class FileFlusher(threading.Thread):
         self.current_timestamp += self.elapsed_tx_sequences * delta_t
         self.sequence = packet.tx_sequence
 
-        print(int(self.current_timestamp), self.previous_second)
         if int(self.current_timestamp) > self.previous_second:
-            pdb.set_trace()
             print("index", self.packet_index_in_trace)
 
         if self.packet_index_in_trace >= sampling_rate:
