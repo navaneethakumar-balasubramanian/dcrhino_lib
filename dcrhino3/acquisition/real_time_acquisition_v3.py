@@ -237,7 +237,7 @@ class FileFlusher(threading.Thread):
         self.elapsed_tx_sequences = packet.tx_sequence - self.sequence
         # print(self.elapsed_tx_clock_cycles)
         # self.current_timestamp += self.elapsed_tx_clock_cycles * 10/1000000.0
-        self.current_timestamp += self.elapsed_tx_sequences * sampling_rate
+        self.current_timestamp += self.elapsed_tx_sequences * delta_t
         # self.sequence = packet.tx_clock_ticks
         self.sequence = packet.tx_sequence
 
