@@ -25,7 +25,7 @@ def interpolate_data(ideal_timestamps, digitizer_timestamps, data):
 def main(args):
     #pdb.set_trace()
     save_raw = False
-    save_csv = False
+    save_csv = True
     save_numpy = False
     t0 = datetime.now()
     if args.sampling_rate is None:
@@ -89,25 +89,24 @@ def main(args):
 
     sequence_diff = np.diff(tx_sequence)
     missed_samples = sequence_diff[sequence_diff > 1]-1
+    fig = plt.figure("DataCloud Rhino Missed Samples", figsize=(10, 5))
     plt.hist(missed_samples, bins="sqrt")
     plt.title("Distribution of Missed Samples")
 
-    plt.show()
+    fig.savefig(fname.replace(".h5","_missed_samples.png"))
 
     missed_samples_indices = np.where(sequence_diff > 1)
     good_samples_in_a_row = np.diff(missed_samples_indices[0])
-    bins = np.hstack((np.arange(1, 100, 10), np.arange(100, 1100, 100)))
+    fig = plt.figure("DataCloud Rhino Good Samples in a row Samples", figsize=(10, 5))
     bins = np.arange(5, 1001, 5)
     plt.hist(good_samples_in_a_row,bins=bins)
     plt.title("Distribution of good samples in a row")
-    plt.show()
+    fig.savefig(fname.replace(".h5","_good_samples_in_a_row.png"))
 
     # performance_df = pd.DataFrame(columns=["ts", "good", "missed"])
     # performance_df["ts"] = ts[1:]
     # performance_df["good"] = good_samples_in_a_row
     # performance_df["missed"] = missed_samples
-
-    pdb.set_trace()
 
     print("Applying calibration")
 
