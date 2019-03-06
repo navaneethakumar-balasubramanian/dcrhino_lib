@@ -220,14 +220,7 @@ class FileFlusher(threading.Thread):
         print("t0",int(timestamp),timestamp-int(timestamp))
         samples_to_next_trace = int(ceil((int(timestamp) + 1 - timestamp) / delta_t))
         self.packet_index_in_trace = int(sampling_rate) - samples_to_next_trace - 1
-        self.timestamp_array[self.packet_index_in_trace] = timestamp
-        initial_sequence = packet.tx_sequence - self.packet_index_in_trace
-        self.sequence_array = np.arange(initial_sequence, initial_sequence + sampling_rate)
-        self.timestamp_array = self.sequence_array * delta_t + timestamp
         self.current_timestamp = timestamp
-
-        # # self.sequence = packet.tx_clock_ticks
-        # # self.previous_timestamp = packet.tx_clock_ticks
         self.sequence = packet.tx_sequence
         self.previous_timestamp = packet.tx_sequence
         self.previous_second = int(self.current_timestamp)
@@ -249,8 +242,9 @@ class FileFlusher(threading.Thread):
         self.current_timestamp += self.elapsed_tx_sequences * delta_t
         self.sequence = packet.tx_sequence
 
+        print(int(self.current_timestamp), self.previous_second)
         if int(self.current_timestamp) > self.previous_second:
-            print(int(self.current_timestamp),self.previous_second)
+            pdb.set_trace()
             print("index", self.packet_index_in_trace)
 
         if self.packet_index_in_trace >= sampling_rate:
