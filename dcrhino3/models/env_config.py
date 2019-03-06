@@ -15,6 +15,8 @@ class MwdType(Enum):
 
 
 class EnvConfig(object):
+    """
+    """
     def __init__(self,env_conf_json_path=False):
         if env_conf_json_path is False:
             env_conf_json_path = 'env_config.json'
@@ -24,10 +26,20 @@ class EnvConfig(object):
         
         
     def _parse_json(self,env_conf_json_path):
+        """
+        Load the json file.
+        """
         with open(env_conf_json_path, 'r') as f:
             self.__dict__ = json.load(f)
             
     def _get_mine_config(self,mine_name):
+        """
+        Parameters:
+            mine_name (str): name of mine to find configuration for
+        Returns:
+            mine if able to find the mine name in env_config name or alternative names,
+            False otherwise
+        """
         mine_name = str(mine_name).lower()
         for mine in self.mines.keys():
             mine = self.mines[mine]
@@ -37,12 +49,26 @@ class EnvConfig(object):
         return False
     
     def get_hole_h5_interpolated_cache_folder(self,mine_name):
+        """
+        Parameters:
+            mine_name (str): mine name
+            
+        Returns:
+            Path to h5 interpolated cache folder for the mine named, False if missing
+        """
         mine_cfg = self._get_mine_config(mine_name)
         if not mine_cfg or 'paths' not in mine_cfg.keys() or 'hole_h5_interpolated_cache_folder' not in mine_cfg['paths']:
             return False
         return mine_cfg['paths']['hole_h5_interpolated_cache_folder']
     
     def get_hole_h5_processed_cache_folder(self,mine_name):
+        """
+        Parameters:
+            mine_name (str): mine name
+            
+        Returns:
+            Path to h5 processed cache folder for the mine named, False if missing
+        """        
         mine_cfg = self._get_mine_config(mine_name)
         if not mine_cfg or 'paths' not in mine_cfg.keys() or 'hole_h5_processed_cache_folder' not in mine_cfg['paths']:
             return False
@@ -50,6 +76,10 @@ class EnvConfig(object):
 
     
     def is_file_blacklisted(self,file_path):
+        """
+        Returns:
+            (bool): True is blacklisted, False if not
+        """
         for black_list_file_path in self.blacklist_files:
             if black_list_file_path == file_path:
                 return True
@@ -57,6 +87,13 @@ class EnvConfig(object):
         
 
     def get_rhino_db_connection_from_mine_name(self,mine_name):
+        """
+        Search env_config.json for rhino_db_connection credentials.
+        
+        Returns:
+            rhino_db_connection (host,user,password,database),
+            or False if missing from env_config
+        """
         mine_cfg = self._get_mine_config(mine_name)
         if not mine_cfg or 'rhino_db_connection' not in mine_cfg.keys():
             logger.warn("Missing rhino_db_connection on env.json for " + str(mine_name) + " mine." )
@@ -65,6 +102,12 @@ class EnvConfig(object):
             
     
     def get_mwd_type(self,mine_name):
+        """
+        Get data file type.
+        
+        Returns:
+            CSV or DATABASE to MwdType key
+        """
         mine_cfg = self._get_mine_config(mine_name)
         if not mine_cfg or 'mwd' not in mine_cfg.keys():
             return False
@@ -74,6 +117,12 @@ class EnvConfig(object):
             return MwdType.DATABASE
         
     def get_mwd_csv_cfg(self,mine_name):
+        """
+        Get csv configuration from mine_cfg dictionary.
+        
+        Returns:
+            mine_cfg['mwd']['csv'] or False if mwd missing from keys of mine_cfg
+        """
         mine_cfg = self._get_mine_config(mine_name)
         if not mine_cfg or 'mwd' not in mine_cfg.keys():
             return False
@@ -81,6 +130,12 @@ class EnvConfig(object):
             return mine_cfg['mwd']['csv']
         
     def get_mwd_db_cfg(self,mine_name):
+        """
+        Get database configuration from mine_cfg dictionary.
+        
+        Returns:
+            mine_cfg['mwd']['db'] or False if mwd missing from keys of mine_cfg
+        """
         mine_cfg = self._get_mine_config(mine_name)
         if not mine_cfg or 'mwd' not in mine_cfg.keys():
             return False
