@@ -250,8 +250,11 @@ class FileFlusher(threading.Thread):
         #     self.current_timestamp = reference
 
         if int(self.current_timestamp) - self.previous_second > 0:
-            print(int(self.current_timestamp) - self.previous_second)
-            print("Synced timestamp as ", reference)
+            if self.current_timestamp > reference:
+                print("JUMPED INTO THE FUTURE AND ADJUSTED TIME", (self.current_timestamp - reference) * 1000000.0)
+                self.current_timestamp = reference
+                print(diff)
+                print("Synced timestamp as ", reference)
             self.current_timestamp = reference
             self.previous_timestamp = packet.tx_sequence
             self.previous_second = int(self.current_timestamp)
