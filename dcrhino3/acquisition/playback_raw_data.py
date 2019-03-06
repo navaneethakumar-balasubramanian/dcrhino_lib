@@ -101,7 +101,7 @@ def main(args):
     bins = np.arange(5, 1001, 5)
     plt.hist(good_samples_in_a_row,bins=bins)
     plt.title("Distribution of good samples in a row")
-    fig.savefig(fname.replace(".h5","_good_samples_in_a_row.png"))
+    fig.savefig(fname.replace(".h5", "_good_samples_in_a_row.png"))
 
     # performance_df = pd.DataFrame(columns=["ts", "good", "missed"])
     # performance_df["ts"] = ts[1:]
@@ -239,7 +239,7 @@ def main(args):
     fig = plt.figure("DataCloud Rhino Raw Data Playback",figsize=(10,5))
     plt.subplots_adjust(hspace=0.5)
     # ax.ticklabel_format(useOffset=False, style='plain')
-    plt.figure(1)
+    #plt.figure(1)
 
     #######################################################################
     #################TROUBLESHOOTING#######################################
