@@ -212,8 +212,8 @@ class FileFlusher(threading.Thread):
         self.tx_status = 0
         self.good_packets_in_a_row = 1
         self.sample_index = 0
-        self.sequence_array = np.empty((int(sampling_rate),))
-        self.timestamp_array = np.empty((int(sampling_rate),))
+        self.sequence_array = np.empty((int(sampling_rate)*2,))
+        self.timestamp_array = np.empty((int(sampling_rate)*2,))
         self.timestamp_array[:] = np.nan
 
     def first_packet_received(self, packet, timestamp):
@@ -248,29 +248,12 @@ class FileFlusher(threading.Thread):
         self.current_timestamp += self.elapsed_tx_sequences * delta_t
         self.sequence = packet.tx_sequence
 
-
-        index = np.where(self.sequence_array == packet.tx_sequence)[0][0]
-        print(index)
-        self.current_timestamp = self.timestamp_array[index]
-        diff = int(self.current_timestamp-reference)
-
-
-
-
-        # if int(self.current_timestamp) - self.previous_second > 0:
-        #     if self.current_timestamp - reference > 1:
-        #         print("JUMPED INTO THE FUTURE AND ADJUSTED TIME", (self.current_timestamp - reference) * 1000000.0)
-        #         self.current_timestamp = reference
-        #         print(diff)
-        #         print("Synced timestamp as ", reference)
-        #     self.current_timestamp = reference
-        #     self.previous_timestamp = packet.tx_sequence
-        #     self.previous_second = int(self.current_timestamp)
-        #     self.counter_changes += 1
-        #     m = "('Changed', {},{},{},{})\n".format(int(self.current_timestamp), int(reference), diff,
-        #                                             self.counter_changes)
-        #     self.logQ.put(m)
-        #     self.displayQ.put(m)
+        if self.packet_index_in_trace >= sampling rate:
+            self.packet_index_in_trace -= sampling_rate
+            if self.current_timestamp - reference > delta_t:
+                self.current_timestamp = reference
+                print("updated time from", int(self.current_timestamp), (self.current_timestamp-int(self.current_timestamp)))
+                print("to", int(reference), (reference-int(reference)))
 
         return self.current_timestamp
 
