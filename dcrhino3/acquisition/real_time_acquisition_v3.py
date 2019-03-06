@@ -217,103 +217,62 @@ class FileFlusher(threading.Thread):
         self.timestamp_array[:] = np.nan
 
     def first_packet_received(self, packet, timestamp):
-
-        pdb.set_trace()
         samples_to_next_trace = int(ceil((int(timestamp) + 1 - timestamp) / delta_t))
         self.packet_index_in_trace = int(sampling_rate) - samples_to_next_trace - 1
         self.timestamp_array[self.packet_index_in_trace] = timestamp
         initial_sequence = packet.tx_sequence - self.packet_index_in_trace
         self.sequence_array = np.arange(initial_sequence, initial_sequence + sampling_rate)
         self.timestamp_array = self.sequence_array * delta_t + timestamp
-
-
-
         self.current_timestamp = timestamp
 
-
-
-
-
-
-
-
-
-
-        # print(timestamp-int(timestamp))
-        #
-        # self.timestamp_array = np.arange(samples_to_next_trace)*delta_t + timestamp
-        # np.delete(self.timestamp_array, 0)
-        #
-        # print("number of samples until next second", samples_to_next_trace)
-        # self.last_rollback = timestamp
         # # self.sequence = packet.tx_clock_ticks
         # # self.previous_timestamp = packet.tx_clock_ticks
-        # self.sequence = packet.tx_sequence
-        # self.previous_timestamp = packet.tx_sequence
-        # self.previous_second = int(self.current_timestamp)
+        self.sequence = packet.tx_sequence
+        self.previous_timestamp = packet.tx_sequence
+        self.previous_second = int(self.current_timestamp)
         # # m = "{}: START SEQUENCE = {}\n".format(datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S"),
         # #                                        packet.tx_clock_ticks)
-        # m = "{}: START SEQUENCE = {}\n".format(datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S"),
-        #                                        packet.tx_sequence)
-        # self.logQ.put(m)
-        # self.displayQ.put(m)
-        # print(m)
+        m = "{}: START SEQUENCE = {}\n".format(datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S"),
+                                               packet.tx_sequence)
+        self.logQ.put(m)
+        self.displayQ.put(m)
+        print(m)
 
     def get_data_from_q(self):
         return self.flushq.get(False, 0.001)
 
     def calculate_packet_timestamp(self, packet):
         reference = time.time()
-
-        # self.elapsed_tx_clock_cycles = packet.tx_clock_ticks - self.sequence
         self.elapsed_tx_sequences = packet.tx_sequence - self.sequence
         self.samples_in_trace += self.elapsed_tx_sequences
-        # print(self.elapsed_tx_clock_cycles)
-        # self.current_timestamp += self.elapsed_tx_clock_cycles * 10/1000000.0
         self.current_timestamp += self.elapsed_tx_sequences * delta_t
-        # self.sequence = packet.tx_clock_ticks
         self.sequence = packet.tx_sequence
 
-        if self.samples_in_trace > sampling_rate:
-            self.samples_in_trace = 1
 
-
-
-
+        index = np.where(self.sequence_array == packet.tx_sequence)[0]
+        print(index)
+        self.current_timestamp = self.timestamp_array[index]
         diff = int(self.current_timestamp-reference)
-        # if self.current_timestamp - reference > 1:
-        #     print("JUMPED INTO THE FUTURE AND ADJUSTED TIME", (self.current_timestamp-reference)*1000000.0)
-        #     self.current_timestamp = reference
 
-        if int(self.current_timestamp) - self.previous_second > 0:
-            if self.current_timestamp - reference > 1:
-                print("JUMPED INTO THE FUTURE AND ADJUSTED TIME", (self.current_timestamp - reference) * 1000000.0)
-                self.current_timestamp = reference
-                print(diff)
-                print("Synced timestamp as ", reference)
-            self.current_timestamp = reference
-            self.previous_timestamp = packet.tx_sequence
-            self.previous_second = int(self.current_timestamp)
-            self.counter_changes += 1
-            m = "('Changed', {},{},{},{})\n".format(int(self.current_timestamp), int(reference), diff,
-                                                    self.counter_changes)
-            self.logQ.put(m)
-            self.displayQ.put(m)
+
+
+
+        # if int(self.current_timestamp) - self.previous_second > 0:
+        #     if self.current_timestamp - reference > 1:
+        #         print("JUMPED INTO THE FUTURE AND ADJUSTED TIME", (self.current_timestamp - reference) * 1000000.0)
+        #         self.current_timestamp = reference
+        #         print(diff)
+        #         print("Synced timestamp as ", reference)
+        #     self.current_timestamp = reference
+        #     self.previous_timestamp = packet.tx_sequence
+        #     self.previous_second = int(self.current_timestamp)
+        #     self.counter_changes += 1
+        #     m = "('Changed', {},{},{},{})\n".format(int(self.current_timestamp), int(reference), diff,
+        #                                             self.counter_changes)
+        #     self.logQ.put(m)
+        #     self.displayQ.put(m)
 
         return self.current_timestamp
-
-    # def adjust_drift(self,reference):
-    #     diff = int(self.current_timestamp-reference)
-    #     if diff>0:
-    #         rollback_interval = reference - self.last_rollback
-    #         self.last_rollback = reference
-    #         m = ("{}: The Calculated Time of {} is greater than the actual time of {}.  Rolling back in time.  Rollback interval was {} sec\n".format(datetime.utcfromtimestamp(reference).strftime("%Y-%m-%d %H:%M:%S"),self.current_timestamp,reference,rollback_interval))
-    #         self.logQ.put(m)
-    #         self.displayQ.put(m)
-    #         print(m)
-    #         self.current_timestamp -=1
-    #         self.counter_changes -=1
-    #     return diff
 
     def save_row_to_processing_q(self, packet):
 
