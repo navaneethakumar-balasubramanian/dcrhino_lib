@@ -16,96 +16,52 @@ from dcrhino.process_pipeline.trace_processing import TraceProcessing
 from dcrhino3.models.config import Config
 from dcrhino3.acquisition.config_file_utilities import extract_metadata_from_h5_file
 
-def interpolate_data(ideal_timestamps,digitizer_timestamps,data):
-    interp_data = np.interp(ideal_timestamps,digitizer_timestamps,data)
+
+def interpolate_data(ideal_timestamps, digitizer_timestamps, data):
+    interp_data = np.interp(ideal_timestamps, digitizer_timestamps, data)
     return interp_data
-
-def butter_highpass(cutoff, fs, order=5):
-    nyq = 0.5 * fs
-    normal_cutoff = cutoff / nyq
-    b, a = butter(order, normal_cutoff, btype='high', analog=False)
-    return b, a
-
-def butter_highpass_filter(data, cutoff, fs, order=5):
-    b, a = butter_highpass(cutoff, fs, order=order)
-    y = filtfilt(b, a, data)
-    return y
-
-# def extract_metadata_from_h5_file(h5f):
-#     config = ConfigParser.ConfigParser()
-#     for key,value in h5f.attrs.iteritems():
-#         #print(key,value)
-#         section = key.split("/")[0]
-#         param_name = key.split("/")[1]
-#         #pdb.set_trace()
-#         if config.has_section(section):
-#             config.set(section,param_name,value)
-#         else:
-#             config.add_section(section)
-#             config.set(section,param_name,value)
-#
-#     m =Metadata(config)
-#     return m
-
-
-
-
 
 
 def main(args):
     #pdb.set_trace()
     save_raw = False
-    save_csv = True
+    save_csv = False
+    save_numpy = False
     t0 = datetime.now()
-    #if args.config_path == None:
-    #    configfile_path = os.path.join(PATH,'collection_daemon.cfg')
-    #else:
-    #    configfile_path = args.config_path
-
-    #config = ConfigParser.SafeConfigParser()
-    #config.read(configfile_path)
-    #pdb.set_trace()
-    if args.sampling_rate == None:
+    if args.sampling_rate is None:
         print("NEED A RESAMPLE RATE")
-        return;
-        output_sampling_rate = 3200
+        return
     else:
         output_sampling_rate = int(args.sampling_rate)
 
-    if args.start_time == None:
+    if args.start_time is None:
         start_time = 0
     else:
-        start_time = calendar.timegm(datetime.strptime(args.start_time,'%Y-%m-%d %H:%M:%S').utctimetuple())
+        start_time = calendar.timegm(datetime.strptime(args.start_time, '%Y-%m-%d %H:%M:%S').utctimetuple())
 
-    if args.end_time == None:
+    if args.end_time is None:
         end_time = 0
     else:
-        end_time = calendar.timegm(datetime.strptime(args.end_time,'%Y-%m-%d %H:%M:%S').utctimetuple())
+        end_time = calendar.timegm(datetime.strptime(args.end_time, '%Y-%m-%d %H:%M:%S').utctimetuple())
 
-    #if args.source_path == None:
-    #    fname = os.path.join(config.get("PLAYBACK","filename"))
-    #else:
     fname = args.source_path
     original_name = fname.split(".")[0]
 
-    #apply_sensitivities = config.getboolean("PLAYBACK","apply_sensitivities")
-
-
-    axis = ["X","Y","Z"]
+    axis = ["X", "Y", "Z"]
 
     print("Reading File")
     hf = h5py.File(fname, 'r')
 
     print("Extracting Metadata")
     metadata = extract_metadata_from_h5_file(hf)
-    ts = np.asarray(hf.get('ts'),dtype=np.float64)
-    sensitivity = np.asarray(hf.get('sensitivity'),dtype=np.float64)
+    ts = np.asarray(hf.get('ts'), dtype=np.float64)
+    sensitivity = np.asarray(hf.get('sensitivity'), dtype=np.float64)
     print (hf.get('axis'))
-    if hf.get('axis') == None:
-        print ("NO AXIS ON METADATA SUPPOSING ITS AN IDE FILE")
-        file_axis = [1,2]
+    if hf.get('axis') is None:
+        print ("NO AXIS ON METADATA ASSUMING IT'S AN IDE FILE")
+        file_axis = [1, 2]
     else:
-        file_axis = np.asarray(hf.get('axis'),dtype=np.int32)
+        file_axis = np.asarray(hf.get('axis'), dtype=np.int32)
     #print (hf.keys())
 
     #IDE File
@@ -127,8 +83,20 @@ def main(args):
 
     #pdb.set_trace()
 
-    seq = np.asarray(hf.get('seq'),dtype=np.int32)
-    ticks = np.asarray(hf.get('cticks'),dtype=np.int32)
+    seq = np.asarray(hf.get('seq'), dtype=np.int32)
+    tx_sequence = np.asarray(hf.get('cticks'), dtype=np.int32)
+
+    sequence_diff = np.diff(tx_sequence)
+    missed_samples = sequence_diff[sequence_diff > 1]
+    plt.hist(missed_samples)
+    plt.show()
+
+    missed_samples_indices = np.where(missed_samples > 1)
+    good_samples_in_a_row = np.insert(np.diff(missed_samples_indices)-1, 0, missed_samples_indices[0][0])
+    plt.hist(good_samples_in_a_row)
+    plt.show()
+
+    pdb.set_trace()
 
     print("Applying calibration")
 
@@ -137,9 +105,9 @@ def main(args):
     rhino_version = global_config.rhino_version
 
     if len(sensitivity)>1:
-        is_ide_file=False
+        is_ide_file = False
     else:
-        is_ide_file=True
+        is_ide_file = True
     trace_processor = TraceProcessing(global_config, is_ide_file,accelerometer_max_voltage,rhino_version)
 
     if is_ide_file:
@@ -222,12 +190,7 @@ def main(args):
     tangential_path = os.path.join(output_path,"tangential",output_name+"_tangential_{}_{}.npy".format(axis[tangential_axis_index],output_sampling_rate))
     radial_path = os.path.join(output_path,"radial",output_name+"_radial_{}_{}.npy".format(axis[radial_axis_index],output_sampling_rate))
 
-    if not os.path.exists(os.path.dirname(axial_path)):
-        os.mkdir(os.path.dirname(axial_path))
-    if not os.path.exists(os.path.dirname(tangential_path)):
-        os.mkdir(os.path.dirname(tangential_path))
-    if not os.path.exists(os.path.dirname(radial_path)):
-        os.mkdir(os.path.dirname(radial_path))
+
 
     interp_data=[]
     #time_filtered_interp_x_data = interpolate_data(ideal_timestamps,digitizer_timestamps,time_filtered_x_raw_data)
@@ -238,10 +201,17 @@ def main(args):
     interp_data.append(interpolate_data(ideal_timestamps,digitizer_timestamps,time_filtered_data[1]))#Y data
     interp_data.append(interpolate_data(ideal_timestamps,digitizer_timestamps,time_filtered_data[2]))#Z data
 
-    print("Saving Files")
-    np.save(axial_path,interp_data[file_axis[0]-1])
-    np.save(tangential_path,interp_data[file_axis[1]-1])
-    np.save(radial_path,interp_data[5-file_axis[0]-file_axis[1]])
+    if save_numpy:
+        print("Saving Files")
+        if not os.path.exists(os.path.dirname(axial_path)):
+            os.mkdir(os.path.dirname(axial_path))
+        if not os.path.exists(os.path.dirname(tangential_path)):
+            os.mkdir(os.path.dirname(tangential_path))
+        if not os.path.exists(os.path.dirname(radial_path)):
+            os.mkdir(os.path.dirname(radial_path))
+        np.save(axial_path,interp_data[file_axis[0]-1])
+        np.save(tangential_path,interp_data[file_axis[1]-1])
+        np.save(radial_path,interp_data[5-file_axis[0]-file_axis[1]])
 
 
     if save_csv:
