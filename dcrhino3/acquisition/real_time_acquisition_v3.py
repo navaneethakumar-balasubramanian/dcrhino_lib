@@ -214,7 +214,7 @@ class FileFlusher(threading.Thread):
         self.sample_index = 0
         self.sequence_array = np.empty((int(sampling_rate),))
         self.timestamp_array = np.empty((int(sampling_rate),))
-        self.timestamp_array = np.nan
+        self.timestamp_array[:] = np.nan
 
     def first_packet_received(self, packet, timestamp):
 
