@@ -95,7 +95,7 @@ def main(args):
     plt.show()
 
     missed_samples_indices = np.where(sequence_diff > 1)
-    good_samples_in_a_row = np.insert(np.diff(missed_samples_indices[0]))
+    good_samples_in_a_row = np.diff(missed_samples_indices[0])
     plt.hist(good_samples_in_a_row,bins="sqrt")
     plt.title("Distribution of good samples in a row")
     plt.show()
