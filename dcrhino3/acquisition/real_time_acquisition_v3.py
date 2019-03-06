@@ -82,7 +82,7 @@ class LogFileDaemonThread(threading.Thread):
         self.filename = os.path.join(LOGS_PATH,datetime.now().strftime('%Y_%m_%d_%H')+'.log')
         self.output_file = open(self.filename, 'ar', buffering=0)
 
-    def run (self):
+    def run(self):
         print("Started LogFileDaemon")
         while True:
             filename = os.path.join(LOGS_PATH,datetime.now().strftime('%Y_%m_%d_%H')+'.log')
@@ -90,7 +90,6 @@ class LogFileDaemonThread(threading.Thread):
                 self.change_files(filename)
             self.log()
             time.sleep(1)
-
 
     def stop(self):
         while not self.logQ.empty():
@@ -112,40 +111,39 @@ class LogFileDaemonThread(threading.Thread):
 
 class Packet_v10(object):
     def __init__(self,q_data):
-        lst = struct.unpack('=bLbbHHHLLb',q_data)
+        lst = struct.unpack('=bLbbHHHLLb', q_data)
         self.rx_sequence = lst[1]
         self.x = socket.ntohs(lst[4])
         self.y = socket.ntohs(lst[5])
         self.z = socket.ntohs(lst[6])
-        self.tx_clock_ticks = lst[7] #Each clock tick is 10 microseconds
+        self.tx_clock_ticks = lst[7] # Each clock tick is 10 microseconds
         # self.tx_sequence = lst[8]
 
-        #this is in preparation for new data stream with battery, rssi and temp
-        import random
-        self.rssi = random.randint(10,30)
-        self.temp = random.randint(-15,0)
-        self.batt = random.randint(10,12)
-        self.sleep_time = 0 #For comaptibility with v1.1, not really used for anything
+        # this is in preparation for new data stream with battery, rssi and temp
+        self.rssi = np.nan
+        self.temp = np.nan
+        self.batt = np.nan
+        self.sleep_time = np.nan  # For comaptibility with v1.1, not really used for anything
 
 
 
 
 class Packet_v11(object):
-    def __init__(self,q_data):
-        self.packet_type = 0 # 0=data_packet, 1=info_packet
+    def __init__(self, q_data):
+        self.packet_type = 0  # 0=data_packet, 1=info_packet
         self.rx_sequence = 0
         self.x = 0
         self.y = 0
         self.z = 0
-        self.tx_clock_ticks = 0 #Each clock tick is 10 microseconds
+        self.tx_clock_ticks = 0  # Each clock tick is 10 microseconds
+        self.tx_sequence = 0  # Each sequence is 250 or 500 microseconds depending on the sampling rate
         self.rssi = 0
         self.temp = 0
         self.batt = 0
         self.sleep_time = 0
         self.packet_decoder(q_data)
 
-    def calc_rssi_value(self,rssi_val):
-        calc_val = 0
+    def calc_rssi_value(self, rssi_val):
         offset = 0  # this needs to be calculated.
         if rssi_val >= 128:
             calc_val = ((rssi_val - 256)/2.) - offset
@@ -153,15 +151,15 @@ class Packet_v11(object):
             calc_val = (rssi_val/2.) - offset
         return calc_val
 
-    def calc_temp_in_c(self,val):
+    def calc_temp_in_c(self, val):
         if val & 0x8000:
             val = val - 0xFFF0
         val = (val >> 4) * 0.0625
         return val
 
-    def calc_batt(self,val):
-        val = ((val/4096.)*13.2)#+0.5
-        return round(val,2)
+    def calc_batt(self, val):
+        val = ((val/4096.)*13.2)  # +0.5
+        return round(val, 2)
 
     def packet_decoder(self, pkt):
         try:
@@ -173,11 +171,12 @@ class Packet_v11(object):
         if msgtype == data_message_identifier:
             # this is a data msg.
             self.packet_type = 0
-            self.rx_sequence= lst[2]
-            self.x= lst[4]
-            self.y=lst[5]
-            self.tx_clock_ticks=lst[6]
-            self.rssi=self.calc_rssi_value(lst[7])
+            self.rx_sequence = lst[2]
+            self.x = lst[4]
+            self.y = lst[5]
+            # self.tx_clock_ticks = lst[6]
+            self.tx_sequence = lst[6]
+            self.rssi = self.calc_rssi_value(lst[7])
         else:
             self.packet_type = 1
             lst = struct.unpack('=bbLbHHHbbbbbbbb',pkt)
@@ -199,7 +198,8 @@ class FileFlusher(threading.Thread):
         self.stope = threading.Event()
         self.stope.clear()
         self.previous_timestamp = 0
-        self.current_timestamp  = 0
+        self.previous_second = 0
+        self.current_timestamp = 0
         self.sequence = 0
         self.bufferQ = Queue.Queue()
         self.elapsed_tx_sequences = 0
@@ -210,89 +210,94 @@ class FileFlusher(threading.Thread):
         self.tx_status = 0
         self.good_packets_in_a_row = 1
 
-    def first_packet_received(self,packet,timestamp):
+    def first_packet_received(self, packet, timestamp):
         self.current_timestamp = timestamp
         self.last_rollback = timestamp
-        self.sequence = packet.tx_clock_ticks
-        self.previous_timestamp = packet.tx_clock_ticks
+        # self.sequence = packet.tx_clock_ticks
+        # self.previous_timestamp = packet.tx_clock_ticks
+        self.sequence = packet.tx_sequence
+        self.previous_timestamp = packet.tx_sequence
         self.previous_second = int(self.current_timestamp)
-        m = "{}: START SEQUENCE = {}\n".format(datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S"),packet.tx_clock_ticks)
+        # m = "{}: START SEQUENCE = {}\n".format(datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S"),
+        #                                        packet.tx_clock_ticks)
+        m = "{}: START SEQUENCE = {}\n".format(datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S"),
+                                               packet.tx_sequence)
         self.logQ.put(m)
         self.displayQ.put(m)
         print(m)
 
     def get_data_from_q(self):
-        return self.flushq.get(False,0.001)
+        return self.flushq.get(False, 0.001)
 
-    def calculate_packet_timestamp(self,packet):
+    def calculate_packet_timestamp(self, packet):
         reference = time.time()
-        self.elapsed_tx_clock_cycles = packet.tx_clock_ticks - self.sequence
+        # self.elapsed_tx_clock_cycles = packet.tx_clock_ticks - self.sequence
+        self.elapsed_tx_sequences = packet.tx_sequence - self.sequence
         # print(self.elapsed_tx_clock_cycles)
-        self.current_timestamp += self.elapsed_tx_clock_cycles * 10/1000000.0
-        self.sequence = packet.tx_clock_ticks
-        # if ceil(self.elapsed_tx_clock_cycles/30.)>1:
-        #     print("Good packets in a row", self.good_packets_in_a_row)
-        #     print("Missed packets in a row", ceil(self.elapsed_tx_clock_cycles/30.)-1)
-        #     self.good_packets_in_a_row = 1
-        # else:
-        #     self.good_packets_in_a_row +=1
+        # self.current_timestamp += self.elapsed_tx_clock_cycles * 10/1000000.0
+        self.current_timestamp += self.elapsed_tx_sequences * 0.000250
+        # self.sequence = packet.tx_clock_ticks
+        self.sequence = packet.tx_sequence
+
+
+
 
         diff = int(self.current_timestamp-reference)
         if self.current_timestamp > reference:
+            print("JUMPED INTO THE FUTURE AND ADJUSTED TIME")
             self.current_timestamp = reference
 
         if int(self.current_timestamp) - self.previous_second > 0:
             self.previous_timestamp = packet.tx_clock_ticks
             self.previous_second = int(self.current_timestamp)
-            self.counter_changes +=1
-            m = "('Changed', {},{},{},{})\n".format(int(self.current_timestamp),int(reference), diff,self.counter_changes)
+            self.counter_changes += 1
+            m = "('Changed', {},{},{},{})\n".format(int(self.current_timestamp), int(reference), diff,
+                                                    self.counter_changes)
             self.logQ.put(m)
             self.displayQ.put(m)
 
         return self.current_timestamp
 
-    def adjust_drift(self,reference):
-        diff = int(self.current_timestamp-reference)
-        if diff>0:
-            rollback_interval = reference - self.last_rollback
-            self.last_rollback = reference
-            m = ("{}: The Calculated Time of {} is greater than the actual time of {}.  Rolling back in time.  Rollback interval was {} sec\n".format(datetime.utcfromtimestamp(reference).strftime("%Y-%m-%d %H:%M:%S"),self.current_timestamp,reference,rollback_interval))
-            self.logQ.put(m)
-            self.displayQ.put(m)
-            print(m)
-            self.current_timestamp -=1
-            self.counter_changes -=1
-        return diff
+    # def adjust_drift(self,reference):
+    #     diff = int(self.current_timestamp-reference)
+    #     if diff>0:
+    #         rollback_interval = reference - self.last_rollback
+    #         self.last_rollback = reference
+    #         m = ("{}: The Calculated Time of {} is greater than the actual time of {}.  Rolling back in time.  Rollback interval was {} sec\n".format(datetime.utcfromtimestamp(reference).strftime("%Y-%m-%d %H:%M:%S"),self.current_timestamp,reference,rollback_interval))
+    #         self.logQ.put(m)
+    #         self.displayQ.put(m)
+    #         print(m)
+    #         self.current_timestamp -=1
+    #         self.counter_changes -=1
+    #     return diff
 
-    def save_row_to_processing_q(self,laptop_ts,timestamp,packet):
-        row = (self.current_timestamp,packet.tx_clock_ticks,packet.x,packet.y,packet.z,self.sequence,packet.rx_sequence,packet.rssi,packet.temp,packet.batt,self.counter_changes,self.rhino_serial_number)
+    def save_row_to_processing_q(self, packet):
+
+        try:
+            row = (self.current_timestamp, packet.tx_sequence, packet.x, packet.y, packet.z, self.sequence,
+                   packet.rx_sequence, packet.rssi, packet.temp, packet.batt, self.counter_changes,
+                   self.rhino_serial_number)
+        except:  # This is for v1.0 that uses tx_clock ticks instead of sequence number
+            row = (self.current_timestamp, packet.tx_clock_ticks, packet.x, packet.y, packet.z, self.sequence,
+                   packet.rx_sequence, packet.rssi, packet.temp, packet.batt, self.counter_changes,
+                   self.rhino_serial_number)
         self.bufferQ.put(row)
 
     def stop(self):
         self.stope.set()
 
     def run(self):
-    	if rhino_version == 1.1:
+        if rhino_version == 1.1:
             self.run_v11()
-    	else:
-    		self.run_v10()
-
+        else:
+            self.run_v10()
 
     def run_v10(self):
         print("Started File Fluser 1.0")
         self.tx_status = 1 #for comaptibility with version 1.1.  Status is always 1 (on) for v1.0
-        first_ts = time.time()
-        first_seq = 0
-        psec = None
-        counter = 0
-        prev = 0
-        counterchanges = 0
-        tx_restarted = False
-        lst = ""
         while True:
             try:
                 timestamp = time.time()
-                laptop_ts = timestamp
                 q_data = self.get_data_from_q()
 
                 packet = Packet_v10(q_data)
@@ -302,17 +307,17 @@ class FileFlusher(threading.Thread):
                     m = "{}: FIRST PACKET RECEIVED\n".format(datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S"))
                     self.logQ.put(m)
                     self.displayQ.put(m)
-                    self.first_packet_received(packet,timestamp)
-                    self.save_row_to_processing_q(laptop_ts,timestamp,packet)
+                    self.first_packet_received(packet, timestamp)
+                    self.save_row_to_processing_q(packet)
                 else:
                     #if it is a consecutive packet or if we missed any
                     if packet.tx_clock_ticks > self.sequence:
-                        timestamp = self.calculate_packet_timestamp(packet)
-                        self.save_row_to_processing_q(laptop_ts,timestamp,packet)
+                        self.calculate_packet_timestamp(packet)
+                        self.save_row_to_processing_q(packet)
                     elif packet.tx_clock_ticks == self.sequence:
                         print (self.previous_timestamp, packet.tx_clock_ticks)
                         self.previous_timestamp = 0
-                        timestamp = self.calculate_packet_timestamp(packet)
+                        self.calculate_packet_timestamp(packet)
                         m = "{}: DUPLICATED RECORD WILL BE IGNORED\n".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
                         self.logQ.put(m)
                         self.displayQ.put(m)
@@ -320,8 +325,8 @@ class FileFlusher(threading.Thread):
                         m = "{}: ADJUSTED FOR CLOCK ROLLOVER USING FIRST PACKET LOGIC\n".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
                         self.logQ.put(m)
                         self.displayQ.put(m)
-                        self.first_packet_received(packet,timestamp)
-                        self.save_row_to_processing_q(laptop_ts,timestamp,packet)
+                        self.first_packet_received(packet, timestamp)
+                        self.save_row_to_processing_q(packet)
             except Queue.Empty:
                 # Handle empty queue here
                 time.sleep(0.05)
@@ -330,23 +335,14 @@ class FileFlusher(threading.Thread):
 
     def run_v11(self):
         print("Started File Fluser 1.1")
-        first_ts = time.time()
-        first_seq = 0
-        psec = None
-        counter = 0
-        prev = 0
-        counterchanges = 0
-        tx_restarted = False
-        lst = ""
-        self.current_temp = 0
-        self.current_batt = 0
-        self.current_rssi = 0
-        self.current_sleep_time = 0
+        self.current_temp = np.nan
+        self.current_batt = np.nan
+        self.current_rssi = np.nan
+        self.current_sleep_time = np.nan
 
         while True:
             try:
                 timestamp = time.time()
-                laptop_ts = timestamp
                 q_data = self.get_data_from_q()
 
                 packet = Packet_v11(q_data)
@@ -361,17 +357,19 @@ class FileFlusher(threading.Thread):
                         m = "{}: FIRST PACKET RECEIVED\n".format(datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S"))
                         self.logQ.put(m)
                         self.displayQ.put(m)
-                        self.first_packet_received(packet,timestamp)
-                        self.save_row_to_processing_q(laptop_ts,timestamp,packet)
+                        self.first_packet_received(packet, timestamp)
+                        self.save_row_to_processing_q(packet)
                     else:
                         #if it is a consecutive packet or if we missed any
-                        if packet.tx_clock_ticks > self.sequence:
-                            timestamp = self.calculate_packet_timestamp(packet)
-                            self.save_row_to_processing_q(laptop_ts,timestamp,packet)
-                        elif packet.tx_clock_ticks == self.sequence:
-                            print (self.previous_timestamp, packet.tx_clock_ticks)
+                        # if packet.tx_clock_ticks > self.sequence:
+                        if packet.tx_sequence > self.sequence:
+                            self.calculate_packet_timestamp(packet)
+                            self.save_row_to_processing_q(packet)
+                        # elif packet.tx_clock_ticks == self.sequence:
+                        elif packet.tx_sequence == self.sequence:
+                            print (self.previous_timestamp, packet.tx_sequence)
                             self.previous_timestamp = 0
-                            timestamp = self.calculate_packet_timestamp(packet)
+                            self.calculate_packet_timestamp(packet)
                             m = "{}: DUPLICATED RECORD WILL BE IGNORED\n".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
                             self.logQ.put(m)
                             self.displayQ.put(m)
@@ -379,8 +377,8 @@ class FileFlusher(threading.Thread):
                             m = "{}: ADJUSTED FOR CLOCK ROLLOVER USING FIRST PACKET LOGIC\n".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
                             self.logQ.put(m)
                             self.displayQ.put(m)
-                            self.first_packet_received(packet,timestamp)
-                            self.save_row_to_processing_q(laptop_ts,timestamp,packet)
+                            self.first_packet_received(packet, timestamp)
+                            self.save_row_to_processing_q(packet)
                 else:
                     m="{}: INFO MESSAGE RECEIVED\n".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
                     self.logQ.put(m)
@@ -396,7 +394,7 @@ class FileFlusher(threading.Thread):
 
 
 class SerialThread(threading.Thread):
-    def __init__(self, comport,brate,pktlen,flushq,logQ,displayQ):#def __init__(self, comport,brate,pktlen,flushq,secsq,logQ,displayQ):
+    def __init__(self, comport, brate, pktlen, flushq, logQ, displayQ):
         threading.Thread.__init__(self)
         self.cport = serial.Serial(comport, brate, timeout=1.0)
         self.pktlen = pktlen
@@ -410,8 +408,7 @@ class SerialThread(threading.Thread):
         self.tx_status = 0
 
     def start_rx(self):
-        #print("STARTED RX")
-        self.cport.write(bytearray("ready\r\n","utf-8"))
+        self.cport.write(bytearray("ready\r\n", "utf-8"))
 
     def stop_rx(self):
         self.cport.write(bytearray("stop\r\n", "utf-8"))
@@ -438,11 +435,10 @@ class SerialThread(threading.Thread):
 
 
     def run(self):
-
-    	if rhino_version == 1.1:
+        if rhino_version == 1.1:
             self.run_v11()
-    	else:
-    		self.run_v10()
+        else:
+            self.run_v10()
 
 
     def run_v10 (self):
@@ -554,7 +550,7 @@ class CollectionDaemonThread(threading.Thread):
             while True:
                 if not self.bufferQ.empty():
                     # row = (0 =self.current_timestamp,
-                    # 1=packet.tx_clock_ticks,
+                    # 1=packet.tx_clock_ticks or packet.tx_sequence
                     # 2=packet.x,
                     # 3=packet.y,
                     # 4=packet.z,
@@ -565,9 +561,10 @@ class CollectionDaemonThread(threading.Thread):
                     # 9=packet.batt,
                     # 10=self.counter_changes,
                     # 11=self.rhino_serial_number)
-                    row = np.asarray(self.bufferQ.get()[0:-1],dtype=np.float64)#It has to be [0:-1] because the last entry is the rhino serial number and that is a string
+                    row = np.asarray(self.bufferQ.get()[0:-1], dtype=np.float64)#It has to be [0:-1] because the last
+                    # entry is the rhino serial number and that is a string
 
-                    if self.lastSecond != int(row[0]) :
+                    if self.lastSecond != int(row[0]):
                         temp_lastSecond = self.lastSecond
                         self.lastSecond = int(row[0])
 
@@ -578,32 +575,37 @@ class CollectionDaemonThread(threading.Thread):
 
                             if lastFileName != utc_dt.hour:
                                 prefix = utc_dt.strftime('%Y%m%d')+"_RTR"
-                                delta = utc_dt - datetime(year=utc_dt.year,month=utc_dt.month,day=utc_dt.day)
+                                delta = utc_dt - datetime(year=utc_dt.year, month=utc_dt.month, day=utc_dt.day)
                                 elapsed = str(int(delta.total_seconds()))
                                 leading_zeros = ""
                                 if len(elapsed) < 5:
                                     leading_zeros = "0" * (5-len(elapsed))
-                                filename = "{}{}{}_{}.h5".format(prefix,leading_zeros,elapsed,rhino_serial_number)
-                                filename = os.path.join(run_folder_path,filename)
+                                filename = "{}{}{}_{}.h5".format(prefix, leading_zeros, elapsed, rhino_serial_number)
+                                filename = os.path.join(run_folder_path, filename)
                                 lastFileName = utc_dt.hour
                                 first = True
                             h5f = h5py.File(filename, 'a')
 
                             if first:
                                 first = False
-                                h5f,m = config_file_to_attrs(config,h5f)
+                                h5f, m = config_file_to_attrs(config, h5f)
                                 global_config = Config(Metadata(config))
                                 self.displayQ.put(m)
                                 self.logQ.put(m)
-                                sensitivity = np.array([config.getfloat('PLAYBACK', 'x_sensitivity'),config.getfloat('PLAYBACK', 'y_sensitivity'),config.getfloat('PLAYBACK', 'z_sensitivity')],dtype=np.float32)
-                                saveNumpyToFile(h5f,'sensitivity',sensitivity)
-                                axis = np.array([config.getfloat('INSTALLATION', 'sensor_axial_axis'),config.getfloat('INSTALLATION', 'sensor_tangential_axis')],dtype=np.float32)
-                                saveNumpyToFile(h5f,'axis',axis)
+                                sensitivity = np.array([config.getfloat('PLAYBACK', 'x_sensitivity'),
+                                                        config.getfloat('PLAYBACK', 'y_sensitivity'),
+                                                        config.getfloat('PLAYBACK', 'z_sensitivity')],
+                                                       dtype=np.float32)
+                                saveNumpyToFile(h5f, 'sensitivity', sensitivity)
+                                axis = np.array([config.getfloat('INSTALLATION', 'sensor_axial_axis'),
+                                                 config.getfloat('INSTALLATION', 'sensor_tangential_axis')],
+                                                dtype=np.float32)
+                                saveNumpyToFile(h5f, 'axis', axis)
 
 
 
                             # row = (0 =self.current_timestamp,
-                            # 1=packet.tx_clock_ticks,
+                            # 1=packet.tx_clock_ticks or packet.tx_sequence
                             # 2=packet.x,
                             # 3=packet.y,
                             # 4=packet.z,
@@ -614,16 +616,16 @@ class CollectionDaemonThread(threading.Thread):
                             # 9=packet.batt,
                             # 10=self.counter_changes,
                             # 11=self.rhino_serial_number)
-                            ts = np.asarray(self.bufferThisSecond[:,0],dtype=np.float64)
-                            seq = np.asarray(self.bufferThisSecond[:,6],dtype=np.int32)
-                            cticks = np.asarray(self.bufferThisSecond[:,1],dtype=np.int32)
-                            x = np.asarray(self.bufferThisSecond[:,2],dtype=np.uint32)
-                            y = np.asarray(self.bufferThisSecond[:,3],dtype=np.uint32)
-                            z = np.asarray(self.bufferThisSecond[:,4],dtype=np.uint32)
-                            rssi = np.asarray(self.bufferThisSecond[:,7],dtype=np.float32)
-                            temp = np.asarray([self.bufferThisSecond[-1,8],],dtype=np.float32)
-                            batt = np.asarray([self.bufferThisSecond[-1,9],],dtype=np.float32)
-                            counterchanges = np.asarray(self.bufferThisSecond[:,10],dtype=np.int32)[-1]
+                            ts = np.asarray(self.bufferThisSecond[:, 0], dtype=np.float64)
+                            seq = np.asarray(self.bufferThisSecond[:, 6], dtype=np.int32)
+                            cticks = np.asarray(self.bufferThisSecond[:, 1], dtype=np.int32)
+                            x = np.asarray(self.bufferThisSecond[:, 2], dtype=np.uint32)
+                            y = np.asarray(self.bufferThisSecond[:, 3], dtype=np.uint32)
+                            z = np.asarray(self.bufferThisSecond[:, 4], dtype=np.uint32)
+                            rssi = np.asarray(self.bufferThisSecond[:, 7], dtype=np.float32)
+                            temp = np.asarray([self.bufferThisSecond[-1, 8], ], dtype=np.float32)
+                            batt = np.asarray([self.bufferThisSecond[-1, 9], ], dtype=np.float32)
+                            counterchanges = np.asarray(self.bufferThisSecond[:, 10], dtype=np.int32)[-1]
 
                             rssi_avg = np.average(rssi) #Only need the average of RSSI because it's the only value that gets reported on every packet
 
