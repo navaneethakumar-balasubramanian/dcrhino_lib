@@ -83,22 +83,21 @@ def main(args):
 
     #pdb.set_trace()
 
-    seq = np.asarray(hf.get('seq'), dtype=np.int32)
-    tx_sequence = np.asarray(hf.get('cticks'), dtype=np.int32)
-
-
-
-
+    seq = np.asarray(hf.get('seq'), dtype=np.uint32)
+    tx_sequence = np.asarray(hf.get('cticks'), dtype=np.uint32)
 
 
     sequence_diff = np.diff(tx_sequence)
     missed_samples = sequence_diff[sequence_diff > 1]
     plt.hist(missed_samples)
+    plt.title("Distribution of Missed Samples")
+
     plt.show()
 
     missed_samples_indices = np.where(missed_samples > 1)
     good_samples_in_a_row = np.insert(np.diff(missed_samples_indices)-1, 0, missed_samples_indices[0][0])
     plt.hist(good_samples_in_a_row)
+    plt.title("Distribution of good samples in a row")
     plt.show()
 
     # performance_df = pd.DataFrame(columns=["ts", "good", "missed"])

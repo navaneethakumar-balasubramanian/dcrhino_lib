@@ -109,9 +109,9 @@ def main():
         #print (ts,start_time,end_time)
         #pdb.set_trace()
 
-        seq = np.asarray(hf.get('seq'),dtype=np.int32)
+        seq = np.asarray(hf.get('seq'),dtype=np.uint32)
         saveNumpyToFile(output_h5f,'seq',seq)
-        ticks = np.asarray(hf.get('cticks'),dtype=np.int32)
+        ticks = np.asarray(hf.get('cticks'),dtype=np.uint32)
         saveNumpyToFile(output_h5f,'cticks',ticks)
         x = np.asarray(hf.get('x'),dtype=np.uint32)
         saveNumpyToFile(output_h5f,'x',x)

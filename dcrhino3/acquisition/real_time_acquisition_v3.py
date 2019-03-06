@@ -612,8 +612,8 @@ class CollectionDaemonThread(threading.Thread):
                             # 10=self.counter_changes,
                             # 11=self.rhino_serial_number)
                             ts = np.asarray(self.bufferThisSecond[:, 0], dtype=np.float64)
-                            seq = np.asarray(self.bufferThisSecond[:, 6], dtype=np.int32)
-                            cticks = np.asarray(self.bufferThisSecond[:, 1], dtype=np.int32)
+                            seq = np.asarray(self.bufferThisSecond[:, 6], dtype=np.uint32)
+                            cticks = np.asarray(self.bufferThisSecond[:, 1], dtype=np.uint32)
                             x = np.asarray(self.bufferThisSecond[:, 2], dtype=np.uint32)
                             y = np.asarray(self.bufferThisSecond[:, 3], dtype=np.uint32)
                             z = np.asarray(self.bufferThisSecond[:, 4], dtype=np.uint32)
