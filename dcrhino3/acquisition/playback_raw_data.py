@@ -96,7 +96,9 @@ def main(args):
 
     missed_samples_indices = np.where(sequence_diff > 1)
     good_samples_in_a_row = np.diff(missed_samples_indices[0])
-    plt.hist(good_samples_in_a_row,bins=np.arange(100,1000,100))
+    bins = np.hstack(np.arange(1, 100, 10), np.arange(100, 1100, 100))
+    print(bins)
+    plt.hist(good_samples_in_a_row,bins=bins)
     plt.title("Distribution of good samples in a row")
     plt.show()
 
