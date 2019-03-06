@@ -68,6 +68,7 @@ run_start_time = time.time()
 battery_max_voltage = config.getfloat("INSTALLATION","battery_max_voltage")
 battery_lower_limit = config.getfloat("INSTALLATION","battery_min_voltage")
 sampling_rate = config.getfloat("COLLECTION", "output_sampling_rate")
+delta_t = 1.0/sampling_rate
 
 
 local_folder = config.get("DATA_TRANSMISSION","local_folder",DATA_PATH)
@@ -210,11 +211,39 @@ class FileFlusher(threading.Thread):
         self.last_rollback = 0
         self.tx_status = 0
         self.good_packets_in_a_row = 1
+        self.sample_index = 0
+        self.sequence_array = numpy.empty((sampling_rate,))
+        self.timestamp_array = numpy.empty((sampling_rate,))
+        self.timestamp_array = np.nan
 
     def first_packet_received(self, packet, timestamp):
+
+        samples_to_next_trace = int(ceil((int(timestamp) + 1 - timestamp) / delta_t))
+        self.packet_index_in_trace = sampling_rate - samples_to_next_trace - 1
+        self.timestamp_array[self.packet_index_in_trace] = timestamp
+        initial_sequence = packet.tx_sequence - self.packet_index_in_trace
+        self.sequence_array = np.arange(initial_sequence, initial_sequence + sampling_rate)
+        self.timestamp_array = self.sequence_array * delta_t + timestamp
+
+        pdb.set_trace()
+
         self.current_timestamp = timestamp
+
+
+
+
+
+
+
+
+
+
         print(timestamp-int(timestamp))
-        print("number of samples until next second", int(ceil((int(timestamp)+1 - timestamp)/(1./sampling_rate))))
+
+        self.timestamp_array = np.arange(samples_to_next_trace)*delta_t + timestamp
+        np.delete(self.timestamp_array, 0)
+
+        print("number of samples until next second", samples_to_next_trace)
         self.last_rollback = timestamp
         # self.sequence = packet.tx_clock_ticks
         # self.previous_timestamp = packet.tx_clock_ticks
@@ -234,14 +263,18 @@ class FileFlusher(threading.Thread):
 
     def calculate_packet_timestamp(self, packet):
         reference = time.time()
-        delta_t = 1.0/sampling_rate
+
         # self.elapsed_tx_clock_cycles = packet.tx_clock_ticks - self.sequence
         self.elapsed_tx_sequences = packet.tx_sequence - self.sequence
+        self.samples_in_trace += self.elapsed_tx_sequences
         # print(self.elapsed_tx_clock_cycles)
         # self.current_timestamp += self.elapsed_tx_clock_cycles * 10/1000000.0
         self.current_timestamp += self.elapsed_tx_sequences * delta_t
         # self.sequence = packet.tx_clock_ticks
         self.sequence = packet.tx_sequence
+
+        if self.samples_in_trace > sampling_rate:
+            self.samples_in_trace = 1
 
 
 
