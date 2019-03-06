@@ -214,7 +214,7 @@ class FileFlusher(threading.Thread):
     def first_packet_received(self, packet, timestamp):
         self.current_timestamp = timestamp
         print(timestamp)
-        print("number of samples until next second", (int(timestamp)+1 - timestamp)/.000250)
+        print("number of samples until next second", int(ceil((int(timestamp)+1 - timestamp)/.000250)))
         self.last_rollback = timestamp
         # self.sequence = packet.tx_clock_ticks
         # self.previous_timestamp = packet.tx_clock_ticks
