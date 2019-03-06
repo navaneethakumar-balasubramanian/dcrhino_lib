@@ -219,7 +219,7 @@ class FileFlusher(threading.Thread):
     def first_packet_received(self, packet, timestamp):
 
         samples_to_next_trace = int(ceil((int(timestamp) + 1 - timestamp) / delta_t))
-        self.packet_index_in_trace = sampling_rate - samples_to_next_trace - 1
+        self.packet_index_in_trace = int(sampling_rate) - samples_to_next_trace - 1
         self.timestamp_array[self.packet_index_in_trace] = timestamp
         initial_sequence = packet.tx_sequence - self.packet_index_in_trace
         self.sequence_array = np.arange(initial_sequence, initial_sequence + sampling_rate)
