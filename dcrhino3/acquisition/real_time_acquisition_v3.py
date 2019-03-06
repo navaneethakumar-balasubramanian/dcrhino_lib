@@ -217,6 +217,7 @@ class FileFlusher(threading.Thread):
         self.timestamp_array[:] = np.nan
 
     def first_packet_received(self, packet, timestamp):
+        print("t0",timestamp)
         samples_to_next_trace = int(ceil((int(timestamp) + 1 - timestamp) / delta_t))
         self.packet_index_in_trace = int(sampling_rate) - samples_to_next_trace - 1
         self.timestamp_array[self.packet_index_in_trace] = timestamp
@@ -248,7 +249,7 @@ class FileFlusher(threading.Thread):
         self.current_timestamp += self.elapsed_tx_sequences * delta_t
         self.sequence = packet.tx_sequence
 
-        if self.packet_index_in_trace > sampling_rate:
+        if self.packet_index_in_trace >= sampling_rate:
             self.packet_index_in_trace -= sampling_rate
             diff = round(self.current_timestamp - reference, 6)
             if diff > (delta_t*(self.packet_index_in_trace+1)):
