@@ -249,6 +249,8 @@ class FileFlusher(threading.Thread):
         self.current_timestamp += self.elapsed_tx_sequences * delta_t
         self.sequence = packet.tx_sequence
 
+
+
         if self.packet_index_in_trace >= sampling_rate:
             self.packet_index_in_trace -= sampling_rate
             diff = round(self.current_timestamp - reference, 6)
@@ -258,12 +260,16 @@ class FileFlusher(threading.Thread):
                 self.logQ.put(m)
                 self.displayQ.put(m)
                 print(m)
+                self.previous_second = int(self.current_timestamp)
                 self.current_timestamp = reference
             self.counter_changes += 1
             m = "('Changed', {},{},{},{})\n".format(int(self.current_timestamp), int(reference), diff,
                                                     self.counter_changes)
             self.logQ.put(m)
             self.displayQ.put(m)
+
+        if int(current_timestamp) > self.previous_second:
+            print("index", self.packet_index_in_trace)
 
         return self.current_timestamp
 
