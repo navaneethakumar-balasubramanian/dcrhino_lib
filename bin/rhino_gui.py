@@ -36,7 +36,7 @@ logging.basicConfig(filename=os.path.join(LOGS_PATH,"{}_GUI.log".format(timestam
 fname = os.path.join(PATH,"collection_daemon.cfg")
 config = ConfigParser.SafeConfigParser()
 
-debug = False
+debug = True
 
 def load_config_file():
     config.read(fname)
