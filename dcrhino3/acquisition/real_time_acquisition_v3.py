@@ -268,7 +268,7 @@ class FileFlusher(threading.Thread):
             self.logQ.put(m)
             self.displayQ.put(m)
 
-        if int(current_timestamp) > self.previous_second:
+        if int(self.current_timestamp) > self.previous_second:
             print("index", self.packet_index_in_trace)
 
         return self.current_timestamp
