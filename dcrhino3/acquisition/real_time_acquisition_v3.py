@@ -250,10 +250,18 @@ class FileFlusher(threading.Thread):
 
         if self.packet_index_in_trace >= sampling_rate:
             self.packet_index_in_trace -= sampling_rate
-            if self.current_timestamp - reference > delta_t:
+            diff = self.current_timestamp - reference
+            if diff > delta_t:
                 self.current_timestamp = reference
-                print("updated time from", int(self.current_timestamp), (self.current_timestamp-int(self.current_timestamp)))
+                print(diff)
+                print("updated time from", int(self.current_timestamp), (self.current_timestamp-int(
+                    self.current_timestamp)))
                 print("to", int(reference), (reference-int(reference)))
+            self.counter_changes += 1
+            m = "('Changed', {},{},{},{})\n".format(int(self.current_timestamp), int(reference), diff,
+                                                    self.counter_changes)
+            self.logQ.put(m)
+            self.displayQ.put(m)
 
         return self.current_timestamp
 
