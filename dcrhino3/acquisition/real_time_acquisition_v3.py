@@ -250,6 +250,7 @@ class FileFlusher(threading.Thread):
         self.sequence = packet.tx_sequence
 
         if int(self.current_timestamp) > self.previous_second:
+            print(self.current_timestamp,self.previous_second)
             print("index", self.packet_index_in_trace)
 
         if self.packet_index_in_trace >= sampling_rate:
