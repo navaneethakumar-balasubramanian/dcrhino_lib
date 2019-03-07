@@ -252,20 +252,20 @@ class FileFlusher(threading.Thread):
                 self.offset = 0
                 print("reset to", self.packet_index_in_trace)
 
-            diff = round(self.current_timestamp - reference, 6)
-            if diff > (delta_t*(self.packet_index_in_trace+1)):
-                m = "updated time from {}.{} to {}.{}".format(int(self.current_timestamp), (self.current_timestamp-int(
-                    self.current_timestamp)), int(reference), (reference-int(reference)))
+            # diff = round(self.current_timestamp - reference, 6)
+            # if diff > (delta_t*(self.packet_index_in_trace+1)):
+            #     m = "updated time from {}.{} to {}.{}".format(int(self.current_timestamp), (self.current_timestamp-int(
+            #         self.current_timestamp)), int(reference), (reference-int(reference)))
+            #     self.logQ.put(m)
+            #     self.displayQ.put(m)
+            #     print(m)
+            #
+            #     self.current_timestamp = reference
+                self.counter_changes += 1
+                m = "('Changed', {},{},{},{})\n".format(int(self.current_timestamp), int(reference), diff,
+                                                        self.counter_changes)
                 self.logQ.put(m)
                 self.displayQ.put(m)
-                print(m)
-
-                self.current_timestamp = reference
-            self.counter_changes += 1
-            m = "('Changed', {},{},{},{})\n".format(int(self.current_timestamp), int(reference), diff,
-                                                    self.counter_changes)
-            self.logQ.put(m)
-            self.displayQ.put(m)
 
 
 
