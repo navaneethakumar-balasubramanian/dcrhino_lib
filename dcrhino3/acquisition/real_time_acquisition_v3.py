@@ -249,7 +249,7 @@ class FileFlusher(threading.Thread):
                 print(diff, (delta_t*(self.packet_index_in_trace+1)))
                 self.packet_index_in_trace -= (sampling_rate + self.offset)
                 self.offset = 0
-                print("Current T0 {}".format(self.current_timestamp))
+                print("Current T0 {}".format(str(self.current_timestamp)))
 
                 if self.current_timestamp < reference:
                     print("made it jump ahead from {} to {}".format(self.current_timestamp,reference))
