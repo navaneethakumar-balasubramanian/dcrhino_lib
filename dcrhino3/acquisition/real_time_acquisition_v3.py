@@ -243,6 +243,13 @@ class FileFlusher(threading.Thread):
         if self.packet_index_in_trace >= 2005:
             pdb.set_trace()
 
+
+
+
+
+
+
+
         if self.packet_index_in_trace >= sampling_rate:
             if int(self.current_timestamp) < self.previous_second:
                 self.offset +=1
@@ -255,7 +262,7 @@ class FileFlusher(threading.Thread):
                     self.current_timestamp)))
 
                 diff = round(self.current_timestamp - reference, 6)
-                print(diff)
+                print(diff, (delta_t*(self.packet_index_in_trace+1)))
                 if diff > (delta_t*(self.packet_index_in_trace+1)):
                     m = "updated time from {}.{} to {}.{}".format(int(self.current_timestamp), (self.current_timestamp-int(
                         self.current_timestamp)), int(reference), (reference-int(reference)))
