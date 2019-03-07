@@ -15,16 +15,19 @@ from dcrhino3.models.metadata import Metadata
 from dcrhino.process_pipeline.trace_processing import TraceProcessing
 from dcrhino3.models.config import Config
 from dcrhino3.acquisition.config_file_utilities import extract_metadata_from_h5_file
+import scipy as sp
 
 
 def interpolate_data(ideal_timestamps, digitizer_timestamps, data):
-    interp_data = np.interp(ideal_timestamps, digitizer_timestamps, data)
+    # interp_data = np.interp(ideal_timestamps, digitizer_timestamps, data)
+    interp_function = sp.interpolate.interp1d(digitizer_timestamps, data, kind="quadratic", bounds_error=False)
+    interp_data = interp_function(ideal_timestamps)
     return interp_data
 
 
 def main(args):
     #pdb.set_trace()
-    save_raw = False
+    save_raw = True
     save_csv = True
     save_numpy = False
     t0 = datetime.now()
@@ -164,7 +167,8 @@ def main(args):
 
     total_seconds = end_time - start_time
 
-    ideal_timestamps = (np.arange(total_seconds*output_sampling_rate)*1.0/output_sampling_rate)+start_time
+    ideal_timestamps = (np.arange(total_seconds*output_sampling_rate)*1.0/output_sampling_rate)+ts[0]
+    # ideal_timestamps = (np.arange(total_seconds * output_sampling_rate) * 1.0 / output_sampling_rate) + start_time
     index = (ts>=start_time) & (ts<end_time)
     digitizer_timestamps = ts[index]
 
@@ -232,7 +236,7 @@ def main(args):
         d = {cols[0]:ideal_timestamps,cols[1]:datetimes,cols[2]:interp_data[axial_axis_index],cols[3]:interp_data[tangential_axis_index],cols[4]:interp_data[radial_axis_index]}
         output_data = pd.DataFrame(data=d)
         output_data = output_data[cols]
-        csv_path = os.path.join(output_path,original_name+"_resampled_{}.csv".format(output_sampling_rate))
+        csv_path = os.path.join(output_path,original_name+"_quadratic_interpolated_{}.csv".format(output_sampling_rate))
         output_data.to_csv(csv_path,index=False)
 
     t1 = datetime.now()
@@ -286,7 +290,10 @@ def main(args):
     # plt.plot([datetime.utcfromtimestamp(x) for x in digitizer_timestamps],time_filtered_data[file_axis[0]-1],'k')
     # plt.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps],interp_data[file_axis[0]-1],'r')
 
-    axial_plot.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps],interp_data[axial_axis_index],'r')
+    axial_plot.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps],interp_data[axial_axis_index], 'r',
+                    marker="X")
+    axial_plot.plot([datetime.utcfromtimestamp(x) for x in digitizer_timestamps],time_filtered_data[
+        axial_axis_index],'b',marker=".")
     tangential_plot.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps],interp_data[tangential_axis_index],'b')
     radial_plot.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps],interp_data[radial_axis_index],'g')
 
