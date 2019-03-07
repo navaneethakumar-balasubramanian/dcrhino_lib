@@ -34,8 +34,8 @@ if __name__ == '__main__':
     if use_argparse:
         argparser = argparse.ArgumentParser(description="Copyright (c) 2018 DataCloud")
         argparser.add_argument('-f', '--flow-path', help="JSON File Path", required=True)
-        argparser.add_argument('-env', '--env-path', help="ENV CONFIG File Path",
-                               default="env_config.json")
+        argparser.add_argument('-env', '--env-path', help="ENV CONFIG File Path", default="env_config.json")
+        argparser.add_argument('-tid', '--task-id', help="Task ID", default=False)
         argparser.add_argument("h5_path", metavar="path", type=str,
         help="Path to files to be processed; enclose in quotes, accepts * as wildcard for directories or filenames" )
         args = argparser.parse_args()
@@ -61,8 +61,6 @@ if __name__ == '__main__':
 
     seconds_to_process = False
     #seconds_to_process = 10
-
-
 
     output_path = False
 
@@ -91,5 +89,4 @@ if __name__ == '__main__':
                              args=(process_json,ffile,env_config,seconds_to_process))
                 p.start()
                 p.join()
-                process_flow.process_file(process_json, ffile, env_config,
-                                          seconds_to_process=False)#10)
+                #process_flow.process_file(process_json,file,env_config)
