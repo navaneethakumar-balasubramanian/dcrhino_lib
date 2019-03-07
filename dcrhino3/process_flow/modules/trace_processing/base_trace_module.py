@@ -18,6 +18,9 @@ class BaseTraceModule(BaseModule):
         BaseModule.__init__(self, json, output_path)
         self.id = "base_trace_module"
 
+    def process_trace(self,trace):
+        return self.process_trace_data(trace)
+
 
     def process_trace_data(self,trace):
         """

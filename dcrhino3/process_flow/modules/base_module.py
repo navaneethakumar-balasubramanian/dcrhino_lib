@@ -23,6 +23,9 @@ class BaseModule(object):
 
         self.set_data_from_json(json)
 
+    def process_trace(self,trace):
+        return trace
+
 
     def get_transformed_args(self, global_config):
         transformed = dict()

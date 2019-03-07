@@ -54,6 +54,9 @@ class BaseFeatureModule(BaseModule):
         self.id = "base_feature_module"
 
 
+    def process_trace(self,trace):
+        return self.extract_features(trace)
+
     def extract_features(self,trace):
         """
         works with a TraceData() class, typically an entire hole, or

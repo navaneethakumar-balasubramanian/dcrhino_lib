@@ -60,7 +60,7 @@ if __name__ == '__main__':
     h5_files_list = glob2.glob(h5_path)
 
     seconds_to_process = False
-    #seconds_to_process = 10
+    seconds_to_process = 10
 
     output_path = False
 

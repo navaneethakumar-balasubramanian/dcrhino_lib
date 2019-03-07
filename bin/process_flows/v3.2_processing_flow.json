@@ -1,7 +1,6 @@
 {
   "id": "v3.2_processing_flow",
   "output_to_file":true,
-  "trace_processing": {
     "modules": [
       {
         "type": "unfold",
@@ -35,11 +34,7 @@
           "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
           "sampling_rate": "|global_config.sampling_rate|"
         }
-      }
-    ]
-  },
-  "features_extraction": {
-    "modules": [
+      },
       {
         "type": "j0",
         "output_to_file": false,
@@ -92,13 +87,7 @@
                "apply_primary_rotation": true,
                "apply_secondary_rotations": true
                }
-     }
-
-    ],
-    "output_to_file": true
-  },
-  "plotters": {
-    "modules": [
+     },
       {
         "type": "qc_log_v1",
         "output_to_file": true,
@@ -166,13 +155,8 @@
 	  "mult_neg_win": 0.5,
 	  "mult_pos_win": 3.5
         }
-      }
-    ]
-  },
+      },
 
-  "log_processing": {
-    "output_to_file": true,
-    "modules": [
       {
         "type": "binning",
         "output_to_file": false,
@@ -188,6 +172,4 @@
         }
       }
     ]
-  }
-
 }
