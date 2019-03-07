@@ -245,8 +245,9 @@ class FileFlusher(threading.Thread):
                 self.offset +=1
             else:
                 old_index = self.packet_index_in_trace
+                diff = round(self.current_timestamp - reference, 6)
                 if int(self.current_timestamp) > self.previous_second:
-                    diff = round(self.current_timestamp - reference, 6)
+
                     self.packet_index_in_trace -= (sampling_rate + self.offset)
                     self.current_timestamp = reference()
 
