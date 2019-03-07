@@ -247,7 +247,8 @@ class FileFlusher(threading.Thread):
                 diff = round(self.current_timestamp - reference, 6)
                 if int(self.current_timestamp) > self.previous_second:
                     self.packet_index_in_trace -= (sampling_rate + self.offset)
-                    self.current_timestamp = reference
+                    print(repr(self.current_timestamp),repr(reference))
+                    # self.current_timestamp = reference
                     self.offset = 0
                     print("Current T0 {}".format(repr(self.current_timestamp)))
                     self.counter_changes += 1
