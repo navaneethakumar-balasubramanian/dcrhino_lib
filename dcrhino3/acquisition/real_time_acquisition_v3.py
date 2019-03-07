@@ -211,10 +211,7 @@ class FileFlusher(threading.Thread):
         self.last_rollback = 0
         self.tx_status = 0
         self.good_packets_in_a_row = 1
-        self.sample_index = 0
-        self.sequence_array = np.empty((int(sampling_rate)*2,))
-        self.timestamp_array = np.empty((int(sampling_rate)*2,))
-        self.timestamp_array[:] = np.nan
+        self.offset = 0
 
     def first_packet_received(self, packet, timestamp):
         print("t0",int(timestamp),timestamp-int(timestamp))
@@ -246,10 +243,15 @@ class FileFlusher(threading.Thread):
 
         if self.packet_index_in_trace >= sampling_rate:
             print("more samples than SR", self.packet_index_in_trace)
-            self.packet_index_in_trace -= sampling_rate
-            print("reset to", self.packet_index_in_trace)
             print(int(self.current_timestamp), (self.current_timestamp-int(
                     self.current_timestamp)))
+            if int(self.current_timestamp) <= self.previous_second:
+                self.offset +=1
+            else:
+                self.packet_index_in_trace -= (sampling_rate + self.offset)
+                self.offset = 0
+                print("reset to", self.packet_index_in_trace)
+
             diff = round(self.current_timestamp - reference, 6)
             if diff > (delta_t*(self.packet_index_in_trace+1)):
                 m = "updated time from {}.{} to {}.{}".format(int(self.current_timestamp), (self.current_timestamp-int(
