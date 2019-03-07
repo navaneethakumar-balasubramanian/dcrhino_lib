@@ -237,7 +237,6 @@ class FileFlusher(threading.Thread):
         reference = time.time()
         self.elapsed_tx_sequences = packet.tx_sequence - self.sequence
         self.packet_index_in_trace += self.elapsed_tx_sequences
-        self.previous_second = int(self.current_timestamp)
         self.current_timestamp += self.elapsed_tx_sequences * delta_t
         self.sequence = packet.tx_sequence
 
@@ -270,6 +269,7 @@ class FileFlusher(threading.Thread):
                                                         self.counter_changes)
                 self.logQ.put(m)
                 self.displayQ.put(m)
+        self.previous_second = int(self.current_timestamp)
 
 
 
