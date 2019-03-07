@@ -221,7 +221,7 @@ class FileFlusher(threading.Thread):
         self.current_timestamp = timestamp
         self.sequence = packet.tx_sequence
         self.previous_timestamp = packet.tx_sequence
-        self.previous_second = int(self.current_timestamp)
+        # self.previous_second = int(self.current_timestamp)
         # # m = "{}: START SEQUENCE = {}\n".format(datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S"),
         # #                                        packet.tx_clock_ticks)
         m = "{}: START SEQUENCE = {}\n".format(datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S"),
@@ -240,7 +240,7 @@ class FileFlusher(threading.Thread):
         self.current_timestamp += self.elapsed_tx_sequences * delta_t
         self.sequence = packet.tx_sequence
 
-        if self.packet_index_in_trace >= 2100:
+        if self.packet_index_in_trace >= 2005:
             pdb.set_trace()
 
         if self.packet_index_in_trace >= sampling_rate:
