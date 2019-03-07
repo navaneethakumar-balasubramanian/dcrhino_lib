@@ -155,9 +155,9 @@ def main(args):
 
     if save_raw:
         print("Saving Raw Data")
-        cols = ["raw_ts","adc_x","adc_y","adc_z","cal_x","cal_y","cal_z"]
+        cols = ["raw_ts","adc_x","adc_y","adc_z","cal_x","cal_y","cal_z","tx_sequence"]
         d = {cols[0]:ts,cols[1]:np.asarray(hf.get('x'),dtype=np.float32),cols[2]:np.asarray(hf.get('y'),dtype=np.float32),cols[3]:np.asarray(hf.get('z'),dtype=np.float32),
-            cols[4]:x_data,cols[5]:y_data,cols[6]:z_data}
+            cols[4]:x_data,cols[5]:y_data,cols[6]:z_data, cols[7]:tx_sequence}
         output_data = pd.DataFrame(data=d)
         output_data = output_data[cols]
         csv_path = os.path.join(output_path,original_name+"_raw.csv".format(output_sampling_rate))
