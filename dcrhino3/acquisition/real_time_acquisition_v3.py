@@ -241,6 +241,9 @@ class FileFlusher(threading.Thread):
         self.current_timestamp += self.elapsed_tx_sequences * delta_t
         self.sequence = packet.tx_sequence
 
+        if self.packet_index_in_trace >= 2100:
+            pdb.set_trace()
+
         if self.packet_index_in_trace >= sampling_rate:
             print("more samples than SR", self.packet_index_in_trace)
             print(int(self.current_timestamp), (self.current_timestamp-int(
@@ -253,14 +256,14 @@ class FileFlusher(threading.Thread):
                 print("reset to", self.packet_index_in_trace)
 
                 diff = round(self.current_timestamp - reference, 6)
-            # if diff > (delta_t*(self.packet_index_in_trace+1)):
-            #     m = "updated time from {}.{} to {}.{}".format(int(self.current_timestamp), (self.current_timestamp-int(
-            #         self.current_timestamp)), int(reference), (reference-int(reference)))
-            #     self.logQ.put(m)
-            #     self.displayQ.put(m)
-            #     print(m)
-            #
-            #     self.current_timestamp = reference
+                # if diff > (delta_t*(self.packet_index_in_trace+1)):
+                #     m = "updated time from {}.{} to {}.{}".format(int(self.current_timestamp), (self.current_timestamp-int(
+                #         self.current_timestamp)), int(reference), (reference-int(reference)))
+                #     self.logQ.put(m)
+                #     self.displayQ.put(m)
+                #     print(m)
+                #
+                #     self.current_timestamp = reference
                 self.counter_changes += 1
                 m = "('Changed', {},{},{},{})\n".format(int(self.current_timestamp), int(reference), diff,
                                                         self.counter_changes)
