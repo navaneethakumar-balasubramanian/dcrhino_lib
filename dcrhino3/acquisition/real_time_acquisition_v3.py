@@ -244,16 +244,18 @@ class FileFlusher(threading.Thread):
             pdb.set_trace()
 
         if self.packet_index_in_trace >= sampling_rate:
-            print("more samples than SR", self.packet_index_in_trace)
-            print("current",int(self.current_timestamp), (self.current_timestamp-int(
-                    self.current_timestamp)))
-            print("previous",self.previous_second)
+            # print("more samples than SR", self.packet_index_in_trace)
+            # print("current",int(self.current_timestamp), (self.current_timestamp-int(
+            #         self.current_timestamp)))
+            # print("previous",self.previous_second)
             if int(self.current_timestamp) < self.previous_second:
                 self.offset +=1
             else:
                 self.packet_index_in_trace -= (sampling_rate + self.offset)
                 self.offset = 0
                 print("reset to", self.packet_index_in_trace)
+                print("current", int(self.current_timestamp), (self.current_timestamp - int(
+                    self.current_timestamp)))
 
                 diff = round(self.current_timestamp - reference, 6)
                 # if diff > (delta_t*(self.packet_index_in_trace+1)):
