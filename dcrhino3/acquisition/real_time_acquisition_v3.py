@@ -257,19 +257,19 @@ class FileFlusher(threading.Thread):
                 print(self.packet_index_in_trace)
                 diff = round(self.current_timestamp - reference, 6)
                 print(diff, (delta_t*(self.packet_index_in_trace+1)))
-                if diff > (delta_t*(self.packet_index_in_trace+1)):
-                    m = "updated time from {}.{} to {}.{}".format(int(self.current_timestamp), (self.current_timestamp-int(
-                        self.current_timestamp)), int(reference), (reference-int(reference)))
-                    self.logQ.put(m)
-                    self.displayQ.put(m)
-                    print(m)
-                    self.current_timestamp = reference
-                else:
-                    self.packet_index_in_trace -= (sampling_rate + self.offset)
-                    self.offset = 0
-                    print("reset to", self.packet_index_in_trace)
-                    print("current", int(self.current_timestamp), (self.current_timestamp - int(
-                        self.current_timestamp)))
+                # if diff > (delta_t*(self.packet_index_in_trace+1)):
+                #     m = "updated time from {}.{} to {}.{}".format(int(self.current_timestamp), (self.current_timestamp-int(
+                #         self.current_timestamp)), int(reference), (reference-int(reference)))
+                #     self.logQ.put(m)
+                #     self.displayQ.put(m)
+                #     print(m)
+                #     self.current_timestamp = reference
+                # else:
+                self.packet_index_in_trace -= (sampling_rate + self.offset)
+                self.offset = 0
+                print("reset to", self.packet_index_in_trace)
+                print("Current T0", int(self.current_timestamp), (self.current_timestamp - int(
+                    self.current_timestamp)))
                 self.counter_changes += 1
                 m = "('Changed', {},{},{},{})\n".format(int(self.current_timestamp), int(reference), diff,
                                                         self.counter_changes)
