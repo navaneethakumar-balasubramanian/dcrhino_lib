@@ -8,10 +8,13 @@ from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 import pdb
 
+##Tristan Needs
+import sys
+sys.path.append('/home/kkappler/anaconda2/dcrhino_full/dcrhino_lib')
+
 from dcrhino3.feature_extraction.feature_windowing import WindowBoundaries
 from dcrhino3.physics.util import get_expected_multiple_times
 from dcrhino3.plotters.colour_bar_axis_limits import ColourBarAxisLimits
-
 
 
 class QCLogPlotter():
@@ -43,14 +46,14 @@ class QCLogPlotter():
         self.transformed_args = transformed_args
         for component_id in components_to_plot.keys():
             if component_id == 'axial':
-                self.axial = self.prepare_trace_for_heatmap(components_to_plot['axial'])
+                self.axial = self.prepare_trace(components_to_plot['axial'])
             elif component_id == 'tangential':
-                self.tangential = self.prepare_trace_for_heatmap(components_to_plot['tangential'])
+                self.tangential = self.prepare_trace(components_to_plot['tangential'])
             elif component_id == 'radial':
-                self.radial = self.prepare_trace_for_heatmap(components_to_plot['radial'])
+                self.radial = self.prepare_trace(components_to_plot['radial'])
         self.num_traces_per_component, self.num_samples = self.axial.T.shape
 
-    def prepare_trace_for_heatmap(self,component_trace):
+    def prepare_trace(self,component_trace):
         """
         note here the 0.2 is hard-coded but should actually be taken from the
 
@@ -73,13 +76,9 @@ class QCLogPlotter():
         half_way = int(n_samples/2)
         component_trace = component_trace[half_way-samples_back:half_way+samples_fwd,:]
 
-        try:
-            if math.isnan(component_trace.min()) == True and math.isnan(component_trace.min()) == True:
-                return component_trace
-        except ValueError:
-            print("logger.error:  the last time I saw this error it was because the incorrect\
-                         sampling rate was being used")
-            raise Exception
+
+        if math.isnan(component_trace.min()) == True and math.isnan(component_trace.min()) == True:
+            return component_trace
         if component_trace.min() == 0 and component_trace.min() == 0:
             return component_trace
 
@@ -156,7 +155,6 @@ class QCLogPlotter():
         window_boundaries = {}
         for component_id in self.transformed_args.components_to_process:
             window_boundaries[component_id] = None
-        #pdb.set_trace()
         try:
             if self.transformed_args.plot.wavelet_windows_to_show is not None:
                 window_widths = self.transformed_args.window_widths
@@ -174,17 +172,10 @@ class QCLogPlotter():
         #pdb.set_trace()
 
         n = 0
-        #pdb.set_trace()
-        if self.plot_panel_comp.axial_heatmap_plot is True and self.axial is not None:
-#            axial_header_plot = True
-#            try:
-#                axial_header_plot = self.transformed_args.plot.panels.axial_amp_feature_plot
-#            except:
-#                pass
-#            if axial_header_plot:
-            self.axial_feature_plot(ax[n], X, peak_ampl_x, reflection_coefficient,
-                                        axial_RC2,ax_vel_del,noise_threshold,ax_lim)
 
+        if self.plot_panel_comp.axial_heatmap_plot is True and self.axial is not None:
+            self.axial_feature_plot(ax[n], X, peak_ampl_x, reflection_coefficient,
+                                    axial_RC2,ax_vel_del,noise_threshold,ax_lim)
             ax[n+1], heatmap1 = self.plot_hole_as_heatmap(ax[n+1], cbal.v_min_1,
               cbal.v_max_1, X, Y, self.axial, cmap_string, y_tick_locations,
               delay=ax_vel_del,delay_2=ax_vel_2, window_boundaries=window_boundaries['axial'])
@@ -247,7 +238,7 @@ class QCLogPlotter():
             colours['primary'] = 'black'
             colours['multiple_1'] = 'blue'
             colours['multiple_2'] = 'red'
-            #pdb.set_trace()
+            pdb.set_trace()
             for wavelet_id in self.transformed_args.plot.wavelet_windows_to_show:
                 y_values = window_boundaries[wavelet_id]
                 ax.hlines(1000*y_values, X[0], X[-1], color=colours[wavelet_id],linestyle = '-',linewidth = 1.05)

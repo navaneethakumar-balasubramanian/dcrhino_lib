@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pdb
-from plotter_core import RhinoDisplay
+from rhino_display import RhinoDisplay
 
 
 

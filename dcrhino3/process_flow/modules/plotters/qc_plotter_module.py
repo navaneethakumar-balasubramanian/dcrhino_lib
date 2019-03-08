@@ -70,7 +70,6 @@ class QCPlotterModule(BaseModule):
         plot_title = self.get_plot_title(transformed_args, trace,process_flow_id)
 
         noise_threshold = self.get_noise_threshold(transformed_args)
-        print("why is this being calculated if the user does not always want it?")
         mult_pos = self.get_multiples(transformed_args,trace)
         mult_win_label = self.get_multiple_win_label(transformed_args)
         plot_panel_comp = transformed_args.plot.panels
@@ -80,21 +79,16 @@ class QCPlotterModule(BaseModule):
         if transformed_args.plot.peak_ampl_x_col_name in trace.dataframe.columns:
             peak_ampl_x = trace.dataframe[transformed_args.plot.peak_ampl_x_col_name]
         else:
-            peak_ampl_x = np.zeros(len(trace.dataframe))
+            peak_ampl_x = False
         if transformed_args.plot.peak_ampl_y_col_name in trace.dataframe.columns:
             peak_ampl_y = trace.dataframe[transformed_args.plot.peak_ampl_y_col_name]
         else:
-            peak_ampl_y = np.zeros(len(trace.dataframe))
+            peak_ampl_y = False
         if transformed_args.plot.peak_ampl_z_col_name in trace.dataframe.columns:
             peak_ampl_z = trace.dataframe[transformed_args.plot.peak_ampl_z_col_name]
         else:
-            peak_ampl_z = np.zeros(len(trace.dataframe))
-        try:
-            reflection_coefficient = trace.dataframe[transformed_args.plot.reflection_coefficient_col_name]
-        except KeyError:
-            print('TOTAL HACK  - 1 why are we forcing this calculation when \
-                  the user may not want it? 2. why is it not axial_reflection_coefficient?')
-            reflection_coefficient = np.zeros(len(trace.dataframe))
+            peak_ampl_z = False
+        reflection_coefficient = trace.dataframe[transformed_args.plot.reflection_coefficient_col_name]
         #pdb.set_trace()
         if transformed_args.plot.ax_vel_del_col_name:
             ax_vel_del = trace.dataframe[transformed_args.plot.ax_vel_del_col_name].copy()
@@ -108,19 +102,12 @@ class QCPlotterModule(BaseModule):
         if "axial_RC2_col_name" in vars(transformed_args.plot):
             axial_RC2  = trace.dataframe[transformed_args.plot.axial_RC2_col_name]
 
-        try:
-            tangential_reflection_coefficient = trace.dataframe[transformed_args.plot.tangential_RC_col_name]
-        except KeyError:
-            print('HACK!')
-            tangential_reflection_coefficient = reflection_coefficient = np.zeros(len(trace.dataframe))
+        tangential_reflection_coefficient = trace.dataframe[transformed_args.plot.tangential_RC_col_name]
+
         tang_RC2 = False
         if "tangential_RC2_col_name" in vars(transformed_args.plot):
             tang_RC2  = trace.dataframe[transformed_args.plot.tangential_RC2_col_name]
-        try:
-            tang_vel_del = trace.dataframe[transformed_args.plot.tang_vel_del_col_name]
-        except KeyError:
-            print('HACK! ... also , what is a vel_del? is it a velocity or a delay?')
-            tang_vel_del = reflection_coefficient = np.zeros(len(trace.dataframe))
+        tang_vel_del = trace.dataframe[transformed_args.plot.tang_vel_del_col_name]
         tang_vel_2 = False
         if "tang_vel_multiple_2_col_name" in vars(transformed_args.plot):
             tang_vel_2 = trace.dataframe[transformed_args.plot.tang_vel_multiple_2_col_name]
@@ -164,28 +151,22 @@ class QCPlotterModule(BaseModule):
         @TODO: Review why we needed the try/Except loop here ... do we still want it???
         """
         expected_multiple = get_expected_multiple_times(transformed_args, recipe='J1')
+
         try:
-            try:
-                ax_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial-multiple_1']*1000)
-                ax_2_mult =  (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial-multiple_2']*1000)
+            ax_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial-multiple_1']*1000)
+            ax_2_mult =  (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial-multiple_2']*1000)
 
-                tang_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential-multiple_1']*1000)
-                tang_2_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential-multiple_2']*1000)
-            except KeyError:
-                print("logger.warning: we should no longer need this try-except loop!!!!!!")
-                #pdb.set_trace()
-                #raise Exception
-                ax_1_mult = (trace.dataframe.axial_primary_max_time + expected_multiple['axial-multiple_1']*1000)
-                ax_2_mult =  (trace.dataframe.axial_primary_max_time + expected_multiple['axial-multiple_2']*1000)
+            tang_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential-multiple_1']*1000)
+            tang_2_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential-multiple_2']*1000)
+        except KeyError:
+            print("logger.warning: we should no longer need this try-except loop!!!!!!")
+            #pdb.set_trace()
+            #raise Exception
+            ax_1_mult = (trace.dataframe.axial_primary_max_time + expected_multiple['axial-multiple_1']*1000)
+            ax_2_mult =  (trace.dataframe.axial_primary_max_time + expected_multiple['axial-multiple_2']*1000)
 
-                tang_1_mult = (trace.dataframe.tangential_primary_max_time + expected_multiple['tangential-multiple_1']*1000)
-                tang_2_mult = (trace.dataframe.tangential_primary_max_time + expected_multiple['tangential-multiple_2']*1000)
-        except AttributeError:
-            n_traces = len(trace.dataframe)
-            ax_1_mult = np.zeros(n_traces)
-            ax_2_mult = np.zeros(n_traces)
-            tang_1_mult = np.zeros(n_traces)
-            tang_2_mult = np.zeros(n_traces)
+            tang_1_mult = (trace.dataframe.tangential_primary_max_time + expected_multiple['tangential-multiple_1']*1000)
+            tang_2_mult = (trace.dataframe.tangential_primary_max_time + expected_multiple['tangential-multiple_2']*1000)
 
         mult_pos = pd.DataFrame({'ax_1_mult':ax_1_mult, 'ax_2_mult':ax_2_mult, 'tang_1_mult':tang_1_mult, 'tang_2_mult':tang_2_mult})
         return mult_pos
