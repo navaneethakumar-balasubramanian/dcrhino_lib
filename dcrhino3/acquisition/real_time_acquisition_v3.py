@@ -42,7 +42,9 @@ from dcrhino3.models.metadata import Metadata
 from dcrhino3.models.traces.raw_trace import RawTraceData
 from dcrhino3.acquisition.external.seismic_wiggle import seismic_wiggle
 from dcrhino3.process_flow.modules.trace_processing.unfold_autocorrelation import unfold_trace
-from sklearn import preprocessing
+import multiprocessing
+
+
 
 
 config_collection_file_path = os.path.join(PATH,'collection_daemon.cfg')
@@ -741,19 +743,21 @@ def main_run(run=True):
                 logQ.put(m)
                 displayQ.put(m)
                 subpids.append(sub_pid)
-        p = subprocess.Popen(['taskset', '-cp','7', str(pid)], stdout=subprocess.PIPE, stderr=subprocess.PIPE) # 6
+        p = subprocess.Popen(['taskset', '-cp','{}'.format(multiprocessing.cpu_count()-1), str(pid)], stdout=subprocess.PIPE, stderr=subprocess.PIPE) # 6
         out, err = p.communicate()
-        p = subprocess.Popen(['taskset', '-cp','7', str(subpids[0])], stdout=subprocess.PIPE, stderr=subprocess.PIPE) #6
-        out, err = p.communicate()
-        p = subprocess.Popen(['taskset', '-cp','7', str(subpids[1])], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = p.communicate()
-        p = subprocess.Popen(['taskset', '-cp','7', str(subpids[2])], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = p.communicate()
-        p = subprocess.Popen(['taskset', '-cp','7', str(subpids[3])], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = p.communicate()
-        # for index in range(len(subpids)):
-        #     p = subprocess.Popen(['taskset', '-cp','{}'.format(4+index), str(subpids[index]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        #     out, err = p.communicate()
+        # p = subprocess.Popen(['taskset', '-cp','7', str(subpids[0])], stdout=subprocess.PIPE, stderr=subprocess.PIPE) #6
+        # out, err = p.communicate()
+        # p = subprocess.Popen(['taskset', '-cp','7', str(subpids[1])], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # out, err = p.communicate()
+        # p = subprocess.Popen(['taskset', '-cp','7', str(subpids[2])], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # out, err = p.communicate()
+        # p = subprocess.Popen(['taskset', '-cp','7', str(subpids[3])], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # out, err = p.communicate()
+        for index in range(len(subpids)):
+            p = subprocess.Popen(['taskset', '-cp','{}'.format(multiprocessing.cpu_count()-1), str(subpids[index])],
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
+            out, err = p.communicate()
 
 
     else:

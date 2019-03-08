@@ -26,6 +26,7 @@ import subprocess
 import serial
 import logging
 from dcrhino3.models.metadata import Metadata
+import multiprocessing
 
 if not os.path.exists(LOGS_PATH):
     os.makedirs(LOGS_PATH)
@@ -152,9 +153,11 @@ class GUI():
                     self.sensor_stats_process = Popen(['python', os.path.abspath(os.path.join(PATH,sensor_stats))],stderr=self.err)
                 logging.info("Acquisition started in regular mode")
 
-            p = subprocess.Popen(['taskset', '-cp','5', str(self.system_health_process.pid)],
+            p = subprocess.Popen(['taskset', '-cp','{}'.format(multiprocessing.cpu_count()-1),
+                                  str(self.system_health_process.pid)],
                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            p = subprocess.Popen(['taskset', '-cp','6', str(self.sensor_stats_process.pid)], stdout=subprocess.PIPE,
+            p = subprocess.Popen(['taskset', '-cp','{}'.format(multiprocessing.cpu_count()-2),
+                                  str(self.sensor_stats_process.pid)], stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
 
     def acquisition_daemon_stop(self):
