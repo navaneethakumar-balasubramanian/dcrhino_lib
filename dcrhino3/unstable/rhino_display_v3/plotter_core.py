@@ -14,13 +14,27 @@ import numpy as np
 import os
 import pdb
 
-def plotty_mcplotsalot(json_dict):
-    """
-    .. todo:: change json_dict to self. after embedding in plotter
-    """
-    n_panels = len(json_dict.keys())
-    print(n_panels)
-    print('ok, start plttoing')
+
+class RhinoDisplay(object):
+    def __init__(self):
+        self.panels = {}
+        self.json_dict = {}
+
+    def dc_plot_lim(self):
+        """
+        width, height in inches
+        """
+        dc_plot_lim = (24,12)
+        return dc_plot_lim
+
+    def plot(self):
+        """
+        plotty_mcplotsalot(self.dict)
+        """
+        n_panels = len(self.json_dict.keys())
+        fig, ax = plt.subplots(n_panels, sharex=False, figsize=self.dc_plot_lim())
+        print(n_panels)
+        print('ok, start plttoing')
 
 
 def my_function():

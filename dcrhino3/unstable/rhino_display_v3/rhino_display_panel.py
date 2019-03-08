@@ -13,17 +13,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pdb
-from plotter_core import plotty_mcplotsalot
+from plotter_core import RhinoDisplay
 
-class RhinoDisplay(object):
-    def __init__(self):
-        self.panels = {}
-        self.dict = {}
 
-    def plot(self):
-        plotty_mcplotsalot(self.dict)
-
-        pass
 
 
 class RhinoDisplayPanel(object):
@@ -67,7 +59,7 @@ def test_rhino_display():
     rd_dict['4'] = heatmap_2.to_dict()
 
 
-    rhino_display.dict = rd_dict
+    rhino_display.json_dict = rd_dict
     rhino_display.plot()
 
 def main():
