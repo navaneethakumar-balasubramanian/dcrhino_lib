@@ -152,8 +152,10 @@ class GUI():
                     self.sensor_stats_process = Popen(['python', os.path.abspath(os.path.join(PATH,sensor_stats))],stderr=self.err)
                 logging.info("Acquisition started in regular mode")
 
-            p = subprocess.Popen(['taskset', '-cp','2', str(self.system_health_process.pid) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            p = subprocess.Popen(['taskset', '-cp','3', str(self.sensor_stats_process.pid) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p = subprocess.Popen(['taskset', '-cp','5', str(self.system_health_process.pid)],
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p = subprocess.Popen(['taskset', '-cp','6', str(self.sensor_stats_process.pid)], stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
 
     def acquisition_daemon_stop(self):
         if self.acquisition_process != None:

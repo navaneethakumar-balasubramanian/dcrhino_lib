@@ -94,16 +94,19 @@ class H5Helper:
 
 
     def _extract_metadata_from_h5_file(self):
-        config = ConfigParser.ConfigParser()
-        for key, value in self.h5f.attrs.iteritems():
-            # print(key,value)
-            section = key.split("/")[0]
-            param_name = key.split("/")[1]
-            # pdb.set_trace()
-            if config.has_section(section):
-                config.set(section, param_name, value)
-            else:
-                config.add_section(section)
-                config.set(section, param_name, value)
-        m = Metadata(config)
-        return m
+        try:
+            config = ConfigParser.ConfigParser()
+            for key, value in self.h5f.attrs.iteritems():
+                # print(key,value)
+                section = key.split("/")[0]
+                param_name = key.split("/")[1]
+                # pdb.set_trace()
+                if config.has_section(section):
+                    config.set(section, param_name, value)
+                else:
+                    config.add_section(section)
+                    config.set(section, param_name, value)
+            m = Metadata(config)
+            return m
+        except:
+            return None

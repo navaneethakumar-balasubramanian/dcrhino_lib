@@ -43,7 +43,7 @@ def print_h5file_stats(h5):
             print(key,ar)
 
 def main():
-    #pdb.set_trace()
+    pdb.set_trace()
     path = args.input_path
     list = os.listdir(path)
 
@@ -96,8 +96,8 @@ def main():
             print ("New sensitivity: " , sensitivity)
             if hf.get('axis') != None:
                 file_axis = np.asarray([config.getfloat("INSTALLATION","sensor_axial_axis"),config.getfloat("INSTALLATION","sensor_tangential_axis")],dtype=np.int32)
-                saveNumpyToFile(output_h5f,'axis',file_axis)
-            print ("New File_axis : " , file_axis)
+                saveNumpyToFile(output_h5f, 'axis', file_axis)
+            print ("New File_axis : ", file_axis)
             saved_sensitivity = True
 
         #if start_time == 0:
@@ -134,7 +134,7 @@ def main():
         hf.close()
     print("Finished")
     output_h5f.close()
-    #pdb.set_trace()
+    pdb.set_trace()
     min_time = datetime.utcfromtimestamp(int(min_time))
     utc_date = datetime(year=min_time.year,month=min_time.month,day=min_time.day)
     elapsed = min_time - utc_date

@@ -42,6 +42,7 @@ from dcrhino3.models.metadata import Metadata
 from dcrhino3.models.traces.raw_trace import RawTraceData
 from dcrhino3.acquisition.external.seismic_wiggle import seismic_wiggle
 from dcrhino3.process_flow.modules.trace_processing.unfold_autocorrelation import unfold_trace
+from sklearn import preprocessing
 
 
 config_collection_file_path = os.path.join(PATH,'collection_daemon.cfg')
@@ -178,6 +179,7 @@ class Packet_v11(object):
             self.y = lst[5]
             # self.tx_clock_ticks = lst[6]
             self.tx_sequence = lst[6]
+            #self.tx_sequence = lst[2]  # This is only until I update the firmware on my test rhino
             self.rssi = self.calc_rssi_value(lst[7])
         else:
             self.packet_type = 1
@@ -236,8 +238,10 @@ class FileFlusher(threading.Thread):
     def calculate_packet_timestamp(self, packet):
         reference = time.time()
         self.elapsed_tx_sequences = packet.tx_sequence - self.sequence
-        self.packet_index_in_trace += self.elapsed_tx_sequences
-        self.current_timestamp += self.elapsed_tx_sequences * delta_t
+        # self.packet_index_in_trace += self.elapsed_tx_sequences
+        self.packet_index_in_trace += int(round(self.elapsed_tx_sequences/25.))
+        # self.current_timestamp += self.elapsed_tx_sequences * delta_t
+        self.current_timestamp += self.elapsed_tx_sequences * 10./1000000
         self.sequence = packet.tx_sequence
 
         if self.packet_index_in_trace >= sampling_rate:
@@ -247,9 +251,9 @@ class FileFlusher(threading.Thread):
                 if int(self.current_timestamp) > self.previous_second:
                     self.packet_index_in_trace -= (sampling_rate + self.offset)
                     self.offset = 0
-                    print("Current T0 {}".format(repr(self.current_timestamp)))
+                    # print("Current T0 {}".format(repr(self.current_timestamp)))
                     diff = int(self.current_timestamp) - reference
-                    print("difference", diff)
+                    # print("difference", diff)
 
                     self.counter_changes += 1
                     m = "('Changed', {},{},{},{})\n".format(int(self.current_timestamp), int(reference), diff,
@@ -654,9 +658,10 @@ class CollectionDaemonThread(threading.Thread):
                             component_trace_raw_data = {"axial":channel_trace_raw_data[axial_index],"tangential":channel_trace_raw_data[tangential_index],"radial":channel_trace_raw_data[radial_index]}
                             secondless_timestamps = ts - int(ts[0])
 
-                            ideal_timestamps = 1./float(global_config.output_sampling_rate) * np.arange(0,int(global_config.output_sampling_rate)) + int(ts[0])
+                            ideal_timestamps = 1./float(global_config.output_sampling_rate) * np.arange(0,int(global_config.output_sampling_rate)) + ts[0]
 
-                            number_of_samples = int(global_config.autocorrelation_duration * global_config.output_sampling_rate)
+                            number_of_samples = int(global_config.auto_correlation_trace_duration *
+                                                    global_config.output_sampling_rate)
 
 
                             for label in component_labels:
@@ -668,14 +673,16 @@ class CollectionDaemonThread(threading.Thread):
                                                               "{}_auto_correlated".format(label):acorr_data}
 
                             #Send data to the Q so that it can be plotted
-                            self.tracesQ.put({"timestamp":np.asarray([temp_lastSecond,],dtype=np.float64),
-                                            "raw_data":component_trace_raw_data,
-                                            "trace_data":component_trace_dict,
-                                            "rssi":np.asarray([rssi_avg,],dtype=np.float32),
-                                            "temp":temp,
-                                            "batt":batt,
-                                            "counter_changes":counterchanges,
-                                            "filename":filename})
+                            self.tracesQ.put({"timestamp": np.asarray([temp_lastSecond, ], dtype=np.float64),
+                                              "raw_timestamps": ts,
+                                              "ideal_timestamps": ideal_timestamps,
+                                              "raw_data": component_trace_raw_data,
+                                              "trace_data": component_trace_dict,
+                                              "rssi": np.asarray([rssi_avg, ], dtype=np.float32),
+                                              "temp": temp,
+                                              "batt": batt,
+                                              "counter_changes": counterchanges,
+                                              "filename": filename})
 
                         self.bufferThisSecond = list()
 
@@ -734,15 +741,15 @@ def main_run(run=True):
                 logQ.put(m)
                 displayQ.put(m)
                 subpids.append(sub_pid)
-        p = subprocess.Popen(['taskset', '-cp','1', str(pid) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(['taskset', '-cp','7', str(pid)], stdout=subprocess.PIPE, stderr=subprocess.PIPE) # 6
         out, err = p.communicate()
-        p = subprocess.Popen(['taskset', '-cp','1', str(subpids[0]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(['taskset', '-cp','7', str(subpids[0])], stdout=subprocess.PIPE, stderr=subprocess.PIPE) #6
         out, err = p.communicate()
-        p = subprocess.Popen(['taskset', '-cp','1', str(subpids[1]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(['taskset', '-cp','7', str(subpids[1])], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate()
-        p = subprocess.Popen(['taskset', '-cp','1', str(subpids[2]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(['taskset', '-cp','7', str(subpids[2])], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate()
-        p = subprocess.Popen(['taskset', '-cp','1', str(subpids[3]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(['taskset', '-cp','7', str(subpids[3])], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate()
         # for index in range(len(subpids)):
         #     p = subprocess.Popen(['taskset', '-cp','{}'.format(4+index), str(subpids[index]) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -834,10 +841,18 @@ def main_run(run=True):
 
 
             sec_delay = round(now - trace_second,2)
-            plt.suptitle( "Trace Time "+ tracetime.strftime('%H:%M:%S' ) + " plotted at " + datetime.utcfromtimestamp(now).strftime('%H:%M:%S') +  " delay of " + str(sec_delay) )
+            plt.suptitle("Trace Time "+ tracetime.strftime('%H:%M:%S' ) + " plotted at " + datetime.utcfromtimestamp(now).strftime('%H:%M:%S') +  " delay of " + str(sec_delay) )
+
+            signal_plot.plot(trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)],
+                             'black')
 
 
-            signal_plot.plot(trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)],'k')
+            # signal_plot.plot(trace["ideal_timestamps"][0:100:10],normalize_array(trace["trace_data"][
+            #                                                                     component_to_display]["{"
+            #                                                                                     "}_interpolated".format(
+            #     component_to_display)])[0:100:10], 'k', marker="x")
+            # signal_plot.plot(trace["raw_timestamps"][0:100:10], normalize_array(trace["raw_data"][component_to_display])[0:100:10], 'r',
+            #                  marker=".")
 
     	    # if rhino_version == 1.1:
             if second_plot_display in components:
@@ -958,6 +973,12 @@ def write_data_to_h5_files(h5f_path,trace_data,trace):
     df["radial_trace"]=list([trace_data["trace_data"]["radial"]["radial_auto_correlated"],])
     trace.dataframe=df
     trace.realtime_append_to_h5(h5f_path)
+
+# def normalize_array(array):
+#     value = np.max(np.absolute(array))
+#     if value == 0:
+#         value=1
+#     return array/value
 
 
 def calculate_battery_percentage(current_voltage,battery_max_voltage,battery_lower_limit):

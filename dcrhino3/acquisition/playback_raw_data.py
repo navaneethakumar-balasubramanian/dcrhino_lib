@@ -2,33 +2,22 @@ import numpy as np
 import pandas as pd
 import h5py
 import matplotlib.pyplot as plt
-import ConfigParser
-from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
 import os
 import argparse
 import calendar
 import pdb
 import time
 from datetime import datetime
-from scipy.signal import butter, filtfilt
-from dcrhino3.models.metadata import Metadata
 from dcrhino.process_pipeline.trace_processing import TraceProcessing
 from dcrhino3.models.config import Config
 from dcrhino3.acquisition.config_file_utilities import extract_metadata_from_h5_file
+from dcrhino3.helpers.general_helper_functions import init_logging, interpolate_data
 import scipy as sp
-
-
-def interpolate_data(ideal_timestamps, digitizer_timestamps, data):
-    # interp_data = np.interp(ideal_timestamps, digitizer_timestamps, data)
-    interp_function = sp.interpolate.interp1d(digitizer_timestamps, data, kind="quadratic", bounds_error=False)
-    interp_data = interp_function(ideal_timestamps)
-    return interp_data
-
 
 def main(args):
     #pdb.set_trace()
-    save_raw = True
-    save_csv = True
+    save_raw = False
+    save_csv = False
     save_numpy = False
     t0 = datetime.now()
     if args.sampling_rate is None:
@@ -79,7 +68,9 @@ def main(args):
     print(sensitivity)
     print(file_axis)
     if start_time == 0:
-        start_time = int(ts[0])
+        start_time = ts[0]
+    else:
+        start_time = ts[ts>=start_time][0]
 
     if end_time == 0:
         end_time = int(ts[-1])+1
@@ -90,21 +81,21 @@ def main(args):
     tx_sequence = np.asarray(hf.get('cticks'), dtype=np.uint32)
 
 
-    sequence_diff = np.diff(tx_sequence)
-    missed_samples = sequence_diff[sequence_diff > 1]-1
-    fig = plt.figure("DataCloud Rhino Missed Samples", figsize=(10, 5))
-    plt.hist(missed_samples, bins="sqrt")
-    plt.title("Distribution of Missed Samples")
-
-    fig.savefig(fname.replace(".h5","_missed_samples.png"))
-
-    missed_samples_indices = np.where(sequence_diff > 1)
-    good_samples_in_a_row = np.diff(missed_samples_indices[0])
-    fig = plt.figure("DataCloud Rhino Good Samples in a row Samples", figsize=(10, 5))
-    bins = np.arange(5, 1001, 5)
-    plt.hist(good_samples_in_a_row,bins=bins)
-    plt.title("Distribution of good samples in a row")
-    fig.savefig(fname.replace(".h5", "_good_samples_in_a_row.png"))
+    # sequence_diff = np.diff(tx_sequence)
+    # missed_samples = sequence_diff[sequence_diff > 1]-1
+    # fig = plt.figure("DataCloud Rhino Missed Samples", figsize=(10, 5))
+    # plt.hist(missed_samples, bins="sqrt")
+    # plt.title("Distribution of Missed Samples")
+    #
+    # fig.savefig(fname.replace(".h5","_missed_samples.png"))
+    #
+    # missed_samples_indices = np.where(sequence_diff > 1)
+    # good_samples_in_a_row = np.diff(missed_samples_indices[0])
+    # fig = plt.figure("DataCloud Rhino Good Samples in a row Samples", figsize=(10, 5))
+    # bins = np.arange(5, 1001, 5)
+    # plt.hist(good_samples_in_a_row,bins=bins)
+    # plt.title("Distribution of good samples in a row")
+    # fig.savefig(fname.replace(".h5", "_good_samples_in_a_row.png"))
 
     # performance_df = pd.DataFrame(columns=["ts", "good", "missed"])
     # performance_df["ts"] = ts[1:]
@@ -165,9 +156,9 @@ def main(args):
 
     hf.close()
 
-    total_seconds = end_time - start_time
+    total_seconds = end_time - int(start_time)
 
-    ideal_timestamps = (np.arange(total_seconds*output_sampling_rate)*1.0/output_sampling_rate)+ts[0]
+    ideal_timestamps = (np.arange(total_seconds*output_sampling_rate)*1.0/output_sampling_rate)+start_time
     # ideal_timestamps = (np.arange(total_seconds * output_sampling_rate) * 1.0 / output_sampling_rate) + start_time
     index = (ts>=start_time) & (ts<end_time)
     digitizer_timestamps = ts[index]
