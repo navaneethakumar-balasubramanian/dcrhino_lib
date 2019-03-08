@@ -18,10 +18,11 @@ from rhino_display import RhinoDisplay
 from rhino_display import Header, Heatmap
 
 home = os.path.expanduser('~/')
-h5_path = os.path.join(home, '.cache/datacloud/line_creek/acorr/23531_5208_5208.h5')
+#h5_path = os.path.join(home, '.cache/datacloud/line_creek/acorr/23531_5208_5208.h5')
+h5_path = os.path.join(home, '.cache/datacloud/holes/processed/mont_wright/6586_5451_5451/v3_processing_flow/processed.h5')
 
 def test_rhino_display():
-    pdb.set_trace()
+    #pdb.set_trace()
     rhino_display = RhinoDisplay()
     header_1 = Header(h5=h5_path)
     heatmap_1 = Heatmap(h5=h5_path)
@@ -40,7 +41,7 @@ def test_rhino_display():
 
     rhino_display.json_dict = rd_dict
     rhino_display.panels = [header_1, heatmap_1, header_2, heatmap_2]
-    pdb.set_trace()
+    #pdb.set_trace()
     rhino_display.plot()
 
 def main():
