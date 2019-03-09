@@ -172,7 +172,7 @@ while True:
             temp_array[temp_array > temp_bins[-1]] = temp_bins[-1]
             temp_plot.hist(temp_array, bins=temp_bins, edgecolor='black', density=True)#3
 
-            rssi_array = np.asarray(rssi, dtype=np.float32)
+            rssi_array = np.asarray(rssi)
             rssi_array = rssi_array[~np.isnan(rssi_array)]
             rssi_array[rssi_array < rssi_bins[0]] = rssi_bins[0]
             rssi_array[rssi_array > rssi_bins[-1]] = rssi_bins[-1]
