@@ -680,9 +680,9 @@ class CollectionDaemonThread(threading.Thread):
                                               "ideal_timestamps": ideal_timestamps,
                                               "raw_data": component_trace_raw_data,
                                               "trace_data": component_trace_dict,
-                                              "rssi": np.asarray([rssi_avg, ], dtype=np.float32),
-                                              "temp": temp,
-                                              "batt": batt,
+                                              "rssi": rssi_avg, #np.asarray([rssi_avg, ], dtype=np.float32),
+                                              "temp": temp[0],
+                                              "batt": batt[0],
                                               "counter_changes": counterchanges,
                                               "filename": filename})
 

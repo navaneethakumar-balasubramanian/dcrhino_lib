@@ -18,7 +18,7 @@ import calendar,time
 import pdb
 import os,glob
 from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
-from dcrhino3.acquisition.constants import DATA_PATH, LOGS_PATH
+from dcrhino3.acquisition.constants import DATA_PATH, LOGS_PATH,RAM_PATH
 from subprocess import call
 from subprocess import Popen
 import signal
@@ -171,6 +171,7 @@ class GUI():
             self.sensor_stats_process.terminate()
             self.sensor_stats_process = None
             self.stop_rx(True)
+            os.remove(os.path.join(RAM_PATH,"system_health.npy"))
             logging.info("Acquisition stopped")
         # else:
         #     self.stop_rx(False)

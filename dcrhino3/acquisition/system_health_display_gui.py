@@ -12,6 +12,7 @@ import pdb
 from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
 from dcrhino3.acquisition.constants import DATA_PATH, LOGS_PATH
 cfg_fname = os.path.join(PATH,"collection_daemon.cfg")
+import math
 
 
 config = ConfigParser.SafeConfigParser()
@@ -238,9 +239,9 @@ class GUI():
     def do_nothing(self):
         pass
 
-    def colors(self,component,value):
+    def colors(self, component, value):
 
-        if self.tx_status.get() == "TRANSMITTING":
+        if self.tx_status.get() == "TRANSMITTING" and not math.isnan(value):
             greater = True
             method = "normal"
             upper_limit_2 = None
