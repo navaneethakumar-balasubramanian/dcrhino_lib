@@ -533,6 +533,7 @@ class SerialThread(threading.Thread):
                         time.sleep(0.1)
 
             except serial.serialutil.SerialException:
+                print(sys.exc_info())
                 time.sleep(0.5)
                 self.restart_rx()
 
