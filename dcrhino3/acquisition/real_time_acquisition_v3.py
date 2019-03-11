@@ -403,6 +403,9 @@ class SerialThread(threading.Thread):
         self.stope.clear()
         self._corrupt_packets = 0
         self.tx_status = 0
+        self.comport = comport
+        self.brate = brate
+        self.pktlen = pktlen
 
     def start_rx(self):
         self.cport.write(bytearray("ready\r\n", "utf-8"))
@@ -539,7 +542,7 @@ class SerialThread(threading.Thread):
                 print("Serial Thread Exception")
                 print(sys.exc_info())
                 self.cport.close()
-                self.cport = serial.Serial(comport, brate, timeout=1.0)
+                self.cport = serial.Serial(self.comport, self.brate, timeout=1.0)
                 self.restart_rx()
                 pass
 
