@@ -534,15 +534,11 @@ class SerialThread(threading.Thread):
                         self.logQ.put(m)
                         self.displayQ.put(m)
                         time.sleep(0.1)
-
-            except serial.serialutil.SerialException:
-                print(sys.exc_info())
-                time.sleep(0.5)
-                self.restart_rx()
             except:
-                time.sleep(0.1)
+                time.sleep(0.5)
                 print("Serial Thread Exception")
                 print(sys.exc_info())
+                self.restart_rx()
                 pass
 
 class CollectionDaemonThread(threading.Thread):
