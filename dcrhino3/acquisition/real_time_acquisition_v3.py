@@ -541,10 +541,12 @@ class SerialThread(threading.Thread):
                 time.sleep(0.5)
                 print("Serial Thread Exception")
                 print(sys.exc_info())
+                while not os.path.exists(get_rhino_ttyusb()):
+                    time.sleep(1)
+                    print("USB Disconnected")
                 self.cport.close()
                 self.cport = serial.Serial(self.comport, self.brate, timeout=1.0)
                 self.restart_rx()
-                pass
 
 class CollectionDaemonThread(threading.Thread):
     def __init__(self, bufferQ,tracesQ,logQ,displayQ):
