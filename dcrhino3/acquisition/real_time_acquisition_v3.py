@@ -513,7 +513,7 @@ class SerialThread(threading.Thread):
                             datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
                         self.logQ.put(m)
                         self.displayQ.put(m)
-                        self.stop_rx()
+                        self.cport.write(bytearray("stop\r\n", "utf-8"))
                         self.start_rx()
 
                         # temp = self.cport.read(1)
