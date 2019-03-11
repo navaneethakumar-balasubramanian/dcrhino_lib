@@ -39,7 +39,7 @@ batt = []
 
 
 fig1 = plt.figure("DataCloud Rhino Sensor Stats", figsize=(6, 4))
-plt.subplots_adjust(hspace=1.0, wspace=0.5)
+plt.subplots_adjust(hspace=1.0, wspace=0.5, top=0.8, bottom=0)
 plt.pause(.05)
 fig1.canvas.draw()
 previous_tracetime = 0
