@@ -541,7 +541,7 @@ class SerialThread(threading.Thread):
                 time.sleep(0.5)
                 print("Serial Thread Exception")
                 print(sys.exc_info())
-                while not os.path.exists(get_rhino_ttyusb()):
+                while not os.path.exists(rhino_port):
                     time.sleep(1)
                     print("USB Disconnected")
                 self.cport.close()
