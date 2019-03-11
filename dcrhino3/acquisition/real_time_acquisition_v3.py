@@ -538,6 +538,8 @@ class SerialThread(threading.Thread):
                 time.sleep(0.5)
                 print("Serial Thread Exception")
                 print(sys.exc_info())
+                self.cport.close()
+                self.cport = serial.Serial(comport, brate, timeout=1.0)
                 self.restart_rx()
                 pass
 
