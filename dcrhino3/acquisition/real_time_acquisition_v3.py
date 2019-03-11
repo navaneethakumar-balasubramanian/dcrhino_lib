@@ -413,11 +413,11 @@ class SerialThread(threading.Thread):
         self.stope.set()
 
     def restart_rx(self):
-        self.stop_rx()
+        self.cport.write(bytearray("stop\r\n", "utf-8"))
         m = '{}: STOPPING SERIAL PORT\n'.format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
         self.logQ.put(m)
         self.displayQ.put(m)
-        self.cport = serial.Serial(comport, brate, timeout=1.0)
+        self.cport.flush()
         m = '{}: FLUSHING SERIAL BUFFER\n'.format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
         self.logQ.put(m)
         self.displayQ.put(m)
@@ -513,8 +513,7 @@ class SerialThread(threading.Thread):
                             datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
                         self.logQ.put(m)
                         self.displayQ.put(m)
-                        self.cport.write(bytearray("stop\r\n", "utf-8"))
-                        self.start_rx()
+                        self.restart_rx()
 
                         # temp = self.cport.read(1)
                         # while temp != b'\x03':
@@ -533,7 +532,12 @@ class SerialThread(threading.Thread):
                         self.displayQ.put(m)
                         time.sleep(0.1)
 
+            except serial.serialutil.SerialException:
+                time.sleep(0.5)
+                self.restart_rx()
+
             except:
+                time.sleep(0.1)
                 print("Serial Thread Exception")
                 print(sys.exc_info())
                 pass
