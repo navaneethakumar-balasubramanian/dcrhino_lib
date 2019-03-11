@@ -194,6 +194,9 @@ while True:
     except IOError:
         time.sleep(0.1)
         pass
+    except EOFError:
+        time.sleep(0.1)
+        pass
     except:
         time.sleep(0.1)
         pass

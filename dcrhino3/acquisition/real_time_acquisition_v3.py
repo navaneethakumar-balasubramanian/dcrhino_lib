@@ -508,17 +508,25 @@ class SerialThread(threading.Thread):
                             self.logQ.put(m)
                             self.displayQ.put(m)
 
-                        temp = self.cport.read(1)
-                        while temp != b'\x03':
-                            temp = self.cport.read(1)
-                            if len(temp):
-                                pass
-                            else:
-                                time.sleep(0.1)
-                                self.start_rx()
-                                m = '{}: ATEMPTING TO RESTART ACQUISITION\n'.format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-                                self.logQ.put(m)
-                                self.displayQ.put(m)
+                        time.sleep(0.1)
+                        m = '{}: ATEMPTING TO RESTART ACQUISITION\n'.format(
+                            datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+                        self.logQ.put(m)
+                        self.displayQ.put(m)
+                        self.stop_rx()
+                        self.start_rx()
+
+                        # temp = self.cport.read(1)
+                        # while temp != b'\x03':
+                        #     temp = self.cport.read(1)
+                        #     if len(temp):
+                        #         pass
+                        #     else:
+                        #         time.sleep(0.1)
+                        #         self.start_rx()
+                        #         m = '{}: ATEMPTING TO RESTART ACQUISITION\n'.format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+                        #         self.logQ.put(m)
+                        #         self.displayQ.put(m)
                     else:
                         m = '{}: SLEEPING\n'.format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
                         self.logQ.put(m)
@@ -543,8 +551,9 @@ class CollectionDaemonThread(threading.Thread):
     def run (self):
         print("Started Collection Daemon")
         lastFileName = None
-        try:
-            while True:
+
+        while True:
+            try:
                 if not self.bufferQ.empty():
                     # row = (0 =self.current_timestamp,
                     # 1=packet.tx_clock_ticks or packet.tx_sequence
@@ -692,8 +701,8 @@ class CollectionDaemonThread(threading.Thread):
                 else:
                     # print("collection daemon buffer empty")
                     time.sleep(0.05)
-        except:
-            print("Collection Daemon Exception:", sys.exc_info())
+            except:
+                print("Collection Daemon Exception:", sys.exc_info())
 
 
 
