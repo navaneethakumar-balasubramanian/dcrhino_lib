@@ -221,7 +221,7 @@ class FileFlusher(threading.Thread):
         self.offset = 0
 
     def first_packet_received(self, packet, timestamp):
-        print("t0",int(timestamp),timestamp-int(timestamp))
+        print("t0",repr(timestamp),delta_t)
         samples_to_next_trace = int(ceil((int(timestamp) + 1 - timestamp) / delta_t))
         self.packet_index_in_trace = int(sampling_rate) - samples_to_next_trace - 1
         print("Initial Index", self.packet_index_in_trace)
