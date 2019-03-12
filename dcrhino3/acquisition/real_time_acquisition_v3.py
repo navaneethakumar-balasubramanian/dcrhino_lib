@@ -707,7 +707,7 @@ class CollectionDaemonThread(threading.Thread):
 
 
                             initial_trace_timestamp = self.calculate_initial_tracetime_from_timestamp(ts[0])
-                            print("T0", repr(initial_trace_timestamp))
+                            # print("T0", repr(initial_trace_timestamp))
 
 
                             ideal_timestamps = 1./float(global_config.output_sampling_rate) * np.arange(0,
