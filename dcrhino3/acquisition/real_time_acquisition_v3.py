@@ -244,13 +244,13 @@ class FileFlusher(threading.Thread):
     def calculate_packet_timestamp(self, packet):
         reference = time.time()
         self.elapsed_tx_sequences = packet.tx_sequence - self.sequence
-        # self.packet_index_in_trace += self.elapsed_tx_sequences
-        self.packet_index_in_trace += int(round(self.elapsed_tx_sequences/25.))
-        # self.current_timestamp += self.elapsed_tx_sequences * delta_t
-        self.current_timestamp += self.elapsed_tx_sequences * 10./1000000
+        self.packet_index_in_trace += self.elapsed_tx_sequences
+        # self.packet_index_in_trace += int(round(self.elapsed_tx_sequences/25.))
+        self.current_timestamp += self.elapsed_tx_sequences * delta_t
+        # self.current_timestamp += self.elapsed_tx_sequences * 10./1000000
         self.sequence = packet.tx_sequence
         diff = self.current_timestamp - reference
-        if reference - self.last_sync >= 900: # 15 min.  This should be configurable
+        if reference - self.last_sync >= 300:  # 15 min.  This should be configurable
             self.last_sync = reference
             if abs(diff) > delta_t:
                 print("Updated the value from {} to {} with a diff of {}".format(repr(self.current_timestamp),
@@ -722,7 +722,7 @@ class CollectionDaemonThread(threading.Thread):
                                 calibrated_data = raw_trace_data.calibrate_1d_component_array(component_trace_raw_data[label],global_config,global_config.sensor_sensitivity[label])
                                 interp_data = raw_trace_data.interpolate_1d_component_array(ts,calibrated_data,ideal_timestamps)
                                 acorr_data = raw_trace_data.autocorrelate_1d_component_array(interp_data,number_of_samples)
-                                component_trace_dict[label]= {"{}_calibrated".format(label):calibrated_data,
+                                component_trace_dict[label] = {"{}_calibrated".format(label):calibrated_data,
                                                               "{}_interpolated".format(label):interp_data,
                                                               "{}_auto_correlated".format(label):acorr_data}
 
@@ -744,6 +744,11 @@ class CollectionDaemonThread(threading.Thread):
                 else:
                     # print("collection daemon buffer empty")
                     time.sleep(0.05)
+            except AttributeError:
+                print("Collection Daemon Exception:", sys.exc_info())
+                print("WEIRD ERROR TRYING TO APPEND TO BUFFER THIS SECOND AFTER IT WAS CONVERTED TO NUMPY ON CLOCK "
+                      "ROLLOVER")
+                self.bufferThisSecond = list()
             except:
                 print("Collection Daemon Exception:", sys.exc_info())
 
