@@ -249,15 +249,13 @@ class FileFlusher(threading.Thread):
         self.current_timestamp += self.elapsed_tx_sequences * delta_t
         # self.current_timestamp += self.elapsed_tx_sequences * 10./1000000
         self.sequence = packet.tx_sequence
-        diff = self.current_timestamp - reference
-        if reference - self.last_sync >= 300:  # 15 min.  This should be configurable
+        diff = abs(self.current_timestamp - reference)
+        if diff >= 1:
+            print("Last update was {} sec ago".format(reference-self.last_sync))
+            print ("Differece is {} sec, rolling back from {} to {}".format(diff,repr(self.current_timestamp),
+                                                                            repr(reference)))
+            self.current_timestamp = reference
             self.last_sync = reference
-            if abs(diff) > delta_t:
-                print("Updated the value from {} to {} with a diff of {}".format(repr(self.current_timestamp),
-                                                                                 repr(reference),diff))
-                self.current_timestamp = reference
-            else:
-                print("No change", diff)
 
 
         if self.packet_index_in_trace >= sampling_rate:

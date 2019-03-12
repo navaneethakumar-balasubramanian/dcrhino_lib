@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from datetime import datetime
+from datetime import datetime, timedelta
 import ConfigParser
 from dcrhino3.acquisition.constants import RAM_PATH
 from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
@@ -138,7 +138,7 @@ while True:
             # print("list",len(rssi),len(packets),len(temp))
             previous_tracetime = tracetime
             if len(rssi) >= length:
-                initial_tracetime += 3600
+                initial_tracetime += timedelta(seconds=3600)
                 print(len(rssi))
                 rssi.pop(0)
                 packets.pop(0)

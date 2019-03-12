@@ -190,7 +190,7 @@ def find_files(directory, pattern, **kwargs):
 
 def interpolate_data(raw_timestamps,data,ideal_timestamps):
     # print("Interpolating")
-    interp_function = interp1d(raw_timestamps, data, kind="quadratic", bounds_error=False, fill_value=0)
+    interp_function = interp1d(raw_timestamps, data, kind="quadratic", bounds_error=False, fill_value="extrapolate")
     interp_data = interp_function(ideal_timestamps)
     # interp_data = np.interp(ideal_timestamps,data,raw_timestamps)
     return interp_data
