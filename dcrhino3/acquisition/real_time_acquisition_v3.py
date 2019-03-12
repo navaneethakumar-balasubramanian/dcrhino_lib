@@ -44,6 +44,8 @@ from dcrhino3.acquisition.external.seismic_wiggle import seismic_wiggle
 from dcrhino3.process_flow.modules.trace_processing.unfold_autocorrelation import unfold_trace
 import multiprocessing
 
+import pyudev
+
 
 
 
@@ -56,15 +58,16 @@ global_config = Config(config_parser=config)
 
 def get_rhino_ttyusb():
     p = subprocess.check_output('ls -l /dev/serial/by-id/ | grep "usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_" | grep -Po -- "../../\K\w*"',shell=True)
-    return p.replace('\n','')
+    return "/dev/" + p.replace('\n','')
 
 
 rhino_baudrate = config.getint("COLLECTION", "baud_rate")
 rhino_pktlen = config.getint("COLLECTION", "packet_length")
 data_message_identifier = int(config.get("COLLECTION","data_message_identifier",0x64),16)
 info_message_identifier = int(config.get("COLLECTION","info_message_identifier",0x69),16)
-rhino_ttyusb = get_rhino_ttyusb()
-rhino_port = "/dev/"+rhino_ttyusb
+# rhino_ttyusb = get_rhino_ttyusb()
+# rhino_port = "/dev/"+rhino_ttyusb
+rhino_port = get_rhino_ttyusb()
 rhino_serial_number = config.get("INSTALLATION","sensor_serial_number","S9999")
 rhino_version = config.getfloat("COLLECTION","rhino_version")
 run_start_time = time.time()
@@ -212,7 +215,7 @@ class FileFlusher(threading.Thread):
         self.elapsed_tx_clock_cycles = 0
         self.counter_changes = 0
         self.rhino_serial_number = rhino_serial_number
-        self.last_rollback = 0
+        self.last_sync = 0
         self.tx_status = 0
         self.good_packets_in_a_row = 1
         self.offset = 0
@@ -223,6 +226,7 @@ class FileFlusher(threading.Thread):
         self.packet_index_in_trace = int(sampling_rate) - samples_to_next_trace - 1
         print("Initial Index", self.packet_index_in_trace)
         self.current_timestamp = timestamp
+        self.last_sync = timestamp
         self.sequence = packet.tx_sequence
         self.previous_timestamp = packet.tx_sequence
         # self.previous_second = int(self.current_timestamp)
@@ -245,6 +249,16 @@ class FileFlusher(threading.Thread):
         # self.current_timestamp += self.elapsed_tx_sequences * delta_t
         self.current_timestamp += self.elapsed_tx_sequences * 10./1000000
         self.sequence = packet.tx_sequence
+        diff = self.current_timestamp - reference
+        if reference - self.last_sync >= 900: # 15 min.  This should be configurable
+            self.last_sync = reference
+            if abs(diff) > delta_t:
+                print("Updated the value from {} to {} with a diff of {}".format(repr(self.current_timestamp),
+                                                                                 repr(reference),diff))
+                self.current_timestamp = reference
+            else:
+                print("No change", diff)
+
 
         if self.packet_index_in_trace >= sampling_rate:
             if int(self.current_timestamp) < self.previous_second:
@@ -254,7 +268,7 @@ class FileFlusher(threading.Thread):
                     self.packet_index_in_trace -= (sampling_rate + self.offset)
                     self.offset = 0
                     # print("Current T0 {}".format(repr(self.current_timestamp)))
-                    diff = int(self.current_timestamp) - reference
+
                     # print("difference", diff)
 
                     self.counter_changes += 1
@@ -492,6 +506,7 @@ class SerialThread(threading.Thread):
         counter = 0
         while True:
             try:
+                # print("trying")
                 a = self.cport.read(self.pktlen)
                 if len(a)==self.pktlen and a[0] == b'\x02' and a[self.pktlen-1] == b'\x03':
                     counter = 0
@@ -541,12 +556,19 @@ class SerialThread(threading.Thread):
                 time.sleep(0.5)
                 print("Serial Thread Exception")
                 print(sys.exc_info())
-                while not os.path.exists(rhino_port):
-                    time.sleep(1)
-                    print("USB Disconnected")
-                self.cport.close()
-                self.cport = serial.Serial(self.comport, self.brate, timeout=1.0)
-                self.restart_rx()
+                disconected = True
+                context = pyudev.Context()
+                monitor = pyudev.Monitor.from_netlink(context)
+                monitor.filter_by(subsystem='usb')
+                while disconected:
+                    for device in iter(monitor.poll, None):
+                        if device.action == 'add':
+                            print('{} connected'.format(device))
+                            disconected = False
+                            time.sleep(1)
+                            self.cport.close()
+                            self.cport = serial.Serial(get_rhino_ttyusb(), self.brate, timeout=1.0)
+
 
 class CollectionDaemonThread(threading.Thread):
     def __init__(self, bufferQ,tracesQ,logQ,displayQ):
@@ -558,10 +580,14 @@ class CollectionDaemonThread(threading.Thread):
         self.logQ = logQ
         self.displayQ = displayQ
 
+    def calculate_initial_tracetime_from_timestamp(self, timestamp):
+        fraction = timestamp - int(timestamp)
+        offset = int(fraction / delta_t)
+        return timestamp - sampling_rate * offset
+
     def run (self):
         print("Started Collection Daemon")
         lastFileName = None
-
         while True:
             try:
                 if not self.bufferQ.empty():
@@ -679,7 +705,14 @@ class CollectionDaemonThread(threading.Thread):
                             component_trace_raw_data = {"axial":channel_trace_raw_data[axial_index],"tangential":channel_trace_raw_data[tangential_index],"radial":channel_trace_raw_data[radial_index]}
                             secondless_timestamps = ts - int(ts[0])
 
-                            ideal_timestamps = 1./float(global_config.output_sampling_rate) * np.arange(0,int(global_config.output_sampling_rate)) + ts[0]
+
+                            initial_trace_timestamp = self.calculate_initial_tracetime_from_timestamp(ts[0])
+                            print("T0", repr(initial_trace_timestamp))
+
+
+                            ideal_timestamps = 1./float(global_config.output_sampling_rate) * np.arange(0,
+                                                                                                        int(
+                                                                                                            global_config.output_sampling_rate)) + initial_trace_timestamp
 
                             number_of_samples = int(global_config.auto_correlation_trace_duration *
                                                     global_config.output_sampling_rate)

@@ -202,9 +202,9 @@ def main(args):
     #time_filtered_interp_y_data = interpolate_data(ideal_timestamps,digitizer_timestamps,time_filtered_y_raw_data)
     #time_filtered_interp_z_data = interpolate_data(ideal_timestamps,digitizer_timestamps,time_filtered_z_raw_data)
     print("interpolating")
-    interp_data.append(interpolate_data(ideal_timestamps,digitizer_timestamps,time_filtered_data[0]))#X data
-    interp_data.append(interpolate_data(ideal_timestamps,digitizer_timestamps,time_filtered_data[1]))#Y data
-    interp_data.append(interpolate_data(ideal_timestamps,digitizer_timestamps,time_filtered_data[2]))#Z data
+    interp_data.append(interpolate_data(digitizer_timestamps,time_filtered_data[0],ideal_timestamps))#X data
+    interp_data.append(interpolate_data(digitizer_timestamps,time_filtered_data[1],ideal_timestamps))#Y data
+    interp_data.append(interpolate_data(digitizer_timestamps,time_filtered_data[2],ideal_timestamps))#Z data
 
     if save_numpy:
         print("Saving Files")
@@ -283,8 +283,8 @@ def main(args):
 
     axial_plot.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps],interp_data[axial_axis_index], 'r',
                     marker="X")
-    axial_plot.plot([datetime.utcfromtimestamp(x) for x in digitizer_timestamps],time_filtered_data[
-        axial_axis_index],'b',marker=".")
+    # axial_plot.plot([datetime.utcfromtimestamp(x) for x in digitizer_timestamps],time_filtered_data[
+    #     axial_axis_index],'b',marker=".")
     tangential_plot.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps],interp_data[tangential_axis_index],'b')
     radial_plot.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps],interp_data[radial_axis_index],'g')
 
