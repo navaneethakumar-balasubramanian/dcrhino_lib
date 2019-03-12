@@ -39,6 +39,8 @@ logger = init_logging(__name__)
 
 
 class ProcessFlow:
+    """
+    """
     def __init__(self, output_path=""):
         self.id = "process_flow"
 
@@ -93,6 +95,14 @@ class ProcessFlow:
         self.parse_json(process_json)
 
     def parse_json(self, process_json):
+        """
+        Parse env_config.json for info on mine/how to run the process. Use dictionary
+        "process_json" for what to parse in the json. Only get info on necessary 
+        modules.
+        
+        Parameters:
+            process_json (dict): dictionary on output locations & modules to run
+        """
         self.id = process_json['id']
         if 'output_to_file' in process_json.keys():
             self.output_to_file = process_json['output_to_file']
@@ -152,8 +162,19 @@ class ProcessFlow:
         logger.info("Processing files to :" + process_flow_output_path)
         create_folders_if_needed(process_flow_output_path)
         """
-        @Thiago: why are we reassigning name in first line?  do you mean .copy?
-        @var module: process_flow.modules.trace_processing.base
+        Process the trace data. Uses :py:mod:`process_flow.modules.trace_processing.base`
+        
+        .. warning:: Will create folders if it can find them. Will save data heavy
+            files locally. To test, interrupt after a few h5 files have been saved.
+        
+        Parameters:
+            trace_data: data to be processed
+            
+        Returns:
+            processed trace data (other files will be saved to assigned locations
+                and folders will be created if needed)
+            
+        .. todo:: @Thiago: why are we reassigning name in first line?  do you mean .copy?
         """
         output_trace = trace_data
         for module in self.trace_flow:

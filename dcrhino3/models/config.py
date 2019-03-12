@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
-@author: thiago
+Author: thiago
 """
 import json
 import numpy as np
@@ -13,9 +13,14 @@ from dcrhino3.models.metadata import METADATA_HEADER_FORMAT_KEYS, DataType
 
 
 class Config( object ):
+    """
+    """
     def __init__(self, metadata = None, env_config_parser=None, config_parser = None):
         """
-        @TODO: change output_sampling_rate to sampling_rate or all resampled data
+        Configuration file for rhino software. Assigns default constants, calculates
+        other constants, and assigns a json file to be parsed for mine data.
+        
+        .. todo:: change output_sampling_rate to sampling_rate or all resampled data
         """
         # DEFAULT VALUES
         self.mine_name = ''
@@ -96,13 +101,20 @@ class Config( object ):
         return
 
     def component_index(self, component_id):
+        """
+        :func:`get_component_index`
+        """
         return self.get_component_index(component_id)
 
     def get_component_index(self, component_id):
         """
+        Returns integer, representing the index of that component in component_id.
+        
+        Parameters:
+            component_id (str): 'axial', 'tangentia', or 'radial'
 
-        returns type integer
-        ::rparam:: this is the index assocaited with the component label
+        Returns:
+            (int): this is the index assocaited with the component label
         """
 #        rhino_channel_map = get_rhino_channel_map_v2(self.sensor_axial_axis)
 #        component_index = rhino_channel_map[component]
@@ -120,6 +132,12 @@ class Config( object ):
 
     @property
     def components_to_process(self):
+        """ 
+        D
+
+        Returns:
+            list of strings of components to collect/process
+        """
         return self.components_to_collect.split(',')
 
     @property
@@ -134,7 +152,10 @@ class Config( object ):
     @property
     def num_taps_in_decon_filter(self):
         """
-        TODO: confirm type is int returned by get_num_decon_taps()
+        Save number of coefficients in the deconvolution filter, calculated with
+        :func:`_get_num_decon_taps`
+        
+        .. todo:: confirm type is int returned by get_num_decon_taps()
         """
         deconvolution_filter_duration = float(self.deconvolution_filter_duration)
         number_of_taps_in_decon_filter = self._get_num_decon_taps(deconvolution_filter_duration, self.sampling_rate)
@@ -142,6 +163,12 @@ class Config( object ):
 
     @property
     def samples_per_trace(self):
+        """
+        D
+        
+        Returns:
+            (int): number of samples per trace
+        """
 #        if self.trace_length_in_seconds is None:
 #            logger.warning("trace_duration is None - Fix this condition in Global Config")
 #            logger.critical("trace duration should be a float")
@@ -151,13 +178,18 @@ class Config( object ):
     @property
     def n_spiking_decon_filter_taps(self):
         """
-        .. todo::  20190305: this method looks like it should be deprecated, it
-        duplicates _get_num_decon_taps() whcih itself belongs in a separte module (KK)
+        D
+        
+        Returns:
+            (int): number of *spiking* decon filter coefficients (a.k.a. the order)
         """
         return int(self.sampling_rate * self.spiking_decon_filter_duration)
 
     @property
     def ideal_timestamps(self):
+        """
+        Set ideal timestamps of equal interval for our trace length.
+        """
         return np.arange(0,self.output_sampling_rate*self.trace_length_in_seconds)*(1.0/self.output_sampling_rate)
 
     def set_data_from_json(self,data):
@@ -165,15 +197,21 @@ class Config( object ):
             self.__dict__[_key] = data[_key]
 
     def json_string(self):
+        """
+        Store current variables in json string.
+        
+        Returns:
+            (json): JSON string of module variables
+        """
         json_str = json.dumps(vars(self), indent=4)
         return json_str
 
     def _get_num_decon_taps(self,deconvolution_filter_duration,sampling_rate):
         """
-        this no longer belongs in global config; it is a filter property
-        To control the process flow intuitively we work in terms of the filter
-        duration, and sampling rate is already defined.  So the json should
-        accept filter_duration as an argument rather than number of taps.
+        Get number of coefficients needed for the filter.
+        
+        Returns:
+            (int): decon filter length taps
         """
         dt = 1. / sampling_rate
         decon_filter_length_taps = int(deconvolution_filter_duration / dt)
@@ -183,8 +221,14 @@ class Config( object ):
 
     def set_metadata(self, metadata):
         """
-        @chnage 20181212: json.dump does not seem to like datetime objects, so we cast as strings
-        #key_list = [key for key, data_type in METADATA_HEADER_FORMAT_KEYS.items()]
+        Convert datetime objects (in metadata) to strings to facilitate :func:`json_str`
+        
+        Parameters:
+            metadata (dataframe): metadata on the hole/mine/process
+        
+        .. note:: 20181212: json.dump does not seem to like datetime objects, 
+            so we cast as strings
+            #key_list = [key for key, data_type in METADATA_HEADER_FORMAT_KEYS.items()]
         """
         for key, data_type in METADATA_HEADER_FORMAT_KEYS.items():
             try:
@@ -200,9 +244,9 @@ class Config( object ):
     @property
     def n_samples_trimmed_trace(self):
         """
-        .. todo::  this looks like it should be deprecated as well - unless
-        it is used in v2,but the fewer operators we keep around to do the
-        same thing the better.
+        Returns:
+            (int): the total number of samples in the trimmed_trace, calculated
+                by sampling_rate and time ecnompassed.
         """
         sampling_rate = float(self.output_sampling_rate)
         n_samples_back = int(sampling_rate * np.abs(self.min_lag_trimmed_trace))
@@ -211,6 +255,12 @@ class Config( object ):
 
     @property
     def trimmed_trace_duration(self):
+        """
+        Re-assign duration to reflect trimmed trace.
+        
+        Returns:
+            (float): duration of trimmed trace
+        """
         duration = self.max_lag_trimmed_trace - self.min_lag_trimmed_trace
         #duration = np.abs(self.max_lag_trimmed_trace) + np.abs(self.min_lag_trimmed_trace)
         return duration
@@ -218,7 +268,7 @@ class Config( object ):
 
     def set_config_parser( self, config_parser ):
         """
-        can be the env_config_parser here ...
+        Can be the env_config_parser here ...
         """
         for section in config_parser.sections():
             for option in config_parser.options(section):

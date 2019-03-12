@@ -2,24 +2,24 @@
 # -*- coding: utf-8 -*-
 """
 
-@author: natal
+Author: natal
 
-@note 20190123: we have not discussed exactly how we will handle the global_config
-storage.  We know that for a particular trace only one global config can be active
-and since a trace comes from a file, we are planning to reference the global_config
-of a file to the trace.  A modest complication we have discussed is when a file
-has more than one config.  I cannot recall how that is possible but it seems that
-it is believed to be possible (@TODO: discuss this case ... can we eliminate it?
-is it becuase we may swap out a sensor without rebooting rhino?? ... or is this
-because different processing types maybe used for different traces?  Or because a
-single hole could have a reboot where some cfg changes, i.e. sampling rate -- but wouldn't that
-result in a new file uid??)
-In any case, the dataset we get back will be a dataframe indexed by timestamp.
-For each timestamp there are traces but also a column called 'acorr_file_id', this
-is an integer which is basically a uid for the parent file and can be used to call
-the relevant config ... it is equal to 14 in our prelimniary test)
-
-So the global configs should be a dictionary, keyed by 'acorr_file_id',
+.. note:: 20190123: we have not discussed exactly how we will handle the global_config
+    storage.  We know that for a particular trace only one global config can be active
+    and since a trace comes from a file, we are planning to reference the global_config
+    of a file to the trace.  A modest complication we have discussed is when a file
+    has more than one config.  I cannot recall how that is possible but it seems that
+    it is believed to be possible (@TODO: discuss this case ... can we eliminate it?
+    is it becuase we may swap out a sensor without rebooting rhino?? ... or is this
+    because different processing types maybe used for different traces?  Or because a
+    single hole could have a reboot where some cfg changes, i.e. sampling rate -- but wouldn't that
+    result in a new file uid??)
+    In any case, the dataset we get back will be a dataframe indexed by timestamp.
+    For each timestamp there are traces but also a column called 'acorr_file_id', this
+    is an integer which is basically a uid for the parent file and can be used to call
+    the relevant config ... it is equal to 14 in our prelimniary test)
+    
+    So the global configs should be a dictionary, keyed by 'acorr_file_id',
 """
 
 from __future__ import absolute_import, division, print_function
@@ -43,6 +43,19 @@ TRACE_COLUMN_LABELS = ['{}_trace'.format(x) for x in COMPONENT_IDS]
 
 
 class ModuleType(Enum):
+    """
+    Assign integers to different module types.
+    
+        + RAW = 1
+        + INTERPOLATION = 2
+        + AUTOCORRELATION = 3
+        + MWD_MERGE = 4
+        + LEAD_DECON = 5
+        + LAG_DECON = 6
+        + BAND_PASS_FILTER = 7
+        + PHASE_ROTATION = 8
+        + TRIM = 9
+    """    
     RAW = 1
     INTERPOLATION = 2
     AUTOCORRELATION = 3
@@ -75,6 +88,8 @@ class ModuleType(Enum):
 
 
 class TraceData(object):
+    """
+    """
     def __init__(self, **kwargs):
         """
         """
@@ -107,6 +122,7 @@ class TraceData(object):
 
     def apply_module(self,module_type,arguments):
         """
+        Return the applied modules.
         """
         self.applied_modules.append({module_type:arguments})
         #return the index where it was appended
@@ -114,17 +130,20 @@ class TraceData(object):
 
     def load_from_db(self, db_helper, files_ids, min_ts, max_ts):
         """
-        @type db_helper: dcrhino3.helpers.rhino_db_helper.RhinoDBHelper
-        @type files_ids: list (of integers)
-        @type min_ts, max_ts: integer (or float?)
-        @param min_ts, max_ts: start and end timestamps of data set to get from db
+        Load data (selected with file ids and timestamps) from the database.
+        
+        Parameters:
+            db_helper (module): :class:`rhino_db_helper.RhinoDBHelper`
+            files_ids (list): list of integers
+            min_ts (integer (or float?)): start timestamps of data set to get from db
+            max_ts (integer (or float?)): end timestamps of data set to get from db
 
-        @note: the intended use case for this function is to get data from a
-        'observed-blasthole'.  Normally len(files_ids) will equal 1, but we need to
-        consider the case where the hole is in more than one file ...
-        @TODO: push thhe handling of the files_ids, and timestamps back a layer so the
-        user doesn't use this method outside of exceptional circumstances ...
-        i.e. it will be more common to request a blasthole, together with a sensor_id
+        .. note:: the intended use case for this function is to get data from a
+            'observed-blasthole'.  Normally len(files_ids) will equal 1, but we need to
+            consider the case where the hole is in more than one file ...
+        .. todo:: push thhe handling of the files_ids, and timestamps back a layer so the
+            user doesn't use this method outside of exceptional circumstances ...
+            i.e. it will be more common to request a blasthole, together with a sensor_id
         """
         self.dataframe = db_helper.get_autocor_traces_from_files_ids(files_ids,min_ts,max_ts)
         for file_id in files_ids:
@@ -135,6 +154,13 @@ class TraceData(object):
 
 
     def save_to_csv(self,path):
+        """
+        Save dataframe (without trace data) to csv at location specified by "path"
+        
+        Parameters:
+            path (str): where to save csv
+            
+        """
         df = self.copy_without_trace_data()
         first_global_config = self.global_config_by_index(str(int(df['acorr_file_id'].values[0])))
         df['mine_name'] = self.mine_name
@@ -145,19 +171,25 @@ class TraceData(object):
 
     def save_to_h5(self, path):
         """
-        @note: when porting to python3 replace iteritems with items see Keith's answer in
-        https://stackoverflow.com/questions/10458437/what-is-the-difference-between-dict-items-and-dict-iteritems
-        @warning: this requires dtypes to be float, will need to use a mapping of
-        dtypes for df columns ... where will we get this? @Thiago: will this
-        be maintained in database models?
+        Save dataframe (without trace data) to h5 at location specified by "path"
+        
+        Parameters:
+            path (str): where to save h5
+        
+        .. note:: when porting to python3 replace iteritems with items see Keith's answer in
+            https://stackoverflow.com/questions/10458437/what-is-the-difference-between-dict-items-and-dict-iteritems
+        .. warning:: this requires dtypes to be float, will need to use a mapping of
+            dtypes for df columns ... where will we get this? @Thiago: will this
+            be maintained in database models?
 
-        @note 20190122: This needs to handle three forms of 'saving'
-        1. Save the traces (as float32, today they will store as float, will check 32 or 64 later)
-        2. Save any columns from the mwd
-        3. Save the global_config (as json dumps?)
+        .. note:: 20190122: This needs to handle three forms of 'saving':
+            
+            1. Save the traces (as float32, today they will store as float, will check 32 or 64 later)
+            2. Save any columns from the mwd
+            3. Save the global_config (as json dumps?)
 
-        @ToDo: clean up iteration over trace labels to use only the
-        components specified in global_config
+        .. todo:: clean up iteration over trace labels to use only the
+            components specified in global_config
         """
         #df_as_dict = dict(self.dataframe)
         if len(self.dataframe) == 0:
@@ -219,6 +251,16 @@ class TraceData(object):
         return
 
     def realtime_append_to_h5(self,path,file_id='0',global_config=None):
+        """
+        Add to h5 file found at path
+        
+        Parameters:
+            path
+        
+        Other Parameters:
+            file_id = '0'
+            global_config = None
+        """
         all_columns = list(self.dataframe.columns)
         max_shape = (None,)
         dtype = np.uint32
@@ -263,7 +305,7 @@ class TraceData(object):
 
     def load_from_h5(self,path):
         """
-        inverse of save_to_h5; Handle traces, then other columns, then json cfg
+        Inverse of save_to_h5; Handle traces, then other columns, then json cfg
         """
         h5f = h5py.File(path, 'r')
         dict_for_df = {}
@@ -304,6 +346,16 @@ class TraceData(object):
         self.applied_modules.append(module_string)
 
     def add_global_config(self,global_config, file_id):
+        """
+        Add gloabl configs
+        
+        Parameters:
+            global_config (dict): global_config dictionary to add
+            file_id (str): where to add the dictionary
+            
+        Returns:
+            (str): file_id of edited file
+        """
         self._global_configs[file_id] = global_config
         return file_id
 
@@ -314,18 +366,30 @@ class TraceData(object):
         pass
 
     def global_config_by_index(self,index):
+        """
+        Get global configs by index
+        """
         return self._global_configs[str(int(index))]
 
     def component_as_array(self, component_id):
         """
-        returns the data form component as a 2d numpy array with trace index
+        Returns the data form component as a 2d numpy array with trace index
         running along rows (zero-index).  Useful for slicing data and linalg.
+        
+        Parameters:
+            component_id (str): axial/tangential/radial
+            
+        Return:
+            (array): extracted trace, selected by component_id
         """
         column_name = '{}_trace'.format(component_id)
         data_array = np.atleast_2d(list(self.dataframe[column_name]))
         return data_array
 
     def copy_without_trace_data(self):
+        """
+        Copy dataframe (not deep copying!) and return dataframe without trace data.
+        """
         output_df = self.dataframe.copy(deep=False)
         return output_df.drop([c for c in output_df.columns if 'trace' in c], axis=1)
 

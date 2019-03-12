@@ -2,7 +2,7 @@
 """
 Created on Wed Jul 18 18:06:36 2018
 Metadata Header definition for Rhino Unit File structure
-@author: Natal
+Author: Natal
 """
 from __future__ import absolute_import, division, print_function
 from datetime import datetime
@@ -17,6 +17,13 @@ logger = init_logging(__name__)
 #FUNCTIONS
 #==============================================================================
 def StandardString(s):
+    """
+    Parameters:
+        s (str): string to be standardized
+    
+    Returns:
+        (str): cleaned, standardized string with underscores instead of spaces
+    """
     s = str(s).replace("_"," ")
     components = s.split(" ")
     clean_components=[]
@@ -31,6 +38,20 @@ def StandardString(s):
     return string.upper()
 
 def convert_to_meters(value,units):
+    """
+    Converts distances to meters.
+    
+    Parameters:
+        value (float): value to be converted
+        units (int): current units of value represented by an integer
+        
+            + 1 for feet
+            + 2 for inches
+            + 5 for km
+    
+    Returns:
+        (float): converted value rounded to 2 decimal places
+    """
     for m in range(4,6):
         if units == m:
             value = value / (10**(m-2))
@@ -41,6 +62,8 @@ def convert_to_meters(value,units):
     return round(value,2)
 
 class Measurement():
+    """
+    """
     def __init__(self,tuple):
         (value,units) = tuple
         self._value = float(value)
@@ -50,6 +73,9 @@ class Measurement():
         return "{},{}".format(self._value,self._units)
 
     def value_in_meters(self):
+        """
+        See :func:`metadata.convert_to_meters`
+        """
         return convert_to_meters(self._value,self._units)
 
 
@@ -225,7 +251,8 @@ METADATA_HEADER_FORMAT_KEYS = {
 
 
 class Metadata(object):
-
+    """
+    """
     __slots__ = [key for key,value in METADATA_HEADER_FORMAT_KEYS.items()]
 
     def __init__(self,cfg):
@@ -284,6 +311,16 @@ class Metadata(object):
 
 
     def get_sensitivities_dict(self,cfg):
+        """
+        Get sensitivities dictionary for axial, tangential, and radial components.
+        
+        Parameters:
+            cfg (dataframe): to retrieve sensitivity data from
+        
+        Returns:
+            (dict): dictionary with keys component_id (str) and values for respective
+                sensitivities. All component sensitivities are the same unless sensor_type = 2
+        """
         output_dict = dict()
         axial_index = self.sensor_axial_axis - 1
         tangential_index = self.sensor_tangential_axis - 1
@@ -311,16 +348,34 @@ class Metadata(object):
 
 
     def filename(self):
+        """
+        Returns:
+            Unique filename based on date, time, and sensor id number
+        """
         return "{}_{}".format(StandardString(str(self.datetime_data_recorded)),StandardString(self.sensor_serial_number))
 
 
     def field_base_path(self):
+        """
+        Returns:
+            Path to specific field data using a standardized directory structure
+        """
         return os.path.join(self.company,self.mine_name,"field_data",self.rig_id,self.digitizer_serial_number,self.sensor_serial_number).lower()
 
     def level_0_path(self):
+        """
+        Returns:
+            Path from :func:`field_base_path` joined by level_0
+        """   
         return os.path.join(self.field_base_path(),"level_0").lower()
 
     def level_1_path(self):
+        """
+        Distinguishes between piezo and mems sensors in path.
+        
+        Returns:
+            Path from :func:`field_base_path` joined by level_1 and sensor type
+        """
         if self.sensor_accelerometer_type == 8:
             sensor_type = "piezo"
         elif self.sensor_accelerometer_type == 32:
@@ -332,6 +387,12 @@ class Metadata(object):
 
 
     def save(self,filename):
+        """
+        Saves metadata to a file.
+        
+        Parameters:
+            filename (str): file to be saved
+        """
         _str=''
         metafile = open(filename, 'w')
         for key,value in METADATA_HEADER_FORMAT_KEYS.items():
@@ -340,6 +401,12 @@ class Metadata(object):
         metafile.close()
 
     def load(self,path):
+        """
+        Loads csv metafile. Formats using :func:`format_dtype`
+        
+        Parameters:
+            path (str): path to csv metafile
+        """
         with  open(path, 'r') as metafile:
             meta_data = csv.reader(metafile)
             for row in meta_data:
@@ -347,6 +414,15 @@ class Metadata(object):
                 setattr(self,key,value)
 
     def format_dtype(self,row):
+        """
+        Standardized metadata format and variable type.
+        
+        Parameters:
+            row: list with attribute name,value 
+            
+        Returns:
+            atrribute_name,value formatted
+        """
         attribute_name = row[0]
         dtype = METADATA_HEADER_FORMAT_KEYS[attribute_name]
         value = row[1]
@@ -364,6 +440,21 @@ class Metadata(object):
         return attribute_name,value
 
     def metadata_to_dictionary(self):
+        """
+        Creates dictionary of metadata.
+        
+        Returns:
+            (dict): Metadata with the following keys:
+                
+                + drill_id
+                + digitizer_id
+                + orientation
+                + sampling_rate
+                + sensor_distance_to_source_in_meters
+                + sensor_distance_to_shocksub
+                + accelerometer_type
+                + sensor_type       
+        """
         dict = {}
         dict["drill_id"] = self.rig_id
         dict["digitizer_id"] = self.sensor_serial_number

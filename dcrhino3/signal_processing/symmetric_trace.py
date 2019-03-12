@@ -2,7 +2,7 @@
 """
 Created on Mon Feb  4 21:28:04 2019
 
-@author: kkappler
+Author: kkappler
 """
 
 from __future__ import absolute_import, division, print_function
@@ -20,6 +20,8 @@ from dcrhino3.signal_processing.phase_rotation import rotate_phase
 logger = init_logging(__name__)
 
 class SymmetricTrace(object):
+    """
+    """
     def __init__(self, data, sampling_rate, **kwargs):
         #BaseTraceModule.__init__(self, json, output_path)
         #self.id = "lead_channel_deconvolution"
@@ -35,8 +37,10 @@ class SymmetricTrace(object):
 
     def _clone(self, **kwargs):
         """
-        create a new instance of same type.
-
+        Create a new instance of same type.
+        
+        Keyword Arguments:
+            :Duplicate symmetric trace to be copy.deepcopy()
         """
         duplicate_symmetric_trace = copy.deepcopy(self)
         return duplicate_symmetric_trace
@@ -54,6 +58,10 @@ class SymmetricTrace(object):
         return (self.num_observations - 1) // 2
 
     def calculate_time_vector(self):
+        """
+        Calculate the equal step, ideal time vector using "dt" and "num_observations"
+        and shifting x-axis using t0_index.
+        """
         time_vector = self.dt * (np.arange(self.num_observations) - self.t0_index)
         self._time_vector = time_vector
         return
@@ -71,18 +79,25 @@ class SymmetricTrace(object):
 
     def trim_to_num_points_lr(self, n_points):
         """
+        Trim to index with width = 2 * n_points + 1, centered around 
+        center_index.
         """
         self.data = self.data[self.center_index-n_points:self.center_index+n_points + 1]
         self.calculate_time_vector()
 
     def trim_to_indices(self, indices):
         """
+        Trim to specified indices, not necessarily equidistant around center_index
+        like :func:`trim_to_num_points_lr`
         """
         self.data = self.data[indices]
         self._time_vector = self._time_vector[indices]
 
 
     def plot(self):
+        """
+        Plot time_vector vs. data, title, label, and show.
+        """
         plt.plot(self.time_vector, self.data, 'bs');
         plt.title('{} component'.format(self.component_id))
         plt.xlabel('Time (s)')
@@ -90,11 +105,19 @@ class SymmetricTrace(object):
 
     def rotate_recenter_and_trim(self, phi):
         """
-        @note 20140214: Initially this method trimmed the trace.  BUT that could result in
-        different length traces within a blasthole.  Theoretically this is not a
-        problem,but practically it will cause problems if we wanted to use the
-        component_as_array() method of TraceDataframe().  So to work around this
-        I can either use np.roll or zeropad the trace.
+        Use :func:`phase_rotation.rotate_phase` to rotate data by phi degrees. Find 
+        new center index of rotated data, and shift the trimmings to new center
+        index using `Numpy roll. <https://docs.scipy.org/doc/numpy/reference/generated/numpy.roll.html>`_ 
+        Revise data to reflect these changes.
+        
+        Parameters:
+            phi (float): angle, in degrees, to shift data
+        
+        .. note:: 20140214: Initially this method trimmed the trace.  BUT that could result in
+            different length traces within a blasthole.  Theoretically this is not a
+            problem,but practically it will cause problems if we wanted to use the
+            component_as_array() method of TraceDataframe().  So to work around this
+            I can either use np.roll or zeropad the trace.
         """
         rotated_data = rotate_phase(self.data, phi)
         new_center_index = np.argmax(rotated_data)
@@ -111,6 +134,7 @@ class SymmetricTrace(object):
 
 def my_function():
     """
+    Tester function for :func:`SymmetricTrace`
     """
     x = np.arange(11)
     st = SymmetricTrace(data=x, sampling_rate=10.0)
