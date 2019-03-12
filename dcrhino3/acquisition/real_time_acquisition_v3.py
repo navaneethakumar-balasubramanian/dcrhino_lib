@@ -250,7 +250,6 @@ class FileFlusher(threading.Thread):
         # self.current_timestamp += self.elapsed_tx_sequences * 10./1000000
         self.sequence = packet.tx_sequence
         diff = self.current_timestamp - reference
-        print("Difference",repr(diff))
         # if diff >= 1:
         #     print("Last update was {} sec ago".format(reference-self.last_sync))
         #     print ("Differece is {} sec, rolling back from {} to {}".format(diff,repr(self.current_timestamp),
@@ -268,7 +267,7 @@ class FileFlusher(threading.Thread):
                     self.offset = 0
                     # print("Current T0 {}".format(repr(self.current_timestamp)))
 
-                    # print("difference", diff)
+                    print("difference", diff)
 
                     self.counter_changes += 1
                     m = "('Changed', {},{},{},{})\n".format(int(self.current_timestamp), int(reference), diff,
