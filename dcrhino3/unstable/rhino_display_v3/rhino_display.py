@@ -10,11 +10,19 @@ from __future__ import absolute_import, division, print_function
 
 import datetime
 import matplotlib.pyplot as plt
-import numpy as np
-import os
+#import numpy as np
+#import os
 import pdb
 
-from rhino_display_panel import Header, Heatmap
+font_size = 11
+params = {
+        'legend.fontsize': font_size,
+         'axes.labelsize': font_size,
+         'axes.titlesize':font_size,
+         'xtick.labelsize':font_size,
+         'ytick.labelsize':font_size/1.5
+}
+plt.rcParams.update(params)
 
 class RhinoDisplay(object):
     def __init__(self):
@@ -39,7 +47,7 @@ class RhinoDisplay(object):
 
             axx = ax[i_panel]
             panel = self.panels[i_panel]
-            panel._load_dataframe()
+            panel._load_trace_data()
             panel.plot(axx)
 
         print(n_panels)
