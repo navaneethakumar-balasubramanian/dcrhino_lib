@@ -41,9 +41,10 @@ class EnvConfig(object):
             False otherwise
         """
         mine_name = str(mine_name).lower()
+        mine_name = mine_name.replace('"','')
         for mine in self.mines.keys():
             mine = self.mines[mine]
-            if mine_name in mine['name'] or mine_name in mine['alternative_names']:
+            if mine_name == mine['name'] or mine_name in mine['alternative_names']:
                 return mine
         logger.warn("Could not find a config on env.json for " + str(mine_name) + " mine." )
         return False
