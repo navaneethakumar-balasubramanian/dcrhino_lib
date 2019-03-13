@@ -43,10 +43,19 @@ class RawTraceData(TraceData):
         #typical_dt = np.median(np.diff(relative_timestamps))
         integer_trace_sorted_timestamps = np.floor(relative_timestamps / trace_duration).astype(np.int32)
         dtrace_array = np.diff(integer_trace_sorted_timestamps)
-        discontinuity_indices = np.where(dtrace_array > 0)[0]
-        num_traces = len(discontinuity_indices) +1 #maybe off by one
-        timestamp_indices = np.arange(num_traces) * global_config.trace_length_in_seconds
+        missing_trace_flags = np.where(dtrace_array>1)[0]
+        if len(missing_trace_flags) > 0:
+            logger.critical("entire missing traces in this batch")
+            print('identify the integer-counts of the missing\
+                  traces /timestamps')
 
+        discontinuity_indices = np.where(dtrace_array > 0)[0]
+        num_traces = len(discontinuity_indices) + 1 #maybe off by one
+
+        timestamp_indices = np.arange(num_traces) * global_config.trace_length_in_seconds
+        print('here you need to iterate over the missing traces, and\
+              add at each spot, so that the integer counts mentioned above\
+              do not exist in this array')
         reference_array = np.split(np.arange(len(relative_timestamps)), discontinuity_indices+1)
 
         data = np.asarray(h5_helper.data_xyz)

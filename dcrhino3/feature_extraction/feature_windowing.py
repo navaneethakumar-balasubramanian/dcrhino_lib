@@ -35,7 +35,10 @@ class WindowBoundaries(object):
         #window_boundaries_time_dict = self.window_boundaries_time[component_id]
         for window_label in TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION:
             if window_label == 'primary':
-                width = getattr(window_widths, component_id).primary #awkward unpacking
+                try:
+                    width = getattr(window_widths, component_id).primary #awkward unpacking
+                except:
+                    width = window_widths[component_id]['primary']
                 window_bounds = np.array([primary_shift, primary_shift + width])
             elif bool(re.match('multiple', window_label)):
                 n_multiple = int(window_label[-1])
@@ -43,7 +46,10 @@ class WindowBoundaries(object):
                 delay = n_multiple * expected_multiple_periods[component_var]
                 #delay += primary_shift
                 #width = window_widths[component][window_label]
-                width = getattr(getattr(window_widths,component_id),window_label)
+                try:
+                    width = getattr(getattr(window_widths,component_id),window_label)
+                except:
+                    width = window_widths[component_id][window_label]
                 window_bounds = np.array([delay, delay+width])
             elif window_label == 'noise_1':
                 start_of_window = window_boundaries_time_dict['multiple_1'][1]

@@ -13,6 +13,7 @@ from dcrhino3.physics.util import get_expected_multiple_times
 from dcrhino3.plotters.colour_bar_axis_limits import ColourBarAxisLimits
 
 
+
 class QCLogPlotter():
 
     def __init__(self, axial, tangential, radial, depth, plot_title,
@@ -155,6 +156,7 @@ class QCLogPlotter():
         window_boundaries = {}
         for component_id in self.transformed_args.components_to_process:
             window_boundaries[component_id] = None
+        #pdb.set_trace()
         try:
             if self.transformed_args.plot.wavelet_windows_to_show is not None:
                 window_widths = self.transformed_args.window_widths
@@ -172,10 +174,17 @@ class QCLogPlotter():
         #pdb.set_trace()
 
         n = 0
-
+        #pdb.set_trace()
         if self.plot_panel_comp.axial_heatmap_plot is True and self.axial is not None:
+#            axial_header_plot = True
+#            try:
+#                axial_header_plot = self.transformed_args.plot.panels.axial_amp_feature_plot
+#            except:
+#                pass
+#            if axial_header_plot:
             self.axial_feature_plot(ax[n], X, peak_ampl_x, reflection_coefficient,
-                                    axial_RC2,ax_vel_del,noise_threshold,ax_lim)
+                                        axial_RC2,ax_vel_del,noise_threshold,ax_lim)
+
             ax[n+1], heatmap1 = self.plot_hole_as_heatmap(ax[n+1], cbal.v_min_1,
               cbal.v_max_1, X, Y, self.axial, cmap_string, y_tick_locations,
               delay=ax_vel_del,delay_2=ax_vel_2, window_boundaries=window_boundaries['axial'])
