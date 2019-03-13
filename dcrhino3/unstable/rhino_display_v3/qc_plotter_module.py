@@ -80,15 +80,15 @@ class QCPlotterModule(BaseModule):
         if transformed_args.plot.peak_ampl_x_col_name in trace.dataframe.columns:
             peak_ampl_x = trace.dataframe[transformed_args.plot.peak_ampl_x_col_name]
         else:
-            peak_ampl_x = np.zeros(len(trace.dataframe))
+            peak_ampl_x = False
         if transformed_args.plot.peak_ampl_y_col_name in trace.dataframe.columns:
             peak_ampl_y = trace.dataframe[transformed_args.plot.peak_ampl_y_col_name]
         else:
-            peak_ampl_y = np.zeros(len(trace.dataframe))
+            peak_ampl_y = False
         if transformed_args.plot.peak_ampl_z_col_name in trace.dataframe.columns:
             peak_ampl_z = trace.dataframe[transformed_args.plot.peak_ampl_z_col_name]
         else:
-            peak_ampl_z = np.zeros(len(trace.dataframe))
+            peak_ampl_z = False
         try:
             reflection_coefficient = trace.dataframe[transformed_args.plot.reflection_coefficient_col_name]
         except KeyError:
@@ -164,7 +164,6 @@ class QCPlotterModule(BaseModule):
         @TODO: Review why we needed the try/Except loop here ... do we still want it???
         """
         expected_multiple = get_expected_multiple_times(transformed_args, recipe='J1')
-
         try:
             try:
                 ax_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial-multiple_1']*1000)
