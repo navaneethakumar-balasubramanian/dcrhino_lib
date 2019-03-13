@@ -119,7 +119,7 @@ class Curve(object):
 
     def assign_data_values(self, df, x_axis=None):
         try:
-            self.data = df[self.column_label]
+            self.data = np.asarray(df[self.column_label])
         except:
             print('problem accessing data from dataframe in Curve()')
             print('column label = {}'.format(self.column_label))
@@ -129,7 +129,7 @@ class Curve(object):
         if self.x_axis_values is None:
             if self.x_axis_label:
                 try:
-                    self.x_axis_values = df[self.x_axis_label]
+                    self.x_axis_values = np.asarray(df[self.x_axis_label])
                 except:
 
                     self.x_axis_values = np.arange(len(df))
@@ -170,8 +170,9 @@ class Header(RhinoDisplayPanel):
             #pdb.set_trace()
             ax.plot(curve.x_axis_values, curve.data, color=curve.color,
                     label=curve.column_label)
+            ax.set_xlim(curve.x_axis_values[0], curve.x_axis_values[-1])
         ax.legend();
-
+        #ax.set_xlim(curve.x_axis_values[0], curve.x_axis_values[-1])
 
 class Heatmap(RhinoDisplayPanel):
     def __init__(self, **kwargs):

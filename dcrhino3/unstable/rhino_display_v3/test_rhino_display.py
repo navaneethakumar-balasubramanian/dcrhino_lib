@@ -43,10 +43,9 @@ import numpy as np
 import os
 import pdb
 
-from dcrhino3.feature_extraction.feature_windowing import WindowBoundaries
 
 from rhino_display import RhinoDisplay
-from rhino_display_panel import Header, Heatmap, CurveMedley, Curve
+from rhino_display_panel import Header, Heatmap, Curve#CurveMedley,
 
 home = os.path.expanduser('~/')
 h5_path = os.path.join(home, '.cache/datacloud/line_creek/acorr/23531_5208_5208.h5')
@@ -70,20 +69,20 @@ def test_rhino_display():
     header_2 = Header(h5=h5_path)
     heatmap_2 = Heatmap(h5=h5_path, component='tangential')
 
-    rd_dict = {}
-    rd_dict['1'] = header_1.to_dict()
-    rd_dict['2'] = heatmap_1.to_dict()
-    rd_dict['3'] = header_2.to_dict()
-    rd_dict['4'] = heatmap_2.to_dict()
-    rd_dict['1'] = header_1
-    rd_dict['2'] = heatmap_1
-    rd_dict['3'] = header_2
-    rd_dict['4'] = heatmap_2
+#    rd_dict = {}
+#    rd_dict['1'] = header_1.to_dict()
+#    rd_dict['2'] = heatmap_1.to_dict()
+#    rd_dict['3'] = header_2.to_dict()
+#    rd_dict['4'] = heatmap_2.to_dict()
+#    rd_dict['1'] = header_1
+#    rd_dict['2'] = heatmap_1
+#    rd_dict['3'] = header_2
+#    rd_dict['4'] = heatmap_2
 
-    rhino_display.json_dict = rd_dict
+#    rhino_display.json_dict = rd_dict
     rhino_display.panels = [header_1, heatmap_1, header_2, heatmap_2]
     rhino_display.panels = [header_1, heatmap_1, heatmap_2]
-    #pdb.set_trace()
+    pdb.set_trace()
     rhino_display.plot()
 
 def main():
