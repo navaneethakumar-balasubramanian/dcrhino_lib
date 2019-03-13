@@ -219,7 +219,8 @@ METADATA_HEADER_FORMAT_KEYS = {
         'autocorrelation_duration':DataType.FLOAT,
         'battery_max_voltage':DataType.FLOAT,
         'battery_min_voltage':DataType.FLOAT,
-        'sensor_sensitivity':DataType.DICTIONARY
+        'sensor_sensitivity':DataType.DICTIONARY,
+        'auto_correlation_trace_duration':DataType.FLOAT
         }
 
 

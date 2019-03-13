@@ -286,7 +286,10 @@ class TraceData(object):
             data = h5f.get(key)
             dict_for_df[key] = np.asarray(data)
         df = pd.DataFrame(dict_for_df)
+        if 'acorr_file_id' in df.columns:
+            df['acorr_file_id'] = df['acorr_file_id'].astype('category')
         self.dataframe = df
+
 
         #<config>
         unicode_string = h5f.attrs['global_config_jsons']
