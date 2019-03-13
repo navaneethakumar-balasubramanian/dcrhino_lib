@@ -267,7 +267,7 @@ class FileFlusher(threading.Thread):
                     self.offset = 0
                     # print("Current T0 {}".format(repr(self.current_timestamp)))
 
-                    print("difference", diff)
+                    # print("difference", diff)
 
                     self.counter_changes += 1
                     m = "('Changed', {},{},{},{})\n".format(int(self.current_timestamp), int(reference), diff,
