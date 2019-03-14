@@ -47,6 +47,8 @@ def generate_cache_acorr(mine_name):
         #pdb.set_trace()
     
         for line in matches.itertuples():
+            if int(line.hole_name) != 147388 :
+                continue
     
             h5_filename = str(line.bench_name) + "_" + str(line.pattern_name) + "_" + str(line.hole_name) + "_" + str(line.hole_id)+"_"+str(line.sensor_id)+"_"+str(line.digitizer_id) + ".h5"
 
@@ -56,9 +58,9 @@ def generate_cache_acorr(mine_name):
             acor_trace = TraceData()
     
             if os.path.exists(h5_path) and os.path.isfile(h5_path):
-                acor_trace.load_from_h5(h5_path)
+                #acor_trace.load_from_h5(h5_path)
                 #pdb.set_trace()
-                print ("loaded " + str(h5_path))
+                logger.info("Already have this file :" + h5_path)
             else:
                 print (line.bench_name,line.pattern_name,line.hole_name,line.hole_id)
                 hole_mwd = mwd_helper.get_hole_mwd_from_mine_mwd(mwd_df, line.bench_name,
