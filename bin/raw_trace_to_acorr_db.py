@@ -42,6 +42,10 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
         l1h5_dataframe = l1h5_dataframe[~l1h5_dataframe['timestamp'].isin(dupes)]
         logger.warning("PREVENTING DUPLICATES TIMESTAMPS ON THIS SENSOR_ID:" + global_config.sensor_serial_number + " FILE_ID:" +h5_file_path)
 
+    if l1h5_dataframe.shape[0] == 0:
+        logger.warning("IGNORED THIS FILE")
+        return
+    
     file_id = db_helper.get_file_id_from_file_path(h5_file_path)
 
     if file_id is False:

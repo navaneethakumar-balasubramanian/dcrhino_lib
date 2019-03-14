@@ -11,6 +11,8 @@ import pdb
 from dcrhino3.feature_extraction.feature_windowing import WindowBoundaries
 from dcrhino3.physics.util import get_expected_multiple_times
 from dcrhino3.plotters.colour_bar_axis_limits import ColourBarAxisLimits
+from supporting_heatmap_plotter_v3x import prepare_trace_for_heatmap
+
 
 
 class QCLogPlotter():
@@ -42,16 +44,17 @@ class QCLogPlotter():
         self.transformed_args = transformed_args
         for component_id in components_to_plot.keys():
             if component_id == 'axial':
-                self.axial = self.prepare_trace_for_heatmap(components_to_plot['axial'])
+                self.axial = self.prepare_trace(components_to_plot['axial'])
             elif component_id == 'tangential':
-                self.tangential = self.prepare_trace_for_heatmap(components_to_plot['tangential'])
+                self.tangential = self.prepare_trace(components_to_plot['tangential'])
             elif component_id == 'radial':
-                self.radial = self.prepare_trace_for_heatmap(components_to_plot['radial'])
+                self.radial = self.prepare_trace(components_to_plot['radial'])
         self.num_traces_per_component, self.num_samples = self.axial.T.shape
 
     def prepare_trace_for_heatmap(self,component_trace):
         """
         note here the 0.2 is hard-coded but should actually be taken from the
+
 
 
         """
@@ -72,13 +75,9 @@ class QCLogPlotter():
         half_way = int(n_samples/2)
         component_trace = component_trace[half_way-samples_back:half_way+samples_fwd,:]
 
-        try:
-            if math.isnan(component_trace.min()) == True and math.isnan(component_trace.min()) == True:
-                return component_trace
-        except ValueError:
-            print("logger.error:  the last time I saw this error it was because the incorrect\
-                         sampling rate was being used")
-            raise Exception
+
+        if math.isnan(component_trace.min()) == True and math.isnan(component_trace.min()) == True:
+            return component_trace
         if component_trace.min() == 0 and component_trace.min() == 0:
             return component_trace
 
@@ -238,7 +237,7 @@ class QCLogPlotter():
             colours['primary'] = 'black'
             colours['multiple_1'] = 'blue'
             colours['multiple_2'] = 'red'
-            #pdb.set_trace()
+            pdb.set_trace()
             for wavelet_id in self.transformed_args.plot.wavelet_windows_to_show:
                 y_values = window_boundaries[wavelet_id]
                 ax.hlines(1000*y_values, X[0], X[-1], color=colours[wavelet_id],linestyle = '-',linewidth = 1.05)

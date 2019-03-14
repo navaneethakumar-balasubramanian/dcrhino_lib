@@ -3,7 +3,7 @@
 """
 Created on Tue Jan 22 12:50:55 2019
 
-@author: thiago
+Author: thiago
 """
 
 import pandas as pd
@@ -17,6 +17,15 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 logger = init_logging(__name__)
 
 class MWDHelper():
+    """
+    Facilitates the use of mwd data downstream by managing mine selection, naming, and formatting.
+    
+    References: 
+        local env_config.json file in ..dcrhino_lib/bin
+        
+    .. warning:: **Requires** local env_config.json file that is mine-specific
+    """
+    
     def __init__ (self,env_config):
         self.env_config = env_config
 
@@ -27,6 +36,19 @@ class MWDHelper():
 
 
     def get_hole_mwd_from_mine_mwd(self,mine_mwd,bench_name,pattern_name,hole_name,hole_id):
+        """
+        Locates individual hole data in the mine_mwd data.
+        
+        Parameters:
+            mine_mwd (DataFrame): Data for entire mine
+            bench_name (str): Name of bench where target hole is located
+            pattern_name (str): Name of pattern where target hole is located
+            hole_name (str): Name of hole (sometimes interchangeable with hole_id)
+            hole_id str): Numerical id for hole (sometimes used in place for hole_name)
+
+        Returns:
+            (Series): mine_mwd['bench_name', 'pattern_name', 'hole_name', 'hole_id'], the data for a specific hole.
+        """
         cond1 = mine_mwd['bench_name'].astype(str) == str(bench_name)
         cond2 = mine_mwd['pattern_name'].astype(str) == str(pattern_name)
         cond3 = mine_mwd['hole_name'].astype(str) == str(hole_name)
@@ -34,10 +56,32 @@ class MWDHelper():
         return mine_mwd[cond1 & cond2 & cond3 & cond4]
 
     def get_mwd_from_csv(self,file_path):
+        """
+        Retrieves MWD data from local .csv file.
+        
+        Parameters:
+            file_path (str): Path to .csv file containing mwd data.
+
+        Returns:
+            (DataFrame): The contents of the .csv file in a 2D data structure
+        """
         logger.info("Loading mwd csv from:" + file_path)
         return pd.read_csv(file_path)
 
     def get_mwd_from_db(self,mine_domain,dataset_name):
+        """
+        Connects to database using :func:`~get_db_conn` with credentials and retrieves data from specified mine.
+        
+        Parameters:
+            mine_domain (str): Database domain name for the mine.
+            dataset_name (str): Dataset inside mine_domain Database.
+
+        Returns:
+            (DataFrame): The contents of the dataset_name
+            
+        .. todo:: Ask for user credentials and input them in all database-connecting functions
+        
+        """
         conn_dict = self.get_db_conn(mine_domain)
         client = Client(conn_dict['host'],user=conn_dict['username'],password=conn_dict['password'],database=conn_dict['database'],compression='lz4')
 
@@ -70,19 +114,63 @@ class MWDHelper():
         return mwd_data_df
         
     def query_result_to_pd(self,result,columns):
+            """
+            Convert results to pandas DataFrame
+            
+            Parameters:
+                result(list): data from query to be converted to Pandas DataFrame
+                columns (list): Column names for queried variables
+                
+            Returns:
+                (DataFrame): a DataFrame containing *result* with variable names specified in *columns*.
+            """
             return pd.DataFrame(result,columns=columns)
         
     def get_mapping_from_label(self,mappings,column_name):
+        """
+        String compares variable names to find matches between parameters
+        
+        Parameters:
+            mappings (list): contains mwd metadata in DataFrames
+            mapping (DataFrame): contains variable data
+            column_name (str): column name to find
+            
+        Returns:
+            (DataFrame): DataFrame matching *column_name*, if any
+            
+        """
         for mapping in mappings:
             if str(column_name).upper() == str(mapping['label']).upper():
                 return mapping
 
     def get_describe_by_column_name(self,columns,mapping_column_name):
+        """
+        String compares variable names to find matches between parameters
+        
+        Parameters:
+            mappings (list): contains mwd metadata in DataFrames
+            mapping (DataFrame): contains variable data
+            column_name (str): column name to find
+            
+        Returns:
+            (DataFrame): DataFrame matching *column_name*, if any
+            
+        """
         for column in columns:
             if column[0] == mapping_column_name:
                 return column
             
     def get_db_conn(self,subdomain):
+        """
+        Requests data from database, with credentials built in (for now), creates 
+        a temorary json file for data recieved, and returns data.
+        
+        Parameters:
+            subdomain (str): data location in the database
+            
+        Returns:
+            (dict): connection dictionary with host and port to be used in :func:`~get_mwd_from_db`
+        """
         r = requests.post('https://prod.datacloud.rocks/v1/auth', json={"username":'admin', "password":'pass123$$$'})
         token = r.json()['token']
         headers = {'Authorization':'Bearer ' + token,'x-dc-subdomain':subdomain}
@@ -99,6 +187,15 @@ class MWDHelper():
         return conn_dict
         
     def get_dc_datasets_configs(self,subdomain):
+        """
+        Returns json, not dictionary, with database token and configuration.
+        
+        Parameters:
+            subdomain (str): data location in the database
+            
+        Returns:
+            (unicode): json containing token for database connection, credentials, configuration
+        """
         r = requests.post('https://prod.datacloud.rocks/v1/auth', json={"username":'admin', "password":'pass123$$$'})
         token = r.json()['token']
         headers = {'Authorization':'Bearer ' + token,'x-dc-subdomain':subdomain}
@@ -106,6 +203,17 @@ class MWDHelper():
         return r.json()
 
     def get_remaped_column_values(self,mwd_df,col):
+        """
+        Splits unparsed column names if more than one, and returns remaped column
+        names
+        
+        Parameters:
+            mwd_df (DataFrame): large dataframe for the mine
+            col: variable name, or list of names, separated with "|" to be fetched
+            
+        Returns:
+            (list): list of output column name(s)
+        """
         if "|" in col:
             split = col.split("|")
             temp = pd.DataFrame()
@@ -120,6 +228,16 @@ class MWDHelper():
             return mwd_df[col]
 
     def remap_mwd_df(self,mwd_df,mapping):
+        """
+        Deep-copies mwd dataframe, creates a new dataframe with columns from mapping dict.
+        
+        Parameters:
+            mwd_df (dataframe): dataframe from which copy is made
+            mapping (dict): dictionary with 'column' key and column name values
+            
+        Returns:
+            (Dataframe): remapped mwd dataframe with empty columns dropped
+        """
         #temp = mwd_df
         remaped = pd.DataFrame()
         mwd_df = mwd_df.copy()
@@ -133,6 +251,16 @@ class MWDHelper():
         return remaped
 
     def _have_required_columns(self,mwd_df):
+        """
+        Check if all required columns are present in DataFrame
+        
+        Parameters:
+            mwd_df (DataFrame): DataFrame to be checked
+            
+        Returns:
+            (boolean): True if columns are present, False if one or more columns is missing      
+        """
+            
         for col in self.required_columns:
             if col not in mwd_df.columns:
                 logger.warn("MISSING COLUMN:" + col + " ON DATACLOUD DEFAULT DF")
@@ -140,13 +268,33 @@ class MWDHelper():
         return True
 
     def _create_optional_columns(self,mwd_df):
+        """
+        Allows for optional columns that are included when provided but won't break
+        when not provided.
+        
+        Parameters:
+            mwd_df (DataFrame): DataFrame where optional columns are desired
+            
+        Returns
+            (DataFrame): DataFrame with optional columns added
+        """
         mwd_df = mwd_df.copy()
         for col in self.optional_columns:
             if col not in mwd_df.columns:
                 mwd_df[col] = 0
         return mwd_df
     
-    def _post_process(self,df):    
+    def _post_process(self,df):
+        """
+        Converts metadata values stored in *df* DataFrame to standard names/formatting
+        and sorts holes by start_time.
+        
+        Parameters:
+            df (DataFrame): DataFrame including mine metadata such as start_time, bench_name, etc.
+            
+        Returns:
+            (DataFrame): DataFrame *df* with values rows sorted by start_time.
+        """
         df['start_time'] = pd.to_datetime(df['start_time'])
         df['bench_name'] = df['bench_name'].astype(str)
         df['pattern_name'] = df['pattern_name'].astype(str)
@@ -159,6 +307,19 @@ class MWDHelper():
         return sorted_by_start_time
 
     def get_rhino_mwd_from_mine_name(self,mine_name):
+        """
+        Retrieves mwd from .csv or database connection, remaps,
+        adds columns, standardizes format/names for downstream functions.
+        
+        Parameters:
+            mine_name (str): name of the mine you are working on
+            
+        Returns:
+            (DataFrame): DataFrame from .csv or database if able to be found,
+            remaped with optionals
+            using :func:`~_create_optional_columns` and named/formatted with 
+            :func:`~_post_process`. False if otherwise.
+        """
         mine_type = self.env_config.get_mwd_type(mine_name)
         if mine_type is False:
             logger.warn("Couldnt find a mwd config for this mine:" + mine_name)

@@ -1,0 +1,73 @@
+{
+  "id": "plotting_flow",
+  "output_to_file":false,
+  "plotters": {
+    "modules": [
+      {
+        "type": "qc_log_v1",
+        "output_to_file": true,
+        "args": {
+          "show": true,
+          "plot": {
+            "upper_num_ms": 30,
+            "lower_num_ms": -5,
+            "peak_ampl_x_col_name": "K0_axial_primary_max_amplitude",
+            "peak_ampl_y_col_name": "K0_tangential_primary_max_amplitude",
+            "peak_ampl_z_col_name": "K0_radial_primary_max_amplitude",
+            "tangential_RC_col_name": "K0_tangential_reflection_coefficient_1",
+            "ax_vel_del_col_name": "K0_axial_delay_1",
+            "tang_vel_del_col_name": "K0_tangential_pseudo_velocity_1",
+            "reflection_coefficient_col_name": "K0_axial_reflection_coefficient_1",
+	     "panels":{
+		"axial_amp_feature_plot":true,
+	    	"axial_delay_feature_plot":false,
+	    	"axial_rc_feature_plot":true,
+	    	"tangential_amp_feature_plot":true,
+	    	"tangential_delay_feature_plot":true,
+	    	"tangential_rc_feature_plot":true,
+	    	"radial_amp_feature_plot":false,
+	    	"radial_delay_feature_plot":false,
+	    	"radial_rc_feature_plot":false,
+	    	"axial_heatmap_plot":true,
+	    	"tangential_heatmap_plot":true,
+            	"radial_heatmap_plot":false
+		},
+		"ax_lim":{
+			"axial_amp_lim":[0,1.5],
+			"axial_rc_lim":[0,1.0],
+			"axial_delay_lim":[80,250],
+			"tangential_amp_lim":[0,1.5],
+			"tangential_rc_lim":[0,1.0],
+			"tangential_delay_lim":[80,130],
+			"radial_amp_lim":[0,1.5],
+			"radial_rc_lim":[0,1.0],
+			"radial_delay_lim":[80,130]
+
+		}
+          },
+	  "components_to_process":"|global_config.components_to_process|",
+          "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
+          "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|",
+          "noise_threshold": "|global_config.noise_threshold|",
+          "rig_id": "|global_config.rig_id|",
+          "drill_type": "|global_config.drill_type|",
+          "drill_string_total_length": "|global_config.drill_string_total_length|",
+          "bit_type": "|global_config.bit_type|",
+          "bit_size": "|global_config.bit_size|",
+          "bit_model": "|global_config.bit_model|",
+          "sensor_installation_location": "|global_config.sensor_installation_location|",
+          "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
+          "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
+          "sensor_serial_number": "|global_config.sensor_serial_number|",
+          "sensor_saturation_g": "|global_config.sensor_saturation_g|",
+	  "output_sampling_rate":"|global_config.output_sampling_rate|",
+          "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
+	  "mine_name":"|global_config.mine_name|",
+	  "mult_neg_win": 0.5,
+	  "mult_pos_win": 3.5
+        }
+      }
+    ]
+  }
+
+}

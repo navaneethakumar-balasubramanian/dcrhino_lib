@@ -102,14 +102,16 @@
         "type": "qc_log_v1",
         "output_to_file": true,
         "args": {
+          "show" : false,
           "plot": {
+
             "upper_num_ms": 30,
             "lower_num_ms": -5,
             "peak_ampl_x_col_name": "J0_axial_primary_max_amplitude",
             "peak_ampl_y_col_name": "J0_tangential_primary_max_amplitude",
             "peak_ampl_z_col_name": "J0_radial_primary_max_amplitude",
             "tangential_RC_col_name": "J0_tangential_reflection_coefficient_1",
-            "ax_vel_del_col_name": "J0_axial_pseudo_velocity_1",
+            "ax_vel_del_col_name": "J0_axial_delay_1",
             "tang_vel_del_col_name": "J0_tangential_pseudo_velocity_1",
             "reflection_coefficient_col_name": "J0_axial_reflection_coefficient_1",
 	     "panels":{

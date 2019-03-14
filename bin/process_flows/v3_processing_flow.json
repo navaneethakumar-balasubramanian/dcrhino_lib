@@ -1,13 +1,13 @@
 {
     "id":"v3_processing_flow",
     "output_to_file":true,
-	"trace_processing":{
-		"modules":[
+    "modules":[
                                 {
         "type": "unfold",
         "output_to_file": false,
         "args": {}
       },
+
       {
         "type": "lead_channel_deconvolution",
         "output_to_file": false,
@@ -15,6 +15,7 @@
           "num_taps_in_decon_filter": "|global_config.num_taps_in_decon_filter|"
         }
       },
+
       {
         "type": "export_segy",
         "args": {}
@@ -101,6 +102,7 @@
         "type": "qc_log_v1",
         "output_to_file": true,
         "args": {
+          "show" : false,
           "plot": {
             "upper_num_ms": 30,
             "lower_num_ms": -5,
@@ -123,7 +125,7 @@
 	    	"radial_rc_feature_plot":false,
 	    	"axial_heatmap_plot":true,
 	    	"tangential_heatmap_plot":true,
-            	"radial_heatmap_plot":false
+            "radial_heatmap_plot":false
 		},
 		"ax_lim":{
 			"axial_amp_lim":[0,1.5],

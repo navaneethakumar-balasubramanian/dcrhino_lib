@@ -36,36 +36,32 @@ class RawTraceData(TraceData):
         h5_helper = H5Helper(f1)
         global_config = Config(h5_helper.metadata)
         #pdb.set_trace()
-        trace_duration = global_config.trace_length_in_seconds
 
-        timestamp_offset = np.floor(h5_helper.min_ts)
-        relative_timestamps = h5_helper.ts - timestamp_offset
-        #typical_dt = np.median(np.diff(relative_timestamps))
-        integer_trace_sorted_timestamps = np.floor(relative_timestamps / trace_duration).astype(np.int32)
-        dtrace_array = np.diff(integer_trace_sorted_timestamps)
-        discontinuity_indices = np.where(dtrace_array > 0)[0]
-        num_traces = len(discontinuity_indices) +1 #maybe off by one
-        timestamp_indices = np.arange(num_traces) * global_config.trace_length_in_seconds
-
-        reference_array = np.split(np.arange(len(relative_timestamps)), discontinuity_indices+1)
 
         data = np.asarray(h5_helper.data_xyz)
-        logger.info("data shape = {}".format(data.shape))
-
-        output_dict['timestamp'] = timestamp_indices + timestamp_offset
+        temp_df = pd.DataFrame()
+        temp_df['timestamp'] = h5_helper.ts.astype(np.int64)
+        temp_df['raw_timestamp'] = h5_helper.ts.astype(np.float64)
+        for component_id in global_config.components_to_process:
+            component_index = global_config.component_index(component_id)
+            temp_df[component_id] = data[component_index]
+        ts_groups = temp_df.groupby('timestamp')
+        groups_list = list(ts_groups.groups)
+        num_traces = len(groups_list)
+        output_dict = dict()
+        output_dict['timestamp'] = np.asarray(groups_list)
         output_dict['raw_timestamps'] = num_traces * [None]
         for component_id in global_config.components_to_process:
-            output_dict[component_id] = num_traces * [None]
+             output_dict[component_id] = num_traces * [None]
 
         for i_trace in range(num_traces):
-            non_uniform_time_stamps = relative_timestamps[reference_array[i_trace]] + timestamp_offset
-            output_dict['raw_timestamps'][i_trace] = non_uniform_time_stamps
+            group_id = groups_list[i_trace]
+            group = ts_groups.get_group(group_id)
+            output_dict['raw_timestamps'][i_trace] = np.array(group['raw_timestamp'])
             for component_id in global_config.components_to_process:
-                component_index = global_config.component_index(component_id)
-                non_uniform_time_series = data[component_index, reference_array[i_trace]]
-                output_dict[component_id][i_trace] = non_uniform_time_series
-        output_df = pd.DataFrame(output_dict)
+                output_dict[component_id][i_trace] = np.array(group[component_id])
 
+        output_df = pd.DataFrame(output_dict)
         output_df.index = output_df['timestamp']
         return output_df, global_config
 
@@ -103,6 +99,9 @@ class RawTraceData(TraceData):
             output_dict[component_id] = np.full((num_traces, samples_per_trace), np.nan) #Allocate Memory
 
             for i_trace in range(num_traces):
+                if int(df['timestamp'].iloc[i_trace]) != int(df['raw_timestamps'].iloc[i_trace][0]):
+                    print ("here!!!")
+
                 ideal_timestamps = global_config.dt * np.arange(samples_per_trace) + df['timestamp'].iloc[i_trace]
                 output_dict[component_id][i_trace, :] = self.interpolate_1d_component_array(df['raw_timestamps'].iloc[i_trace],
                                                                                             df[component_id].iloc[i_trace],
@@ -126,6 +125,9 @@ class RawTraceData(TraceData):
         t0 = time.time()
         output = component_array
         is_ide_file = not int(global_config.sensor_type) == 2
+
+        if "rhino_version" not in vars(global_config):
+           global_config.rhino_version = 1.0
 
         if is_ide_file or global_config.rhino_version == None:
             return output / sensitivity
