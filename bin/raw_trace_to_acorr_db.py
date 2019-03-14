@@ -44,7 +44,8 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
 
     if l1h5_dataframe.shape[0] == 0:
         logger.warning("IGNORED THIS FILE")
-       return
+        return
+    
     file_id = db_helper.get_file_id_from_file_path(h5_file_path)
 
     if file_id is False:
