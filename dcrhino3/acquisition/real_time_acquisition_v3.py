@@ -252,15 +252,15 @@ class FileFlusher(threading.Thread):
 
 
         if self.packet_index_in_trace >= sampling_rate:
-            diff = abs(self.current_timestamp - reference)
+            diff = round(abs(self.current_timestamp - reference), 2)
             if diff >= 1:
                 print("Last update was {} sec ago".format(reference-self.last_sync))
-                print ("Differece is {} sec, rolling back from {} to {}".format(diff,repr(self.current_timestamp),
+                print ("Differece is {} sec, rolling back from {} to {}".format(diff, repr(self.current_timestamp),
                                                                                 repr(reference)))
                 self.current_timestamp = reference
                 self.last_sync = reference
             if int(self.current_timestamp) < self.previous_second:
-                self.offset +=1
+                self.offset += 1
             else:
                 if int(self.current_timestamp) > self.previous_second:
                     self.packet_index_in_trace -= (sampling_rate + self.offset)
@@ -271,13 +271,10 @@ class FileFlusher(threading.Thread):
 
                     self.counter_changes += 1
                     m = "('Changed', {},{},{},{})\n".format(int(self.current_timestamp), int(reference), diff,
-                                                        self.counter_changes)
+                                                            self.counter_changes)
                     self.logQ.put(m)
                     self.displayQ.put(m)
         self.previous_second = int(self.current_timestamp)
-
-
-
         return self.current_timestamp
 
     def save_row_to_processing_q(self, packet):
@@ -303,7 +300,7 @@ class FileFlusher(threading.Thread):
 
     def run_v10(self):
         print("Started File Fluser 1.0")
-        self.tx_status = 1 #for comaptibility with version 1.1.  Status is always 1 (on) for v1.0
+        self.tx_status = 1  # for comaptibility with version 1.1.  Status is always 1 (on) for v1.0
         while True:
             try:
                 timestamp = time.time()
@@ -683,7 +680,7 @@ class CollectionDaemonThread(threading.Thread):
 
                             h5f.close()
 
-                            m = "Timestamp :{}, Samples: {})\n".format(int(row[1]),len(self.bufferThisSecond))
+                            m = "TIMESTAMP :{}, SAMPLES: {})\n".format(int(row[0]), len(self.bufferThisSecond))
                             self.logQ.put(m)
                             self.displayQ.put(m)
 

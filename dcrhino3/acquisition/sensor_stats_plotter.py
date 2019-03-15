@@ -91,7 +91,7 @@ while True:
         rssi_plot.tick_params(labelsize=tick_font_size)
         rssi_plot.set_title("RSSI", **title_font)
         rssi_plot.set_xlabel("Signal Strength", **axis_font)
-        rssi_bins = np.arange(15,30,0.1)
+        rssi_bins = np.arange(10,30,0.1)
         # min,max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS","rssi_y_lim"))
         # rssi_plot.set_ylim(min,max)
         # rssi_plot.yaxis.tick_right()
@@ -118,7 +118,7 @@ while True:
         axial_accel_plot.tick_params(labelsize=tick_font_size)
         axial_accel_plot.set_title("Axial Acceleration", **title_font)
         axial_accel_plot.set_xlabel("G", **axis_font)
-        accel_plot_bins = np.arange(sensor_saturation_g*-1.1, sensor_saturation_g*1.1, sensor_saturation_g/10.)
+        accel_plot_bins = np.arange(sensor_saturation_g*-1.1, sensor_saturation_g*1.1, 1)
         # temp_plot.set_xlabel("time (sec)", **axis_font)
         # min,max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS","temperature_y_lim"))
         # temp_plot.set_ylim(min,max)
@@ -153,8 +153,8 @@ while True:
             # print("list",len(rssi),len(packets),len(temp))
             previous_tracetime = tracetime
             if len(rssi) >= length:
-                initial_tracetime += timedelta(seconds=3600)
-                print(len(rssi))
+                tracetime -= timedelta(seconds=3600)
+                # print(len(rssi))
                 rssi.pop(0)
                 packets.pop(0)
                 delay.pop(0)
@@ -186,7 +186,7 @@ while True:
                 now).strftime('%H:%M:%S') + " delay of " + str(sec_delay) + "\n" + "Data From: {} to {}".format(
                 initial_tracetime.strftime('%H:%M:%S'), tracetime.strftime('%H:%M:%S')), fontsize=10)
 
-            packets_array = 100-np.absolute(np.asarray(packets)/ideal_packets-1)*100
+            packets_array = np.absolute(np.asarray(packets)/ideal_packets-1)*100
             packets_array = packets_array[~np.isnan(packets_array)]
             packets_array[packets_array > packet_bins[-1]] = packet_bins[-1]
             packets_plot.hist(packets_array,  bins=packet_bins, edgecolor='black', align="mid", density=True)
@@ -245,5 +245,5 @@ while True:
         pass
     except:
         time.sleep(0.1)
-        pass
+        print("Sensor Stats Plotter Exception")
         print(sys.exc_info())

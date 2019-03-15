@@ -105,7 +105,7 @@ while True:
 
         accel_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1, sharex=packets_plot)
         accel_plot.tick_params(labelsize=tick_font_size)
-        accel_plot.set_title("{} Acceleration".format(accel_component), **title_font)
+        accel_plot.set_title("{} Acceleration".format(accel_component.capitalize()), **title_font)
         accel_plot.set_xlabel("time (sec)", **axis_font)
         accel_plot.set_ylabel("G", **axis_font)
         # min,max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS","temperature_y_lim"))
