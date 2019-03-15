@@ -47,8 +47,6 @@ def generate_cache_acorr(mine_name):
         #pdb.set_trace()
     
         for line in matches.itertuples():
-            if int(line.hole_name) != 147388 :
-                continue
     
             h5_filename = str(line.bench_name) + "_" + str(line.pattern_name) + "_" + str(line.hole_name) + "_" + str(line.hole_id)+"_"+str(line.sensor_id)+"_"+str(line.digitizer_id) + ".h5"
 
