@@ -18,6 +18,7 @@ import subprocess
 import pdb
 
 from collections import namedtuple
+from scipy.interpolate import interp1d
 
 #<temporary logging>
 import logging
