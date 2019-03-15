@@ -66,7 +66,7 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
             #TODO: add min/max accel
             resampled_dataframe = raw_trace_data.resample_l1h5(calibrated_dataframe, global_config)
             autcorrelated_dataframe = raw_trace_data.autocorrelate_l1h5(resampled_dataframe, global_config)
-            pdb.set_trace()
+            # pdb.set_trace()
             autcorrelated_dataframe["max_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
                 lambda x: np.max(x)))
             autcorrelated_dataframe["min_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
@@ -99,13 +99,13 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
             db_helper.save_autocorr_traces(file_id, autcorrelated_dataframe['timestamp'],
                                            axial=autcorrelated_dataframe['axial'],
                                            radial=autcorrelated_dataframe['radial'],
-                                           tangential=autcorrelated_dataframe['tangential'],
-                                           max_axial_acceleration=autcorrelated_dataframe['axial'],
-                                           min_axial_acceleration=autcorrelated_dataframe['axial'],
-                                           max_tangential_acceleration=autcorrelated_dataframe['tangential'],
-                                           min_tangential_acceleration=autcorrelated_dataframe['tangential'],
-                                           max_radial_acceleration=autcorrelated_dataframe['radial'],
-                                           min_radial_acceleration=autcorrelated_dataframe['radial']
+                                           tangential=autcorrelated_dataframe['tangential']  #,
+                                           # max_axial_acceleration=autcorrelated_dataframe['axial'],
+                                           # min_axial_acceleration=autcorrelated_dataframe['axial'],
+                                           # max_tangential_acceleration=autcorrelated_dataframe['tangential'],
+                                           # min_tangential_acceleration=autcorrelated_dataframe['tangential'],
+                                           # max_radial_acceleration=autcorrelated_dataframe['radial'],
+                                           # min_radial_acceleration=autcorrelated_dataframe['radial']
                                            )
 
 
