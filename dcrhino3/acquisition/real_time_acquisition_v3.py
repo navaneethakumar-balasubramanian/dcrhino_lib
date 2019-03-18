@@ -43,7 +43,7 @@ from dcrhino3.models.traces.raw_trace import RawTraceData
 from dcrhino3.acquisition.external.seismic_wiggle import seismic_wiggle
 from dcrhino3.process_flow.modules.trace_processing.unfold_autocorrelation import unfold_trace
 import multiprocessing
-
+import psutil
 import pyudev
 
 
@@ -580,7 +580,8 @@ class CollectionDaemonThread(threading.Thread):
         offset = int(fraction / delta_t)
         return timestamp - sampling_rate * offset
 
-    def run (self):
+
+    def run(self):
         print("Started Collection Daemon")
         lastFileName = None
         while True:
@@ -624,6 +625,8 @@ class CollectionDaemonThread(threading.Thread):
                             h5f = h5py.File(filename, 'a')
 
                             if first:
+                                disk_usage = psutil.disk_usage('/')[3]
+                                print(disk_usage)
                                 first = False
                                 h5f, m = config_file_to_attrs(config, h5f)
                                 global_config = Config(Metadata(config))
@@ -734,6 +737,7 @@ class CollectionDaemonThread(threading.Thread):
                                               "batt": batt[0],
                                               "acceleration": acceleration_dict,
                                               "counter_changes": counterchanges,
+                                              "disk_usage": disk_usage,
                                               "filename": filename})
 
                         self.bufferThisSecond = list()
@@ -834,6 +838,7 @@ def main_run(run=True):
     min_axial_acceleration = [np.nan] * length
     min_radial_acceleration = [np.nan] * length
     min_tangential_acceleration = [np.nan] * length
+    disk_usage = [np.nan] * length
     # traces_for_plot = []
     last_tracetime = time.time()
     counterchanges = 0
@@ -957,6 +962,7 @@ def main_run(run=True):
             min_axial_acceleration.pop(0)
             min_tangential_acceleration.pop(0)
             min_radial_acceleration.pop(0)
+            disk_usage.pop(0)
 
             rssi.append(trace["rssi"])
             temp.append(trace["temp"])
@@ -972,11 +978,12 @@ def main_run(run=True):
             min_axial_acceleration.append(trace["acceleration"]["axial"]["min"])
             min_tangential_acceleration.append(trace["acceleration"]["tangential"]["min"])
             min_radial_acceleration.append(trace["acceleration"]["radial"]["min"])
+            disk_usage.append(trace["disk_usage"])
             counterchanges = trace["counter_changes"]
             health = [rssi, packets, delay, temp, batt, counterchanges, tracetime, now, sec_delay,
                       comport.corrupt_packets, fflush.tx_status, max_axial_acceleration, min_axial_acceleration,
                       max_tangential_acceleration, min_tangential_acceleration,
-                      max_radial_acceleration, min_radial_acceleration]
+                      max_radial_acceleration, min_radial_acceleration, disk_usage]
             system_healthQ.put(health)
             np.save(os.path.join(RAM_PATH, 'system_health.npy'), np.asarray(health))
             display.update_system_health()
@@ -1021,7 +1028,7 @@ def main_run(run=True):
                                           last_tracetime, counterchanges, comport.corrupt_packets, fflush.tx_status,
                                           max_axial_acceleration, min_axial_acceleration,
                                           max_tangential_acceleration, min_tangential_acceleration,
-                                          max_radial_acceleration, min_radial_acceleration)
+                                          max_radial_acceleration, min_radial_acceleration, disk_usage)
             display.update_system_health()
         except:
             m = "{}\n".format(sys.exc_info())
@@ -1074,7 +1081,8 @@ def calculate_battery_percentage(current_voltage,battery_max_voltage,battery_low
 def add_empty_health_row_to_Q(rssi, temp, batt, packets, delay, trace_time_array, now_array, system_healthQ,
                               last_tracetime, last_counterchanges, corrupt_packets, tx_status,
                               max_axial_acceleration, min_axial_acceleration, max_tangential_acceleration,
-                              min_tangential_acceleration, max_radial_acceleration, min_radial_acceleration):
+                              min_tangential_acceleration, max_radial_acceleration, min_radial_acceleration,
+                              disk_usage):
     now = time.time()
     rssi.pop(0)
     temp.pop(0)
@@ -1089,6 +1097,7 @@ def add_empty_health_row_to_Q(rssi, temp, batt, packets, delay, trace_time_array
     min_axial_acceleration.pop(0)
     min_tangential_acceleration.pop(0)
     min_radial_acceleration.pop(0)
+    disk_usage.pop(0)
 
     if tx_status == 1:
         rssi.append(np.nan)
@@ -1101,6 +1110,7 @@ def add_empty_health_row_to_Q(rssi, temp, batt, packets, delay, trace_time_array
         min_axial_acceleration.append(np.nan)
         min_tangential_acceleration.append(np.nan)
         min_radial_acceleration.append(np.nan)
+        disk_usage.append(np.nan)
     elif tx_status == 0:
         rssi.append(rssi[-1])
         temp.append(temp[-1])
@@ -1112,6 +1122,7 @@ def add_empty_health_row_to_Q(rssi, temp, batt, packets, delay, trace_time_array
         min_axial_acceleration.append(min_axial_acceleration[-1])
         min_tangential_acceleration.append(min_tangential_acceleration[-1])
         min_radial_acceleration.append(min_radial_acceleration[-1])
+        disk_usage.append(disk_usage[-1])
 
     sec_delay = round(now-last_tracetime, 2)
     delay.append(sec_delay)
@@ -1121,7 +1132,7 @@ def add_empty_health_row_to_Q(rssi, temp, batt, packets, delay, trace_time_array
     health = [rssi, packets, delay, temp, batt, last_counterchanges, last_tracetime, now, sec_delay,
               corrupt_packets, tx_status, max_axial_acceleration, min_axial_acceleration,
               max_tangential_acceleration, min_tangential_acceleration,
-              max_radial_acceleration, min_radial_acceleration]
+              max_radial_acceleration, min_radial_acceleration, disk_usage]
     system_healthQ.put(health)
     np.save(os.path.join(RAM_PATH, 'system_health.npy'), np.asarray(health))
 
