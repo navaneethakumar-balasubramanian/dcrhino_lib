@@ -152,7 +152,7 @@ class RhinoDBHelper:
             return self.client.execute("select UUIDStringToNum('"+uuid_string+"')")[0][0]
 
 
-        def save_autocorr_traces(self,file_id,timestamps,axial,tangential,radial):
+        def save_autocorr_traces(self,file_id,timestamps,axial,tangential,radial,max_axial_acceleration,min_axial_acceleration,max_tangential_acceleration,min_tangential_acceleration,max_radial_acceleration,min_radial_acceleration):
             """
             Insert data into *acorr_traces_table_name* for each chunk.
             
@@ -169,6 +169,12 @@ class RhinoDBHelper:
             df['axial'] = axial.tolist()
             df['tangential'] = tangential.tolist()
             df['radial'] = radial.tolist()
+            df['max_axial_acceleration'] = max_axial_acceleration.tolist()
+            df['min_axial_acceleration'] = min_axial_acceleration.tolist()
+            df['max_tangential_acceleration'] = max_tangential_acceleration.tolist()
+            df['min_tangential_acceleration'] = min_tangential_acceleration.tolist()
+            df['max_radial_acceleration'] = max_radial_acceleration.tolist()
+            df['min_radial_acceleration'] = min_radial_acceleration.tolist()
             df['acorr_file_id'] = file_id
 
             n = self.max_batch_to_query

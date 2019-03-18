@@ -45,7 +45,7 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
     if l1h5_dataframe.shape[0] == 0:
         logger.warning("IGNORED THIS FILE")
         return
-    
+
     file_id = db_helper.get_file_id_from_file_path(h5_file_path)
 
     if file_id is False:
@@ -99,13 +99,13 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
             db_helper.save_autocorr_traces(file_id, autcorrelated_dataframe['timestamp'],
                                            axial=autcorrelated_dataframe['axial'],
                                            radial=autcorrelated_dataframe['radial'],
-                                           tangential=autcorrelated_dataframe['tangential']  #,
-                                           # max_axial_acceleration=autcorrelated_dataframe['axial'],
-                                           # min_axial_acceleration=autcorrelated_dataframe['axial'],
-                                           # max_tangential_acceleration=autcorrelated_dataframe['tangential'],
-                                           # min_tangential_acceleration=autcorrelated_dataframe['tangential'],
-                                           # max_radial_acceleration=autcorrelated_dataframe['radial'],
-                                           # min_radial_acceleration=autcorrelated_dataframe['radial']
+                                           tangential=autcorrelated_dataframe['tangential'],
+                                           max_axial_acceleration=autcorrelated_dataframe['max_axial_acceleration'],
+                                           min_axial_acceleration=autcorrelated_dataframe['min_axial_acceleration'],
+                                           max_tangential_acceleration=autcorrelated_dataframe['max_tangential_acceleration'],
+                                           min_tangential_acceleration=autcorrelated_dataframe['min_tangential_acceleration'],
+                                           max_radial_acceleration=autcorrelated_dataframe['max_radial_acceleration'],
+                                           min_radial_acceleration=autcorrelated_dataframe['min_radial_acceleration']
                                            )
 
 
