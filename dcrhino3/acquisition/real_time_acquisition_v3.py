@@ -244,10 +244,10 @@ class FileFlusher(threading.Thread):
     def calculate_packet_timestamp(self, packet):
         reference = time.time()
         self.elapsed_tx_sequences = packet.tx_sequence - self.sequence
-        # self.packet_index_in_trace += self.elapsed_tx_sequences
-        self.packet_index_in_trace += int(round(self.elapsed_tx_sequences/25.))
-        # self.current_timestamp += self.elapsed_tx_sequences * delta_t
-        self.current_timestamp += self.elapsed_tx_sequences * 10./1000000
+        self.packet_index_in_trace += self.elapsed_tx_sequences
+        # self.packet_index_in_trace += int(round(self.elapsed_tx_sequences/25.))
+        self.current_timestamp += self.elapsed_tx_sequences * delta_t
+        # self.current_timestamp += self.elapsed_tx_sequences * 10./1000000
         self.sequence = packet.tx_sequence
 
 
