@@ -67,19 +67,33 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
             resampled_dataframe = raw_trace_data.resample_l1h5(calibrated_dataframe, global_config)
             autcorrelated_dataframe = raw_trace_data.autocorrelate_l1h5(resampled_dataframe, global_config)
             # pdb.set_trace()
-            autcorrelated_dataframe["max_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
-                lambda x: np.max(x)))
-            autcorrelated_dataframe["min_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
-                lambda x: np.min(x)))
-            autcorrelated_dataframe["max_tangential_acceleration"] = np.asarray(calibrated_dataframe[
-                "tangential"].apply(lambda x: np.max(x)))
-            autcorrelated_dataframe["min_tangential_acceleration"] = np.asarray(calibrated_dataframe[
-                "tangential"].apply(lambda x: np.min(x)))
-            autcorrelated_dataframe["max_radial_acceleration"] = np.asarray(calibrated_dataframe["radial"].apply(
-                lambda x: np.max(x)))
-            autcorrelated_dataframe["min_radial_acceleration"] = np.asarray(calibrated_dataframe["radial"].apply(
-                lambda x: np.min(x)))
-            
+            if 'axial' in calibrated_dataframe.columns:
+                autcorrelated_dataframe["max_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
+                    lambda x: np.max(x)))
+                autcorrelated_dataframe["min_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
+                    lambda x: np.min(x)))
+            else:
+                autcorrelated_dataframe["max_axial_acceleration"] = 0
+                autcorrelated_dataframe["min_axial_acceleration"] = 0
+                
+            if 'tangential' in calibrated_dataframe.columns:
+                autcorrelated_dataframe["max_tangential_acceleration"] = np.asarray(calibrated_dataframe[
+                    "tangential"].apply(lambda x: np.max(x)))
+                autcorrelated_dataframe["min_tangential_acceleration"] = np.asarray(calibrated_dataframe[
+                    "tangential"].apply(lambda x: np.min(x)))
+            else:
+                autcorrelated_dataframe["max_tangential_acceleration"] = 0
+                autcorrelated_dataframe["min_tangential_acceleration"] = 0
+
+            if 'radial' in calibrated_dataframe.columns:
+                autcorrelated_dataframe["max_radial_acceleration"] = np.asarray(calibrated_dataframe["radial"].apply(
+                    lambda x: np.max(x)))
+                autcorrelated_dataframe["min_radial_acceleration"] = np.asarray(calibrated_dataframe["radial"].apply(
+                    lambda x: np.min(x)))
+            else:
+                autcorrelated_dataframe["max_radial_acceleration"] = 0
+                autcorrelated_dataframe["min_radial_acceleration"] = 0
+
             if 'radial' not in autcorrelated_dataframe.columns:
                 num_lines = autcorrelated_dataframe.shape[0]
                 len_line = len(autcorrelated_dataframe['axial'].values[0])
