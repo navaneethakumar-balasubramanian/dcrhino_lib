@@ -279,7 +279,7 @@ class RhinoDBHelper:
             if len(files_ids) == 0:
                return np.array([])
            
-            time_columns = ['timestamp', 'microtime','acorr_file_id']
+            time_columns = ['timestamp', 'microtime','acorr_file_id','max_axial_acceleration','min_axial_acceleration','max_tangential_acceleration','min_tangential_acceleration','max_radial_acceleration','min_radial_acceleration']
             trace_components_to_fetch = ['axial', 'tangential', 'radial']
             trace_labels_for_db_call = ['{}_trace'.format(x) for x in trace_components_to_fetch]
             all_columns = time_columns + trace_labels_for_db_call
