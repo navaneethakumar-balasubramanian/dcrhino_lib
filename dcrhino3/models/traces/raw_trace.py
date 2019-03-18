@@ -103,9 +103,11 @@ class RawTraceData(TraceData):
                     print ("here!!!")
 
                 ideal_timestamps = global_config.dt * np.arange(samples_per_trace) + df['timestamp'].iloc[i_trace]
-                output_dict[component_id][i_trace, :] = self.interpolate_1d_component_array(df['raw_timestamps'].iloc[i_trace],
+                interpolated = self.interpolate_1d_component_array(df['raw_timestamps'].iloc[i_trace],
                                                                                             df[component_id].iloc[i_trace],
                                                                                             ideal_timestamps)
+                if interpolated is not False:
+                    output_dict[component_id][i_trace, :] = interpolated
             output_dict[component_id] = list(output_dict[component_id])
             df[component_id] = output_dict[component_id]
 

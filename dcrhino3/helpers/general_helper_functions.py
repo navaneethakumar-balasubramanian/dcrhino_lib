@@ -258,10 +258,12 @@ def find_files(directory, pattern, **kwargs):
     return matches
 
 def interpolate_data(raw_timestamps,data,ideal_timestamps):
-    # print("Interpolating")
-    interp_function = interp1d(raw_timestamps, data, kind="quadratic", bounds_error=False, fill_value=0)
-    interp_data = interp_function(ideal_timestamps)
-    # interp_data = np.interp(ideal_timestamps,data,raw_timestamps)
+    try:
+        interp_function = interp1d(raw_timestamps, data, kind="quadratic", bounds_error=False, fill_value=0)
+        interp_data = interp_function(ideal_timestamps)
+    except:
+        logger.error("Failed to interpolate this trace " + str(int(raw_timestamps[0])))
+        return False
     return interp_data
 
 

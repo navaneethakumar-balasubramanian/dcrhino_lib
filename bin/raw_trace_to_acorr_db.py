@@ -63,6 +63,10 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
     for chunk in list_df:
         if len(chunk) > 0:
             calibrated_dataframe = raw_trace_data.calibrate_l1h5(chunk, global_config)
+
+            resampled_dataframe = raw_trace_data.resample_l1h5(calibrated_dataframe, global_config)
+            autcorrelated_dataframe = raw_trace_data.autocorrelate_l1h5(resampled_dataframe, global_config)
+            # pdb.set_trace()
             if 'axial' in calibrated_dataframe.columns:
                 calibrated_dataframe["max_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
                     lambda x: np.max(x)))
@@ -91,10 +95,6 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
             else:
                 calibrated_dataframe["max_radial_acceleration"] = 0
                 calibrated_dataframe["min_radial_acceleration"] = 0
-            resampled_dataframe = raw_trace_data.resample_l1h5(calibrated_dataframe, global_config)
-            autcorrelated_dataframe = raw_trace_data.autocorrelate_l1h5(resampled_dataframe, global_config)
-            # pdb.set_trace()
-
 
             if 'radial' not in autcorrelated_dataframe.columns:
                 num_lines = autcorrelated_dataframe.shape[0]
