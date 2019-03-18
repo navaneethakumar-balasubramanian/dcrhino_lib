@@ -43,9 +43,12 @@ class RhinoDisplay(object):
         n_panels = len(self.json_dict.keys())
         n_panels = len(self.panels)
         fig, ax = plt.subplots(n_panels, sharex=False, figsize=self.dc_plot_lim())
+        pdb.set_trace()
         for i_panel in range(n_panels):
-
-            axx = ax[i_panel]
+            if n_panels==1:
+                axx = ax
+            else:
+                axx = ax[i_panel]
             panel = self.panels[i_panel]
             panel._load_trace_data()
             panel.plot(axx)

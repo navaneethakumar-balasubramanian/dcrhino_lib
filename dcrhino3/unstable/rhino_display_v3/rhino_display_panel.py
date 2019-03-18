@@ -261,7 +261,7 @@ class Heatmap(RhinoDisplayPanel):
             heatmap = ax.pcolormesh(X, Y, Z, cmap=self.cmap_string,
                                     vmin=self.v_min, vmax=self.v_max)
         locs,labs = plt.xticks()
-        pdb.set_trace()
+        #pdb.set_trace()
         ax.set_ylabel('time (ms)')
         ax.invert_yaxis()
 
@@ -291,15 +291,16 @@ class Heatmap(RhinoDisplayPanel):
             colours['primary'] = 'black'
             colours['multiple_1'] = 'blue'
             colours['multiple_2'] = 'red'
-            window_widths = self._get_window_widths_from_h5()
-            multiple_delays = self._get_multiple_delays_from_h5()
-            pdb.set_trace()
-            #primary_shift = -1.0 * getattr(window_widths, self.component).primary / 2.0
-            primary_shift = -1.0 * window_widths[self.component]['primary'] / 2.0
-            wb = WindowBoundaries()
-            wb.assign_window_boundaries(self.component, window_widths,
-                                        multiple_delays, primary_shift=primary_shift)
-            window_boundaries = wb.window_boundaries_time
+            if window_boundaries is None:
+                window_widths = self._get_window_widths_from_h5()
+                multiple_delays = self._get_multiple_delays_from_h5()
+                pdb.set_trace()
+                #primary_shift = -1.0 * getattr(window_widths, self.component).primary / 2.0
+                primary_shift = -1.0 * window_widths[self.component]['primary'] / 2.0
+                wb = WindowBoundaries()
+                wb.assign_window_boundaries(self.component, window_widths,
+                                            multiple_delays, primary_shift=primary_shift)
+                window_boundaries = wb.window_boundaries_time
             for wavelet_id in self.wavelet_windows_to_show:
                 y_values = window_boundaries[wavelet_id]
                 ax.hlines(1000*y_values, X[0], X[-1], color=colours[wavelet_id],linestyle = '-',linewidth = 1.05)
