@@ -10,7 +10,7 @@ from scipy.interpolate import interp1d
 from dcrhino3.models.config import Config
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.helpers.h5_helper import H5Helper
-from dcrhino3.helpers.general_helper_functions import init_logging
+from dcrhino3.helpers.general_helper_functions import init_logging, interpolate_data
 from dcrhino3.process_flow.modules.trace_processing.autocorrelate import autocorrelate_trace
 
 
@@ -103,9 +103,11 @@ class RawTraceData(TraceData):
                     print ("here!!!")
 
                 ideal_timestamps = global_config.dt * np.arange(samples_per_trace) + df['timestamp'].iloc[i_trace]
-                output_dict[component_id][i_trace, :] = self.interpolate_1d_component_array(df['raw_timestamps'].iloc[i_trace],
+                interpolated = self.interpolate_1d_component_array(df['raw_timestamps'].iloc[i_trace],
                                                                                             df[component_id].iloc[i_trace],
                                                                                             ideal_timestamps)
+                if interpolated is not False:
+                    output_dict[component_id][i_trace, :] = interpolated
             output_dict[component_id] = list(output_dict[component_id])
             df[component_id] = output_dict[component_id]
 
@@ -117,9 +119,9 @@ class RawTraceData(TraceData):
     def interpolate_1d_component_array(self,raw_timestamps,component_array,ideal_timestamps):
         #<Numpy is a lot faster and it was the legacy method we have been using so will continue using the
         #Extrapolation capabilities>
-        interp_data = np.interp(ideal_timestamps, raw_timestamps,component_array)
+        # interp_data = np.interp(ideal_timestamps, raw_timestamps,component_array)
         #</numpy function>
-        return interp_data
+        return interpolate_data(raw_timestamps, component_array, ideal_timestamps)
 
     def calibrate_1d_component_array(self,component_array,global_config,sensitivity):
         t0 = time.time()

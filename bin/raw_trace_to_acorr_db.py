@@ -42,6 +42,10 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
         l1h5_dataframe = l1h5_dataframe[~l1h5_dataframe['timestamp'].isin(dupes)]
         logger.warning("PREVENTING DUPLICATES TIMESTAMPS ON THIS SENSOR_ID:" + global_config.sensor_serial_number + " FILE_ID:" +h5_file_path)
 
+    if l1h5_dataframe.shape[0] == 0:
+        logger.warning("IGNORED THIS FILE")
+        return
+
     file_id = db_helper.get_file_id_from_file_path(h5_file_path)
 
     if file_id is False:
@@ -59,10 +63,39 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
     for chunk in list_df:
         if len(chunk) > 0:
             calibrated_dataframe = raw_trace_data.calibrate_l1h5(chunk, global_config)
-            #TODO: add min/max accel
+
             resampled_dataframe = raw_trace_data.resample_l1h5(calibrated_dataframe, global_config)
             autcorrelated_dataframe = raw_trace_data.autocorrelate_l1h5(resampled_dataframe, global_config)
-            
+            # pdb.set_trace()
+            if 'axial' in calibrated_dataframe.columns:
+                calibrated_dataframe["max_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
+                    lambda x: np.max(x)))
+                calibrated_dataframe["min_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
+                    lambda x: np.min(x)))
+            else:
+                calibrated_dataframe["max_axial_acceleration"] = 0
+                calibrated_dataframe["min_axial_acceleration"] = 0
+
+            if 'tangential' in calibrated_dataframe.columns:
+                calibrated_dataframe["max_tangential_acceleration"] = np.asarray(calibrated_dataframe[
+                                                                                     "tangential"].apply(
+                    lambda x: np.max(x)))
+                calibrated_dataframe["min_tangential_acceleration"] = np.asarray(calibrated_dataframe[
+                                                                                     "tangential"].apply(
+                    lambda x: np.min(x)))
+            else:
+                calibrated_dataframe["max_tangential_acceleration"] = 0
+                calibrated_dataframe["min_tangential_acceleration"] = 0
+
+            if 'radial' in calibrated_dataframe.columns:
+                calibrated_dataframe["max_radial_acceleration"] = np.asarray(calibrated_dataframe["radial"].apply(
+                    lambda x: np.max(x)))
+                calibrated_dataframe["min_radial_acceleration"] = np.asarray(calibrated_dataframe["radial"].apply(
+                    lambda x: np.min(x)))
+            else:
+                calibrated_dataframe["max_radial_acceleration"] = 0
+                calibrated_dataframe["min_radial_acceleration"] = 0
+
             if 'radial' not in autcorrelated_dataframe.columns:
                 num_lines = autcorrelated_dataframe.shape[0]
                 len_line = len(autcorrelated_dataframe['axial'].values[0])
@@ -79,7 +112,17 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
                     temp[i] = [0] * len_line
                 autcorrelated_dataframe['tangential'] = temp
             
-            db_helper.save_autocorr_traces(file_id,autcorrelated_dataframe['timestamp'],axial=autcorrelated_dataframe['axial'],radial=autcorrelated_dataframe['radial'],tangential=autcorrelated_dataframe['tangential'])
+            db_helper.save_autocorr_traces(file_id, autcorrelated_dataframe['timestamp'],
+                                           axial=autcorrelated_dataframe['axial'],
+                                           radial=autcorrelated_dataframe['radial'],
+                                           tangential=autcorrelated_dataframe['tangential'],
+                                           max_axial_acceleration=calibrated_dataframe['max_axial_acceleration'],
+                                           min_axial_acceleration=calibrated_dataframe['min_axial_acceleration'],
+                                           max_tangential_acceleration=calibrated_dataframe['max_tangential_acceleration'],
+                                           min_tangential_acceleration=calibrated_dataframe['min_tangential_acceleration'],
+                                           max_radial_acceleration=calibrated_dataframe['max_radial_acceleration'],
+                                           min_radial_acceleration=calibrated_dataframe['min_radial_acceleration']
+                                           )
 
 
 if __name__ == '__main__':

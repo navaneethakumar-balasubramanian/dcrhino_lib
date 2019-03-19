@@ -18,6 +18,7 @@ import subprocess
 import pdb
 
 from collections import namedtuple
+from scipy.interpolate import interp1d
 
 #<temporary logging>
 import logging
@@ -256,6 +257,14 @@ def find_files(directory, pattern, **kwargs):
 
     return matches
 
+def interpolate_data(raw_timestamps,data,ideal_timestamps):
+    try:
+        interp_function = interp1d(raw_timestamps, data, kind="quadratic", bounds_error=False, fill_value=0)
+        interp_data = interp_function(ideal_timestamps)
+    except:
+        logger.error("Failed to interpolate this trace " + str(int(raw_timestamps[0])))
+        return False
+    return interp_data
 
 
 #def arrayBounds(ts,ordered=False,**kwargs):

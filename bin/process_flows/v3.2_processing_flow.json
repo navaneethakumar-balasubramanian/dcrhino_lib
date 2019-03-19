@@ -15,6 +15,10 @@
         }
       },
       {
+        "type": "export_segy",
+        "args": {}
+      },
+      {
         "type": "band_pass_filter",
         "output_to_file": false,
         "args": {
@@ -32,7 +36,22 @@
         "args": {
           "max_lag_trimmed_trace": "|global_config.max_lag_trimmed_trace|",
           "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
-          "sampling_rate": "|global_config.sampling_rate|"
+          "sampling_rate": "|global_config.sampling_rate|",
+          "manual_window_boundaries" : {
+              "axial": {
+                  "primary": [-0.002, 0.008],
+                  "multiple_1": [0.008, 0.011],
+                  "multiple_2": [0.017, 0.025],
+                  "multiple_3": [0.033, 0.044],
+              },
+              "tangential": {
+                "primary": [-0.002, 0.002],
+                "multiple_1": [0.013, 0.017],
+                "multiple_2": [0.030, 0.034],
+                "multiple_3": [0.044, 0.055],
+              }
+          }
+          }
         }
       },
       {

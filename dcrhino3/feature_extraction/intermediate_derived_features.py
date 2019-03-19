@@ -185,6 +185,7 @@ class IntermediateFeatureDeriver(object):
             try:
                 self.df_dict['axial_reflection_coefficient_2'] = self.axial_reflection_coefficient_2
             except:
+                
                 logger.warn("Couldnt calculate axial_reflection_coefficient_2")
             self.df_dict['axial_delay_1'] = self.axial_delay_1
 
