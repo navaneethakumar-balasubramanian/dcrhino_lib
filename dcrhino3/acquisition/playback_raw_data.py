@@ -16,8 +16,8 @@ import scipy as sp
 
 def main(args):
     #pdb.set_trace()
-    save_raw = False
-    save_csv = False
+    save_raw = True
+    save_csv = True
     save_numpy = False
     t0 = datetime.now()
     if args.sampling_rate is None:
