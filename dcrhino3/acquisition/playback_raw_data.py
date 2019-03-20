@@ -159,6 +159,7 @@ def main(args):
     total_seconds = end_time - int(start_time)
 
     ideal_timestamps = (np.arange(total_seconds*output_sampling_rate)*1.0/output_sampling_rate)+start_time
+    ideal_timestamps = ideal_timestamps[ideal_timestamps <= end_time]
     # ideal_timestamps = (np.arange(total_seconds * output_sampling_rate) * 1.0 / output_sampling_rate) + start_time
     index = (ts>=start_time) & (ts<end_time)
     digitizer_timestamps = ts[index]
