@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import os
 
 
-def plot(depth, x, y, feature1, feature2, title, output_path):
+def plot(depth1, depth2, data1, data2, feature1, feature2, title, output_path):
     axis_font = {'fontname': 'Arial', 'size': '8'}
     title_font = {'fontname': 'Arial', 'size': '14'}
     suptitle_font_size = 20
@@ -24,8 +24,8 @@ def plot(depth, x, y, feature1, feature2, title, output_path):
     plt.subplots_adjust(hspace=0.25)
     depth_plot = plt.subplot2grid((2, 1), (0, 0), colspan=1)
     scatter_plot = plt.subplot2grid((2, 1), (1, 0), colspan=1)
-    depth_plot.plot(depth, x, "crimson", linewidth=1)
-    depth_plot.plot(depth, y, "steelblue", linewidth=1)
+    depth_plot.plot(depth1, data1, "crimson", linewidth=1)
+    depth_plot.plot(depth2, data2, "steelblue", linewidth=1)
     depth_plot.set_xlabel("m", **axis_font)
     depth_plot.set_title("Features vs Depth", **title_font)
     depth_plot.tick_params(labelsize=tick_size)
@@ -36,20 +36,23 @@ def plot(depth, x, y, feature1, feature2, title, output_path):
     depth_plot.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1),
                       fancybox=True, shadow=True, ncol=5, prop={'size': legend_font_size})
 
-    _min = np.min([np.min(x), np.min(y)]) * .90
-    _max = np.max([np.max(x), np.max(y)]) * 1.10
+    _min = np.min([np.min(data1), np.min(data2)]) * .90
+    _max = np.max([np.max(data1), np.max(data2)]) * 1.10
 
-    scatter_plot.scatter(x, y, marker="o", c="steelblue")
-    scatter_plot.set_xlabel(feature1, **axis_font)
-    scatter_plot.set_ylabel(feature2, **axis_font)
-    scatter_plot.set_title("{} vs. {}".format(feature1, feature2), **title_font)
-    scatter_plot.tick_params(labelsize=tick_size)
-    scatter_box = scatter_plot.get_position()
-    scatter_plot.set_position([scatter_box.x0, scatter_box.y0 + scatter_box.height * 0.01,
-                               scatter_box.width, scatter_box.height * 0.95])
+    try:
+        scatter_plot.scatter(data1, data2, marker="o", c="steelblue")
+        scatter_plot.set_xlabel(feature1, **axis_font)
+        scatter_plot.set_ylabel(feature2, **axis_font)
+        scatter_plot.set_title("{} vs. {}".format(feature1, feature2), **title_font)
+        scatter_plot.tick_params(labelsize=tick_size)
+        scatter_box = scatter_plot.get_position()
+        scatter_plot.set_position([scatter_box.x0, scatter_box.y0 + scatter_box.height * 0.01,
+                                   scatter_box.width, scatter_box.height * 0.95])
 
-    scatter_plot.set_xlim(_min, _max)
-    scatter_plot.set_ylim(_min, _max)
+        scatter_plot.set_xlim(_min, _max)
+        scatter_plot.set_ylim(_min, _max)
+    except:
+        print("Data arrays are different size and can't be crossplotted")
 
     plt.suptitle(title, size=suptitle_font_size)
     fig.savefig(os.path.join(output_path, "{}_vs_{}.png".format(feature1, feature2)))
@@ -69,14 +72,18 @@ def compare_versions(file1, features, output_path, file2=None):
 
     file_1_path = file1
 
+
+
+    df1 = pd.read_csv(file_1_path)
+    depth1 = df1["depth"]
+    depth2 = depth1
+
     if not same_file:
         # file_2_path = "/home/natal/toconvert/e77015_15_147487_W226_6243_extracted_features.csv"
         file_2_path = file2
         df2 = pd.read_csv(file_2_path)
+        depth2 = df2["depth"]
 
-    df1 = pd.read_csv(file_1_path)
-
-    depth = df1["depth"]
     hole = df1["hole_name"].iloc[0]
     bench = df1["bench_name"].iloc[0]
     pattern = df1["pattern_name"].iloc[0]
@@ -99,12 +106,12 @@ def compare_versions(file1, features, output_path, file2=None):
                 feature1 = feature
                 feature2 = feature_list[index]
                 if feature1[:3] != feature2[:3]:
-                    x = df1[feature1]
-                    y = df1[feature2]
+                    data1 = df1[feature1]
+                    data2 = df1[feature2]
                     title = "Bench:{} - Pattern:{} - Hole:{}\n Rig:{} - Sensor 1:{} - Sensor 2:{}\n Feature 1: {} - " \
                             "Feature 2: {} - Same File {}".format(bench, pattern, hole, rig, sensor_id_1, sensor_id_2,
                                                                   feature1, feature2, same_file, args.output_path)
-                    plot(depth, x, y, feature1, feature2, title)
+                    plot(depth1, depth2, data1, data2, feature1, feature2, title)
     else:
         if sensor_id_1 != df2["rhino_sensor_uid"].iloc[0]:
             sensor_id_2 = df2["rhino_sensor_uid"].iloc[0]
@@ -114,12 +121,12 @@ def compare_versions(file1, features, output_path, file2=None):
                 feature1 = feature
                 feature2 = df2.columns[index]
                 if feature1[3:] == feature2[3:]:
-                    x = df1[feature1]
-                    y = df2[feature2]
+                    data1 = df1[feature1]
+                    data2 = df2[feature2]
                     title = "Bench:{} - Pattern:{} - Hole:{}\n Rig:{} - Sensor 1:{} - Sensor 2:{}\n Feature 1: {} - " \
                             "Feature 2: {} - Same File {}".format(bench, pattern, hole, rig, sensor_id_1, sensor_id_2,
                                                                   feature1, feature2, same_file)
-                    plot(depth, x, y, feature1, feature2, title, output_path)
+                    plot(depth1, depth2, data1, data2, feature1, feature2, title, output_path)
     print("Done")
 
 

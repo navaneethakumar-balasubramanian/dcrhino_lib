@@ -16,6 +16,7 @@ import os
 from string import zfill
 import subprocess
 import pdb
+from scipy.interpolate import interp1d
 
 from collections import namedtuple
 from scipy.interpolate import interp1d
@@ -265,6 +266,7 @@ def interpolate_data(raw_timestamps,data,ideal_timestamps):
         logger.error("Failed to interpolate this trace " + str(int(raw_timestamps[0])))
         return False
     return interp_data
+
 
 
 #def arrayBounds(ts,ordered=False,**kwargs):
