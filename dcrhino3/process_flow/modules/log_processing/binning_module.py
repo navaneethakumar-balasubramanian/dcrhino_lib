@@ -5,11 +5,11 @@ from rhino_lp.logs.base import LogCollection
 
 
 class BinningModule(BaseLogProcessingModule):
-    def __init__(self, json, output_path):
+    def __init__(self, json, output_path,process_flow,order):
         """
         @ivar id: data_processing_stage_designator
         """
-        BaseLogProcessingModule.__init__(self, json, output_path)
+        BaseLogProcessingModule.__init__(self, json, output_path, process_flow,order)
         self.id = "binning"
 
     def process_df(self, df,transformed_args):

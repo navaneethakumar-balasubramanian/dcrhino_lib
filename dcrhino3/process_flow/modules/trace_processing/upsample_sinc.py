@@ -24,8 +24,8 @@ from dcrhino3.process_flow.modules.trace_processing.base_trace_module import Bas
 logger = init_logging(__name__)
 
 class UpsampleSincModule(BaseTraceModule):
-    def __init__(self, json, output_path):
-        BaseTraceModule.__init__(self, json, output_path)
+    def __init__(self, json, output_path,process_flow,order):
+        BaseTraceModule.__init__(self, json, output_path,process_flow,order)
         self.id = "upsample_sinc"
 
     def process_component(self,component_id, component_vector, global_config):

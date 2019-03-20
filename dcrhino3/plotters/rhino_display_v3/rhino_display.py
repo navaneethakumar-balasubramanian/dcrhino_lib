@@ -29,6 +29,8 @@ class RhinoDisplay(object):
         self.panels = {}
         self.json_dict = {}
 
+
+
     def dc_plot_lim(self):
         """
         width, height in inches
@@ -36,7 +38,7 @@ class RhinoDisplay(object):
         dc_plot_lim = (24,12)
         return dc_plot_lim
 
-    def plot(self):
+    def plot(self,output_path=False):
         """
         plotty_mcplotsalot(self.dict)
         """
@@ -47,11 +49,12 @@ class RhinoDisplay(object):
 
             axx = ax[i_panel]
             panel = self.panels[i_panel]
-            panel._load_trace_data()
             panel.plot(axx)
 
         print(n_panels)
         print('ok, start plttoing')
+        if output_path:
+            plt.savefig(output_path)
         plt.show()
 
 def my_function():

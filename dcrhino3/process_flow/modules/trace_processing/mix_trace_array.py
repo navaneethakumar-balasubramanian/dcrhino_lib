@@ -30,8 +30,8 @@ logger = init_logging(__name__)
 
 
 class TraceMixingArrayModule(BaseTraceArrayModule):
-    def __init__(self, json, output_path):
-        BaseTraceArrayModule.__init__(self, json, output_path)
+    def __init__(self, json, output_path,process_flow,order):
+        BaseTraceArrayModule.__init__(self, json, output_path,process_flow,order)
         self.id = "trace_mixing"
 
     def process_component(self,component_id, component_array, transformed_args):

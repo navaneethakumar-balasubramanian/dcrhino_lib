@@ -21,8 +21,8 @@ def get_band_pass_filter_taps(transformed_args):
     return fir_taps
 
 class BandPassFilterModule(BaseTraceModule):
-    def __init__(self, json, output_path):
-        BaseTraceModule.__init__(self, json, output_path)
+    def __init__(self, json, output_path,process_flow,order):
+        BaseTraceModule.__init__(self, json, output_path,process_flow,order)
         self.id = "band_pass_filter"
 
     def process_component(self,component_id, component_vector, global_config):

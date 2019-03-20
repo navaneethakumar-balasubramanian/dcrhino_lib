@@ -32,6 +32,7 @@ from dcrhino3.process_flow.modules.log_processing.binning_module import BinningM
 from dcrhino3.process_flow.modules.log_processing.rhino_physics import RhinoPhysicsModule
 
 from dcrhino3.process_flow.modules.plotters.qc_plotter_module import QCPlotterModule
+from dcrhino3.process_flow.modules.plotters.rhino_plotter_module import RhinoPlotterModule
 
 from dcrhino3.models.trace_dataframe import TraceData
 
@@ -64,7 +65,8 @@ class ProcessFlow:
             "unfold": UnfoldAutocorrelationModule,
             "upsample": UpsampleModule,
             "upsample_sinc": UpsampleSincModule,
-            "export_segy": ExportSEGYModule
+            "export_segy": ExportSEGYModule,
+            "rhino_plotter": RhinoPlotterModule
         }
 
 
@@ -105,7 +107,7 @@ class ProcessFlow:
             for module in modules_json:
                 process_counter += 1
                 module_output_path = os.path.join(process_flow_output_path)
-                self.modules_flow.append(self.modules[module['type']](module, module_output_path))
+                self.modules_flow.append(self.modules[module['type']](module, module_output_path,self,process_counter))
 
 
 
@@ -125,14 +127,11 @@ class ProcessFlow:
         Returns:
             processed trace data (other files will be saved to assigned locations
                 and folders will be created if needed)
-            
-        .. todo:: @Thiago: why are we reassigning name in first line?  do you mean .copy?
         """
         output_trace = trace_data
         for module in self.modules_flow:
             t0 = time.time()
             logger.info("Applying " + str(module.id) + " with: " + str(module.args))
-
             output_trace = module.process_trace(output_trace)
             delta_t = time.time() - t0
             logger.info("{} ran in {}s ".format(module.id, delta_t))

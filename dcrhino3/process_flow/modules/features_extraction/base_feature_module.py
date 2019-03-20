@@ -46,11 +46,11 @@ def strip_k0_from_trace_column_labels(df):
     return df
 
 class BaseFeatureModule(BaseModule):
-    def __init__(self, json, output_path):
+    def __init__(self, json, output_path,process_flow, order):
         """
         @ivar id: data_processing_stage_designator
         """
-        BaseModule.__init__(self, json, output_path)
+        BaseModule.__init__(self, json, output_path,process_flow, order)
         self.id = "base_feature_module"
 
 
@@ -94,7 +94,7 @@ class BaseFeatureModule(BaseModule):
         trace.add_applied_module(self.applied_module_string(self.args))
 
         if self.output_to_file:
-            features_df.to_csv(self.output_path,index=False)
+            features_df.to_csv(self.output_file_basepath(extension=".csv"),index=False)
 
 
         return trace
