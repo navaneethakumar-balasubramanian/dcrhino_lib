@@ -25,6 +25,7 @@ from dcrhino3.process_flow.modules.trace_processing.upsample_sinc import Upsampl
 
 from dcrhino3.process_flow.modules.features_extraction.j0 import J0FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.j1 import J1FeaturesModule
+from dcrhino3.process_flow.modules.features_extraction.j2 import J2FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.k0 import K0FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.b0 import B0FeaturesModule
 
@@ -56,6 +57,7 @@ class ProcessFlow:
         self.features_extraction_modules = {
             "j0": J0FeaturesModule,
             "j1": J1FeaturesModule,
+            "j2": J2FeaturesModule,
             "k0": K0FeaturesModule,
             "b0": B0FeaturesModule
         }
@@ -97,9 +99,9 @@ class ProcessFlow:
     def parse_json(self, process_json):
         """
         Parse env_config.json for info on mine/how to run the process. Use dictionary
-        "process_json" for what to parse in the json. Only get info on necessary 
+        "process_json" for what to parse in the json. Only get info on necessary
         modules.
-        
+
         Parameters:
             process_json (dict): dictionary on output locations & modules to run
         """
@@ -163,17 +165,17 @@ class ProcessFlow:
         create_folders_if_needed(process_flow_output_path)
         """
         Process the trace data. Uses :py:mod:`process_flow.modules.trace_processing.base`
-        
+
         .. warning:: Will create folders if it can find them. Will save data heavy
             files locally. To test, interrupt after a few h5 files have been saved.
-        
+
         Parameters:
             trace_data: data to be processed
-            
+
         Returns:
             processed trace data (other files will be saved to assigned locations
                 and folders will be created if needed)
-            
+
         .. todo:: @Thiago: why are we reassigning name in first line?  do you mean .copy?
         """
         output_trace = trace_data

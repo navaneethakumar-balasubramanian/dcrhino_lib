@@ -27,6 +27,7 @@ class RhinoDisplayPanel(object):
         self.dict = {}
         self.h5_file = kwargs.get('h5', None)
         self.trace_data = kwargs.get('trace_data', None)
+        self.override_sampling_rate = kwargs.get('override_sampling_rate', None)
         #self.dataframe = kwargs.get('trace_data', None)
 
     def to_dict(self):
@@ -86,7 +87,10 @@ class RhinoDisplayPanel(object):
         """
         update to take from column later, for now use first_global_config
         """
-        sampling_rate = self.trace_data.first_global_config.sampling_rate
+        if self.override_sampling_rate is not None:
+            return self.override_sampling_rate
+        else:
+            sampling_rate = self.trace_data.first_global_config.sampling_rate
         return sampling_rate
 
 
@@ -189,6 +193,9 @@ class Heatmap(RhinoDisplayPanel):
         self.y_tick_interval_ms = kwargs.get('y_tick_interval_ms', 5.)
         #self.wavelet_windows_to_show = kwargs.get('wavelet_windows_to_show', [])
         self.wavelet_windows_to_show = kwargs.get('wavelet_windows_to_show', ['primary', 'multiple_1', 'multiple_2'])
+        self.manual_picks_to_show = kwargs.get('manual_picks_to_show', None)
+        self.manual_window_widths_to_show = kwargs.get('manual_window_widths_to_show', None)
+        self.picks_to_show = kwargs.get('picks_to_show', None)
 
     @property
     def column_label(self):
@@ -263,6 +270,7 @@ class Heatmap(RhinoDisplayPanel):
         locs,labs = plt.xticks()
         #pdb.set_trace()
         ax.set_ylabel('time (ms)')
+        ax.set_xlabel('depth (m)')
         ax.invert_yaxis()
 
         ax.set_yticks(y_tick_locations, minor=False)
@@ -294,7 +302,7 @@ class Heatmap(RhinoDisplayPanel):
             if window_boundaries is None:
                 window_widths = self._get_window_widths_from_h5()
                 multiple_delays = self._get_multiple_delays_from_h5()
-                pdb.set_trace()
+                #pdb.set_trace()
                 #primary_shift = -1.0 * getattr(window_widths, self.component).primary / 2.0
                 primary_shift = -1.0 * window_widths[self.component]['primary'] / 2.0
                 wb = WindowBoundaries()
@@ -304,6 +312,55 @@ class Heatmap(RhinoDisplayPanel):
             for wavelet_id in self.wavelet_windows_to_show:
                 y_values = window_boundaries[wavelet_id]
                 ax.hlines(1000*y_values, X[0], X[-1], color=colours[wavelet_id],linestyle = '-',linewidth = 1.05)
+
+        if self.manual_picks_to_show is not None:
+            colours = {}
+            colours['primary'] = 'black'
+            colours['multiple_1'] = 'blue'
+            colours['multiple_2'] = 'red'
+            for wavelet_id in self.manual_picks_to_show.keys():
+                y_value = self.manual_picks_to_show[wavelet_id]
+                print(wavelet_id, y_value)
+                ax.hlines(1000*np.asarray(y_value), X[0], X[-1], color=colours[wavelet_id],
+                          linestyle = '-.',linewidth = 2.05)
+                if self.manual_window_widths_to_show is not None:
+                    try:
+                        width = self.manual_window_widths_to_show[wavelet_id]
+                        y_values = np.asarray([y_value-width, y_value+width])
+                        ax.hlines(1000*np.asarray(y_values), X[0], X[-1], color=colours[wavelet_id],
+                          linestyle = '--',linewidth = 1.05)
+                    except KeyError:
+                        print('whoops')
+
+        if self.picks_to_show is not None:
+            colours = {}
+            colours['primary'] = 'white'
+            colours['multiple_1'] = 'white'
+            colours['multiple_2'] = 'white'
+            for wavelet_id in self.picks_to_show:
+                #pdb.set_trace()
+                if wavelet_id=='primary':
+                    y_values = self.dataframe.J2_axial_primary_max_time
+                elif wavelet_id=='multiple_1':
+                    y_values = self.dataframe.J2_axial_multiple_1_zero_crossing_time
+                elif wavelet_id=='multiple_2':
+                    y_values = self.dataframe.J2_axial_multiple_2_min_time
+                plt.plot(X, 1000*y_values, color=colours[wavelet_id], linewidth=1.25)
+                #pdb.set_trace()
+#
+#                y_value = self.manual_picks_to_show[wavelet_id]
+#                print(wavelet_id, y_value)
+#                ax.hlines(1000*np.asarray(y_value), X[0], X[-1], color=colours[wavelet_id],
+#                          linestyle = '-.',linewidth = 2.05)
+#                if self.manual_window_widths_to_show is not None:
+#                    try:
+#                        width = self.manual_window_widths_to_show[wavelet_id]
+#                        y_values = np.asarray([y_value-width, y_value+width])
+#                        ax.hlines(1000*np.asarray(y_values), X[0], X[-1], color=colours[wavelet_id],
+#                          linestyle = '--',linewidth = 1.05)
+#                    except KeyError:
+#                        print('whoops')
+
 
         #pdb.set_trace()
         ax.set_xlim(X[0], X[-1])

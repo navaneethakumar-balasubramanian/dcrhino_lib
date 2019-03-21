@@ -97,7 +97,10 @@ class QCPlotterModule(BaseModule):
             reflection_coefficient = np.zeros(len(trace.dataframe))
         #pdb.set_trace()
         if transformed_args.plot.ax_vel_del_col_name:
-            ax_vel_del = trace.dataframe[transformed_args.plot.ax_vel_del_col_name].copy()
+            try:
+                ax_vel_del = trace.dataframe[transformed_args.plot.ax_vel_del_col_name].copy()
+            except KeyError:
+                ax_vel_del = None
         else:
             ax_vel_del = None
         axial_vel_2 = False

@@ -73,7 +73,7 @@ class FeatureExtractorK0(FeatureExtractorJ1):
         index_window_dict = self.window_boundaries_indices[component]
         trace_data_window_dict = {}
         trace_time_vector_dict = {}
-        pdb.set_trace()
+        #pdb.set_trace()
         for window_label in index_window_dict.keys():
             lower_index = index_window_dict[window_label][0]
             upper_index = index_window_dict[window_label][1]
