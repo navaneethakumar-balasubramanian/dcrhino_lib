@@ -25,22 +25,10 @@ class RhinoDisplayPanel(object):
     def __init__(self, **kwargs):
         self.plot_style = None
         self.dict = {}
-        self.h5_file = kwargs.get('h5', None)
         self.trace_data = kwargs.get('trace_data', None)
-        #self.dataframe = kwargs.get('trace_data', None)
 
-    def to_dict(self):
-        print("this makes a dict/json with params")
-        pass
 
-    def _load_trace_data(self):
-        """
-        placeholder, not atall  sure this is the right way ... but think
-        a method like this is needed, jusstnot hths exact one
-        """
-        td = TraceData()
-        td.load_from_h5(self.h5_file)
-        self.trace_data = td
+
 
     def _get_window_widths_from_h5(self):
         """
@@ -148,7 +136,7 @@ class Header(RhinoDisplayPanel):
         self.plot_style = "header"
         self.curves= kwargs.get('curves', [])
 
-        self._load_trace_data()
+        self.trace_data = kwargs.get('trace_data', None)
         self.load_curve_data_from_dataframe()
 
 
@@ -170,8 +158,19 @@ class Header(RhinoDisplayPanel):
             #pdb.set_trace()
             ax.plot(curve.x_axis_values, curve.data, color=curve.color,
                     label=curve.column_label)
+            X = curve.x_axis_values
+            x_maj_tick = (np.arange(X[0], X[-1]) - X[0])
+            x_min_tick = (np.arange(X[0], X[-1], 0.5) - X[0])
+            for x_maj_tick in x_maj_tick:
+                ax.axvline(x=x_maj_tick, ymin=0, ymax=1.5, color='k')
+
+            for x_min_tick in x_min_tick:
+                ax.axvline(x=x_min_tick, ymin=0, ymax=1.5, color='k', linestyle=':')
+
+
             ax.set_xlim(curve.x_axis_values[0], curve.x_axis_values[-1])
         ax.legend();
+        return ax, None
         #ax.set_xlim(curve.x_axis_values[0], curve.x_axis_values[-1])
 
 class Heatmap(RhinoDisplayPanel):
@@ -261,8 +260,10 @@ class Heatmap(RhinoDisplayPanel):
             heatmap = ax.pcolormesh(X, Y, Z, cmap=self.cmap_string,
                                     vmin=self.v_min, vmax=self.v_max)
         locs,labs = plt.xticks()
-        pdb.set_trace()
+        #pdb.set_trace()
         ax.set_ylabel('time (ms)')
+
+
         ax.invert_yaxis()
 
         ax.set_yticks(y_tick_locations, minor=False)
@@ -279,7 +280,7 @@ class Heatmap(RhinoDisplayPanel):
 #            if multiple_search_forward_ms is not None:
 #                ax.plot(np.asarray([X[0], X[-1]]), (two_way_travel_time_ms + multiple_search_forward_ms) * np.ones(2), 'k', linewidth=1.)
         if self.mult_pos is not None:
-            print("what is this? a pick? thoeretical, actual?")
+            #print("what is this? a pick? thoeretical, actual?")
             ax.plot(X,self.mult_pos.ax_1_mult, color = 'k',linestyle = '--',linewidth = 2)
             ax.plot(X,self.mult_pos.ax_2_mult, color = 'k',linestyle = '--',linewidth = 2)
             ax.plot(X,self.mult_pos.tang_1_mult, color = 'k',linestyle = '-',linewidth = 2)
@@ -293,7 +294,7 @@ class Heatmap(RhinoDisplayPanel):
             colours['multiple_2'] = 'red'
             window_widths = self._get_window_widths_from_h5()
             multiple_delays = self._get_multiple_delays_from_h5()
-            pdb.set_trace()
+            #pdb.set_trace()
             #primary_shift = -1.0 * getattr(window_widths, self.component).primary / 2.0
             primary_shift = -1.0 * window_widths[self.component]['primary'] / 2.0
             wb = WindowBoundaries()
@@ -324,7 +325,7 @@ class Heatmap(RhinoDisplayPanel):
             delay_2 = delay_2 * 1000
             ax.spines['right'].set_color('black')
             ax.plot(X, delay_2, color='white', linewidth=0.5)
-
+        ax.set_title("Component:" + str(self.component),loc="left")
         return ax, heatmap
 
     def plot(self, ax):

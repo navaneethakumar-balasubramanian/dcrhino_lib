@@ -16,5 +16,6 @@ def autocorrelate_trace(trace_data, n_pts):
         return acorr[zero_time_index:zero_time_index+n_pts]
 
 class AutoCorrelateModule(BaseTraceModule):
-    def __init__(self):
+    def __init__(self, json, output_path, process_flow,order):
+        BaseTraceModule.__init__(self, json, output_path, process_flow,order)
         self.id = "autocorrelate"

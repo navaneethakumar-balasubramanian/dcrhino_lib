@@ -25,8 +25,8 @@ define_obspy_trace_header()
 
 
 class ExportSEGYModule(BaseTraceModule):
-    def __init__(self, json, output_path):
-        BaseTraceModule.__init__(self, json, output_path)
+    def __init__(self, json, output_path,process_flow,order):
+        BaseTraceModule.__init__(self, json, output_path,process_flow,order)
         self.id = "export_segy"
         self.output_to_file = False
         self.stream = Stream()
@@ -42,8 +42,8 @@ class ExportSEGYModule(BaseTraceModule):
         else:
             m = "Only one config file identified while generating SEGY"
             logger.info(m)
-            basename = os.path.basename(self.output_path).replace(".h5", "")
-            output_path = os.path.join(os.path.dirname(self.output_path),
+            basename = os.path.basename(self.output_file_basepath(extension=""))
+            output_path = os.path.join(os.path.dirname(self.output_file_basepath(extension=".h5")),
                                        "{}_{}.sgy".format(basename, self.generate_output_name(trace.applied_modules)))
             self.global_config = trace.global_config_by_index(trace.dataframe['acorr_file_id'].values[0])
             self.sampling_rate = self.get_sampling_rate(trace.applied_modules)

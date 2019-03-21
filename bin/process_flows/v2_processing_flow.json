@@ -1,7 +1,6 @@
 {
   "id": "v2_processing_flow",
   "output_to_file":true,
-  "trace_processing": {
     "modules": [
       {
         "type": "unfold",
@@ -35,11 +34,7 @@
           "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
           "sampling_rate": "|global_config.sampling_rate|"
         }
-      }
-    ]
-  },
-  "features_extraction": {
-    "modules": [
+      },
       {
         "type": "j0",
         "output_to_file": false,
@@ -72,12 +67,7 @@
           "n_samples_trimmed_trace": "|global_config.n_samples_trimmed_trace|",
           "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|"
         }
-      }
-    ],
-    "output_to_file": false
-  },
-  "plotters": {
-    "modules": [
+      },
       {
         "type": "qc_log_v1",
         "output_to_file": true,
@@ -147,5 +137,4 @@
         }
       }
     ]
-  }
 }

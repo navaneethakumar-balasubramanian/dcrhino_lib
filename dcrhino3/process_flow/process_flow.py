@@ -32,6 +32,7 @@ from dcrhino3.process_flow.modules.log_processing.binning_module import BinningM
 from dcrhino3.process_flow.modules.log_processing.rhino_physics import RhinoPhysicsModule
 
 from dcrhino3.process_flow.modules.plotters.qc_plotter_module import QCPlotterModule
+from dcrhino3.process_flow.modules.plotters.rhino_plotter_module import RhinoPlotterModule
 
 from dcrhino3.models.trace_dataframe import TraceData
 
@@ -44,23 +45,14 @@ class ProcessFlow:
     def __init__(self, output_path=""):
         self.id = "process_flow"
 
-        self.lp_modules = {
+        self.modules = {
             "binning": BinningModule,
-            "rhino_physics":RhinoPhysicsModule
-        }
-
-        self.plotters_modules = {
-            "qc_log_v1": QCPlotterModule
-        }
-
-        self.features_extraction_modules = {
+            "rhino_physics": RhinoPhysicsModule,
             "j0": J0FeaturesModule,
             "j1": J1FeaturesModule,
             "k0": K0FeaturesModule,
-            "b0": B0FeaturesModule
-        }
-
-        self.trace_processing_modules = {
+            "b0": B0FeaturesModule,
+            "qc_log_v1": QCPlotterModule,
             "balance": BalanceModule,
             "band_pass_filter": BandPassFilterModule,
             "add_one": AddOneModule,
@@ -73,18 +65,17 @@ class ProcessFlow:
             "unfold": UnfoldAutocorrelationModule,
             "upsample": UpsampleModule,
             "upsample_sinc": UpsampleSincModule,
-            "export_segy": ExportSEGYModule
+            "export_segy": ExportSEGYModule,
+            "rhino_plotter": RhinoPlotterModule
         }
+
+
 
         self.output_path = output_path
 
 
     def set_process_flow(self,process_json):
-        self.trace_flow = []
-        self.features_flow = []
-        self.plotters_flow = []
-        self.lp_flow = []
-
+        self.modules_flow = []
 
 
         self.save_features_to_file = False
@@ -111,51 +102,14 @@ class ProcessFlow:
 
         process_flow_output_path = os.path.join(self.output_path, self.id)
         process_counter = 0
-        if 'trace_processing' in process_json.keys():
-            trace_processing_json = process_json['trace_processing']
-            if 'modules' in trace_processing_json.keys():
-                trace_processing_modules_json = trace_processing_json['modules']
-                for module in trace_processing_modules_json:
-                    process_counter += 1
-                    module_file_name = str(process_counter) + "_tp_" + module['type'] + ".h5"
-                    module_output_path = os.path.join(process_flow_output_path, module_file_name)
-                    self.trace_flow.append(self.trace_processing_modules[module['type']](module, module_output_path))
+        if 'modules' in process_json.keys():
+            modules_json = process_json['modules']
+            for module in modules_json:
+                process_counter += 1
+                module_output_path = os.path.join(process_flow_output_path)
+                self.modules_flow.append(self.modules[module['type']](module, module_output_path,self,process_counter))
 
-        if 'features_extraction' in process_json.keys():
-            features_extraction_json = process_json['features_extraction']
-            if 'output_to_file' in features_extraction_json.keys():
-                self.save_features_to_file = features_extraction_json['output_to_file']
 
-            if 'modules' in features_extraction_json.keys():
-                features_extraction__modules_json = features_extraction_json['modules']
-                for module in features_extraction__modules_json:
-                    process_counter += 1
-                    module_file_name = str(process_counter) + "_features_" + module['type'] + ".csv"
-                    module_output_path = os.path.join(process_flow_output_path, module_file_name)
-                    self.features_flow.append(
-                        self.features_extraction_modules[module['type']](module, module_output_path))
-
-        if "plotters" in process_json.keys():
-            plotters_json = process_json['plotters']
-            if 'modules' in plotters_json.keys():
-                plotters_modules_json = plotters_json['modules']
-                for module in plotters_modules_json:
-                    process_counter += 1
-                    module_file_name = str(process_counter) + "_plot_" + module['type'] + ".png"
-                    module_output_path = os.path.join(process_flow_output_path, module_file_name)
-                    self.plotters_flow.append(self.plotters_modules[module['type']](module, module_output_path))
-
-        if 'log_processing' in process_json.keys():
-            log_processing_json = process_json['log_processing']
-
-            if 'modules' in log_processing_json.keys():
-                log_processing_modules_json = log_processing_json['modules']
-                for module in log_processing_modules_json:
-                    process_counter += 1
-                    module_file_name = str(process_counter) + "_lp_" + module['type'] + ".csv"
-                    module_output_path = os.path.join(process_flow_output_path, module_file_name)
-                    self.lp_flow.append(
-                        self.lp_modules[module['type']](module, module_output_path))
 
     def process(self, trace_data):
         process_flow_output_path = os.path.join(self.output_path, self.id)
@@ -173,42 +127,12 @@ class ProcessFlow:
         Returns:
             processed trace data (other files will be saved to assigned locations
                 and folders will be created if needed)
-            
-        .. todo:: @Thiago: why are we reassigning name in first line?  do you mean .copy?
         """
         output_trace = trace_data
-        for module in self.trace_flow:
+        for module in self.modules_flow:
             t0 = time.time()
             logger.info("Applying " + str(module.id) + " with: " + str(module.args))
-            # pdb.set_trace()
-            output_trace = module.process_trace_data(output_trace)
-            delta_t = time.time() - t0
-            logger.info("{} ran in {}s ".format(module.id, delta_t))
-
-        for module in self.features_flow:
-            t0 = time.time()
-            logger.info("Extracting features using module: " + str(module.id) + " with: " + str(module.args))
-            # pdb.set_trace()
-            output_trace = module.extract_features(output_trace)
-            delta_t = time.time() - t0
-            logger.info("{} ran in {}s ".format(module.id, delta_t))
-
-        if self.save_features_to_file:
-            output_trace.save_to_csv(os.path.join(process_flow_output_path, "extracted_features.csv"))
-
-        for module in self.plotters_flow:
-            t0 = time.time()
-            logger.info("Plotting using module: " + str(module.id) + " with: " + str(module.args))
-            # pdb.set_trace()
-            module.plot_trace_data(output_trace,process_flow_id=self.id)
-            delta_t = time.time() - t0
-            logger.info("{} ran in {}s ".format(module.id, delta_t))
-
-        for module in self.lp_flow:
-            t0 = time.time()
-            logger.info("Log processing using module: " + str(module.id) + " with: " + str(module.args))
-            # pdb.set_trace()
-            module.process_trace_data(output_trace)
+            output_trace = module.process_trace(output_trace)
             delta_t = time.time() - t0
             logger.info("{} ran in {}s ".format(module.id, delta_t))
 

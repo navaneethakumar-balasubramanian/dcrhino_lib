@@ -54,14 +54,7 @@
           "upsample_interpolation_kind": ["|global_config.upsample_interpolation_kind|", "quadratic"]
                }
 
-      }
-
-
-		]
-	},
-  "features_extraction": {
-    "output_to_file":true,
-    "modules": [
+      },
       {
         "type": "j0",
         "output_to_file": false,
@@ -93,11 +86,7 @@
                 "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
                 "window_widths":"|global_config.window_widths"
                 }
-      }
-    ]
-  },
-  "plotters": {
-    "modules": [
+      },
       {
         "type": "qc_log_v1",
         "output_to_file": true,
@@ -164,4 +153,4 @@
       }
     ]
   }
-}
+

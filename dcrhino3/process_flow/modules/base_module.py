@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import pdb
+import os
 import json
 from collections import namedtuple
 from dcrhino3.helpers.general_helper_functions import json_string_to_object,dict_to_object
 
 class BaseModule(object):
-    def __init__(self, json, output_path):
+    def __init__(self, json, output_path,process_flow,order):
         """
         @type json: dictionary
         @iver args: dictionary, from json, this is where we specify the numerical
@@ -20,12 +21,26 @@ class BaseModule(object):
 
         self.output_to_file = False
         self.args = {}
+        self.default_args = {}
 
         self.set_data_from_json(json)
+        self.process_flow = process_flow
+        self.order = order
+
+    def process_trace(self,trace):
+        return trace
+
+
+
+    def output_file_basepath(self,append="",extension=".csv"):
+        output_file_name = str(self.order) + "_" + str(self.id) + str(append) + extension
+        return os.path.join(self.output_path,output_file_name)
 
 
     def get_transformed_args(self, global_config):
         transformed = dict()
+        self.default_args.update(self.args)
+        self.args = self.default_args
         for key in self.args.keys():
             val = self.args[key]
             if type(val) == list:
