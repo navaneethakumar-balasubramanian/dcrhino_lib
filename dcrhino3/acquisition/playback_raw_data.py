@@ -2,110 +2,58 @@ import numpy as np
 import pandas as pd
 import h5py
 import matplotlib.pyplot as plt
-import ConfigParser
-from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
 import os
 import argparse
 import calendar
 import pdb
 import time
 from datetime import datetime
-from scipy.signal import butter, filtfilt
-from dcrhino3.models.metadata import Metadata
 from dcrhino.process_pipeline.trace_processing import TraceProcessing
 from dcrhino3.models.config import Config
 from dcrhino3.acquisition.config_file_utilities import extract_metadata_from_h5_file
-
-def interpolate_data(ideal_timestamps,digitizer_timestamps,data):
-    interp_data = np.interp(ideal_timestamps,digitizer_timestamps,data)
-    return interp_data
-
-def butter_highpass(cutoff, fs, order=5):
-    nyq = 0.5 * fs
-    normal_cutoff = cutoff / nyq
-    b, a = butter(order, normal_cutoff, btype='high', analog=False)
-    return b, a
-
-def butter_highpass_filter(data, cutoff, fs, order=5):
-    b, a = butter_highpass(cutoff, fs, order=order)
-    y = filtfilt(b, a, data)
-    return y
-
-# def extract_metadata_from_h5_file(h5f):
-#     config = ConfigParser.ConfigParser()
-#     for key,value in h5f.attrs.iteritems():
-#         #print(key,value)
-#         section = key.split("/")[0]
-#         param_name = key.split("/")[1]
-#         #pdb.set_trace()
-#         if config.has_section(section):
-#             config.set(section,param_name,value)
-#         else:
-#             config.add_section(section)
-#             config.set(section,param_name,value)
-#
-#     m =Metadata(config)
-#     return m
-
-
-
-
-
+from dcrhino3.helpers.general_helper_functions import init_logging, interpolate_data
+import scipy as sp
 
 def main(args):
     #pdb.set_trace()
-    save_raw = False
+    save_raw = True
     save_csv = True
+    save_numpy = False
     t0 = datetime.now()
-    #if args.config_path == None:
-    #    configfile_path = os.path.join(PATH,'collection_daemon.cfg')
-    #else:
-    #    configfile_path = args.config_path
-
-    #config = ConfigParser.SafeConfigParser()
-    #config.read(configfile_path)
-    #pdb.set_trace()
-    if args.sampling_rate == None:
+    if args.sampling_rate is None:
         print("NEED A RESAMPLE RATE")
-        return;
-        output_sampling_rate = 3200
+        return
     else:
         output_sampling_rate = int(args.sampling_rate)
 
-    if args.start_time == None:
+    if args.start_time is None:
         start_time = 0
     else:
-        start_time = calendar.timegm(datetime.strptime(args.start_time,'%Y-%m-%d %H:%M:%S').utctimetuple())
+        start_time = calendar.timegm(datetime.strptime(args.start_time, '%Y-%m-%d %H:%M:%S').utctimetuple())
 
-    if args.end_time == None:
+    if args.end_time is None:
         end_time = 0
     else:
-        end_time = calendar.timegm(datetime.strptime(args.end_time,'%Y-%m-%d %H:%M:%S').utctimetuple())
+        end_time = calendar.timegm(datetime.strptime(args.end_time, '%Y-%m-%d %H:%M:%S').utctimetuple())
 
-    #if args.source_path == None:
-    #    fname = os.path.join(config.get("PLAYBACK","filename"))
-    #else:
     fname = args.source_path
     original_name = fname.split(".")[0]
 
-    #apply_sensitivities = config.getboolean("PLAYBACK","apply_sensitivities")
-
-
-    axis = ["X","Y","Z"]
+    axis = ["X", "Y", "Z"]
 
     print("Reading File")
     hf = h5py.File(fname, 'r')
 
     print("Extracting Metadata")
     metadata = extract_metadata_from_h5_file(hf)
-    ts = np.asarray(hf.get('ts'),dtype=np.float64)
-    sensitivity = np.asarray(hf.get('sensitivity'),dtype=np.float64)
+    ts = np.asarray(hf.get('ts'), dtype=np.float64)
+    sensitivity = np.asarray(hf.get('sensitivity'), dtype=np.float64)
     print (hf.get('axis'))
-    if hf.get('axis') == None:
-        print ("NO AXIS ON METADATA SUPPOSING ITS AN IDE FILE")
-        file_axis = [1,2]
+    if hf.get('axis') is None:
+        print ("NO AXIS ON METADATA ASSUMING IT'S AN IDE FILE")
+        file_axis = [1, 2]
     else:
-        file_axis = np.asarray(hf.get('axis'),dtype=np.int32)
+        file_axis = np.asarray(hf.get('axis'), dtype=np.int32)
     #print (hf.keys())
 
     #IDE File
@@ -120,15 +68,39 @@ def main(args):
     print(sensitivity)
     print(file_axis)
     if start_time == 0:
-        start_time = int(ts[0])
+        start_time = ts[0]
+    else:
+        start_time = ts[ts>=start_time][0]
 
     if end_time == 0:
         end_time = int(ts[-1])+1
 
     #pdb.set_trace()
 
-    seq = np.asarray(hf.get('seq'),dtype=np.int32)
-    ticks = np.asarray(hf.get('cticks'),dtype=np.int32)
+    seq = np.asarray(hf.get('seq'), dtype=np.uint32)
+    tx_sequence = np.asarray(hf.get('cticks'), dtype=np.uint32)
+
+
+    # sequence_diff = np.diff(tx_sequence)
+    # missed_samples = sequence_diff[sequence_diff > 1]-1
+    # fig = plt.figure("DataCloud Rhino Missed Samples", figsize=(10, 5))
+    # plt.hist(missed_samples, bins="sqrt")
+    # plt.title("Distribution of Missed Samples")
+    #
+    # fig.savefig(fname.replace(".h5","_missed_samples.png"))
+    #
+    # missed_samples_indices = np.where(sequence_diff > 1)
+    # good_samples_in_a_row = np.diff(missed_samples_indices[0])
+    # fig = plt.figure("DataCloud Rhino Good Samples in a row Samples", figsize=(10, 5))
+    # bins = np.arange(5, 1001, 5)
+    # plt.hist(good_samples_in_a_row,bins=bins)
+    # plt.title("Distribution of good samples in a row")
+    # fig.savefig(fname.replace(".h5", "_good_samples_in_a_row.png"))
+
+    # performance_df = pd.DataFrame(columns=["ts", "good", "missed"])
+    # performance_df["ts"] = ts[1:]
+    # performance_df["good"] = good_samples_in_a_row
+    # performance_df["missed"] = missed_samples
 
     print("Applying calibration")
 
@@ -137,9 +109,9 @@ def main(args):
     rhino_version = global_config.rhino_version
 
     if len(sensitivity)>1:
-        is_ide_file=False
+        is_ide_file = False
     else:
-        is_ide_file=True
+        is_ide_file = True
     trace_processor = TraceProcessing(global_config, is_ide_file,accelerometer_max_voltage,rhino_version)
 
     if is_ide_file:
@@ -174,9 +146,9 @@ def main(args):
 
     if save_raw:
         print("Saving Raw Data")
-        cols = ["raw_ts","adc_x","adc_y","adc_z","cal_x","cal_y","cal_z"]
+        cols = ["raw_ts","adc_x","adc_y","adc_z","cal_x","cal_y","cal_z","tx_sequence"]
         d = {cols[0]:ts,cols[1]:np.asarray(hf.get('x'),dtype=np.float32),cols[2]:np.asarray(hf.get('y'),dtype=np.float32),cols[3]:np.asarray(hf.get('z'),dtype=np.float32),
-            cols[4]:x_data,cols[5]:y_data,cols[6]:z_data}
+            cols[4]:x_data,cols[5]:y_data,cols[6]:z_data, cols[7]:tx_sequence}
         output_data = pd.DataFrame(data=d)
         output_data = output_data[cols]
         csv_path = os.path.join(output_path,original_name+"_raw.csv".format(output_sampling_rate))
@@ -184,9 +156,11 @@ def main(args):
 
     hf.close()
 
-    total_seconds = end_time - start_time
+    total_seconds = end_time - int(start_time)
 
     ideal_timestamps = (np.arange(total_seconds*output_sampling_rate)*1.0/output_sampling_rate)+start_time
+    ideal_timestamps = ideal_timestamps[ideal_timestamps <= end_time]
+    # ideal_timestamps = (np.arange(total_seconds * output_sampling_rate) * 1.0 / output_sampling_rate) + start_time
     index = (ts>=start_time) & (ts<end_time)
     digitizer_timestamps = ts[index]
 
@@ -222,26 +196,28 @@ def main(args):
     tangential_path = os.path.join(output_path,"tangential",output_name+"_tangential_{}_{}.npy".format(axis[tangential_axis_index],output_sampling_rate))
     radial_path = os.path.join(output_path,"radial",output_name+"_radial_{}_{}.npy".format(axis[radial_axis_index],output_sampling_rate))
 
-    if not os.path.exists(os.path.dirname(axial_path)):
-        os.mkdir(os.path.dirname(axial_path))
-    if not os.path.exists(os.path.dirname(tangential_path)):
-        os.mkdir(os.path.dirname(tangential_path))
-    if not os.path.exists(os.path.dirname(radial_path)):
-        os.mkdir(os.path.dirname(radial_path))
+
 
     interp_data=[]
     #time_filtered_interp_x_data = interpolate_data(ideal_timestamps,digitizer_timestamps,time_filtered_x_raw_data)
     #time_filtered_interp_y_data = interpolate_data(ideal_timestamps,digitizer_timestamps,time_filtered_y_raw_data)
     #time_filtered_interp_z_data = interpolate_data(ideal_timestamps,digitizer_timestamps,time_filtered_z_raw_data)
     print("interpolating")
-    interp_data.append(interpolate_data(ideal_timestamps,digitizer_timestamps,time_filtered_data[0]))#X data
-    interp_data.append(interpolate_data(ideal_timestamps,digitizer_timestamps,time_filtered_data[1]))#Y data
-    interp_data.append(interpolate_data(ideal_timestamps,digitizer_timestamps,time_filtered_data[2]))#Z data
+    interp_data.append(interpolate_data(digitizer_timestamps,time_filtered_data[0],ideal_timestamps))#X data
+    interp_data.append(interpolate_data(digitizer_timestamps,time_filtered_data[1],ideal_timestamps))#Y data
+    interp_data.append(interpolate_data(digitizer_timestamps,time_filtered_data[2],ideal_timestamps))#Z data
 
-    print("Saving Files")
-    np.save(axial_path,interp_data[file_axis[0]-1])
-    np.save(tangential_path,interp_data[file_axis[1]-1])
-    np.save(radial_path,interp_data[5-file_axis[0]-file_axis[1]])
+    if save_numpy:
+        print("Saving Files")
+        if not os.path.exists(os.path.dirname(axial_path)):
+            os.mkdir(os.path.dirname(axial_path))
+        if not os.path.exists(os.path.dirname(tangential_path)):
+            os.mkdir(os.path.dirname(tangential_path))
+        if not os.path.exists(os.path.dirname(radial_path)):
+            os.mkdir(os.path.dirname(radial_path))
+        np.save(axial_path,interp_data[file_axis[0]-1])
+        np.save(tangential_path,interp_data[file_axis[1]-1])
+        np.save(radial_path,interp_data[5-file_axis[0]-file_axis[1]])
 
 
     if save_csv:
@@ -252,14 +228,14 @@ def main(args):
         d = {cols[0]:ideal_timestamps,cols[1]:datetimes,cols[2]:interp_data[axial_axis_index],cols[3]:interp_data[tangential_axis_index],cols[4]:interp_data[radial_axis_index]}
         output_data = pd.DataFrame(data=d)
         output_data = output_data[cols]
-        csv_path = os.path.join(output_path,original_name+"_resampled_{}.csv".format(output_sampling_rate))
+        csv_path = os.path.join(output_path,original_name+"_quadratic_interpolated_{}.csv".format(output_sampling_rate))
         output_data.to_csv(csv_path,index=False)
 
     t1 = datetime.now()
     fig = plt.figure("DataCloud Rhino Raw Data Playback",figsize=(10,5))
     plt.subplots_adjust(hspace=0.5)
     # ax.ticklabel_format(useOffset=False, style='plain')
-    plt.figure(1)
+    #plt.figure(1)
 
     #######################################################################
     #################TROUBLESHOOTING#######################################
@@ -306,7 +282,10 @@ def main(args):
     # plt.plot([datetime.utcfromtimestamp(x) for x in digitizer_timestamps],time_filtered_data[file_axis[0]-1],'k')
     # plt.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps],interp_data[file_axis[0]-1],'r')
 
-    axial_plot.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps],interp_data[axial_axis_index],'r')
+    axial_plot.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps],interp_data[axial_axis_index], 'r',
+                    marker="X")
+    # axial_plot.plot([datetime.utcfromtimestamp(x) for x in digitizer_timestamps],time_filtered_data[
+    #     axial_axis_index],'b',marker=".")
     tangential_plot.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps],interp_data[tangential_axis_index],'b')
     radial_plot.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps],interp_data[radial_axis_index],'g')
 

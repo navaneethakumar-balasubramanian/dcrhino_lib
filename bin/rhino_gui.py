@@ -18,7 +18,7 @@ import calendar,time
 import pdb
 import os,glob
 from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
-from dcrhino3.acquisition.constants import DATA_PATH, LOGS_PATH
+from dcrhino3.acquisition.constants import DATA_PATH, LOGS_PATH,RAM_PATH
 from subprocess import call
 from subprocess import Popen
 import signal
@@ -26,6 +26,7 @@ import subprocess
 import serial
 import logging
 from dcrhino3.models.metadata import Metadata
+import multiprocessing
 
 if not os.path.exists(LOGS_PATH):
     os.makedirs(LOGS_PATH)
@@ -135,34 +136,31 @@ class GUI():
     def acquisition_daemon(self):
         load_config_file()
         if self.acquisition_process == None:
-            # self.acquisition_process = Popen(['python', os.path.abspath(os.path.join(PATH,'atexit_test.py'))])
             timestamp = datetime.now().strftime('%Y_%m_%d_%H')
-            rhino_version = config.getfloat("COLLECTION","rhino_version")
             acq_script = 'real_time_acquisition_v3.py'
-            # if rhino_version == 1.1:
-            #     acq_script = 'real_time_acquisition_v3_dev.py'
-            # else:
-            #     acq_script = 'real_time_acquisition.py'
             health_script = 'system_health_plotter.py'
-            # sensor_stats = 'sensor_stats_plotter.py'
+            sensor_stats = 'sensor_stats_plotter.py'
             if debug:
                 self.acquisition_process = Popen(['python', os.path.abspath(os.path.join(PATH,acq_script))])
                 self.system_health_process = Popen(['python', os.path.abspath(os.path.join(PATH,health_script))])
-                # self.sensor_stats_process = Popen(['python', os.path.abspath(os.path.join(PATH,sensor_stats))])
+                self.sensor_stats_process = Popen(['python', os.path.abspath(os.path.join(PATH,sensor_stats))])
                 logging.info("Acquisition started in debug mode")
             else:
                 self.error_file = os.path.join(LOGS_PATH,"{}.err".format(timestamp))
                 with open(self.error_file,"ar",buffering=0) as self.err:
                     self.acquisition_process = Popen(['python', os.path.abspath(os.path.join(PATH,acq_script))],stderr=self.err)
                     self.system_health_process = Popen(['python', os.path.abspath(os.path.join(PATH,health_script))],stderr=self.err)
-                    # self.sensor_stats_process = Popen(['python', os.path.abspath(os.path.join(PATH,sensor_stats))],stderr=self.err)
+                    self.sensor_stats_process = Popen(['python', os.path.abspath(os.path.join(PATH,sensor_stats))],stderr=self.err)
                 logging.info("Acquisition started in regular mode")
 
-            p = subprocess.Popen(['taskset', '-cp','3', str(self.system_health_process.pid) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            # p = subprocess.Popen(['taskset', '-cp','7', str(self.sensor_stats_process.pid) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p = subprocess.Popen(['taskset', '-cp','{}'.format(multiprocessing.cpu_count()-1),
+                                  str(self.system_health_process.pid)],
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p = subprocess.Popen(['taskset', '-cp','{}'.format(multiprocessing.cpu_count()-2),
+                                  str(self.sensor_stats_process.pid)], stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
 
     def acquisition_daemon_stop(self):
-        # self.acquisition_process.terminate()
         if self.acquisition_process != None:
             if not debug:
                 self.err.close()
@@ -170,9 +168,10 @@ class GUI():
             self.acquisition_process = None
             self.system_health_process.terminate()
             self.system_health_process = None
-            # self.sensor_stats_process.terminate()
-            # self.sensor_stats_process = None
+            self.sensor_stats_process.terminate()
+            self.sensor_stats_process = None
             self.stop_rx(True)
+            os.remove(os.path.join(RAM_PATH,"system_health.npy"))
             logging.info("Acquisition stopped")
         # else:
         #     self.stop_rx(False)
@@ -273,8 +272,8 @@ class GUI():
     def merge_files(self):
         mfg.main()
 
-    def processing_pipeline(self):
-        ppl.main()
+    # def processing_pipeline(self):
+    #     ppl.main()
 
     # def feature_extract_settings(self):
     #     fg.main()

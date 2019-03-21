@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pdb
 import time
-from scipy.interpolate import interp1d
+
 
 from dcrhino3.models.config import Config
 from dcrhino3.models.trace_dataframe import TraceData
@@ -15,6 +15,8 @@ from dcrhino3.process_flow.modules.trace_processing.autocorrelate import autocor
 
 
 logger = init_logging(__name__)
+
+
 
 class RawTraceData(TraceData):
     def load_from_h5(self,path):
