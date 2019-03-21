@@ -16,7 +16,6 @@ import os
 from string import zfill
 import subprocess
 import pdb
-from scipy.interpolate import interp1d
 
 from collections import namedtuple
 from scipy.interpolate import interp1d
@@ -260,7 +259,7 @@ def find_files(directory, pattern, **kwargs):
 
 def interpolate_data(raw_timestamps,data,ideal_timestamps):
     try:
-        interp_function = interp1d(raw_timestamps, data, kind="quadratic", bounds_error=False, fill_value=0)
+        interp_function = interp1d(raw_timestamps, data, kind="quadratic", bounds_error=False, fill_value="extrapolate")
         interp_data = interp_function(ideal_timestamps)
     except:
         logger.error("Failed to interpolate this trace " + str(int(raw_timestamps[0])))
