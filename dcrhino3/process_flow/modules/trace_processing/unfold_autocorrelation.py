@@ -23,8 +23,8 @@ def unfold_trace(component_vector):
 
 
 class UnfoldAutocorrelationModule(BaseTraceModule):
-    def __init__(self, json, output_path):
-        BaseTraceModule.__init__(self, json, output_path)
+    def __init__(self, json, output_path,process_flow,order):
+        BaseTraceModule.__init__(self, json, output_path,process_flow,order)
         self.id = "unfold"
 
     def process_component(self,component_id, component_vector, global_config):

@@ -40,18 +40,21 @@ def decide_what_components_to_plot(transformed_args,axial,tangential,radial):
     return components_to_plot
 
 class QCPlotterModule(BaseModule):
-    def __init__(self, json, output_path):
-        BaseModule.__init__(self, json, output_path)
+    def __init__(self, json, output_path,process_flow,order):
+        BaseModule.__init__(self, json, output_path,process_flow,order)
         self.id = "qc_log_v1"
 
-    def plot_trace_data(self,trace,process_flow_id):
+    def process_trace(self, trace):
+        return self.plot_trace_data(trace)
+
+    def plot_trace_data(self,trace):
         """
         @note 20190214: Modify this so that it iterates NOT over all three components
         but rather over the components_to_plot
         todo: factor out all the assignments and header plot into a separate
         routine self.sort_out_what_to_plot_in_header()
         """
-
+        process_flow_id = self.process_flow.id
         row_of_df = trace.dataframe.iloc[0]
         first_global_conf = trace.global_config_by_index(row_of_df['acorr_file_id'])
         transformed_args = self.get_transformed_args(first_global_conf)
@@ -134,7 +137,7 @@ class QCPlotterModule(BaseModule):
 
         output_path = None
         if self.output_to_file:
-            output_path = self.output_path
+            output_path = self.output_file_basepath(extension=".png")
 
         show = transformed_args.show
 
@@ -156,6 +159,7 @@ class QCPlotterModule(BaseModule):
                  output_path
                  )
 
+        return trace
 
 
 

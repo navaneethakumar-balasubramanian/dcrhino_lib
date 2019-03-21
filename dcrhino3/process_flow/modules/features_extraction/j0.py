@@ -16,8 +16,8 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 logger = init_logging(__name__)
 
 class J0FeaturesModule(BaseFeatureModule):
-    def __init__(self,json,output_path):
-        BaseFeatureModule.__init__(self,json,output_path)
+    def __init__(self,json,output_path,process_flow,order):
+        BaseFeatureModule.__init__(self,json,output_path,process_flow,order)
         self.id = "j0"
 
     def extract_feature_component(self, component_id, component_array, transformed_args, trace_timestamp):

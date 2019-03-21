@@ -11,12 +11,15 @@ import pdb
 from dcrhino3.process_flow.modules.base_module import BaseModule
 
 class BaseTraceModule(BaseModule):
-    def __init__(self, json, output_path):
+    def __init__(self, json, output_path,process_flow,order):
         """
         @ivar id: data_processing_stage_designator
         """
-        BaseModule.__init__(self, json, output_path)
+        BaseModule.__init__(self, json, output_path,process_flow,order)
         self.id = "base_trace_module"
+
+    def process_trace(self,trace):
+        return self.process_trace_data(trace)
 
 
     def process_trace_data(self,trace):
@@ -58,7 +61,7 @@ class BaseTraceModule(BaseModule):
         trace.add_applied_module(self.applied_module_string(self.args))
 
         if self.output_to_file:
-            trace.save_to_h5(self.output_path)
+            trace.save_to_h5(self.output_file_basepath(extension=".h5"))
 
         return trace
 

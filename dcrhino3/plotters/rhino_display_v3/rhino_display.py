@@ -29,6 +29,8 @@ class RhinoDisplay(object):
         self.panels = {}
         self.json_dict = {}
 
+
+
     def dc_plot_lim(self):
         """
         width, height in inches
@@ -36,23 +38,38 @@ class RhinoDisplay(object):
         dc_plot_lim = (24,12)
         return dc_plot_lim
 
-    def plot(self):
+
+    def plot(self,output_path=False,title=False):
         """
         plotty_mcplotsalot(self.dict)
         """
         n_panels = len(self.json_dict.keys())
         n_panels = len(self.panels)
         fig, ax = plt.subplots(n_panels, sharex=False, figsize=self.dc_plot_lim())
-        for i_panel in range(n_panels):
+        plt.subplots_adjust(left=0.05,right=0.95,bottom=0.05,top=0.9,hspace = 0.2)
+        if title:
+            fig.text(0.01, 0.99, title[0],verticalalignment='top')
+            fig.text(0.5, 0.99, title[1], verticalalignment='top',horizontalalignment="center")
+            fig.text(0.99, 0.99, title[2], verticalalignment='top',horizontalalignment="right")
 
-            axx = ax[i_panel]
-            panel = self.panels[i_panel]
-            panel._load_trace_data()
-            panel.plot(axx)
+
+        if n_panels > 1:
+            first_ax = ax[0]
+            for i_panel in range(n_panels):
+                axx = ax[i_panel]
+                panel = self.panels[i_panel]
+                panel.plot(axx)
+        else:
+            first_ax = ax
+            panel = self.panels[0]
+            panel.plot(ax)
 
         print(n_panels)
         print('ok, start plttoing')
+        if output_path:
+            plt.savefig(output_path,dpi=300)
         plt.show()
+
 
 def my_function():
     """

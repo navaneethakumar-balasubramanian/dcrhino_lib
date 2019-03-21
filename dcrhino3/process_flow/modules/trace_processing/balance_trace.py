@@ -35,8 +35,8 @@ logger = init_logging(__name__)
 
 
 class BalanceModule(BaseTraceModule):
-    def __init__(self, json, output_path):
-        BaseTraceModule.__init__(self, json, output_path)
+    def __init__(self, json, output_path,process_flow,order):
+        BaseTraceModule.__init__(self, json, output_path,process_flow,order)
         self.id = "balance"
 
     def process_component(self,component_id, component_vector, global_config):

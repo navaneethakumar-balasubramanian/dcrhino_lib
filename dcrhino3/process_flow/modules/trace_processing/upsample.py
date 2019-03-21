@@ -25,8 +25,8 @@ from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
 logger = init_logging(__name__)
 
 class UpsampleModule(BaseTraceModule):
-    def __init__(self, json, output_path):
-        BaseTraceModule.__init__(self, json, output_path)
+    def __init__(self, json, output_path,process_flow,order):
+        BaseTraceModule.__init__(self, json, output_path,process_flow,order)
         self.id = "upsample"
 
     def process_component(self,component_id, component_vector, global_config):

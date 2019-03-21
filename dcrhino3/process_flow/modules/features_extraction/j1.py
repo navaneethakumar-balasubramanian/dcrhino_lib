@@ -13,8 +13,8 @@ from dcrhino3.process_flow.modules.features_extraction.base_feature_module impor
 from dcrhino3.feature_extraction.feature_extractor_j1a import FeatureExtractorJ1
 
 class J1FeaturesModule(BaseFeatureModule):
-    def __init__(self,json,output_path):
-        BaseFeatureModule.__init__(self,json,output_path)
+    def __init__(self,json,output_path,process_flow,order):
+        BaseFeatureModule.__init__(self,json,output_path,process_flow,order)
         self.id = "j1"
 
     def extract_feature_component(self, component_id, trace_to_process, transformed_args, timestamp):

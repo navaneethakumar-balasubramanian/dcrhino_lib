@@ -12,8 +12,8 @@ import pdb
 from dcrhino3.process_flow.modules.trace_processing.base_trace_module import BaseTraceModule
 
 class AddOneModule(BaseTraceModule):
-    def __init__(self,json,output_path):
-        BaseTraceModule.__init__(self,json,output_path)
+    def __init__(self,json,output_path ,process_flow,order):
+        BaseTraceModule.__init__(self,json,output_path, process_flow,order)
         self.id = "add_one"
         
     def process_component(self,component_id,component_array,transformed_args):

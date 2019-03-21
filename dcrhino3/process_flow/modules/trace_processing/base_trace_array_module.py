@@ -9,9 +9,12 @@ from dcrhino3.models.trace_dataframe import COMPONENT_IDS, TRACE_COLUMN_LABELS
 logger = init_logging(__name__)
 
 class BaseTraceArrayModule(BaseModule):
-    def __init__(self, json, output_path):
-        BaseModule.__init__(self, json, output_path)
+    def __init__(self, json, output_path,process_flow,order):
+        BaseModule.__init__(self, json, output_path,process_flow,order)
         self.id = "base_trace_array_module"
+
+    def process_trace(self, trace):
+        return self.process_trace_data(trace)
 
 
     def process_trace_data(self, trace, args=None):
@@ -40,7 +43,7 @@ class BaseTraceArrayModule(BaseModule):
         trace.add_applied_module(self.applied_module_string(args))
 
         if self.output_to_file:
-            trace.save_to_h5(self.output_path)
+            trace.save_to_h5(self.output_file_basepath(extension=".h5"))
 
         return trace
 
