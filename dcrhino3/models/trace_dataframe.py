@@ -111,6 +111,15 @@ class TraceData(object):
         return self.first_global_config.digitizer_serial_number
 
     @property
+    def component_columns(self):
+        component_columns = []
+        for component_id in COMPONENT_IDS:
+            trace_label = '{}_trace'.format(component_id)
+            if trace_label in self.dataframe.columns:
+                component_columns.append(trace_label)
+        return component_columns
+
+    @property
     def hole_h5_filename(self):
         line = self.dataframe.iloc[0]
         return  str(line.bench_name) + "_" + str(line.pattern_name) + "_" + str(line.hole_name) + "_" + str(

@@ -158,8 +158,19 @@ class Header(RhinoDisplayPanel):
             #pdb.set_trace()
             ax.plot(curve.x_axis_values, curve.data, color=curve.color,
                     label=curve.column_label)
+            X = curve.x_axis_values
+            x_maj_tick = (np.arange(X[0], X[-1]) - X[0])
+            x_min_tick = (np.arange(X[0], X[-1], 0.5) - X[0])
+            for x_maj_tick in x_maj_tick:
+                ax.axvline(x=x_maj_tick, ymin=0, ymax=1.5, color='k')
+
+            for x_min_tick in x_min_tick:
+                ax.axvline(x=x_min_tick, ymin=0, ymax=1.5, color='k', linestyle=':')
+
+
             ax.set_xlim(curve.x_axis_values[0], curve.x_axis_values[-1])
         ax.legend();
+        return ax, None
         #ax.set_xlim(curve.x_axis_values[0], curve.x_axis_values[-1])
 
 class Heatmap(RhinoDisplayPanel):
@@ -251,6 +262,8 @@ class Heatmap(RhinoDisplayPanel):
         locs,labs = plt.xticks()
         #pdb.set_trace()
         ax.set_ylabel('time (ms)')
+
+
         ax.invert_yaxis()
 
         ax.set_yticks(y_tick_locations, minor=False)
@@ -267,7 +280,7 @@ class Heatmap(RhinoDisplayPanel):
 #            if multiple_search_forward_ms is not None:
 #                ax.plot(np.asarray([X[0], X[-1]]), (two_way_travel_time_ms + multiple_search_forward_ms) * np.ones(2), 'k', linewidth=1.)
         if self.mult_pos is not None:
-            print("what is this? a pick? thoeretical, actual?")
+            #print("what is this? a pick? thoeretical, actual?")
             ax.plot(X,self.mult_pos.ax_1_mult, color = 'k',linestyle = '--',linewidth = 2)
             ax.plot(X,self.mult_pos.ax_2_mult, color = 'k',linestyle = '--',linewidth = 2)
             ax.plot(X,self.mult_pos.tang_1_mult, color = 'k',linestyle = '-',linewidth = 2)
@@ -312,7 +325,7 @@ class Heatmap(RhinoDisplayPanel):
             delay_2 = delay_2 * 1000
             ax.spines['right'].set_color('black')
             ax.plot(X, delay_2, color='white', linewidth=0.5)
-
+        ax.set_title("Component:" + str(self.component),loc="left")
         return ax, heatmap
 
     def plot(self, ax):
