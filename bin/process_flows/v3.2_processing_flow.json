@@ -149,7 +149,7 @@
             }
           ]
         }
-      }
+      },
 
       {
         "type": "binning",
@@ -160,9 +160,33 @@
       },
       {
         "type": "rhino_physics",
-        "output_to_file": false,
+        "output_to_file": true,
         "args": {
           "recipe_to_use": "J1"
+        }
+      },
+      {
+        "type": "rhino_plotter",
+        "output_to_file": true,
+        "args":{
+          "panels": [
+            {
+              "type": "curves",
+              "curves": [
+                "a_density",
+                "a_modulus",
+                "a_reflection_coef"
+              ]
+            },
+            {
+              "type": "curves",
+              "curves": [
+                "t_density",
+                "t_modulus",
+                "t_reflection_coef"
+              ]
+            }
+          ]
         }
       }
     ]

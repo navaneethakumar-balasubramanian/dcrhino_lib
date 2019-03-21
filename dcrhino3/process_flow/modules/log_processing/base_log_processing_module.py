@@ -8,6 +8,9 @@ class BaseLogProcessingModule(BaseModule):
         BaseModule.__init__(self, json, output_path, process_flow,order)
         self.id = "base_log_processing_module"
 
+    def process_trace(self,trace):
+        return self.process_trace_data(trace)
+
     def process_trace_data(self, trace):
         df = trace.dataframe.copy()
         for col in df.columns:
