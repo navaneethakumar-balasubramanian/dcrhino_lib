@@ -17,7 +17,7 @@ class ColumnsToDataframeModule(BaseHybridModule):
         BaseHybridModule.__init__(self, json, output_path, process_flow, order)
         self.id = "columns_to_df"
         self.can_alter_trace = False
-        self.can_create_columns = False
+        self.can_create_columns = True
 
     def process_splitted_trace(self, splitted_trace):
         transformed_args = splitted_trace["transformed_args"]
