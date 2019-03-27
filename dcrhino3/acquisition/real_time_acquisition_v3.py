@@ -30,7 +30,7 @@ else:
 plt.ioff()
 import h5py
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import calendar
 import subprocess
@@ -255,7 +255,8 @@ class FileFlusher(threading.Thread):
             diff = round(abs(self.current_timestamp - reference), 2)
             if diff >= 1:
                 print("Last update was {} sec ago".format(reference-self.last_sync))
-                print ("Differece is {} sec, rolling back from {} to {}".format(diff, repr(self.current_timestamp),
+                print ("Differece is {} sec, changing time from {} to {}".format(diff,
+                                                                                      repr(self.current_timestamp),
                                                                                 repr(reference)))
                 self.current_timestamp = reference
                 self.last_sync = reference
@@ -569,7 +570,7 @@ class CollectionDaemonThread(threading.Thread):
     def __init__(self, bufferQ,tracesQ,logQ,displayQ):
         threading.Thread.__init__(self)
         self.bufferQ = bufferQ
-        self.bufferThisSecond = []
+        self.bufferThisSecond = list()
         self.lastSecond = None
         self.tracesQ = tracesQ
         self.logQ = logQ
@@ -584,6 +585,8 @@ class CollectionDaemonThread(threading.Thread):
     def run(self):
         print("Started Collection Daemon")
         lastFileName = None
+        look_for_time = True
+        file_change_interval_in_min = config.getint("RUNTIME", "file_change_interval_in_min")
         while True:
             try:
                 if not self.bufferQ.empty():
@@ -610,8 +613,9 @@ class CollectionDaemonThread(threading.Thread):
                         if len(self.bufferThisSecond) >= 1:
                             self.bufferThisSecond = np.asarray(self.bufferThisSecond)
                             utc_dt = datetime.utcfromtimestamp(temp_lastSecond)
-
-                            if lastFileName != utc_dt.hour:
+                            if lastFileName is None or (utc_dt.minute % file_change_interval_in_min == 0 and
+                                                        look_for_time):
+                                look_for_time = False
                                 prefix = utc_dt.strftime('%Y%m%d')+"_RTR"
                                 delta = utc_dt - datetime(year=utc_dt.year, month=utc_dt.month, day=utc_dt.day)
                                 elapsed = str(int(delta.total_seconds()))
@@ -620,13 +624,16 @@ class CollectionDaemonThread(threading.Thread):
                                     leading_zeros = "0" * (5-len(elapsed))
                                 filename = "{}{}{}_{}.h5".format(prefix, leading_zeros, elapsed, rhino_serial_number)
                                 filename = os.path.join(run_folder_path, filename)
-                                lastFileName = utc_dt.hour
+                                lastFileName = utc_dt
                                 first = True
+                            else:
+                                if lastFileName.minute != utc_dt.minute:
+                                    look_for_time = True
                             h5f = h5py.File(filename, 'a')
 
                             if first:
                                 disk_usage = psutil.disk_usage('/')[3]
-                                print(disk_usage)
+                                print("Disk Usage Percentage",disk_usage)
                                 first = False
                                 h5f, m = config_file_to_attrs(config, h5f)
                                 global_config = Config(Metadata(config))
@@ -741,7 +748,6 @@ class CollectionDaemonThread(threading.Thread):
                                               "filename": filename})
 
                         self.bufferThisSecond = list()
-
                     self.bufferThisSecond.append(row)
                 else:
                     # print("collection daemon buffer empty")

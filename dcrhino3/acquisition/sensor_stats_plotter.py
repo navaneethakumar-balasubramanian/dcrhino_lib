@@ -233,7 +233,7 @@ while True:
             time.sleep(.15)
             plt.clf()
         else:
-            time.sleep(.30)
+            time.sleep(.15)
     except NameError:
         time.sleep(0.1)
         pass
