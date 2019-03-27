@@ -3,11 +3,15 @@
   "output_to_file":true,
     "modules": [
       {
-        "type": "columns_to_df",
+        "type": "unfold",
+        "output_to_file": false,
+        "args": {}
+      },
+      {
+        "type": "lead_channel_deconvolution",
+        "output_to_file": false,
         "args": {
-            "max_lag_trimmed_": "|global_config.max_lag_trimmed_trace|",
-            "sampling_rate": "|global_config.sampling_rate|",
-            "karls_val": 9
+          "num_taps_in_decon_filter": "|global_config.num_taps_in_decon_filter|"
         }
       },
       {
@@ -54,7 +58,6 @@
         "output_to_file": true,
         "args":{
           "panels": [
-
             {
               "type": "heatmap",
               "component": "axial",
@@ -120,13 +123,14 @@
         "type": "rhino_plotter",
         "output_to_file": true,
         "args":{
+          "padding_right": 0.03,
           "panels": [
             {
               "type": "curves",
               "curves": [
                 {"column_label":"J0_axial_primary_max_amplitude",       "color": "red",  "spine_side": "left",   "scale":"current" , "space": 0},
                 {"column_label":"J0_axial_reflection_coefficient_1",    "color": "blue", "spine_side": "right",  "scale":"new",  "space": 0},
-                {"column_label": "J0_axial_delay_1",                    "color": "lime", "spine_side": "right",  "scale":"new",  "space": 40}
+                {"column_label": "J0_axial_delay_1",                    "color": "lime", "spine_side": "right",  "scale":"new",  "space": 60}
               ]
             },
             {
@@ -141,9 +145,9 @@
             {
               "type": "curves",
               "curves": [
-                {"column_label":"J0_tangential_primary_max_amplitude",       "color": "deeppink",        "spine_side": "left",   "scale":"current" , "space": 0},
-                {"column_label":"J0_tangential_reflection_coefficient_1",    "color": "deepskyblue",     "spine_side": "right",  "scale":"new",  "space": 0},
-                {"column_label":"J0_tangential_delay_1",                     "color": "green",           "spine_side": "right",  "scale":"new",  "space": 40}
+                {"column_label":"J0_tangential_primary_max_amplitude",       "color": "deeppink",        "spine_side": "left",   "scale":"current"},
+                {"column_label":"J0_tangential_reflection_coefficient_1",    "color": "deepskyblue",     "spine_side": "right",  "scale":"new"},
+                {"column_label":"J0_tangential_delay_1",                     "color": "green",           "spine_side": "right",  "scale":"new",  "space": 70}
               ]
             },
             {
@@ -214,9 +218,6 @@
                 "a_reflection_coef"
               ]
             }
-
-
-
           ]
         }
       }

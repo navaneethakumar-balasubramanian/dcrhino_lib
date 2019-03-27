@@ -28,6 +28,8 @@ class RhinoDisplay(object):
     def __init__(self):
         self.panels = {}
         self.json_dict = {}
+        self.padding_right = 0
+        self.padding_left = 0
 
 
 
@@ -46,7 +48,7 @@ class RhinoDisplay(object):
         n_panels = len(self.json_dict.keys())
         n_panels = len(self.panels)
         fig, ax = plt.subplots(n_panels, sharex=False, figsize=self.dc_plot_lim())
-        plt.subplots_adjust(left=0.05,right=0.95,bottom=0.05,top=0.9,hspace = 0.2)
+        plt.subplots_adjust(left=0.05 + self.padding_left,right=0.95 - self.padding_right,bottom=0.05,top=0.9,hspace = 0.2)
         if title:
             fig.text(0.01, 0.99, title[0],verticalalignment='top')
             fig.text(0.5, 0.99, title[1], verticalalignment='top',horizontalalignment="center")

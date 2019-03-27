@@ -91,6 +91,12 @@ def axis_lims_method_1(data, lim_type):
         + 'buffer' plot all data and allow a 5% buffer
         + 'main' plot the meat of the data (2-98 percentile) and allow 5% buffer for that
     """
+
+    if len(data) == 1:
+        return (data[0] - 1, data[0] + 1)
+    elif np.all(np.isnan(data)):
+        return (0, 0)
+
     # Set buffer and range size
     buffer_size = 0.05
     range_size  = np.max(data) - np.min(data)

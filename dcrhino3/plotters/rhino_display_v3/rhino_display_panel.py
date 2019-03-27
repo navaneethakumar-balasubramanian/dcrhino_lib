@@ -20,6 +20,9 @@ from dcrhino3.feature_extraction.feature_windowing import WindowBoundaries
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.physics.util import get_expected_multiple_times
 from dcrhino3.plotters.rhino_display_v3.plot_helper import axis_lims_method_1
+from dcrhino3.helpers.general_helper_functions import init_logging
+
+logger = init_logging(__name__)
 
 
 class RhinoDisplayPanel(object):
@@ -31,20 +34,27 @@ class RhinoDisplayPanel(object):
 
 
     def plot_curve(self,curve,ax):
+        if len(curve.data) == 1:
+            logger.warn("Not possible to plot 1 value array:" + str(curve.label))
+            return ax
         #pdb.set_trace()
         #print(curve.scale)
         # 
-        if curve.scale == "current" or "new":
+        if curve.scale == "current" or  curve.scale == "new":
             if curve.scale == "current":
                 ax1 = ax
             if curve.scale == "new":
                 ax1 = ax.twinx()    
             #ax1.set_ylabel(curve.label).set_color("k")
+
             ax1.set_ylim(axis_lims_method_1(curve.data,'buffer'))
-            ax1.set_ylabel(curve.column_label).set_color(curve.color)
+            if curve.color is not None:
+                ax1.set_ylabel(curve.column_label).set_color(curve.color)
+                ax1.spines[curve.spine_side].set_color(curve.color)
+
             ax1.yaxis.set_label_position(curve.spine_side)
             ax1.yaxis.set_ticks_position(curve.spine_side)
-            ax1.spines[curve.spine_side].set_color(curve.color)
+
             ax1.spines[curve.spine_side].set_linewidth(1)
             ax1.spines[curve.spine_side].set_position(('outward',curve.space))
             
@@ -154,8 +164,8 @@ class Curve(object):
         self.label = kwargs.get('label', '')
         self.linestyle = kwargs.get('linestyle','-')
         self.linewidth = kwargs.get('linewidth', 1.0)
-        self.scale = kwargs.get("scale","first")
-        self.spine_side = kwargs.get('spine_side','')
+        self.scale = kwargs.get("scale","current")
+        self.spine_side = kwargs.get('spine_side','left')
         self.space = kwargs.get('space' , 0)
         
         if self.label == '':
@@ -180,6 +190,7 @@ class Curve(object):
             else:
                 self.x_axis_values = np.arange(len(df))
             self.apply_formula()
+            self.data = self.data.astype(np.float64)
 
     def apply_formula(self):
         if self.formula != None:
@@ -212,7 +223,7 @@ class Header(RhinoDisplayPanel):
         for curve in self.curves:
             curve_ax = self.plot_curve(curve,ax)
             #curve_ax.legend()
-            curve_ax.set_xlabel(curve.x_axis_label)
+            #curve_ax.set_xlabel(curve.x_axis_label)
             
             
         #ax.legend();
@@ -258,7 +269,7 @@ class Heatmap(RhinoDisplayPanel):
 
         """
         data = self.trace_data.component_as_array(self.component)
-        #data = data.copy()
+        data = data.copy()
         num_traces_in_blasthole, samples_per_trace = data.shape
         #pdb.set_trace()
 
@@ -358,6 +369,7 @@ class Heatmap(RhinoDisplayPanel):
         ax.xaxis.set_minor_locator(minor_locator)
 
         for curve in self.curves:
+            curve.scale = ''
             curve_ax = self.plot_curve(curve, ax)
             #curve_ax.legend()
         #ax.legend();

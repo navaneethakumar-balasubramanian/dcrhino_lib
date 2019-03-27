@@ -23,6 +23,8 @@ class RhinoPlotterModule(BaseModule):
             "sensor_serial_number": "|global_config.sensor_serial_number|",
             "sensor_saturation_g": "|global_config.sensor_saturation_g|",
             "mine_name": "|global_config.mine_name|",
+            "padding_right": 0,
+            "padding_left": 0,
         }
 
     def get_plot_title(self,transformed_args, trace):
@@ -44,6 +46,8 @@ class RhinoPlotterModule(BaseModule):
     def process_trace(self, trace):
         rhino_display = RhinoDisplay()
         transformed_args = self.get_transformed_args(trace.first_global_config)
+        rhino_display.padding_left = transformed_args.padding_left
+        rhino_display.padding_right = transformed_args.padding_right
         panels = []
         for panel in transformed_args.panels:
             if panel["type"] == "curves":
