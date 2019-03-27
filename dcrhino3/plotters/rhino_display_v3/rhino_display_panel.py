@@ -7,7 +7,7 @@ Created on Wed Mar  6 14:16:56 2019
 
 from __future__ import absolute_import, division, print_function
 
-
+import numexpr as ne
 import datetime
 import json
 import math
@@ -29,6 +29,26 @@ class RhinoDisplayPanel(object):
 
 
 
+    def plot_curve(self,curve,ax):
+        if curve.scale == "new":
+            ax1 = ax.twinx()
+            ax1.set_ylabel(curve.label).set_color("k")
+        else:
+            ax1 = ax
+
+        ax1.plot(curve.x_axis_values, curve.data, color=curve.color,
+                label=curve.label, linewidth=curve.linewidth, linestyle=curve.linestyle)
+        X = curve.x_axis_values
+        x_maj_tick = (np.arange(X[0], X[-1]) - X[0])
+        x_min_tick = (np.arange(X[0], X[-1], 0.5) - X[0])
+        for x_maj_tick in x_maj_tick:
+            ax.axvline(x=x_maj_tick, ymin=0, ymax=1.5, color='k')
+
+        for x_min_tick in x_min_tick:
+            ax.axvline(x=x_min_tick, ymin=0, ymax=1.5, color='k', linestyle=':')
+
+        ax.set_xlim(curve.x_axis_values[0], curve.x_axis_values[-1])
+        return ax1
 
     def _get_window_widths_from_h5(self):
         """
@@ -48,6 +68,11 @@ class RhinoDisplayPanel(object):
         global_config = self.trace_data.first_global_config
         multiple_delays = get_expected_multiple_times(global_config)
         return multiple_delays
+
+    def load_curve_data_from_dataframe(self):
+        for curve in self.curves:
+            curve.assign_data_values(self.df)
+        pass
 
 
     @property
@@ -100,9 +125,17 @@ class Curve(object):
         self.data = kwargs.get('data', None)
         #self.x_axis_label = kwargs.get('x_axis_label', '')
         #self.x_axis = kwargs.get('x_axis', None)
-        self.x_axis_label = kwargs.get('x_axis_label', '')
+        self.x_axis_label = kwargs.get('x_axis_label', 'depth')
         self.x_axis_values = kwargs.get('x_axis_values', None)
         self.color = kwargs.get('color', None)
+        self.formula = kwargs.get('formula', None)
+        self.label = kwargs.get('label', '')
+        self.linestyle = kwargs.get('linestyle','-')
+        self.linewidth = kwargs.get('linewidth', 1.0)
+        self.scale = kwargs.get("scale","first")
+
+        if self.label == '':
+            self.label = self.column_label
 
 
     def assign_data_values(self, df, x_axis=None):
@@ -112,7 +145,6 @@ class Curve(object):
             print('problem accessing data from dataframe in Curve()')
             print('column label = {}'.format(self.column_label))
             print('df_type = {}'.format(type(df)))
-            pdb.set_trace()
             raise Exception
         if self.x_axis_values is None:
             if self.x_axis_label:
@@ -123,6 +155,12 @@ class Curve(object):
                     self.x_axis_values = np.arange(len(df))
             else:
                 self.x_axis_values = np.arange(len(df))
+            self.apply_formula()
+
+    def apply_formula(self):
+        if self.formula != None:
+            temp = self.__dict__
+            self.data  = ne.evaluate(self.formula, local_dict=temp)
 
 
 class Header(RhinoDisplayPanel):
@@ -140,13 +178,6 @@ class Header(RhinoDisplayPanel):
         self.load_curve_data_from_dataframe()
 
 
-    def load_curve_data_from_dataframe(self):
-        for curve in self.curves:
-            #pdb.set_trace()
-            curve.assign_data_values(self.df)
-        #pdb.set_trace()
-        pass
-
 
     def plot(self, ax, **kwargs):
         """
@@ -155,23 +186,11 @@ class Header(RhinoDisplayPanel):
         .. todo: handle case of "depth"
         """
         for curve in self.curves:
-            #pdb.set_trace()
-            ax.plot(curve.x_axis_values, curve.data, color=curve.color,
-                    label=curve.column_label)
-            X = curve.x_axis_values
-            x_maj_tick = (np.arange(X[0], X[-1]) - X[0])
-            x_min_tick = (np.arange(X[0], X[-1], 0.5) - X[0])
-            for x_maj_tick in x_maj_tick:
-                ax.axvline(x=x_maj_tick, ymin=0, ymax=1.5, color='k')
+            curve_ax = self.plot_curve(curve,ax)
+            curve_ax.legend()
 
-            for x_min_tick in x_min_tick:
-                ax.axvline(x=x_min_tick, ymin=0, ymax=1.5, color='k', linestyle=':')
-
-
-            ax.set_xlim(curve.x_axis_values[0], curve.x_axis_values[-1])
         ax.legend();
         return ax, None
-        #ax.set_xlim(curve.x_axis_values[0], curve.x_axis_values[-1])
 
 class Heatmap(RhinoDisplayPanel):
     def __init__(self, **kwargs):
@@ -188,6 +207,10 @@ class Heatmap(RhinoDisplayPanel):
         self.y_tick_interval_ms = kwargs.get('y_tick_interval_ms', 5.)
         #self.wavelet_windows_to_show = kwargs.get('wavelet_windows_to_show', [])
         self.wavelet_windows_to_show = kwargs.get('wavelet_windows_to_show', ['primary', 'multiple_1', 'multiple_2'])
+        self.curves = kwargs.get('curves', [])
+        self.load_curve_data_from_dataframe()
+
+
 
     @property
     def column_label(self):
@@ -199,9 +222,9 @@ class Heatmap(RhinoDisplayPanel):
         self._load_dataframe()
         self.data = self.df[column_label]
         for curve in self.curves:
-            pdb.set_trace()
+            #pdb.set_trace()
             curve.assign_data_values(self.df)
-        pdb.set_trace()
+        #pdb.set_trace()
 
     def prepare_trace_array(self):
         """
@@ -267,18 +290,11 @@ class Heatmap(RhinoDisplayPanel):
         ax.invert_yaxis()
 
         ax.set_yticks(y_tick_locations, minor=False)
-#        ax.yaxis.set_minor_locator(minor_locator)
         ax.tick_params(which='major', width=1)
         ax.tick_params(which='major', length=8)
         ax.tick_params(which='minor', length=4, color='r', width=0.5)
 
-#        if two_way_travel_time_ms is not None:
-#            ax.plot(np.asarray([X[0], X[-1]]), two_way_travel_time_ms*np.ones(2), 'r', linewidth=1.)
-#            #this indent not a bug/error
-#            if multiple_search_back_ms is not None:
-#                ax.plot(np.asarray([X[0], X[-1]]), (two_way_travel_time_ms - multiple_search_back_ms) * np.ones(2), 'k', linewidth=1.)
-#            if multiple_search_forward_ms is not None:
-#                ax.plot(np.asarray([X[0], X[-1]]), (two_way_travel_time_ms + multiple_search_forward_ms) * np.ones(2), 'k', linewidth=1.)
+
         if self.mult_pos is not None:
             #print("what is this? a pick? thoeretical, actual?")
             ax.plot(X,self.mult_pos.ax_1_mult, color = 'k',linestyle = '--',linewidth = 2)
@@ -305,7 +321,6 @@ class Heatmap(RhinoDisplayPanel):
                 y_values = window_boundaries[wavelet_id]
                 ax.hlines(1000*y_values, X[0], X[-1], color=colours[wavelet_id],linestyle = '-',linewidth = 1.05)
 
-        #pdb.set_trace()
         ax.set_xlim(X[0], X[-1])
         x_maj_tick = (np.arange(X[0],X[-1])-X[0])
         x_min_tick = (np.arange(X[0],X[-1],0.5)-X[0])
@@ -314,18 +329,12 @@ class Heatmap(RhinoDisplayPanel):
 
         for x_min_tick in x_min_tick:
             ax.axvline(x = x_min_tick, ymin = 0, ymax = 1.5, color = 'k', linestyle = ':')
-#        ax.set_xticklabels()
         ax.xaxis.set_minor_locator(minor_locator)
-        #ax1 = ax.twinx()
-        if delay is not  None and delay is not False :
-            delay = delay * 1000
-            ax.spines['right'].set_color('black')
-            ax.plot(X, delay, color='white', linewidth=0.5)
-        if delay_2 is not  None and delay_2 is not False :
-            delay_2 = delay_2 * 1000
-            ax.spines['right'].set_color('black')
-            ax.plot(X, delay_2, color='white', linewidth=0.5)
-        ax.set_title("Component:" + str(self.component),loc="left")
+
+        for curve in self.curves:
+            curve_ax = self.plot_curve(curve, ax)
+            curve_ax.legend()
+        ax.legend();
         return ax, heatmap
 
     def plot(self, ax):

@@ -129,7 +129,7 @@
             {
               "type": "curves",
               "curves": [
-                "K0_axial_primary_max_amplitude",
+                {"column_label":"K0_axial_primary_max_amplitude"},
                 "J0_axial_primary_max_amplitude",
                 "J1_axial_primary_max_amplitude"
               ]
@@ -137,7 +137,11 @@
             {
               "type": "heatmap",
               "component": "axial",
-              "wavelet_windows_to_show": ["primary", "multiple_1", "multiple_2"]
+              "wavelet_windows_to_show": ["primary", "multiple_1", "multiple_2"],
+              "curves": [
+                {"column_label":"J1_axial_multiple_1_max_time","formula":"data*1000", "label": "Delay 1", "linewidth": 1 , "color": "#FFFFFF"},
+                {"column_label":"J1_axial_multiple_2_max_time","formula":"data*1000", "label": "Delay 2", "linewidth": 1 , "color": "#FFFFFF"}
+              ]
             },
             {
               "type": "curves",
@@ -173,19 +177,42 @@
             {
               "type": "curves",
               "curves": [
-                "a_density",
-                "a_modulus",
-                "a_reflection_coef"
+                "a_density"
               ]
             },
             {
               "type": "curves",
               "curves": [
-                "t_density",
-                "t_modulus",
-                "t_reflection_coef"
+                "a_velocity"
+              ]
+            },
+            {
+              "type": "curves",
+              "curves": [
+                "a_delay"
+              ]
+            },
+            {
+              "type": "curves",
+              "curves": [
+                "a_modulus"
+              ]
+            },
+            {
+              "type": "curves",
+              "curves": [
+                "a_ratio"
+              ]
+            },
+            {
+              "type": "curves",
+              "curves": [
+                "a_reflection_coef"
               ]
             }
+
+
+
           ]
         }
       }

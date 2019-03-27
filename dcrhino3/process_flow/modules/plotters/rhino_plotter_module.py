@@ -48,14 +48,20 @@ class RhinoPlotterModule(BaseModule):
         for panel in transformed_args.panels:
             if panel["type"] == "curves":
                 curves = []
-                for curve in panel['curves']:
-                    curve_temp =  Curve(column_label=curve, x_axis_label='depth')
-                    curves.append(curve_temp)
+                if "curves" in panel.keys():
+                    for curve in panel['curves']:
+                        curves.append(self.create_curve(curve))
                 panel = Header(trace_data=trace, curves=curves)
                 panels.append(panel)
             elif panel['type'] == "heatmap":
+                curves = []
+                if "curves" in panel.keys():
+                    for curve in panel['curves']:
+                        curves.append(self.create_curve(curve))
+
                 panel = Heatmap(trace_data=trace, component=panel["component"],
-                                    wavelet_windows_to_show=panel["wavelet_windows_to_show"])
+                                    wavelet_windows_to_show=panel["wavelet_windows_to_show"],curves=curves)
+
                 panels.append(panel)
         rhino_display.panels = panels
         output_path = False
@@ -65,3 +71,9 @@ class RhinoPlotterModule(BaseModule):
         rhino_display.plot(output_path,title=plot_title)
 
         return trace
+
+    def create_curve(self,_obj):
+        if isinstance(_obj, basestring):
+            return Curve(column_label=_obj, x_axis_label='depth')
+        else:
+            return Curve(**_obj)

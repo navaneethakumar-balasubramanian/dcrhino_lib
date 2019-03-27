@@ -27,9 +27,12 @@ class BaseHybridModule(BaseModule):
 
     def process_trace(self,trace):
         trace = self.before_process_start(trace)
-        splitted_trace = self.split_trace_by_acor_file_id(trace)
-        splitted_trace = self.process_splitted_trace(splitted_trace)
-        trace = self.merge_splitted_trace(splitted_trace,trace)
+        splitted_traces = self.split_trace_by_acor_file_id(trace)
+
+        for i,splitted_trace in enumerate(splitted_traces):
+            splitted_traces[i] = self.process_splitted_trace(splitted_trace)
+
+        trace = self.merge_splitted_trace(splitted_traces,trace)
         return self.before_process_finish(trace)
 
     def process_splitted_trace(self,splitted_trace):
@@ -38,7 +41,7 @@ class BaseHybridModule(BaseModule):
     def merge_splitted_trace(self,splitted_trace,trace):
         df = pd.DataFrame()
         for splitted_trace_part in splitted_trace:
-            df = pd.concat([df,splitted_trace_part.dataframe])
+            df = pd.concat([df,splitted_trace_part["dataframe"]])
         trace.dataframe = df
         return trace
 
@@ -63,9 +66,9 @@ class BaseHybridModule(BaseModule):
 
     def split_trace_by_acor_file_id(self,trace):
         trace_groups = []
-        config_groups = trace.dataframe.group_by("acorr_file_id")
+        config_groups = trace.dataframe.groupby("acorr_file_id")
         for config_group in list(config_groups):
-            df = config_groups.get_group(config_group)
+            df = config_group[1]
             global_config = trace.global_config_by_index(df["acorr_file_id"].values[0])
             transformed_args = self.get_transformed_args(global_config)
             trace_group = {"config":global_config,"dataframe":df,"transformed_args":transformed_args}

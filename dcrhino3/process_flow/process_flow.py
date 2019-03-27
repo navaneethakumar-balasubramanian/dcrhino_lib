@@ -35,6 +35,7 @@ from dcrhino3.process_flow.modules.plotters.qc_plotter_module import QCPlotterMo
 from dcrhino3.process_flow.modules.plotters.rhino_plotter_module import RhinoPlotterModule
 
 from dcrhino3.models.trace_dataframe import TraceData
+from dcrhino3.process_flow.modules.hybrid.columns_to_dataframe_module import ColumnsToDataframeModule
 
 logger = init_logging(__name__)
 
@@ -66,7 +67,8 @@ class ProcessFlow:
             "upsample": UpsampleModule,
             "upsample_sinc": UpsampleSincModule,
             "export_segy": ExportSEGYModule,
-            "rhino_plotter": RhinoPlotterModule
+            "rhino_plotter": RhinoPlotterModule,
+            "columns_to_df": ColumnsToDataframeModule
         }
 
 

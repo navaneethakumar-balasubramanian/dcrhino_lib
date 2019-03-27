@@ -10,6 +10,7 @@ Created on Fri Jan 25 11:44:16 2019
 import matplotlib
 matplotlib.use('Agg')
 
+import numexpr as ne
 import argparse
 import os
 
@@ -60,7 +61,7 @@ if __name__ == '__main__':
     h5_files_list = glob2.glob(h5_path)
 
     seconds_to_process = False
-    #seconds_to_process = 10
+    #seconds_to_process = 100
 
     output_path = False
 
