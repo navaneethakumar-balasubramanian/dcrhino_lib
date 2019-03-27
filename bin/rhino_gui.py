@@ -18,7 +18,7 @@ import calendar,time
 import pdb
 import os,glob
 from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
-from dcrhino3.acquisition.constants import DATA_PATH, LOGS_PATH,RAM_PATH
+from dcrhino3.acquisition.constants import DATA_PATH, LOGS_PATH, RAM_PATH
 from subprocess import call
 from subprocess import Popen
 import signal
@@ -37,7 +37,7 @@ logging.basicConfig(filename=os.path.join(LOGS_PATH,"{}_GUI.log".format(timestam
 fname = os.path.join(PATH,"collection_daemon.cfg")
 config = ConfigParser.SafeConfigParser()
 
-debug = False
+debug = True
 
 def load_config_file():
     config.read(fname)
@@ -200,12 +200,14 @@ class GUI():
         load_config_file()
         m = Metadata(config)
         if self.rsync_daemon_process == None:
-            local_folder = config.get("DATA_TRANSMISSION","local_folder")
-            remote_folder = os.path.join(config.get("DATA_TRANSMISSION","remote_folder"),m.level_0_path())
-            sleep_interval = config.get("DATA_TRANSMISSION","sleep_interval")
-            server = config.get("DATA_TRANSMISSION","server")
-            cmd = os.path.join(PATH,"sendfiles.sh {} {} {} {}".format(local_folder,server, remote_folder,sleep_interval))
-            # print cmd
+            local_folder = config.get("DATA_TRANSMISSION", "local_folder")
+            remote_folder = os.path.join(config.get("DATA_TRANSMISSION", "remote_folder"),m.level_0_path())
+            sleep_interval = config.get("DATA_TRANSMISSION", "sleep_interval")
+            server = config.get("DATA_TRANSMISSION", "server")
+            stats_folder = config.get("DATA_TRANSMISSION", "stats_folder")
+            cmd = os.path.join(PATH, "sendfiles.sh {} {} {} {} {}".format(local_folder, server, remote_folder,
+                                                                      sleep_interval, stats_folder))
+            print cmd
             self.rsync_daemon_process = Popen(args=["lxterminal", "--command={}".format(cmd)])
             logging.info("Rsync Started")
             #self.rsync_daemon_process = Popen(args=["gnome-terminal", "-e","{}".format(cmd)])

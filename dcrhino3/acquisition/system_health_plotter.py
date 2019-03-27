@@ -199,7 +199,7 @@ while True:
 
         fig1.canvas.draw()
         plt.pause(0.05)
-        # fig1.show()
+        fig1.savefig(os.path.join(RAM_PATH, "health.png"))
         time.sleep(.05)
         plt.clf()
     except:
