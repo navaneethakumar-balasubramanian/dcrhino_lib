@@ -36,12 +36,15 @@ from dcrhino3.process_flow.modules.plotters.rhino_plotter_module import RhinoPlo
 
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.process_flow.modules.hybrid.columns_to_dataframe_module import ColumnsToDataframeModule
+from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import UnfoldAutocorrelationModuleHybrid
 
 logger = init_logging(__name__)
 
 
 class ProcessFlow:
     """
+    ..: ivar modules: this is basically a catalog (or a registry) of legal operations
+    to perform on an element of TraceData()
     """
     def __init__(self, output_path=""):
         self.id = "process_flow"
@@ -64,6 +67,7 @@ class ProcessFlow:
             "trim_array": TrimTraceArrayModule,
             "trace_mixing": TraceMixingArrayModule,
             "unfold": UnfoldAutocorrelationModule,
+            "unfold_hybrid": UnfoldAutocorrelationModuleHybrid,
             "upsample": UpsampleModule,
             "upsample_sinc": UpsampleSincModule,
             "export_segy": ExportSEGYModule,
