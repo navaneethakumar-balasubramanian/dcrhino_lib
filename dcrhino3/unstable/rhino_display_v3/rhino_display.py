@@ -55,7 +55,8 @@ class RhinoDisplay(object):
 
         print(n_panels)
         print('ok, start plttoing')
-        plt.show()
+        plt.savefig('/home/kkappler/tmp/20190326_3/'+self.panels[0].hack_title+'.png')
+        #plt.show()
 
 def my_function():
     """

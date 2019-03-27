@@ -195,7 +195,10 @@ class Heatmap(RhinoDisplayPanel):
         self.wavelet_windows_to_show = kwargs.get('wavelet_windows_to_show', ['primary', 'multiple_1', 'multiple_2'])
         self.manual_picks_to_show = kwargs.get('manual_picks_to_show', None)
         self.manual_window_widths_to_show = kwargs.get('manual_window_widths_to_show', None)
+        self.manual_window_upper_extensions = kwargs.get('manual_window_upper_extensions', None)
+        self.manual_window_lower_extensions = kwargs.get('manual_window_lower_extensions', None)
         self.picks_to_show = kwargs.get('picks_to_show', None)
+        self.hack_title = kwargs.get('hack_title', None)
 
     @property
     def column_label(self):
@@ -278,7 +281,9 @@ class Heatmap(RhinoDisplayPanel):
         ax.tick_params(which='major', width=1)
         ax.tick_params(which='major', length=8)
         ax.tick_params(which='minor', length=4, color='r', width=0.5)
-
+        if self.hack_title is not None:
+            #pdb.set_trace()
+            ax.set_title(self.hack_title)
 #        if two_way_travel_time_ms is not None:
 #            ax.plot(np.asarray([X[0], X[-1]]), two_way_travel_time_ms*np.ones(2), 'r', linewidth=1.)
 #            #this indent not a bug/error
@@ -327,6 +332,10 @@ class Heatmap(RhinoDisplayPanel):
                     try:
                         width = self.manual_window_widths_to_show[wavelet_id]
                         y_values = np.asarray([y_value-width, y_value+width])
+                        if self.manual_window_upper_extensions is not None:
+                            y_values[0] -= self.manual_window_upper_extensions[wavelet_id]
+                        if self.manual_window_lower_extensions is not None:
+                            y_values[1] += self.manual_window_lower_extensions[wavelet_id]
                         ax.hlines(1000*np.asarray(y_values), X[0], X[-1], color=colours[wavelet_id],
                           linestyle = '--',linewidth = 1.05)
                     except KeyError:

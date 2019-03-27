@@ -1,9 +1,34 @@
 """
-Author kkapler
+Author kkappler
 
 .. todo:: remove explicit declaration of ACOUSTIC_VELOCITY, and replace with
     value from global_config
     #wavelet_feature_extractor_types = ['sample', 'polynomial', 'ricker',]
+
+Parameters for the json/config:
+    primary_max_time_guess = 0.00018
+    multiple_1_zero_crossing_time_guess = 0.0109
+    multiple_2_min_time_guess = 0.0215
+
+    primary_half_width = 0.001
+    primary_window_start_adjustment = 0.0015
+    primary_window_final_adjustment
+    primary_upper_extension = 0.0015
+
+        multiple_1_half_width = 0.001
+        multiple_2_half_width = 0.00125
+        multiple_2_lower_extension = 0.0015
+        multiple_2_upper_extension = 0.0000
+        #</Time Pick Search Windows>
+
+        #<Amplitude Pick Averaging Windows>
+        half_widths_amplitude = {}
+        half_widths_amplitude['primary'] = 0.00105
+        half_widths_amplitude['multiple_1'] = 0.00105
+        half_widths_amplitude['multiple_2'] = 0.00105
+        #</Amplitude Pick Averaging Windows>
+
+
 """
 import json
 import matplotlib.pyplot as plt
@@ -17,9 +42,12 @@ from dcrhino3.feature_extraction.intermediate_derived_features import Intermedia
 from dcrhino3.helpers.general_helper_functions import flatten
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
+from dcrhino3.signal_processing.phase_rotation import rotate_phase, rotate_phase_true
 from dcrhino3.physics.util import get_expected_multiple_times
 
 from feature_extractor_j1a import calculate_boolean_features
+
+
 logger = init_logging(__name__)
 
 
@@ -236,12 +264,13 @@ class FeatureExtractorJ2(object):
         zero_crossing_time = window_time[zero_crossing_index]
         return zero_crossing_time
 
-    def extract_multiple_2_min_time(self, time_guess, window_half_width):
+    def extract_multiple_2_min_time(self, time_guess, window_half_width,
+                                    upper_extension, lower_extension):
         """
         yes this is a copy of extract_primary_max_time() with a -1.0 multiplier
         """
-        window_first_time = time_guess - window_half_width
-        window_final_time = time_guess + window_half_width
+        window_first_time = time_guess - window_half_width - upper_extension
+        window_final_time = time_guess + window_half_width + lower_extension
         cond1 = self.trace.time_vector >= window_first_time
         cond2 = self.trace.time_vector <  window_final_time
         active_indices = np.where(cond1 & cond2)[0]
@@ -253,14 +282,20 @@ class FeatureExtractorJ2(object):
         result_time = window_time[result_time_index]
         return result_time
 
-    def extract_average_absolute_amplitude(self, time_center, window_half_width):
+    def extract_average_absolute_amplitude(self, time_center, window_half_width, rotate_angle=False):
+        trace_data = self.trace.data.copy()
+        if rotate_angle:
+            trace_data = rotate_phase_true(trace_data, rotate_angle)
+#            pdb.set_trace()
+#            print("truewho?")
         window_first_time = time_center - window_half_width
         window_final_time = time_center + window_half_width
         cond1 = self.trace.time_vector >= window_first_time
         cond2 = self.trace.time_vector <  window_final_time
         active_indices = np.where(cond1 & cond2)[0]
         window_time = self.trace.time_vector[active_indices].copy()
-        window_data = self.trace.data[active_indices].copy()
+        #window_data = self.trace.data[active_indices].copy()
+        window_data = trace_data[active_indices]
         dt = window_time[1] - window_time[0]
         window_duration = window_time[-1] - window_time[0]
         integrated_absolute_amplitude = dt * np.sum(np.abs(window_data)) / window_duration
@@ -287,12 +322,14 @@ class FeatureExtractorJ2(object):
                                'multiple_2_integrated_absolute_amplitude']
         primary_max_time_guess = 0.00018
         multiple_1_zero_crossing_time_guess = 0.0109
-        multiple_2_min_time_guess = 0.022
+        multiple_2_min_time_guess = 0.0215
 
         #<Time Pick Search Windows>
         primary_half_width = 0.001
         multiple_1_half_width = 0.001
-        multiple_2_half_width = 0.001
+        multiple_2_half_width = 0.00125
+        multiple_2_lower_extension = 0.0015
+        multiple_2_upper_extension = 0.0000
         #</Time Pick Search Windows>
 
         #<Amplitude Pick Averaging Windows>
@@ -312,7 +349,9 @@ class FeatureExtractorJ2(object):
                                                                  multiple_1_half_width)
             elif feature_label=='multiple_2_min_time':
                 result = self.extract_multiple_2_min_time(multiple_2_min_time_guess,
-                                                                 multiple_2_half_width)
+                                                                 multiple_2_half_width,
+                                                                 multiple_2_upper_extension,
+                                                                 multiple_2_lower_extension)
             else:
                 print('logger.warning feature {} not yet supported'.format(feature_label))
                 result = None
@@ -320,14 +359,14 @@ class FeatureExtractorJ2(object):
             extracted_features_dict[output_label] = result
 
         for feature_label in amplitude_features:
-            print(feature_label)
+            #print(feature_label)
             window_label = feature_label.split('_integrated_absolute_amplitude')[0]
             if window_label=='primary':
-                reference_label = 'primary_max_time'
+                reference_label = 'primary_max_time'; rotate_angle=False;
             elif window_label=='multiple_1':
-                reference_label = 'multiple_1_zero_crossing_time'
+                reference_label = 'multiple_1_zero_crossing_time'; rotate_angle=-90.0;
             elif window_label=='multiple_2':
-                reference_label = 'multiple_2_min_time'
+                reference_label = 'multiple_2_min_time'; rotate_angle=False;
             else:
                 reference_label = None
                 print('bugger off!')
@@ -335,7 +374,9 @@ class FeatureExtractorJ2(object):
 
             window_center_time_label = '{}_{}'.format(self.trace.component_id, reference_label)
             window_center = extracted_features_dict[window_center_time_label]
-            result = self.extract_average_absolute_amplitude(window_center, half_widths_amplitude[window_label])
+            result = self.extract_average_absolute_amplitude(window_center,
+                                                             half_widths_amplitude[window_label],
+                                                             rotate_angle=rotate_angle)
 
             output_label = '{}_{}'.format(self.trace.component_id, feature_label)
             extracted_features_dict[output_label] = result

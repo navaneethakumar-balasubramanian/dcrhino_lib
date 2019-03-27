@@ -54,7 +54,7 @@ processed_cache = os.path.join(mont_wright_cache, 'processed')
 flow_path = os.path.join(processed_cache, 'e77015_15_147281_147281_6243_6243/v3.2.1_processing_flow_bob_match_mix_time')
 flow_path = os.path.join(processed_cache, 'e77015_15_147281_147281_6243_6243/v3.2.1_processing_flow_bob_match_mix_time_neg90x')
 flow_path = os.path.join(processed_cache, 'e77015_15_147281_147281_6243_6243/v3.2.1_processing_flow_j2')
-
+flow_path = os.path.join(processed_cache, 'e77015_15_147187_147187_6243_6243/v3.2.1_processing_flow_j2_mix_bpf_match_n90m1x')
 h5_path = os.path.join(flow_path, 'processed.h5')
 
 #h5_path = os.path.join(home, '.cache/datacloud/line_creek/acorr/23531_5208_5208.h5')
@@ -67,6 +67,7 @@ h5_path = os.path.join(flow_path, 'processed.h5')
 
 #h5_path = os.path.join(home, '.cache/datacloud/holes/processed/mont_wright/6586_5451_5451/v3_processing_flow/processed.h5')
 def test_rhino_display():
+    h5_path = os.path.join(flow_path, 'processed.h5')
     pdb.set_trace()
     rhino_display = RhinoDisplay()
     header_1_medley_1_label = 'K0_axial_primary_max_amplitude';
@@ -89,7 +90,9 @@ def test_rhino_display():
                         normalize=True, override_sampling_rate=50000.0,
                         manual_picks_to_show=manual_picks_to_show,
                         manual_window_widths_to_show=manual_window_widths_to_show,
-                        picks_to_show=['primary', 'multiple_1', 'multiple_2'])
+                        picks_to_show=['primary', 'multiple_1', 'multiple_2'],
+                        hack_title=flow_path.split('/')[-2])
+    pdb.set_trace()
     header_2 = Header(h5=h5_path)
     heatmap_2 = Heatmap(h5=h5_path, component='tangential')
 

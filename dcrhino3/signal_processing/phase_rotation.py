@@ -47,6 +47,34 @@ def rotate_phase(data, phase_shift, degrees=True):
     phase_shifted_data_time = np.real(np.fft.ifft(phase_shifted_data_fft))
     return phase_shifted_data_time
 
+def rotate_phase_true(data, phase_shift, degrees=True):
+    """
+    Phase rotation by fast fourier transform, multiplication by phasor, inverse fft
+    and taking reals. Rotates data by negative phi
+
+    Parameters:
+        data (array): numpy array (currently 1D, need to test as 2D might need
+             to transpose)
+        phase shift (float): float: #of degrees to shift signal phase
+
+    Other Parameters:
+        degrees (bool): True for degrees, false for radians
+
+    Returns:
+        (real Numpy ndarray): Phase shifted data
+    """
+    if degrees is False:
+        phase_shift_radians = phase_shift
+    else:
+        phase_shift_radians = phase_shift * np.pi / 180.0
+
+    N = len(data)
+    sign_correction = np.sign(np.fft.fftfreq(N))
+    phasor = np.exp(jj * phase_shift_radians * sign_correction)
+    fft_data = np.fft.fft(data)
+    phase_shifted_data_fft = fft_data*phasor
+    phase_shifted_data_time = np.real(np.fft.ifft(phase_shifted_data_fft))
+    return phase_shifted_data_time
 
 def determine_phase_state(data, trough_search_width):
     """
