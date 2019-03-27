@@ -70,6 +70,7 @@ class RhinoPlotterModule(BaseModule):
         plot_title = self.get_plot_title(transformed_args,trace)
         rhino_display.plot(output_path,title=plot_title)
 
+
         return trace
 
     def create_curve(self,_obj):

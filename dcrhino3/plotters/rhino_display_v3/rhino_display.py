@@ -54,18 +54,18 @@ class RhinoDisplay(object):
 
 
         if n_panels > 1:
-            first_ax = ax[0]
+            #first_ax = ax[0]
             for i_panel in range(n_panels):
                 axx = ax[i_panel]
                 panel = self.panels[i_panel]
                 panel.plot(axx)
         else:
-            first_ax = ax
+            #first_ax = ax
             panel = self.panels[0]
             panel.plot(ax)
 
         print(n_panels)
-        print('ok, start plttoing')
+        print('ok, start plotting')
         if output_path:
             plt.savefig(output_path,dpi=300)
         plt.show()

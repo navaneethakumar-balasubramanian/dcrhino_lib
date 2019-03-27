@@ -19,6 +19,7 @@ import pdb
 from dcrhino3.feature_extraction.feature_windowing import WindowBoundaries
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.physics.util import get_expected_multiple_times
+from dcrhino3.plotters.rhino_display_v3.plot_helper import axis_lims_method_1
 
 
 class RhinoDisplayPanel(object):
@@ -30,24 +31,45 @@ class RhinoDisplayPanel(object):
 
 
     def plot_curve(self,curve,ax):
-        if curve.scale == "new":
-            ax1 = ax.twinx()
-            ax1.set_ylabel(curve.label).set_color("k")
+        #pdb.set_trace()
+        #print(curve.scale)
+        # 
+        if curve.scale == "current" or "new":
+            if curve.scale == "current":
+                ax1 = ax
+            if curve.scale == "new":
+                ax1 = ax.twinx()    
+            #ax1.set_ylabel(curve.label).set_color("k")
+            ax1.set_ylim(axis_lims_method_1(curve.data,'buffer'))
+            ax1.set_ylabel(curve.column_label).set_color(curve.color)
+            ax1.yaxis.set_label_position(curve.spine_side)
+            ax1.yaxis.set_ticks_position(curve.spine_side)
+            ax1.spines[curve.spine_side].set_color(curve.color)
+            ax1.spines[curve.spine_side].set_linewidth(1)
+            ax1.spines[curve.spine_side].set_position(('outward',curve.space))
+            
+            
         else:
             ax1 = ax
-
+            
         ax1.plot(curve.x_axis_values, curve.data, color=curve.color,
                 label=curve.label, linewidth=curve.linewidth, linestyle=curve.linestyle)
+        
+        #Plotting Vertical Black Lines (not working TJW 3/26)
         X = curve.x_axis_values
+        
+        ax1.set_xlim(X[0], X[-1])
+        
         x_maj_tick = (np.arange(X[0], X[-1]) - X[0])
         x_min_tick = (np.arange(X[0], X[-1], 0.5) - X[0])
         for x_maj_tick in x_maj_tick:
-            ax.axvline(x=x_maj_tick, ymin=0, ymax=1.5, color='k')
+            ax1.axvline(x=x_maj_tick, ymin=0, ymax=1.5, color='k')
 
         for x_min_tick in x_min_tick:
-            ax.axvline(x=x_min_tick, ymin=0, ymax=1.5, color='k', linestyle=':')
-
-        ax.set_xlim(curve.x_axis_values[0], curve.x_axis_values[-1])
+            ax1.axvline(x=x_min_tick, ymin=0, ymax=1.5, color='k', linestyle=':')
+        
+        
+        
         return ax1
 
     def _get_window_widths_from_h5(self):
@@ -133,7 +155,9 @@ class Curve(object):
         self.linestyle = kwargs.get('linestyle','-')
         self.linewidth = kwargs.get('linewidth', 1.0)
         self.scale = kwargs.get("scale","first")
-
+        self.spine_side = kwargs.get('spine_side','')
+        self.space = kwargs.get('space' , 0)
+        
         if self.label == '':
             self.label = self.column_label
 
@@ -187,9 +211,11 @@ class Header(RhinoDisplayPanel):
         """
         for curve in self.curves:
             curve_ax = self.plot_curve(curve,ax)
-            curve_ax.legend()
-
-        ax.legend();
+            #curve_ax.legend()
+            curve_ax.set_xlabel(curve.x_axis_label)
+            
+            
+        #ax.legend();
         return ax, None
 
 class Heatmap(RhinoDisplayPanel):
@@ -333,8 +359,8 @@ class Heatmap(RhinoDisplayPanel):
 
         for curve in self.curves:
             curve_ax = self.plot_curve(curve, ax)
-            curve_ax.legend()
-        ax.legend();
+            #curve_ax.legend()
+        #ax.legend();
         return ax, heatmap
 
     def plot(self, ax):
