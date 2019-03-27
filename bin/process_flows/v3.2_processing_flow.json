@@ -3,16 +3,11 @@
   "output_to_file":true,
     "modules": [
       {
-        "type": "unfold",
-        "output_to_file": false,
-        "args": {}
-      },
-
-      {
-        "type": "lead_channel_deconvolution",
-        "output_to_file": false,
+        "type": "columns_to_df",
         "args": {
-          "num_taps_in_decon_filter": "|global_config.num_taps_in_decon_filter|"
+            "max_lag_trimmed_": "|global_config.max_lag_trimmed_trace|",
+            "sampling_rate": "|global_config.sampling_rate|",
+            "karls_val": 9
         }
       },
       {
@@ -225,5 +220,5 @@
           ]
         }
       }
-    ]
+      ]
 }
