@@ -38,6 +38,8 @@ from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.process_flow.modules.hybrid.columns_to_dataframe_module import ColumnsToDataframeModule
 from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import UnfoldAutocorrelationModuleHybrid
 
+from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import UnfoldAutocorrelationModuleHybrid
+
 logger = init_logging(__name__)
 
 
