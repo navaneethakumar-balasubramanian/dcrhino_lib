@@ -23,6 +23,22 @@ from scipy.interpolate import interp1d
 #<temporary logging>
 import logging
 
+
+def df_component_as_array(self, component_id,dataframe):
+    """
+    Returns the data form component as a 2d numpy array with trace index
+    running along rows (zero-index).  Useful for slicing data and linalg.
+
+    Parameters:
+        component_id (str): axial/tangential/radial
+
+    Return:
+        (array): extracted trace, selected by component_id
+    """
+    column_name = '{}_trace'.format(component_id)
+    data_array = np.atleast_2d(list(dataframe[column_name]))
+    return data_array
+
 def init_logging(name):
     """
     Start a basic logger.

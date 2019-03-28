@@ -33,7 +33,7 @@ import os
 import pandas as pd
 import pdb
 
-from dcrhino3.helpers.general_helper_functions import init_logging,create_folders_if_needed
+from dcrhino3.helpers.general_helper_functions import init_logging,create_folders_if_needed, df_component_as_array
 from dcrhino3.models.config import Config
 
 logger = init_logging(__name__)
@@ -394,9 +394,8 @@ class TraceData(object):
         Return:
             (array): extracted trace, selected by component_id
         """
-        column_name = '{}_trace'.format(component_id)
-        data_array = np.atleast_2d(list(self.dataframe[column_name]))
-        return data_array
+
+        return df_component_as_array(component_id,self.dataframe)
 
     def copy_without_trace_data(self):
         """

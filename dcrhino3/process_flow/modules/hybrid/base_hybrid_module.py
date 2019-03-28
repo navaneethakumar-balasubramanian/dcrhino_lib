@@ -10,6 +10,7 @@ import pdb
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.process_flow.modules.base_module import BaseModule
+from dcrhino3.models.traces.splitted_trace import SplittedTrace
 
 logger = init_logging(__name__)
 
@@ -41,7 +42,7 @@ class BaseHybridModule(BaseModule):
     def merge_splitted_trace(self,splitted_trace,trace):
         df = pd.DataFrame()
         for splitted_trace_part in splitted_trace:
-            df = pd.concat([df,splitted_trace_part["dataframe"]])
+            df = pd.concat([df,splitted_trace_part.dataframe])
         trace.dataframe = df
         return trace
 
@@ -71,6 +72,6 @@ class BaseHybridModule(BaseModule):
             df = config_group[1]
             global_config = trace.global_config_by_index(df["acorr_file_id"].values[0])
             transformed_args = self.get_transformed_args(global_config)
-            trace_group = {"config":global_config,"dataframe":df,"transformed_args":transformed_args}
+            trace_group = SplittedTrace(df,transformed_args)
             trace_groups.append(trace_group)
         return trace_groups
