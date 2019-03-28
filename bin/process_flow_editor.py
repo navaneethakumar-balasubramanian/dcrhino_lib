@@ -1,9 +1,11 @@
 from Tkinter import *
+import tkMessageBox
 import ttk
 import pdb
 import json
 import os
 import tkFileDialog
+from process_flow import process_glob
 
 debug_path = '/home/natal/toconvert/test2.json'
 debug = False
@@ -67,8 +69,21 @@ class GUI():
         self.master.geometry('1500x1250')
         self.path = []
         self.iid = 0
+        self.saved = True
+        self.glob_str = None
+        self.json = None
 
-        # create a menu
+        #create the file menu
+        self.menubar = Menu(self.master)
+        self.filemenu = Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label="Project", menu=self.filemenu)
+        self.filemenu.add_command(label="Open Data File", command=self.get_data_file)
+        self.filemenu.add_command(label="Open Data Folder", command=self.get_data_path)
+        self.filemenu.add_separator()
+        self.filemenu.add_command(label="Exit", command=self.exit)
+        self.master.config(menu=self.menubar)
+
+        # create the text menu
         self.popup = Menu(self.master, tearoff=0)
         self.popup.add_command(label="DO NOTHING", command=self.do_nothing)
         self.popup.add_command(label="Edit", command=self.enable)
@@ -77,7 +92,7 @@ class GUI():
         self.popup.add_separator()
         self.popup.add_command(label="Copy", command=self.copy)
 
-        # create a menu
+        # create the tree menu
         self.tree_popup = Menu(self.master, tearoff=0)
         self.tree_popup.add_command(label="DO NOTHING", command=self.do_nothing)
         self.tree_popup.add_command(label="Move Up", command=self.move_up)
@@ -104,7 +119,15 @@ class GUI():
 
         row = 0
         column = 0
-        Label(self.master, text="JSON Tree Display").grid(row=row, column=column)
+
+        Label(self.master, text="Project Data Path: ").grid(row=row, column=column, sticky="news")
+        column += 1
+        self.data_path = Entry(self.master)
+        self.data_path.grid(row=row, column=column, sticky="news", columnspan=6)
+        row += 1
+
+        column = 0
+        # Label(self.master, text="JSON Tree Display").grid(row=row, column=column)
         row += 1
         self.tree = ttk.Treeview(self.master, height=60)
         self.tree.grid(row=row, column=column, sticky="news", rowspan=30)
@@ -119,24 +142,24 @@ class GUI():
             self.add_child_node(self.json)
 
         column += 1
-        row = 1
+        row = 2
         self.value = Text(self.master, height=60, font=("Helvetica", 15))
         self.value.grid(row=row, columnspan=6, rowspan=30, column=1, sticky="news")
         self.value.config(state=DISABLED)
         self.value.bind("<Button-3>", self.do_popup)
 
         column += 6
-        row = 1
-        self.open_btn = Button(self.master, text="Open File", command=self.open_file)
+        row = 2
+        self.open_btn = Button(self.master, text="Open JSON File", command=self.open_file)
         self.open_btn.grid(row=row, column=column, rowspan=1, columnspan=1, sticky="news")
         row += 1
         self.pretty_print_btn = Button(self.master, text="Pretty Print", command=self.pretty_print)
         self.pretty_print_btn.grid(row=row, column=column, rowspan=1, columnspan=1, sticky="news")
         row += 1
-        self.save_btn = Button(self.master, text="Save File", command=self.save_file)
+        self.save_btn = Button(self.master, text="Save JSON File", command=self.save_file)
         self.save_btn.grid(row=row, column=column, rowspan=1, columnspan=1, sticky="news")
         row += 1
-        self.save_as_btn = Button(self.master, text="Save As", command=self.save_file_as)
+        self.save_as_btn = Button(self.master, text="Save JSON As", command=self.save_file_as)
         self.save_as_btn.grid(row=row, column=column, rowspan=1, columnspan=1, sticky="news")
         # row += 1
         # self.save_as_btn = Button(self.master, text="Refresh View", command=self.refresh_from_button)
@@ -147,6 +170,9 @@ class GUI():
         row += 1
         self.save_as_btn = Button(self.master, text="Collapse All", command=self.collapse)
         self.save_as_btn.grid(row=row, column=column, rowspan=1, columnspan=1, sticky="news")
+        row += 1
+        self.process_btn = Button(self.master, text="Process Data", command=self.process)
+        self.process_btn.grid(row=row, column=column, rowspan=1, columnspan=1, sticky="news")
 
         style = ttk.Style()
         style.configure("Treeview.Heading", font=('Helvetica', 18))
@@ -181,6 +207,7 @@ class GUI():
             self.tree_popup.grab_release()
 
     def enable(self):
+        self.saved = False
         self.value.config(state=NORMAL)
 
     def move_up(self):
@@ -190,6 +217,7 @@ class GUI():
         self.move(False)
 
     def move(self, up=True):
+        self.saved = False
         selection = self.tree.selection()
         selection_text = self.tree.item(selection)['text']
 
@@ -241,6 +269,7 @@ class GUI():
         self.add_to_list(6)
 
     def add_to_list(self, list_type=1, above=True):
+        self.saved = False
         if list_type == 1:
             text = "module_"
             insert_object = MODULE
@@ -282,6 +311,7 @@ class GUI():
             self.refresh(added=True)
 
     def add_argument(self):
+        self.saved = False
         selection = self.tree.selection()
         selection_text = self.tree.item(selection)["text"]
         if "args" in selection_text:
@@ -308,6 +338,7 @@ class GUI():
         self.delete_other("module_")
 
     def delete_argument(self):
+        self.saved = False
         selection = self.tree.selection()
         selection_text = self.tree.item(selection)["text"]
         selection_parent = self.tree.parent(selection)
@@ -323,6 +354,7 @@ class GUI():
             self.refresh(added=False)
 
     def delete_other(self, text_to_delete):
+        self.saved = False
         selection = self.tree.selection()
         selection_text = self.tree.item(selection)["text"]
         if text_to_delete in selection_text:
@@ -355,7 +387,7 @@ class GUI():
         else:
             value = raw_value.strip()
             self.set_value(json.loads(value))
-        self.refresh(added=False)
+        self.refresh()
 
     def set_value(self, value):
         json_levels_list = []
@@ -374,34 +406,43 @@ class GUI():
     def do_nothing(self):
         pass
 
+
     def refresh_from_button(self):
         self.refresh(added=False)
 
-    def refresh(self, added=False, toggle=True):
-        selection = self.tree.selection()
-        selection_parent = self.tree.parent(selection)
-        if added:
-            selection_original = selection
+    def refresh(self, added=True, toggle=True):
+        if len(self.tree.selection()) == 0:
+            self.tree.delete(*self.tree.get_children())
+            self.add_child_node(self.json)
+            self.tree.selection_set(0)
         else:
-            selection_original = selection_parent
-        self.iid = 0
-        self.value.config(state=NORMAL)
-        self.value.delete(1.0, END)
-        self.tree.delete(*self.tree.get_children())
-        self.add_child_node(self.json)
-        while selection_parent != "":
-            self.tree.item(selection_parent, open=True)
-            selection_parent = self.tree.parent(selection_parent)
-        if toggle:
-            self.tree.selection_set(selection_original)
-            self.tree.item(selection_original, open=True)
-        self.value.config(state=DISABLED)
+            selection = self.tree.selection()
+            selection_parent = self.tree.parent(selection)
+            if added:
+                selection_original = selection
+            else:
+                selection_original = selection_parent
+            self.iid = 0
+            self.value.config(state=NORMAL)
+            self.value.delete(1.0, END)
+            self.tree.delete(*self.tree.get_children())
+            self.add_child_node(self.json)
+            while selection_parent != "":
+                self.tree.item(selection_parent, open=True)
+                selection_parent = self.tree.parent(selection_parent)
+            if toggle:
+                self.tree.selection_set(selection_original)
+                self.tree.item(selection_original, open=True)
+            self.value.config(state=DISABLED)
 
     def add_child_node(self, value, parent=""):
         if type(value) is dict:
             if parent == "":
-                order = ["id", "output_to_file", "modules"]
-                keys = sorted(value.keys(), key=order.index)
+                try:
+                    order = ["id", "output_to_file", "modules"]
+                    keys = sorted(value.keys(), key=order.index)
+                except:
+                    keys = value.keys()
             else:
                 keys = value.keys()
             for index, key in enumerate(keys):
@@ -467,24 +508,26 @@ class GUI():
 
     def run(self):
         self.master.mainloop()
-        pdb.set_trace()
 
     def popup_window(self):
         self.w = popupWindow(self.master)
         self.master.wait_window(self.w.top)
 
     def save_file(self, path=None):
-        pdb.set_trace()
         if path is None:
             save_path = self.json_path
         else:
+            pdb.set_trace()
             save_path = path
-        # with open(save_path, 'w') as f:
-        json.dump(self.json, save_path, indent=4)
+        with open(save_path, 'w') as f:
+            json.dump(self.json, f, indent=4)
+        f.close()
+        self.saved = True
 
     def save_file_as(self):
         extension = [('JSON File', '*.json')]
-        f = tkFileDialog.asksaveasfile(initialdir=os.path.dirname(self.json_path), mode='w', defaultextension=".json",
+        f = tkFileDialog.asksaveasfilename(initialdir=os.path.dirname(self.json_path),
+                                          defaultextension=".json",
                                        filetypes=extension)
         if f is None:  # asksaveasfile return `None` if dialog closed with "cancel".
             return
@@ -509,6 +552,39 @@ class GUI():
     def open_tree_items(self, open_all=True):
         for id in range(self.iid):
             self.tree.item(id, open=open_all)
+
+    def get_data_path(self):
+        dir_name = tkFileDialog.askdirectory()
+        self.data_path.delete(0, 'end')
+        self.data_path.insert(0, dir_name)
+        self.data_path.xview_moveto(1)
+        self.glob_str = dir_name
+
+    def get_data_file(self):
+        extension = [('H5 File', '*.h5')]
+        file_name = tkFileDialog.askopenfilename(defaultextension=".h5", filetypes=extension)
+        self.data_path.delete(0, 'end')
+        self.data_path.insert(0, file_name)
+        self.data_path.xview_moveto(1)
+        self.glob_str = file_name
+
+    def process(self):
+        if self.saved and self.json is not None and self.glob_str is not None:
+            process_glob(self.json, self.glob_str)
+        else:
+            tkMessageBox.showinfo("Unable to Process", "Please make sure JSON file is loaded, modifications are "
+                                                       "saved, and data path has been selected")
+
+    def exit(self):
+        if self.saved:
+            self.master.quit()
+        else:
+            answer = tkMessageBox.askyesnocancel("Exit", "Save Before Exiting?")
+            if answer is None:
+                return
+            elif answer:
+                self.save_file()
+            self.master.quit()
 
 
 def main():

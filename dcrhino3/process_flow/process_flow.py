@@ -37,6 +37,7 @@ from dcrhino3.process_flow.modules.plotters.rhino_plotter_module import RhinoPlo
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.process_flow.modules.hybrid.columns_to_dataframe_module import ColumnsToDataframeModule
 from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import UnfoldAutocorrelationModuleHybrid
+from dcrhino3.process_flow.modules.hybrid.lead_channel_deconvolution import LeadChannelDeconvolutionModuleHybrid
 
 from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import UnfoldAutocorrelationModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.band_pass_filter_hybrid import BandPassFilterModuleHybrid
@@ -66,6 +67,7 @@ class ProcessFlow:
             "add_one": AddOneModule,
             "add_n": AddNModule,
             "lead_channel_deconvolution": LeadChannelDeconvolutionModule,
+            "lead_channel_deconvolution_hybrid": LeadChannelDeconvolutionModuleHybrid,
             "rotate": RotateModule,
             "trim": TrimTraceModule,
             "trim_array": TrimTraceArrayModule,
@@ -98,9 +100,9 @@ class ProcessFlow:
     def parse_json(self, process_json):
         """
         Parse env_config.json for info on mine/how to run the process. Use dictionary
-        "process_json" for what to parse in the json. Only get info on necessary 
+        "process_json" for what to parse in the json. Only get info on necessary
         modules.
-        
+
         Parameters:
             process_json (dict): dictionary on output locations & modules to run
         """
@@ -127,13 +129,13 @@ class ProcessFlow:
         create_folders_if_needed(process_flow_output_path)
         """
         Process the trace data. Uses :py:mod:`process_flow.modules.trace_processing.base`
-        
+
         .. warning:: Will create folders if it can find them. Will save data heavy
             files locally. To test, interrupt after a few h5 files have been saved.
-        
+
         Parameters:
             trace_data: data to be processed
-            
+
         Returns:
             processed trace data (other files will be saved to assigned locations
                 and folders will be created if needed)
