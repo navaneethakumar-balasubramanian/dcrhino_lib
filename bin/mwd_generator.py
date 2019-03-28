@@ -29,11 +29,15 @@ if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description="Copyright (c) 2018 DataCloud")
     argparser.add_argument("path", metavar="path", type=str,
                            help="Path to output file")
+    argparser.add_argument('-mid', '--machine-id', help="Machine ID", default="Y")
     args = argparser.parse_args()
 
     if os.path.exists(args.path):
         df = pd.read_csv(args.path)
-        init_date = pd.to_datetime(df['time_end'].max())
+        init_date = pd.to_datetime(df[df["machine_id"] == args.machine_id]['time_end'].max())
+        if init_date is pd.NaT:
+            init_date = pd.to_datetime("2019-01-01 00:00:00")
+
     else:
         df = pd.DataFrame()
         init_date = pd.to_datetime("2019-01-01 00:00:00")
@@ -66,7 +70,7 @@ if __name__ == '__main__':
             hole_name = hole_id
 
 
-            hole_mwd = FakeHoleMwd(start_time=last_init_date,end_time=end_hole_time, hole_id=hole_id,hole_name=hole_name).dataframe
+            hole_mwd = FakeHoleMwd(start_time=last_init_date,end_time=end_hole_time, hole_id=hole_id,hole_name=hole_name,machine_id = args.machine_id).dataframe
             df = df.append(hole_mwd)
 
             print ("Generated one hole from " + str(last_init_date) + " to " + str(end_hole_time))
