@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-
+splitted trace means traces have been sorted so that all global_config and
+transformed args are common.
 """
 import numpy as np
 import pandas as pd
@@ -66,6 +67,8 @@ class BaseHybridModule(BaseModule):
         return trace
 
     def split_trace_by_acor_file_id(self,trace):
+        """
+        """
         trace_groups = []
         config_groups = trace.dataframe.groupby("acorr_file_id")
         for config_group in list(config_groups):
