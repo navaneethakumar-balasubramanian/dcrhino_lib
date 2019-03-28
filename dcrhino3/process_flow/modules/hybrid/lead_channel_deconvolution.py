@@ -85,7 +85,7 @@ class LeadChannelDeconvolutionModuleHybrid(BaseHybridModule):
             zero_lag_index = (n_samples_per_trace -1) // 2
 
             for i_trace in range(n_traces):
-                pdb.set_trace()
+                #pdb.set_trace()
                 trace_data = data_array[i_trace,:]
                 acorr_for_filter = trace_data[zero_lag_index : zero_lag_index + n_taps]
                 ATA = scipy.linalg.toeplitz(acorr_for_filter)
