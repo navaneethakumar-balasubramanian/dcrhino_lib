@@ -20,7 +20,7 @@ class ColumnsToDataframeModule(BaseHybridModule):
         self.can_create_columns = True
 
     def process_splitted_trace(self, splitted_trace):
-        transformed_args = splitted_trace["transformed_args"]
+        transformed_args = splitted_trace.transformed_args
         for col in transformed_args.__dict__.keys():
-            splitted_trace["dataframe"][col] = transformed_args.__getattribute__(col)
+            splitted_trace.dataframe[col] = transformed_args.__getattribute__(col)
         return splitted_trace

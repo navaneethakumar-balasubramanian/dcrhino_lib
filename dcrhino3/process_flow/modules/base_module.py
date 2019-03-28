@@ -54,18 +54,18 @@ class BaseModule(object):
                 else:
                     transformed[key] = val
                 ################################
-            
+
             elif (type(val) == unicode or type(val) == str) and "|global_config." in str(val):
                 gc_var_name = val.replace("|","").replace("global_config.","")
                 transformed[key] = getattr(global_config, gc_var_name)
             else:
                 transformed[key] = val
-            
+
             transformed[key] = json_string_to_object(transformed[key])
         transformed = dict_to_object(transformed)
-                
+
         return transformed
-    
+
 
     def set_data_from_json(self,json):
         """
@@ -83,3 +83,7 @@ class BaseModule(object):
         temp['module_version'] = self.version
         temp['args'] = args
         return json.dumps(temp)
+
+    @property
+    def components_to_process(self):
+        return ['axial', 'tangential']

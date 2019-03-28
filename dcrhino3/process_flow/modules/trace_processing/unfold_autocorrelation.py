@@ -27,7 +27,7 @@ class UnfoldAutocorrelationModule(BaseTraceModule):
         BaseTraceModule.__init__(self, json, output_path,process_flow,order)
         self.id = "unfold"
 
-    def process_component(self,component_id, component_vector, global_config):
+    def process_component(self, component_id, component_vector, global_config):
         """
         @type component_array: numpy array
         @note: Creates a symmetric and centered data acorr decendant data vector
