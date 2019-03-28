@@ -14,3 +14,8 @@ class SplittedTrace(object):
 
     def component_as_array(self, component_id):
         return df_component_as_array(component_id,self.dataframe)
+
+    def assign_component_from_array(self,component_id,data_array):
+        data_list = list(data_array)
+        component_id += "_trace"
+        self.dataframe['component_id'] = data_list
