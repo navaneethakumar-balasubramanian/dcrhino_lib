@@ -51,8 +51,65 @@ from feature_extractor_j1a import calculate_boolean_features
 logger = init_logging(__name__)
 
 
+class ManualWindows(object):
+    """
+    prototype, to make so changes propagate through J2, and eventually into
+    plotter and json
 
+    TODO: decide to use positive or negative for adjustments ... ??Always Add??
+    """
+    def __init__(self):
+        self.primary_max_time_guess = 0.00018
+        self.multiple_1_zero_crossing_time_guess = 0.0109
+        self.multiple_2_min_time_guess = 0.0215
 
+        self.primary_half_width = 0.001
+        self.multiple_1_half_width = 0.001
+        self.multiple_2_half_width = 0.00125
+
+        #<Time Pick Search Windows>
+        self.primary_start_adjustment = 0.0
+        self.primary_final_adjustment = 0.0
+        self.multiple_1_start_adjustment = 0.0
+        self.multiple_1_final_adjustment = 0.0
+        self.multiple_2_start_adjustment = 0.0
+        self.multiple_2_final_adjustment = 0.0015
+        #</Time Pick Search Windows>
+
+        #<Amplitude Pick Averaging Windows>
+        self.half_widths_amplitude = {}
+        self.half_widths_amplitude['primary'] = 0.00105
+        self.half_widths_amplitude['multiple_1'] = 0.00105
+        self.half_widths_amplitude['multiple_2'] = 0.00105
+
+        self.primary_start_time = None
+        self.primary_final_time = None
+        self.multiple_1_start_time = None
+        self.multiple_1_final_time = None
+        self.multiple_2_start_time = None
+        self.multiple_2_final_time = None
+
+    def get_set_time_window(self, window_label):
+        """
+        yes, this sucks and should be done with a dict BUT it is flexible
+        for half-baked test changes ... so live with it for now
+        """
+        if window_label=='primary':
+            t_start = self.primary_max_time_guess - self.primary_half_width + self.primary_start_adjustment
+            t_final = self.primary_max_time_guess + self.primary_half_width + self.primary_final_adjustment
+            self.primary_start_time = t_start
+            self.primary_final_time = t_final
+        if window_label=='multiple_1':
+            t_start = self.multiple_1_zero_crossing_time_guess - self.multiple_1_half_width + self.multiple_1_start_adjustment
+            t_final = self.multiple_1_zero_crossing_time_guess + self.multiple_1_half_width + self.multiple_1_final_adjustment
+            self.multiple_1_start_time = t_start
+            self.multiple_1_final_time = t_final
+        if window_label=='multiple_2':
+            t_start = self.multiple_2_min_time_guess - self.multiple_2_half_width + self.multiple_2_start_adjustment
+            t_final = self.multiple_2_min_time_guess + self.multiple_2_half_width + self.multiple_2_final_adjustment
+            self.multiple_2_start_time = t_start
+            self.multiple_2_final_time = t_final
+        return t_start, t_final
 
 class FeatureExtractorJ2(object):
     """
@@ -75,6 +132,7 @@ class FeatureExtractorJ2(object):
         #self.sensor_saturation_g = transformed_args.sensor_saturation_g
         self.trace = SymmetricTrace(trimmed_trace, self.sampling_rate, component_id=component_id)
         self.transformed_args = transformed_args
+        self.manual_windows = ManualWindows()
         #self.window_boundaries_time = {}#WindowBoundaries()
         #self.window_boundaries_time[component_id] = {}
         #self.window_boundaries_indices = {}#WindowBoundaries()
@@ -233,9 +291,9 @@ class FeatureExtractorJ2(object):
         unnested_dictionary = feature_deriver.derive_features(self.trace.component_id)
         return unnested_dictionary
 
-    def extract_primary_max_time(self, time_guess, window_half_width):
-        window_first_time = time_guess - window_half_width
-        window_final_time = time_guess + window_half_width
+    def extract_primary_max_time(self, window_first_time, window_final_time):
+#        window_first_time = time_guess - window_half_width
+#        window_final_time = time_guess + window_half_width
         cond1 = self.trace.time_vector >= window_first_time
         cond2 = self.trace.time_vector <  window_final_time
         active_indices = np.where(cond1 & cond2)[0]
@@ -245,15 +303,13 @@ class FeatureExtractorJ2(object):
         primary_max_time = window_time[primary_max_time_index]
         return primary_max_time
 
-    def extract_multiple_1_zero_crossing_time(self, time_guess, window_half_width):
+    def extract_multiple_1_zero_crossing_time(self, window_first_time, window_final_time):
         """
         total bonehead way to do this - just for POC.  How to do for real:
             probably do a LPF, then walk out from ZX until you find nearest
             +to- polarity change.
         Recenter to this value and sharpen (narrow) the window
         """
-        window_first_time = time_guess - window_half_width
-        window_final_time = time_guess + window_half_width
         cond1 = self.trace.time_vector >= window_first_time
         cond2 = self.trace.time_vector <  window_final_time
         active_indices = np.where(cond1 & cond2)[0]
@@ -264,13 +320,12 @@ class FeatureExtractorJ2(object):
         zero_crossing_time = window_time[zero_crossing_index]
         return zero_crossing_time
 
-    def extract_multiple_2_min_time(self, time_guess, window_half_width,
-                                    upper_extension, lower_extension):
+    def extract_multiple_2_min_time(self, window_first_time, window_final_time):
         """
         yes this is a copy of extract_primary_max_time() with a -1.0 multiplier
         """
-        window_first_time = time_guess - window_half_width - upper_extension
-        window_final_time = time_guess + window_half_width + lower_extension
+#        window_first_time = time_guess - window_half_width - upper_extension
+#        window_final_time = time_guess + window_half_width + lower_extension
         cond1 = self.trace.time_vector >= window_first_time
         cond2 = self.trace.time_vector <  window_final_time
         active_indices = np.where(cond1 & cond2)[0]
@@ -307,51 +362,23 @@ class FeatureExtractorJ2(object):
         but for now will develop here;
         """
         extracted_features_dict = {}
-        #<do this later>
-#        time_features = {}
-#        time_features['primary'] = 'max_time'
-#        etc.
-#use dicts for time_features['primary', 'multiple_1', 'multiple_2']
-#use half_widths_time = {}; keys are ['primary', 'multiple_1', 'multiple_2']
-#use dicts half_widths_ampl_avg ['primary', 'multiple_1', 'multiple_2']
-        #<do this later>
         time_features = ['primary_max_time', 'multiple_1_zero_crossing_time',
                                'multiple_2_min_time']
         amplitude_features = ['primary_integrated_absolute_amplitude',
                                'multiple_1_integrated_absolute_amplitude',
                                'multiple_2_integrated_absolute_amplitude']
-        primary_max_time_guess = 0.00018
-        multiple_1_zero_crossing_time_guess = 0.0109
-        multiple_2_min_time_guess = 0.0215
-
-        #<Time Pick Search Windows>
-        primary_half_width = 0.001
-        multiple_1_half_width = 0.001
-        multiple_2_half_width = 0.00125
-        multiple_2_lower_extension = 0.0015
-        multiple_2_upper_extension = 0.0000
-        #</Time Pick Search Windows>
-
-        #<Amplitude Pick Averaging Windows>
-        half_widths_amplitude = {}
-        half_widths_amplitude['primary'] = 0.00105
-        half_widths_amplitude['multiple_1'] = 0.00105
-        half_widths_amplitude['multiple_2'] = 0.00105
-        #</Amplitude Pick Averaging Windows>
-
+        primary_start, primary_final = self.manual_windows.get_set_time_window('primary')
+        multiple_1_start, multiple_1_final = self.manual_windows.get_set_time_window('multiple_1')
+        multiple_2_start, multiple_2_final = self.manual_windows.get_set_time_window('multiple_2')
+        #pdb.set_trace()
         for feature_label in time_features:
             #print(feature_label)
             if feature_label=='primary_max_time':
-                result = self.extract_primary_max_time(primary_max_time_guess,
-                                                                 primary_half_width)
+                result = self.extract_primary_max_time(primary_start, primary_final)
             elif feature_label=='multiple_1_zero_crossing_time':
-                result = self.extract_multiple_1_zero_crossing_time(multiple_1_zero_crossing_time_guess,
-                                                                 multiple_1_half_width)
+                result = self.extract_multiple_1_zero_crossing_time(multiple_1_start, multiple_1_final)
             elif feature_label=='multiple_2_min_time':
-                result = self.extract_multiple_2_min_time(multiple_2_min_time_guess,
-                                                                 multiple_2_half_width,
-                                                                 multiple_2_upper_extension,
-                                                                 multiple_2_lower_extension)
+                result = self.extract_multiple_2_min_time(multiple_2_start, multiple_2_final)
             else:
                 print('logger.warning feature {} not yet supported'.format(feature_label))
                 result = None
@@ -374,26 +401,14 @@ class FeatureExtractorJ2(object):
 
             window_center_time_label = '{}_{}'.format(self.trace.component_id, reference_label)
             window_center = extracted_features_dict[window_center_time_label]
+            #pdb.set_trace()
             result = self.extract_average_absolute_amplitude(window_center,
-                                                             half_widths_amplitude[window_label],
-                                                             rotate_angle=rotate_angle)
+                    self.manual_windows.half_widths_amplitude[window_label],
+                    rotate_angle=rotate_angle)
 
             output_label = '{}_{}'.format(self.trace.component_id, feature_label)
             extracted_features_dict[output_label] = result
 
-
-
-#        self.set_time_window_boundaries()
-#        self.convert_time_window_to_indices()
-#
-#        self.update_window_boundaries_in_time()
-#        window_data_dict, window_time_vector_dict = self.populate_window_data_dict()
-#        #pdb.set_trace()
-#        #test_populate_window_data_dict(window_data_dict, window_time_vector_dict,
-#        #                               self.trace.data, self.trace.time_vector)
-#        extracted_features_dict = self.extract_features_from_each_window(window_data_dict,
-#                                                                    window_time_vector_dict)
-        #pdb.set_trace()
 
         delay_1_label = '{}_delay_1'.format(self.trace.component_id)
         delay_2_label = '{}_delay_2'.format(self.trace.component_id)
