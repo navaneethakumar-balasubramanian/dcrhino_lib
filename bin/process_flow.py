@@ -29,8 +29,8 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 logger = init_logging(__name__)
 
 def process_glob(process_json,glob_str,env_config_path="env_config.json"):
-    env_config = EnvConfig(env_path)
-    logger.info("Using env_config : {}".format(env_path))
+    env_config = EnvConfig(env_config_path)
+    logger.info("Using env_config : {}".format(env_config_path))
 
 
 
