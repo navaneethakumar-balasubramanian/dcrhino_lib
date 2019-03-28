@@ -24,7 +24,7 @@ from scipy.interpolate import interp1d
 import logging
 
 
-def df_component_as_array(self, component_id,dataframe):
+def df_component_as_array(component_id,dataframe):
     """
     Returns the data form component as a 2d numpy array with trace index
     running along rows (zero-index).  Useful for slicing data and linalg.
