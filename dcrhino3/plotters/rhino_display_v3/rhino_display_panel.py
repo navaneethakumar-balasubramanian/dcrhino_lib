@@ -373,6 +373,7 @@ class Heatmap(RhinoDisplayPanel):
             curve_ax = self.plot_curve(curve, ax)
             #curve_ax.legend()
         #ax.legend();
+        ax.set_title(str(self.component).capitalize(),loc="left")
         return ax, heatmap
 
     def plot(self, ax):
