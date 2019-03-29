@@ -53,24 +53,3 @@ class BandPassFilterModuleHybrid(BaseHybridModule):
 
             splitted_traces.assign_component_from_array(component_id, data_array)
         return splitted_traces
-#
-#    def process_component(self,component_id, component_vector, global_config):
-#        """
-#        @type component_vector: numpy array
-#        @TODO: get the filter taps and pass them in;
-#        @NOTE: Why are we using transformed args rather than the global config
-#        itself??
-#        """
-#
-#        transformed_args = self.get_transformed_args(global_config)
-#
-##        output_dict = {}
-##        n_samples_in_input_traces = len(component_vector)
-##        samples_per_trace = n_samples_in_input_traces
-##
-##        num_traces = len(df['timestamp'])
-#
-#        fir_taps = get_band_pass_filter_taps(transformed_args)
-#        trace_data = component_vector
-#        filtered_trace = ssig.filtfilt(fir_taps, 1, trace_data)
-#        return filtered_trace

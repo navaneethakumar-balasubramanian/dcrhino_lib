@@ -40,6 +40,7 @@ from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import UnfoldAu
 from dcrhino3.process_flow.modules.hybrid.lead_channel_deconvolution import LeadChannelDeconvolutionModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.band_pass_filter_hybrid import BandPassFilterModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.trim_trace import TrimTraceModuleHybrid
+from dcrhino3.process_flow.modules.hybrid.upsample_hybrid import UpsampleModuleHybrid
 
 logger = init_logging(__name__)
 
@@ -75,6 +76,7 @@ class ProcessFlow:
             "unfold": UnfoldAutocorrelationModule,
             "unfold_hybrid": UnfoldAutocorrelationModuleHybrid,
             "upsample": UpsampleModule,
+            "upsample_hybrid": UpsampleModuleHybrid,
             "upsample_sinc": UpsampleSincModule,
             "export_segy": ExportSEGYModule,
             "rhino_plotter": RhinoPlotterModule,
