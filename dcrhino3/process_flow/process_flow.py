@@ -40,6 +40,7 @@ from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import UnfoldAu
 from dcrhino3.process_flow.modules.hybrid.lead_channel_deconvolution import LeadChannelDeconvolutionModuleHybrid
 
 from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import UnfoldAutocorrelationModuleHybrid
+from dcrhino3.process_flow.modules.hybrid.band_pass_filter_hybrid import BandPassFilterModuleHybrid
 
 logger = init_logging(__name__)
 
@@ -62,6 +63,7 @@ class ProcessFlow:
             "qc_log_v1": QCPlotterModule,
             "balance": BalanceModule,
             "band_pass_filter": BandPassFilterModule,
+            "band_pass_filter_hybrid": BandPassFilterModuleHybrid,
             "add_one": AddOneModule,
             "add_n": AddNModule,
             "lead_channel_deconvolution": LeadChannelDeconvolutionModule,
