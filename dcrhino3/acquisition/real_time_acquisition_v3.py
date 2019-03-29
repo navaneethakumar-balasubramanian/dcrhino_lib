@@ -500,11 +500,16 @@ class SerialThread(threading.Thread):
     def run_v11 (self):
         print("Started Serial 1.1")
         counter = 0
+        restarted = False
         while True:
             try:
                 # print("trying")
                 a = self.cport.read(self.pktlen)
-                if len(a)==self.pktlen and a[0] == b'\x02' and a[self.pktlen-1] == b'\x03':
+                if restarted:
+                    if len(a):
+                        print(a[0]==b'\x02', a[-1]==b'\x03', len(a))
+                    restarted = False
+                if len(a) == self.pktlen and a[0] == b'\x02' and a[self.pktlen-1] == b'\x03':
                     counter = 0
                     if a[1] == b'\x64':
                         self.tx_status = 1
@@ -525,12 +530,26 @@ class SerialThread(threading.Thread):
                             self.logQ.put(m)
                             self.displayQ.put(m)
 
-                        time.sleep(0.1)
-                        m = '{}: ATEMPTING TO RESTART ACQUISITION\n'.format(
-                            datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-                        self.logQ.put(m)
-                        self.displayQ.put(m)
-                        self.restart_rx()
+                        temp = self.cport.read(1)
+                        while temp != b'\x03':
+                            temp = self.cport.read(1)
+                            if len(temp):
+                                pass
+                            else:
+                                time.sleep(0.1)
+                                self.start_rx()
+                                m = '{}: ATEMPTING TO RESTART ACQUISITION\n'.format(
+                                    datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+                                self.logQ.put(m)
+                                self.displayQ.put(m)
+
+                        # time.sleep(0.1)
+                        # m = '{}: ATEMPTING TO RESTART ACQUISITION\n'.format(
+                        #     datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+                        # self.logQ.put(m)
+                        # self.displayQ.put(m)
+                        # self.restart_rx()
+                        # restarted = True
 
                         # temp = self.cport.read(1)
                         # while temp != b'\x03':
