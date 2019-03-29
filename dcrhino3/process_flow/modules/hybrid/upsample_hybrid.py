@@ -82,6 +82,7 @@ class UpsampleModuleHybrid(BaseHybridModule):
                                                fill_value=(trace_data[0], trace_data[-1]))
                     upsampled_data = interp_function(upsampled_time_vector)
                 output_trace_array[i_trace,:] = upsampled_data
-
+            #pdb.set_trace()
             splitted_traces.assign_component_from_array(component_id, output_trace_array)
+            splitted_traces.dataframe.sampling_rate = upsample_sampling_rate
         return splitted_traces
