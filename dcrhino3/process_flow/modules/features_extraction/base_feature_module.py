@@ -72,7 +72,7 @@ class BaseFeatureModule(BaseModule):
             trace_config = trace.global_config_by_index(row_of_df['acorr_file_id'])
             transformed_args = self.get_transformed_args(trace_config)
 
-            for component_id in trace_config.components_to_process:
+            for component_id in self.components_to_process:
                 component_column_on_df = component_id+"_trace"
                 trace_to_process = row_of_df[component_column_on_df]
                 timestamp = row_of_df.timestamp
