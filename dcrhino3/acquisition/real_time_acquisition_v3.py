@@ -6,9 +6,7 @@ import serial
 import threading
 import Queue#queue for python 3
 import struct
-import signal
 import sys
-import time
 import socket
 import ConfigParser
 import os
@@ -30,11 +28,8 @@ else:
 plt.ioff()
 import h5py
 
-from datetime import datetime, timedelta
-import json
-import calendar
+from datetime import datetime
 import subprocess
-import atexit
 import re
 from shutil import copyfile
 from dcrhino3.models.config import Config
@@ -77,23 +72,25 @@ sampling_rate = config.getfloat("COLLECTION", "output_sampling_rate")
 delta_t = 1.0/sampling_rate
 
 
-local_folder = config.get("DATA_TRANSMISSION","local_folder",DATA_PATH)
-if len(local_folder)==0:
+local_folder = config.get("DATA_TRANSMISSION","local_folder", DATA_PATH)
+if len(local_folder) == 0:
     local_folder = DATA_PATH
 run_folder_path = os.path.join(local_folder, "run_{}".format(datetime.utcfromtimestamp(run_start_time).strftime('%Y%m%d_%H%M%S')))
 
 
 class LogFileDaemonThread(threading.Thread):
-    def __init__(self,logQ):
+    def __init__(self, logQ):
         threading.Thread.__init__(self)
-        self.logQ= logQ
-        self.filename = os.path.join(LOGS_PATH,datetime.now().strftime('%Y_%m_%d_%H')+'.log')
+        self.logQ = logQ
+        self.filename = os.path.join(LOGS_PATH, datetime.now().strftime('%Y_%m_%d_%H')+'.log')
         self.output_file = open(self.filename, 'ar', buffering=0)
 
     def run(self):
-        print("Started LogFileDaemon")
+        m = "Started LogFileDaemon\n"
+        print(m)
+        self.logQ.put(m)
         while True:
-            filename = os.path.join(LOGS_PATH,datetime.now().strftime('%Y_%m_%d_%H')+'.log')
+            filename = os.path.join(LOGS_PATH, datetime.now().strftime('%Y_%m_%d_%H')+'.log')
             if self.filename != filename:
                 self.change_files(filename)
             self.log()
@@ -118,7 +115,7 @@ class LogFileDaemonThread(threading.Thread):
 
 
 class Packet_v10(object):
-    def __init__(self,q_data):
+    def __init__(self, q_data):
         lst = struct.unpack('=bLbbHHHLLb', q_data)
         self.rx_sequence = lst[1]
         self.x = socket.ntohs(lst[4])
@@ -171,9 +168,9 @@ class Packet_v11(object):
 
     def packet_decoder(self, pkt):
         try:
-            lst = struct.unpack('=bbLbLLLbb',pkt)
+            lst = struct.unpack('=bbLbLLLbb', pkt)
         except:
-            print("Lenght - ",len(pkt), pkt)
+            print("Lenght - ", len(pkt), pkt)
         msgtype = lst[1]
 
         if msgtype == data_message_identifier:
@@ -188,7 +185,7 @@ class Packet_v11(object):
             self.rssi = self.calc_rssi_value(lst[7])
         else:
             self.packet_type = 1
-            lst = struct.unpack('=bbLbHHHbbbbbbbb',pkt)
+            lst = struct.unpack('=bbLbHHHbbbbbbbb', pkt)
             self.rx_sequence = lst[2]
             self.temp = self.calc_temp_in_c(lst[4])
             self.batt = self.calc_batt(lst[5])
@@ -221,10 +218,13 @@ class FileFlusher(threading.Thread):
         self.offset = 0
 
     def first_packet_received(self, packet, timestamp):
-        print("t0",repr(timestamp),delta_t)
+        m = "First packet received at t0 {} with delta T of {}\n".format(repr(timestamp), delta_t)
+        print (m)
+        self.logQ.put(m)
+        self.displayQ.put(m)
         samples_to_next_trace = int(ceil((int(timestamp) + 1 - timestamp) / delta_t))
         self.packet_index_in_trace = int(sampling_rate) - samples_to_next_trace - 1
-        print("Initial Index", self.packet_index_in_trace)
+        # print("Initial Index", self.packet_index_in_trace)
         self.current_timestamp = timestamp
         self.last_sync = timestamp
         self.sequence = packet.tx_sequence
@@ -250,14 +250,16 @@ class FileFlusher(threading.Thread):
         # self.current_timestamp += self.elapsed_tx_sequences * 10./1000000
         self.sequence = packet.tx_sequence
 
-
         if self.packet_index_in_trace >= sampling_rate:
             diff = round(abs(self.current_timestamp - reference), 2)
             if diff >= 1:
-                print("Last update was {} sec ago".format(reference-self.last_sync))
-                print ("Differece is {} sec, changing time from {} to {}".format(diff,
-                                                                                      repr(self.current_timestamp),
-                                                                                repr(reference)))
+                m = "Last update was {} sec ago\n".format(reference-self.last_sync)
+                self.logQ.put(m)
+                self.displayQ.put(m)
+                m = "Difference is {} sec, changing time from {} to {}\n".format(diff, repr(self.current_timestamp),
+                                                                               repr(reference))
+                self.logQ.put(m)
+                self.displayQ.put(m)
                 self.current_timestamp = reference
                 self.last_sync = reference
             if int(self.current_timestamp) < self.previous_second:
@@ -266,10 +268,6 @@ class FileFlusher(threading.Thread):
                 if int(self.current_timestamp) > self.previous_second:
                     self.packet_index_in_trace -= (sampling_rate + self.offset)
                     self.offset = 0
-                    # print("Current T0 {}".format(repr(self.current_timestamp)))
-
-                    # print("difference", diff)
-
                     self.counter_changes += 1
                     m = "('Changed', {},{},{},{})\n".format(int(self.current_timestamp), int(reference), diff,
                                                             self.counter_changes)
@@ -300,48 +298,52 @@ class FileFlusher(threading.Thread):
             self.run_v10()
 
     def run_v10(self):
-        print("Started File Fluser 1.0")
-        self.tx_status = 1  # for comaptibility with version 1.1.  Status is always 1 (on) for v1.0
-        while True:
-            try:
-                timestamp = time.time()
-                q_data = self.get_data_from_q()
-
-                packet = Packet_v10(q_data)
-
-                #First packet received
-                if self.sequence == 0:
-                    m = "{}: FIRST PACKET RECEIVED\n".format(datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S"))
-                    self.logQ.put(m)
-                    self.displayQ.put(m)
-                    self.first_packet_received(packet, timestamp)
-                    self.save_row_to_processing_q(packet)
-                else:
-                    #if it is a consecutive packet or if we missed any
-                    if packet.tx_clock_ticks > self.sequence:
-                        self.calculate_packet_timestamp(packet)
-                        self.save_row_to_processing_q(packet)
-                    elif packet.tx_clock_ticks == self.sequence:
-                        print (self.previous_timestamp, packet.tx_clock_ticks)
-                        self.previous_timestamp = 0
-                        self.calculate_packet_timestamp(packet)
-                        m = "{}: DUPLICATED RECORD WILL BE IGNORED\n".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-                        self.logQ.put(m)
-                        self.displayQ.put(m)
-                    else:
-                        m = "{}: ADJUSTED FOR CLOCK ROLLOVER USING FIRST PACKET LOGIC\n".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-                        self.logQ.put(m)
-                        self.displayQ.put(m)
-                        self.first_packet_received(packet, timestamp)
-                        self.save_row_to_processing_q(packet)
-            except Queue.Empty:
-                # Handle empty queue here
-                time.sleep(0.05)
-                pass
+        pass
+        # print("Started File Fluser 1.0")
+        # self.tx_status = 1  # for comaptibility with version 1.1.  Status is always 1 (on) for v1.0
+        # while True:
+        #     try:
+        #         timestamp = time.time()
+        #         q_data = self.get_data_from_q()
+        #
+        #         packet = Packet_v10(q_data)
+        #
+        #         #First packet received
+        #         if self.sequence == 0:
+        #             m = "{}: FIRST PACKET RECEIVED\n".format(datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S"))
+        #             self.logQ.put(m)
+        #             self.displayQ.put(m)
+        #             self.first_packet_received(packet, timestamp)
+        #             self.save_row_to_processing_q(packet)
+        #         else:
+        #             #if it is a consecutive packet or if we missed any
+        #             if packet.tx_clock_ticks > self.sequence:
+        #                 self.calculate_packet_timestamp(packet)
+        #                 self.save_row_to_processing_q(packet)
+        #             elif packet.tx_clock_ticks == self.sequence:
+        #                 print (self.previous_timestamp, packet.tx_clock_ticks)
+        #                 self.previous_timestamp = 0
+        #                 self.calculate_packet_timestamp(packet)
+        #                 m = "{}: DUPLICATED RECORD WILL BE IGNORED\n".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+        #                 self.logQ.put(m)
+        #                 self.displayQ.put(m)
+        #             else:
+        #                 m = "{}: ADJUSTED FOR CLOCK ROLLOVER USING FIRST PACKET LOGIC\n".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+        #                 self.logQ.put(m)
+        #                 self.displayQ.put(m)
+        #                 self.first_packet_received(packet, timestamp)
+        #                 self.save_row_to_processing_q(packet)
+        #     except Queue.Empty:
+        #         # Handle empty queue here
+        #         time.sleep(0.05)
+        #         pass
 
 
     def run_v11(self):
-        print("Started File Fluser 1.1")
+        m = "Started File Fluser 1.1\n"
+        print(m)
+        self.logQ.put(m)
+        self.displayQ.put(m)
         self.current_temp = np.nan
         self.current_batt = np.nan
         self.current_rssi = np.nan
@@ -455,50 +457,54 @@ class SerialThread(threading.Thread):
 
 
     def run_v10 (self):
-        print("Started Serial 1.0")
-        counter = 0
-        while True:
-            try:
-                a = self.cport.read(self.pktlen)
-                if len(a)==self.pktlen and a[0] == b'\x02' and a[self.pktlen-1] == b'\x03':
-                    counter = 0
-                    self.flushq.put(a)
-                    last_a = a
-                else:
-                    counter += 1
-                    self._corrupt_packets += 1
-                    if len(a) >= self.pktlen:
-                        m = '{}: CORRUPT {} BYTE PACKET>>>>>>>>>>>>>>>>>>>>>{}\n'.format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),len(a),counter)
-                        self.logQ.put(m)
-                        self.displayQ.put(m)
-                    else:
-                        m = '{}: TRUNCATED {} BYTE PACKET>>>>>>>>>>>>>>>>>>>>>{}\n'.format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),len(a),counter)
-                        self.logQ.put(m)
-                        self.displayQ.put(m)
-
-                    temp = self.cport.read(1)
-                    while temp != b'\x03':
-                        temp = self.cport.read(1)
-                        if len(temp):
-                            pass
-                        else:
-                            time.sleep(0.1)
-                            self.start_rx()
-                            m = '{}: ATEMPTING TO RESTART ACQUISITION\n'.format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-                            self.logQ.put(m)
-                            self.displayQ.put(m)
-
-            except:
-                print("Serial Thread Exception")
-                print(sys.exc_info())
-                pass
+        pass
+        # print("Started Serial 1.0")
+        # counter = 0
+        # while True:
+        #     try:
+        #         a = self.cport.read(self.pktlen)
+        #         if len(a)==self.pktlen and a[0] == b'\x02' and a[self.pktlen-1] == b'\x03':
+        #             counter = 0
+        #             self.flushq.put(a)
+        #             last_a = a
+        #         else:
+        #             counter += 1
+        #             self._corrupt_packets += 1
+        #             if len(a) >= self.pktlen:
+        #                 m = '{}: CORRUPT {} BYTE PACKET>>>>>>>>>>>>>>>>>>>>>{}\n'.format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),len(a),counter)
+        #                 self.logQ.put(m)
+        #                 self.displayQ.put(m)
+        #             else:
+        #                 m = '{}: TRUNCATED {} BYTE PACKET>>>>>>>>>>>>>>>>>>>>>{}\n'.format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),len(a),counter)
+        #                 self.logQ.put(m)
+        #                 self.displayQ.put(m)
+        #
+        #             temp = self.cport.read(1)
+        #             while temp != b'\x03':
+        #                 temp = self.cport.read(1)
+        #                 if len(temp):
+        #                     pass
+        #                 else:
+        #                     time.sleep(0.1)
+        #                     self.start_rx()
+        #                     m = '{}: ATEMPTING TO RESTART ACQUISITION\n'.format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+        #                     self.logQ.put(m)
+        #                     self.displayQ.put(m)
+        #
+        #     except:
+        #         print("Serial Thread Exception")
+        #         print(sys.exc_info())
+        #         pass
 
 
 
 
 
     def run_v11 (self):
-        print("Started Serial 1.1")
+        m = "Started Serial 1.1\n"
+        print(m)
+        self.logQ.put(m)
+        self.displayQ.put(m)
         counter = 0
         restarted = False
         while True:
@@ -569,20 +575,26 @@ class SerialThread(threading.Thread):
                         time.sleep(0.1)
             except:
                 time.sleep(0.5)
-                print("Serial Thread Exception")
-                print(sys.exc_info())
-                disconected = True
-                context = pyudev.Context()
-                monitor = pyudev.Monitor.from_netlink(context)
-                monitor.filter_by(subsystem='usb')
-                while disconected:
-                    for device in iter(monitor.poll, None):
-                        if device.action == 'add':
-                            print('{} connected'.format(device))
-                            disconected = False
-                            time.sleep(1)
-                            self.cport.close()
-                            self.cport = serial.Serial(get_rhino_ttyusb(), self.brate, timeout=1.0)
+                m = "Serial Thread Exception"
+                print(m)
+                self.logQ.put(m)
+                self.displayQ.put(m)
+                m = sys.exc_info()
+                print(m)
+                self.logQ.put(m)
+                self.displayQ.put(m)
+                # disconected = True
+                # context = pyudev.Context()
+                # monitor = pyudev.Monitor.from_netlink(context)
+                # monitor.filter_by(subsystem='usb')
+                # while disconected:
+                #     for device in iter(monitor.poll, None):
+                #         if device.action == 'add':
+                #             print('{} connected'.format(device))
+                #             disconected = False
+                #             time.sleep(1)
+                #             self.cport.close()
+                #             self.cport = serial.Serial(get_rhino_ttyusb(), self.brate, timeout=1.0)
 
 
 class CollectionDaemonThread(threading.Thread):
@@ -602,7 +614,10 @@ class CollectionDaemonThread(threading.Thread):
 
 
     def run(self):
-        print("Started Collection Daemon")
+        m = "Started Collection Daemon\n"
+        print(m)
+        self.logQ.put(m)
+        self.displayQ.put(m)
         lastFileName = None
         look_for_time = True
         file_change_interval_in_min = config.getint("RUNTIME", "file_change_interval_in_min")
@@ -652,7 +667,10 @@ class CollectionDaemonThread(threading.Thread):
 
                             if first:
                                 disk_usage = psutil.disk_usage('/')[3]
-                                print("Disk Usage Percentage",disk_usage)
+                                print()
+                                m = "Disk Usage Percentage: {}".format(disk_usage)
+                                self.displayQ.put(m)
+                                self.logQ.put(m)
                                 first = False
                                 h5f, m = config_file_to_attrs(config, h5f)
                                 global_config = Config(Metadata(config))
@@ -782,20 +800,25 @@ class CollectionDaemonThread(threading.Thread):
 
 
 def main_run(run=True):
-    print("Started Main")
+
     if not os.path.exists(run_folder_path):
         os.makedirs(run_folder_path)
-    copyfile(config_collection_file_path, os.path.join(run_folder_path,'config.cfg'))
+    copyfile(config_collection_file_path, os.path.join(run_folder_path, 'config.cfg'))
     flushQ = Queue.Queue()
     traces = Queue.Queue()
     logQ = Queue.Queue()
     displayQ = Queue.Queue()
     system_healthQ = Queue.Queue()
     logger = LogFileDaemonThread(logQ)
-    comport = SerialThread(rhino_port,rhino_baudrate,rhino_pktlen,flushQ,logQ,displayQ)
-    display = GUI(displayQ,system_healthQ)
-    fflush = FileFlusher(flushQ,logQ,displayQ)
-    collection_daemon = CollectionDaemonThread(fflush.bufferQ,traces,logQ,displayQ)
+    comport = SerialThread(rhino_port, rhino_baudrate, rhino_pktlen, flushQ, logQ, displayQ)
+    display = GUI(displayQ, system_healthQ)
+    fflush = FileFlusher(flushQ, logQ, displayQ)
+    collection_daemon = CollectionDaemonThread(fflush.bufferQ, traces, logQ, displayQ)
+
+    m = "Started Main\n"
+    print(m)
+    logQ.put(m)
+    displayQ.put(m)
 
     m = plt.get_backend()+"\n"
     logQ.put(m)
