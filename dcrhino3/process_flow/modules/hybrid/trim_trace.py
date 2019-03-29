@@ -21,7 +21,7 @@ logger = init_logging(__name__)
 class TrimTraceModuleHybrid(BaseHybridModule):
     def __init__(self, json, output_path, process_flow,order):
         BaseHybridModule.__init__(self, json, output_path, process_flow, order)
-        self.id = "unfold"
+        self.id = "trim"
 
     def process_splitted_trace(self, splitted_traces):
         """

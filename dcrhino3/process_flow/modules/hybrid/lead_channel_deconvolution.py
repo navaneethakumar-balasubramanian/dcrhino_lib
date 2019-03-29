@@ -21,7 +21,7 @@ logger = init_logging(__name__)
 class LeadChannelDeconvolutionModuleHybrid(BaseHybridModule):
     def __init__(self, json, output_path, process_flow,order):
         BaseHybridModule.__init__(self, json, output_path, process_flow, order)
-        self.id = "unfold"
+        self.id = "lead_channel_deconvolution"
 
     def sort_out_filter_length(self, splitted_traces):
         """
