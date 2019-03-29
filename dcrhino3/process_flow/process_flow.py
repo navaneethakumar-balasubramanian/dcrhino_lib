@@ -38,9 +38,8 @@ from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.process_flow.modules.hybrid.columns_to_dataframe_module import ColumnsToDataframeModule
 from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import UnfoldAutocorrelationModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.lead_channel_deconvolution import LeadChannelDeconvolutionModuleHybrid
-
-from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import UnfoldAutocorrelationModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.band_pass_filter_hybrid import BandPassFilterModuleHybrid
+from dcrhino3.process_flow.modules.hybrid.trim_trace import TrimTraceModuleHybrid
 
 logger = init_logging(__name__)
 
@@ -71,6 +70,7 @@ class ProcessFlow:
             "rotate": RotateModule,
             "trim": TrimTraceModule,
             "trim_array": TrimTraceArrayModule,
+            "trim_hybrid": TrimTraceModuleHybrid,
             "trace_mixing": TraceMixingArrayModule,
             "unfold": UnfoldAutocorrelationModule,
             "unfold_hybrid": UnfoldAutocorrelationModuleHybrid,
