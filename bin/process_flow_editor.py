@@ -5,6 +5,7 @@ import pdb
 import json
 import os
 import tkFileDialog
+import time
 from process_flow import process_glob
 
 debug_path = '/home/natal/toconvert/test2.json'
@@ -517,7 +518,6 @@ class GUI():
         if path is None:
             save_path = self.json_path
         else:
-            pdb.set_trace()
             save_path = path
         with open(save_path, 'w') as f:
             json.dump(self.json, f, indent=4)
@@ -570,7 +570,9 @@ class GUI():
 
     def process(self):
         if self.saved and self.json is not None and self.glob_str is not None:
+            t0= time.time()
             process_glob(self.json, self.glob_str)
+            tkMessageBox.showinfo("Processing Done", "Processing Done in {} sec".format(time.time()-t0))
         else:
             tkMessageBox.showinfo("Unable to Process", "Please make sure JSON file is loaded, modifications are "
                                                        "saved, and data path has been selected")
