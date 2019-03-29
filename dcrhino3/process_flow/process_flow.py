@@ -82,7 +82,7 @@ class ProcessFlow:
         }
 
 
-
+        self.components_to_process = ['axial','tangential']
         self.output_path = output_path
 
 
@@ -111,6 +111,8 @@ class ProcessFlow:
             self.output_to_file = process_json['output_to_file']
         if 'output_to_db' in process_json.keys():
             self.output_to_db = process_json['output_to_db']
+        if 'components_to_process' in process_json.keys():
+            self.components_to_process = process_json['components_to_process']
 
         process_flow_output_path = os.path.join(self.output_path, self.id)
         process_counter = 0
@@ -119,7 +121,9 @@ class ProcessFlow:
             for module in modules_json:
                 process_counter += 1
                 module_output_path = os.path.join(process_flow_output_path)
-                self.modules_flow.append(self.modules[module['type']](module, module_output_path,self,process_counter))
+                module = self.modules[module['type']](module, module_output_path,self,process_counter)
+                module._components_to_process = self.components_to_process
+                self.modules_flow.append(module)
 
 
 

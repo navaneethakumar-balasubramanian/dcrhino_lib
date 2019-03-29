@@ -26,6 +26,7 @@ class BaseModule(object):
         self.set_data_from_json(json)
         self.process_flow = process_flow
         self.order = order
+        self._components_to_process = ['axial','tangential']
 
     def process_trace(self,trace):
         return trace
@@ -86,4 +87,4 @@ class BaseModule(object):
 
     @property
     def components_to_process(self):
-        return ['axial', 'tangential']
+        return self._components_to_process
