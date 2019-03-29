@@ -6,6 +6,10 @@ from dcrhino3.models.bit_types import BitTypes
 from dcrhino3.models.sensor_installation_locations import SensorInstallationLocations
 import pandas as pd
 
+from dcrhino3.helpers.general_helper_functions import init_logging
+
+logger = init_logging(__name__)
+
 class RhinoPlotterModule(BaseModule):
     def __init__(self, json, output_path,process_flow,order):
         BaseModule.__init__(self, json, output_path,process_flow,order)
@@ -51,22 +55,33 @@ class RhinoPlotterModule(BaseModule):
         panels = []
         for panel in transformed_args.panels:
             if panel["type"] == "curves":
+                have_curve_to_plot = False
                 curves = []
                 if "curves" in panel.keys():
                     for curve in panel['curves']:
-                        curves.append(self.create_curve(curve))
-                panel = Header(trace_data=trace, curves=curves)
-                panels.append(panel)
+                        temp_curve = self.create_curve(curve)
+                        curves.append(temp_curve)
+                        if temp_curve.column_label in trace.dataframe.columns:
+                            have_curve_to_plot = True
+                if have_curve_to_plot:
+                    panel = Header(trace_data=trace, curves=curves)
+                    panels.append(panel)
             elif panel['type'] == "heatmap":
                 curves = []
                 if "curves" in panel.keys():
                     for curve in panel['curves']:
                         curves.append(self.create_curve(curve))
 
-                panel = Heatmap(trace_data=trace, component=panel["component"],
-                                    wavelet_windows_to_show=panel["wavelet_windows_to_show"],curves=curves)
+                if panel["component"] in self.components_to_process:
+                    panel = Heatmap(trace_data=trace, component=panel["component"],
+                                        wavelet_windows_to_show=panel["wavelet_windows_to_show"],curves=curves)
 
-                panels.append(panel)
+                    panels.append(panel)
+                else:
+                    logger.warn("Ignored heatmap panel, this component is not on components_to_process " + str(panel["component"]))
+
+        if len(panels) == 0:
+            return trace
         rhino_display.panels = panels
         output_path = False
         if self.output_to_file:
