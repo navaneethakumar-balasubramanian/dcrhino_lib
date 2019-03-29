@@ -82,10 +82,13 @@ class LeadChannelDeconvolutionModuleHybrid(BaseHybridModule):
             t0_index += n_taps // 2 #-1 more here to make clean  reduction by n_taps_decon
             n_valid_samples_rhs = n_samples_per_trace - t0_index
             n_valid_samples_lhs = n_valid_samples_rhs - 1
+            n_samples_output_trace = n_samples_per_trace - (t0_index-n_valid_samples_lhs)
+            output_trace_array = np.full((n_traces, n_samples_output_trace), np.nan )
             zero_lag_index = (n_samples_per_trace -1) // 2
 
             for i_trace in range(n_traces):
                 #pdb.set_trace()
+                #print(i_trace)
                 trace_data = data_array[i_trace,:]
                 acorr_for_filter = trace_data[zero_lag_index : zero_lag_index + n_taps]
                 ATA = scipy.linalg.toeplitz(acorr_for_filter)
@@ -96,6 +99,7 @@ class LeadChannelDeconvolutionModuleHybrid(BaseHybridModule):
                 x_filter = ATAinv[0,:]
                 deconv_trace = np.correlate(trace_data, x_filter,'same')#YES
                 deconv_trace = deconv_trace[t0_index-n_valid_samples_lhs : n_samples_per_trace]
-                splitted_traces.assign_trace(component_id, deconv_trace, i_trace)
+                output_trace_array[i_trace, :] = deconv_trace
+            splitted_traces.assign_component_from_array(component_id, output_trace_array)
 
         return splitted_traces
