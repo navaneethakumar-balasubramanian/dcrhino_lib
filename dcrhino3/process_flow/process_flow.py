@@ -25,6 +25,7 @@ from dcrhino3.process_flow.modules.trace_processing.upsample_sinc import Upsampl
 
 from dcrhino3.process_flow.modules.features_extraction.j0 import J0FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.j1 import J1FeaturesModule
+from dcrhino3.process_flow.modules.features_extraction.j2 import J2FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.k0 import K0FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.b0 import B0FeaturesModule
 
@@ -58,6 +59,7 @@ class ProcessFlow:
             "rhino_physics": RhinoPhysicsModule,
             "j0": J0FeaturesModule,
             "j1": J1FeaturesModule,
+            "j2": J2FeaturesModule,
             "k0": K0FeaturesModule,
             "b0": B0FeaturesModule,
             "qc_log_v1": QCPlotterModule,
