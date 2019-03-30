@@ -937,8 +937,10 @@ class GUI():
 
         if config.getint("INSTALLATION","sensor_accelerometer_type") == 8:#8 is for legacy piezo type from Mide SSX and 32 is for MEMS
             self.sensor_accelerometer_type.set(sensor_accelerometer_types[0])
-        else:
+        elif config.getint("INSTALLATION","sensor_accelerometer_type") == 32:
             self.sensor_accelerometer_type.set(sensor_accelerometer_types[1])
+        elif config.getint("INSTALLATION","sensor_accelerometer_type") == 9:
+            self.sensor_accelerometer_type.set(sensor_accelerometer_types[2])
 
         # if config.getint("INSTALLATION","sensor_saturation_g") == 100:#8 is for legacy piezo type from Mide SSX and 32 is for MEMS
         #     self.sensor_saturation_g.set(sensor_saturation_g_options[0])
