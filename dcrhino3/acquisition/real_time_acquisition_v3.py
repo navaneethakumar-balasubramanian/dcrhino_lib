@@ -767,8 +767,8 @@ class CollectionDaemonThread(threading.Thread):
                                 component_trace_dict[label] = {"{}_calibrated".format(label): calibrated_data,
                                                                "{}_interpolated".format(label): interp_data,
                                                                "{}_auto_correlated".format(label): acorr_data}
-                                acceleration_dict[label] = {"max": np.max(calibrated_data),
-                                                            "min": np.min(calibrated_data)}
+                                acceleration_dict[label] = {"max": np.max(calibrated_data-np.mean(calibrated_data)),
+                                                            "min": np.min(calibrated_data)-np.mean(calibrated_data)}
 
                             #Send data to the Q so that it can be plotted
                             self.tracesQ.put({"timestamp": np.asarray([temp_lastSecond, ], dtype=np.float64),
@@ -961,8 +961,9 @@ def main_run(run=True):
             sec_delay = round(now - trace_second,2)
             plt.suptitle("Trace Time "+ tracetime.strftime('%H:%M:%S' ) + " plotted at " + datetime.utcfromtimestamp(now).strftime('%H:%M:%S') +  " delay of " + str(sec_delay) )
 
-            signal_plot.plot(trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)],
-                             'black')
+            data_to_plot = trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)]
+            data_to_plot = data_to_plot - np.mean(data_to_plot)
+            signal_plot.plot(data_to_plot, 'black')
 
 
             # signal_plot.plot(trace["ideal_timestamps"][0:100:10],normalize_array(trace["trace_data"][
@@ -978,7 +979,9 @@ def main_run(run=True):
                 trace_plot.set_ylabel("g")
                 trace_plot.set_xlabel("samples")
                 trace_plot.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
-                trace_plot.plot(trace["trace_data"][second_plot_display]["{}_interpolated".format(second_plot_display)],'b')
+                data_to_plot = trace["trace_data"][second_plot_display]["{}_interpolated".format(second_plot_display)]
+                data_to_plot = data_to_plot - np.mean(data_to_plot)
+                trace_plot.plot(data_to_plot,'b')
             else:
                 unfolded_trace = unfold_trace(trace["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display)])
                 trace_plot.plot(unfolded_trace,'b')
