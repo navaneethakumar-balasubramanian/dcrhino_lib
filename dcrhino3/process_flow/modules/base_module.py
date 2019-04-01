@@ -28,6 +28,12 @@ class BaseModule(object):
         self.order = order
         self._components_to_process = ['axial','tangential']
 
+    def set_prop_process(self,var_name,var_value):
+        if "vars" not in self.process_flow.process_json.keys():
+            self.process_flow.process_json["vars"] = dict()
+        self.process_flow.process_json["vars"][var_name] = var_value
+
+
     def process_trace(self,trace):
         return trace
 

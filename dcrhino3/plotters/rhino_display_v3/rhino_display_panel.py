@@ -21,7 +21,7 @@ from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.physics.util import get_expected_multiple_times
 from dcrhino3.plotters.rhino_display_v3.plot_helper import axis_lims_method_1
 from dcrhino3.helpers.general_helper_functions import init_logging
-
+from dcrhino3.plotters.window_picker import WindowPicker
 logger = init_logging(__name__)
 
 
@@ -48,8 +48,9 @@ class RhinoDisplayPanel(object):
             #ax1.set_ylabel(curve.label).set_color("k")
 
             ax1.set_ylim(axis_lims_method_1(curve.data,'buffer'))
+            ax1.set_ylabel(curve.label)
             if curve.color is not None:
-                ax1.set_ylabel(curve.column_label).set_color(curve.color)
+                ax1.set_ylabel(curve.label).set_color(curve.color)
                 ax1.spines[curve.spine_side].set_color(curve.color)
 
             ax1.yaxis.set_label_position(curve.spine_side)
@@ -374,6 +375,9 @@ class Heatmap(RhinoDisplayPanel):
             #curve_ax.legend()
         #ax.legend();
         ax.set_title(str(self.component).capitalize(),loc="left")
+
+
+
         return ax, heatmap
 
     def plot(self, ax):

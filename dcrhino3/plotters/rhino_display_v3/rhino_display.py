@@ -66,11 +66,19 @@ class RhinoDisplay(object):
             panel = self.panels[0]
             panel.plot(ax)
 
+
+
+
         print(n_panels)
         print('ok, start plotting')
+
         if output_path:
             plt.savefig(output_path,dpi=300)
-        plt.show()
+        #plt.show(block=True)
+        return fig,ax
+
+
+
 
 
 def my_function():
