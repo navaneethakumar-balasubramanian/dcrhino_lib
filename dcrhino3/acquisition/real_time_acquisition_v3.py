@@ -216,6 +216,7 @@ class FileFlusher(threading.Thread):
         self.tx_status = 0
         self.good_packets_in_a_row = 1
         self.offset = 0
+        self.allowed_clock_difference = config.getfloat("RUNTIME","allowed_clock_difference")
 
     def first_packet_received(self, packet, timestamp):
         m = "First packet received at t0 {} with delta T of {}\n".format(repr(timestamp), delta_t)
@@ -252,7 +253,7 @@ class FileFlusher(threading.Thread):
 
         if self.packet_index_in_trace >= sampling_rate:
             diff = round(abs(self.current_timestamp - reference), 2)
-            if diff >= 1:
+            if diff >= self.allowed_clock_difference:
                 m = "Last update was {} sec ago\n".format(reference-self.last_sync)
                 self.logQ.put(m)
                 self.displayQ.put(m)
