@@ -18,7 +18,8 @@ import pdb
 
 from dcrhino3.feature_extraction.feature_windowing import WindowBoundaries
 from dcrhino3.models.trace_dataframe import TraceData
-from dcrhino3.physics.util import get_expected_multiple_times
+#from dcrhino3.physics.util import get_expected_multiple_times
+from dcrhino3.physics.util import get_resonance_period
 from dcrhino3.plotters.rhino_display_v3.plot_helper import axis_lims_method_1
 from dcrhino3.helpers.general_helper_functions import init_logging
 
@@ -39,12 +40,12 @@ class RhinoDisplayPanel(object):
             return ax
         #pdb.set_trace()
         #print(curve.scale)
-        # 
+        #
         if curve.scale == "current" or  curve.scale == "new":
             if curve.scale == "current":
                 ax1 = ax
             if curve.scale == "new":
-                ax1 = ax.twinx()    
+                ax1 = ax.twinx()
             #ax1.set_ylabel(curve.label).set_color("k")
 
             ax1.set_ylim(axis_lims_method_1(curve.data,'buffer'))
@@ -57,19 +58,19 @@ class RhinoDisplayPanel(object):
 
             ax1.spines[curve.spine_side].set_linewidth(1)
             ax1.spines[curve.spine_side].set_position(('outward',curve.space))
-            
-            
+
+
         else:
             ax1 = ax
-            
+
         ax1.plot(curve.x_axis_values, curve.data, color=curve.color,
                 label=curve.label, linewidth=curve.linewidth, linestyle=curve.linestyle)
-        
+
         #Plotting Vertical Black Lines (not working TJW 3/26)
         X = curve.x_axis_values
-        
+
         ax1.set_xlim(X[0], X[-1])
-        
+
         x_maj_tick = (np.arange(X[0], X[-1]) - X[0])
         x_min_tick = (np.arange(X[0], X[-1], 0.5) - X[0])
         for x_maj_tick in x_maj_tick:
@@ -77,9 +78,9 @@ class RhinoDisplayPanel(object):
 
         for x_min_tick in x_min_tick:
             ax1.axvline(x=x_min_tick, ymin=0, ymax=1.5, color='k', linestyle=':')
-        
-        
-        
+
+
+
         return ax1
 
     def _get_window_widths_from_h5(self):
@@ -92,14 +93,22 @@ class RhinoDisplayPanel(object):
             window_widths = json.loads(window_widths)
         return window_widths
 
-    def _get_multiple_delays_from_h5(self):
+    def _get_multiple_delays_from_h5(self, component_id):
         """
         .. todo: CAREFUL! This should possibly return a time or depth or df-indeexed
         quantity ...
         """
         global_config = self.trace_data.first_global_config
-        multiple_delays = get_expected_multiple_times(global_config)
-        return multiple_delays
+        sensor_distance_to_bit = global_config.sensor_distance_to_source
+        distance_sensor_to_shock_sub_bottom = global_config.sensor_distance_to_shocksub
+        if component_id=='axial':
+            velocity_steel = global_config.ACOUSTIC_VELOCITY
+        elif component_id=='tangential':
+            velocity_steel = global_config.SHEAR_VELOCITY
+        resonance_period = get_resonance_period(component_id, sensor_distance_to_bit,
+                                                distance_sensor_to_shock_sub_bottom,
+                                                velocity_steel)
+        return resonance_period
 
     def load_curve_data_from_dataframe(self):
         for curve in self.curves:
@@ -167,7 +176,7 @@ class Curve(object):
         self.scale = kwargs.get("scale","current")
         self.spine_side = kwargs.get('spine_side','left')
         self.space = kwargs.get('space' , 0)
-        
+
         if self.label == '':
             self.label = self.column_label
 
@@ -224,8 +233,8 @@ class Header(RhinoDisplayPanel):
             curve_ax = self.plot_curve(curve,ax)
             #curve_ax.legend()
             #curve_ax.set_xlabel(curve.x_axis_label)
-            
-            
+
+
         #ax.legend();
         return ax, None
 
@@ -346,13 +355,13 @@ class Heatmap(RhinoDisplayPanel):
             colours['multiple_1'] = 'blue'
             colours['multiple_2'] = 'red'
             window_widths = self._get_window_widths_from_h5()
-            multiple_delays = self._get_multiple_delays_from_h5()
+            resonance_period = self._get_multiple_delays_from_h5()
             #pdb.set_trace()
             #primary_shift = -1.0 * getattr(window_widths, self.component).primary / 2.0
             primary_shift = -1.0 * window_widths[self.component]['primary'] / 2.0
             wb = WindowBoundaries()
             wb.assign_window_boundaries(self.component, window_widths,
-                                        multiple_delays, primary_shift=primary_shift)
+                                        resonance_period, primary_shift=primary_shift)
             window_boundaries = wb.window_boundaries_time
             for wavelet_id in self.wavelet_windows_to_show:
                 y_values = window_boundaries[wavelet_id]

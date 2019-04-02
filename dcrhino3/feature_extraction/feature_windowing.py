@@ -30,7 +30,7 @@ class WindowBoundaries(object):
         self.window_boundaries_time = {}
 
     def assign_window_boundaries(self, component_id, window_widths,
-                                 expected_multiple_periods, primary_shift=0.0):
+                                 expected_resonance_period, primary_shift=0.0):
         window_boundaries_time_dict = {}
         #window_boundaries_time_dict = self.window_boundaries_time[component_id]
         for window_label in TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION:
@@ -42,8 +42,7 @@ class WindowBoundaries(object):
                 window_bounds = np.array([primary_shift, primary_shift + width])
             elif bool(re.match('multiple', window_label)):
                 n_multiple = int(window_label[-1])
-                component_var = '{}-multiple_1'.format(component_id)
-                delay = n_multiple * expected_multiple_periods[component_var]
+                delay = n_multiple * expected_resonance_period
                 #delay += primary_shift
                 #width = window_widths[component][window_label]
                 try:
@@ -64,6 +63,64 @@ class WindowBoundaries(object):
         return
 
 
+#class AmplitudeWindows(object):
+#    """
+#    """
+#    def __init__(self):
+#        self.half_widths = {}
+#        self.half_widths['primary'] = 0.00105
+#        self.half_widths['multiple_1'] = 0.00105
+#        self.half_widths['multiple_2'] = 0.00105
+#
+#class ManualTimeWindows(object):
+#    """
+#    prototype, to make so changes propagate through J2, and eventually into
+#    plotter and json
+#
+#    .. todo: decide about whether this wants to unpack all components or only component_id
+#    """
+#    def __init__(self, manual_bounds=None, component_id=None, wavelets_to_process=None):
+#
+#        self.time_window = {}
+#        pdb.set_trace()
+#
+#        if manual_bounds is not None:
+#            manual_bounds_dict = manual_bounds.__dict__
+#            if component_id is not None:
+#                components_to_unpack = [component_id,]
+#            else:
+#                components_to_unpack = manual_bounds_dict.keys()
+#
+#            for component in components_to_unpack:
+#
+#                self.time_window[component] = {}
+#                wavelets_to_assign = manual_bounds_dict[component].keys()
+#                print(wavelets_to_assign)
+#                pdb.set_trace()
+#                print('ks')
+#
+#
+#            self.time_window['primary'] = Interval(lower_bound=-0.00082,
+#                                                    upper_bound=0.00118)
+#            self.time_window['multiple_1'] = Interval(lower_bound=0.00989,
+#                                                    upper_bound=0.0119)
+#            self.time_window['multiple_2'] = Interval(lower_bound=0.020249,
+#                                                    upper_bound=0.02425)
+#
+#        else:
+#            print('add logic here to calculate windows like a in J1/K0')
+#            pdb.set_trace()
+#            pass
+#
+#
+#    def get_window(self, window_label):
+#        """
+#        yes, this sucks and should be done with a dict BUT it is flexible
+#        for half-baked test changes ... so live with it for now
+#        """
+#        t_start = self.time_window[window_label].lower_bound
+#        t_final = self.time_window[window_label].upper_bound
+#        return t_start, t_final
 def test_populate_window_data_dict(trace_data_window_dict, trace_time_vector_dict,
                                    trimmed_trace, trimmed_time_vector):
     """

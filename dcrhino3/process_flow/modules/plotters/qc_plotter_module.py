@@ -13,7 +13,7 @@ from dcrhino3.plotters.qc_plotter import QCLogPlotter
 from dcrhino3.models.drill_types import DrillTypes
 from dcrhino3.models.bit_types import BitTypes
 from dcrhino3.models.sensor_installation_locations import SensorInstallationLocations
-from dcrhino3.physics.util import get_expected_multiple_times
+from dcrhino3.physics.util import get_resonance_period
 
 def decide_what_components_to_plot(transformed_args,axial,tangential,radial):
     """
@@ -167,24 +167,32 @@ class QCPlotterModule(BaseModule):
         """
         @TODO: Review why we needed the try/Except loop here ... do we still want it???
         """
-        expected_multiple = get_expected_multiple_times(transformed_args, recipe='J1')
+        #expected_multiple = get_expected_multiple_times(transformed_args, recipe='J1')
+        sensor_distance_to_bit = transformed_args.sensor_distance_to_source
+        distance_sensor_to_shock_sub_bottom = transformed_args.sensor_distance_to_shocksub
+        axial_velocity_steel = transformed_args.ACOUSTIC_VELOCITY
+        shear_velocity_steel = transformed_args.SHEAR_VELOCITY
+        axial_resonance_period = get_resonance_period('axial', sensor_distance_to_bit,
+                                                      distance_sensor_to_shock_sub_bottom, axial_velocity_steel)
+        tangential_resonance_period = get_resonance_period('tangential', sensor_distance_to_bit,
+                                                      distance_sensor_to_shock_sub_bottom, shear_velocity_steel)
 
         try:
             try:
-                ax_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial-multiple_1']*1000)
-                ax_2_mult =  (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial-multiple_2']*1000)
+                ax_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + axial_resonance_period*1000)
+                ax_2_mult =  (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + 2*axial_resonance_period*1000)
 
-                tang_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential-multiple_1']*1000)
-                tang_2_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential-multiple_2']*1000)
+                tang_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + tangential_resonance_period*1000)
+                tang_2_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + 2*tangential_resonance_period*1000)
             except KeyError:
                 print("logger.warning: we should no longer need this try-except loop!!!!!!")
                 #pdb.set_trace()
                 #raise Exception
-                ax_1_mult = (trace.dataframe.axial_primary_max_time + expected_multiple['axial-multiple_1']*1000)
-                ax_2_mult =  (trace.dataframe.axial_primary_max_time + expected_multiple['axial-multiple_2']*1000)
+                ax_1_mult = (trace.dataframe.axial_primary_max_time + axial_resonance_period*1000)
+                ax_2_mult =  (trace.dataframe.axial_primary_max_time + 2*axial_resonance_period*1000)
 
-                tang_1_mult = (trace.dataframe.tangential_primary_max_time + expected_multiple['tangential-multiple_1']*1000)
-                tang_2_mult = (trace.dataframe.tangential_primary_max_time + expected_multiple['tangential-multiple_2']*1000)
+                tang_1_mult = (trace.dataframe.tangential_primary_max_time + tangential_resonance_period*1000)
+                tang_2_mult = (trace.dataframe.tangential_primary_max_time + 2*tangential_resonance_period*1000)
         except AttributeError:
             n_traces = len(trace.dataframe)
             ax_1_mult = np.zeros(n_traces)
