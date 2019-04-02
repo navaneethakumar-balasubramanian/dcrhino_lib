@@ -70,6 +70,7 @@ battery_max_voltage = config.getfloat("INSTALLATION","battery_max_voltage")
 battery_lower_limit = config.getfloat("INSTALLATION","battery_min_voltage")
 sampling_rate = config.getfloat("COLLECTION", "output_sampling_rate")
 delta_t = 1.0/sampling_rate
+remove_mean = config.getboolean("RUNTIME", "remove_mean")
 
 
 local_folder = config.get("DATA_TRANSMISSION","local_folder", DATA_PATH)
@@ -149,7 +150,7 @@ class Packet_v11(object):
         self.packet_decoder(q_data)
 
     def calc_rssi_value(self, rssi_val):
-        offset = 0  # this needs to be calculated.
+        offset = config.getfloat("RUNTIME", "rssi_offset")  # this needs to be calculated.
         if rssi_val >= 128:
             calc_val = ((rssi_val - 256)/2.) - offset
         else:
@@ -768,9 +769,12 @@ class CollectionDaemonThread(threading.Thread):
                                 component_trace_dict[label] = {"{}_calibrated".format(label): calibrated_data,
                                                                "{}_interpolated".format(label): interp_data,
                                                                "{}_auto_correlated".format(label): acorr_data}
-                                acceleration_dict[label] = {"max": np.max(calibrated_data-np.mean(calibrated_data)),
-                                                            "min": np.min(calibrated_data)-np.mean(calibrated_data)}
-
+                                if remove_mean:
+                                    acceleration_dict[label] = {"max": np.max(calibrated_data-np.mean(calibrated_data)),
+                                                                "min": np.min(calibrated_data)-np.mean(calibrated_data)}
+                                else:
+                                    acceleration_dict[label] = {"max": np.max(calibrated_data),
+                                                                "min": np.min(calibrated_data)}
                             #Send data to the Q so that it can be plotted
                             self.tracesQ.put({"timestamp": np.asarray([temp_lastSecond, ], dtype=np.float64),
                                               "raw_timestamps": ts,
@@ -963,7 +967,8 @@ def main_run(run=True):
             plt.suptitle("Trace Time "+ tracetime.strftime('%H:%M:%S' ) + " plotted at " + datetime.utcfromtimestamp(now).strftime('%H:%M:%S') +  " delay of " + str(sec_delay) )
 
             data_to_plot = trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)]
-            data_to_plot = data_to_plot - np.mean(data_to_plot)
+            if remove_mean:
+                data_to_plot = data_to_plot - np.mean(data_to_plot)
             signal_plot.plot(data_to_plot, 'black')
 
 
@@ -981,7 +986,8 @@ def main_run(run=True):
                 trace_plot.set_xlabel("samples")
                 trace_plot.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
                 data_to_plot = trace["trace_data"][second_plot_display]["{}_interpolated".format(second_plot_display)]
-                data_to_plot = data_to_plot - np.mean(data_to_plot)
+                if remove_mean:
+                    data_to_plot = data_to_plot - np.mean(data_to_plot)
                 trace_plot.plot(data_to_plot,'b')
             else:
                 unfolded_trace = unfold_trace(trace["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display)])
