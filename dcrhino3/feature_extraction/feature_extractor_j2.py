@@ -32,12 +32,12 @@ class ManualTimeWindows(object):
     """
     def __init__(self):
         self.time_window = {}
-        self.time_window['primary'] = Interval(lower_bound=0.00018 - 0.001,
-                                                upper_bound=0.00018 + 0.001)
-        self.time_window['multiple_1'] = Interval(lower_bound=0.0109 - 0.001,
-                                                upper_bound=0.0109 + 0.001)
-        self.time_window['multiple_2'] = Interval(lower_bound=0.0215 - 0.00125,
-                                                upper_bound=0.0215 + 0.00125 + 0.0015)
+        self.time_window['primary'] = Interval(lower_bound=-0.00082,
+                                                upper_bound=0.00118)
+        self.time_window['multiple_1'] = Interval(lower_bound=0.00989,
+                                                    upper_bound=0.0119)
+        self.time_window['multiple_2'] = Interval(lower_bound=0.020249,
+                                                    upper_bound=0.02425)
 
 
         self.half_widths_amplitude = {}
