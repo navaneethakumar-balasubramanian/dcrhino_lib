@@ -246,7 +246,8 @@ METADATA_HEADER_FORMAT_KEYS = {
         'battery_max_voltage':DataType.FLOAT,
         'battery_min_voltage':DataType.FLOAT,
         'sensor_sensitivity':DataType.DICTIONARY,
-        'auto_correlation_trace_duration':DataType.FLOAT
+        'auto_correlation_trace_duration':DataType.FLOAT,
+        'two_way_resonance_distance': DataType.FLOAT
         }
 
 
@@ -304,6 +305,7 @@ class Metadata(object):
                     raise LookupError("The metadata value in the configuration file is not declared in the metadata class" , item )
         self.sensor_distance_to_source = round(self.drill_string_total_length - self.sensor_position,2)
         self.sensor_distance_to_shocksub = round(self.sensor_position - shocksub_length,2)
+        self.two_way_resonance_distance = round(self.sensor_distance_to_shocksub + self.sensor_distance_to_source, 2)
         self.accelerometer_max_voltage = cfg.getfloat("PLAYBACK","accelerometer_max_voltage")
         self.sensor_sensitivity = self.get_sensitivities_dict(cfg)
         self.sample_interval_duration = 1./self.sensor_ideal_sampling_rate
