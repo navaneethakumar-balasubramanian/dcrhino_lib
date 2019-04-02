@@ -73,6 +73,9 @@ class RhinoPlotterModule(BaseModule):
                     for curve in panel['curves']:
                         curves.append(self.create_curve(curve))
 
+                if "wavelet_windows_to_show" not in panel.keys():
+                    panel["wavelet_windows_to_show"] = []
+                    
                 if panel["component"] in self.components_to_process:
                     panel = Heatmap(trace_data=trace, component=panel["component"],
                                         wavelet_windows_to_show=panel["wavelet_windows_to_show"],curves=curves)
