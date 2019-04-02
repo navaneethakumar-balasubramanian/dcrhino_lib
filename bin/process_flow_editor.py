@@ -172,6 +172,11 @@ class GUI():
         self.save_as_btn = Button(self.master, text="Collapse All", command=self.collapse)
         self.save_as_btn.grid(row=row, column=column, rowspan=1, columnspan=1, sticky="news")
         row += 1
+        Label(self.master, text="Seconds to Process: ").grid(row=row, column=column, sticky="news")
+        row += 1
+        self.seconds_to_process = Entry(self.master)
+        self.seconds_to_process.grid(row=row, column=column, sticky="news", columnspan=6)
+        row += 1
         self.process_btn = Button(self.master, text="Process Data", command=self.process)
         self.process_btn.grid(row=row, column=column, rowspan=1, columnspan=1, sticky="news")
 
@@ -379,11 +384,11 @@ class GUI():
             for line in range(lines):
                 line_value = self.value.get(str(float(line + 1)), str(float(line + 2)))
                 value += line_value.strip()
-                value_list.append(json.loads(line_value.strip()))
+                value_list.append(line_value.strip())
             if isinstance(eval(value), dict):
                 value = eval(value)
             else:
-                value = value_list
+                value = [json.loads(x) for x in value_list]
             self.set_value(value)
         else:
             value = raw_value.strip()
@@ -391,16 +396,22 @@ class GUI():
         self.refresh()
 
     def set_value(self, value):
-        json_levels_list = []
+        pdb.set_trace()
+        json_levels_list = list()
         if len(self.path) > 1:
             json_levels_list.append(self.json[self.path[0]])
-            for item in self.path[1:-1]:
-                if "module_" in item or "panel_" in item or "curve_" in item:
-                    key = int(item.split("_")[1])
-                else:
-                    key = item
-                json_levels_list.append(json_levels_list[-1][key])
-            json_levels_list[-1][self.path[-1]] = value
+            if len(self.path) > 2:
+                item_list = self.path[1:-1]
+                for item in item_list:
+                    if "module_" in item or "panel_" in item or "curve_" in item:
+                        key = int(item.split("_")[1])
+                    else:
+                        key = item
+                    json_levels_list.append(json_levels_list[-1][key])
+            last_key = self.path[-1]
+            if "module_" in last_key or "panel_" in last_key or "curve_" in last_key:
+                last_key = int(last_key.split("_")[1])
+            json_levels_list[-1][last_key] = value
         else:
             self.json[self.path[-1]] = value
 
@@ -572,7 +583,10 @@ class GUI():
         try:
             if self.saved and self.json is not None and self.glob_str is not None:
                 t0 = time.time()
-                process_glob(self.json, self.glob_str)
+                seconds_to_process = False
+                if int(str(self.seconds_to_process.get())) > 0:
+                    seconds_to_process = int(str(self.seconds_to_process.get()))
+                process_glob(self.json, self.glob_str, seconds_to_process=seconds_to_process)
                 tkMessageBox.showinfo("Processing Done", "Processing Done in {} sec".format(time.time()-t0))
             else:
                 tkMessageBox.showinfo("Unable to Process", "Please make sure JSON file is loaded, modifications are "

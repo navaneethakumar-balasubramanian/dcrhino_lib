@@ -32,7 +32,7 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 
 logger = init_logging(__name__)
 
-def process_glob(process_json,glob_str,env_config_path="env_config.json"):
+def process_glob(process_json,glob_str,env_config_path="env_config.json", seconds_to_process=False):
     env_config = EnvConfig(env_config_path)
     logger.info("Using env_config : {}".format(env_config_path))
 
@@ -41,7 +41,7 @@ def process_glob(process_json,glob_str,env_config_path="env_config.json"):
     process_flow = ProcessFlow()
     h5_files_list = glob2.glob(glob_str)
 
-    seconds_to_process = False
+    seconds_to_process = seconds_to_process
     #seconds_to_process = 100
 
     output_path = False
