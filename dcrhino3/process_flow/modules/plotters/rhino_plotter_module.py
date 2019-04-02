@@ -4,6 +4,7 @@ from dcrhino3.plotters.rhino_display_v3.rhino_display_panel import Header, Heatm
 from dcrhino3.models.drill_types import DrillTypes
 from dcrhino3.models.bit_types import BitTypes
 from dcrhino3.models.sensor_installation_locations import SensorInstallationLocations
+import matplotlib.pyplot as plt
 import pandas as pd
 
 from dcrhino3.helpers.general_helper_functions import init_logging
@@ -75,7 +76,6 @@ class RhinoPlotterModule(BaseModule):
                 if panel["component"] in self.components_to_process:
                     panel = Heatmap(trace_data=trace, component=panel["component"],
                                         wavelet_windows_to_show=panel["wavelet_windows_to_show"],curves=curves)
-
                     panels.append(panel)
                 else:
                     logger.warn("Ignored heatmap panel, this component is not on components_to_process " + str(panel["component"]))
@@ -88,9 +88,9 @@ class RhinoPlotterModule(BaseModule):
             output_path = self.output_file_basepath(extension=".png")
         plot_title = self.get_plot_title(transformed_args,trace)
         rhino_display.plot(output_path,title=plot_title)
-
-
         return trace
+
+
 
     def create_curve(self,_obj):
         if isinstance(_obj, basestring):

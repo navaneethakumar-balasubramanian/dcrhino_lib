@@ -14,7 +14,7 @@ class RhinoPhysicsModule(BaseLogProcessingModule):
 
     def process_df(self, df,transformed_args):
         df = df.drop([c for c in df.columns if 'trace' in c], axis=1)
-        rp = RhinoPhysics(df, config={}, use_recipe=transformed_args.recipe_to_use)
+        rp = RhinoPhysics(df, config={}, use_recipe=transformed_args.recipe_to_use,components_to_process=self.components_to_process)
         rp._populate()
 
         return rp.dataframe
