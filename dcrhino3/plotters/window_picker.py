@@ -2,7 +2,7 @@ import numpy as np
 import pdb
 from Tkinter import *
 import matplotlib
-matplotlib.use('TkAgg')
+#matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 plt.ion()

@@ -8,11 +8,11 @@ Created on Fri Jan 25 11:44:16 2019
 
 ## HACK TO WORK ON SERVERS NON INTERACTIVE MODE
 import matplotlib
-#matplotlib.use('Agg')
+matplotlib.use('Agg')
 import matplotlib.rcsetup as rcsetup
-print(rcsetup.all_backends)
+#print(rcsetup.all_backends)
 #matplotlib.use('TkCairo')
-matplotlib.use('TkAgg')
+#matplotlib.use('TkAgg')
 
 import numexpr as ne
 import argparse
