@@ -17,7 +17,8 @@ from dcrhino3.feature_extraction.intermediate_derived_features import Intermedia
 from dcrhino3.helpers.general_helper_functions import flatten
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
-from dcrhino3.physics.util import get_expected_multiple_times
+#from dcrhino3.physics.util import get_expected_multiple_times
+from dcrhino3.physics.util import get_resonance_period
 
 logger = init_logging(__name__)
 
@@ -79,7 +80,18 @@ class FeatureExtractorJ1(object):
         #pdb.set_trace()
         self.acceptable_peak_wander = transformed_args.acceptable_peak_wander
         self.dynamic_windows = transformed_args.dynamic_windows
-        self.expected_multiple_periods = get_expected_multiple_times(transformed_args)
+        #self.expected_multiple_periods = get_expected_multiple_times(transformed_args)
+
+        if component_id=='axial':
+            self.velocity_steel = transformed_args.ACOUSTIC_VELOCITY
+        elif component_id=='tangential':
+            self.velocity_steel = transformed_args.SHEAR_VELOCITY
+        #pdb.set_trace()
+        sensor_distance_to_bit = transformed_args.sensor_distance_to_source
+        distance_sensor_to_shock_sub_bottom = transformed_args.sensor_distance_to_shocksub
+        self.resonance_period = get_resonance_period(component_id, sensor_distance_to_bit,
+                                                     distance_sensor_to_shock_sub_bottom,
+                                                     self.velocity_steel)
         self.sensor_saturation_g = transformed_args.sensor_saturation_g
         self.trace = SymmetricTrace(trimmed_trace, self.sampling_rate, component_id=component_id)
         self.transformed_args = transformed_args
@@ -106,7 +118,7 @@ class FeatureExtractorJ1(object):
         component_id = self.trace.component_id
         wb = WindowBoundaries()
         wb.assign_window_boundaries(component_id, self.window_widths,
-                                    self.expected_multiple_periods,
+                                    self.resonance_period,
                                     primary_shift=primary_shift)
         self.window_boundaries_time[component_id] = wb.window_boundaries_time
         return
