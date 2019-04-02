@@ -39,7 +39,9 @@ class FeatureExtractorJ2(object):
             self.sampling_rate = transformed_args.output_sampling_rate
         self.trace = SymmetricTrace(trimmed_trace, self.sampling_rate, component_id=component_id)
         self.transformed_args = transformed_args
+        manual_windows = getattr(transformed_args.manual_time_windows, component_id)
         self.manual_windows = ManualTimeWindows()
+        self.manual_windows.populate_from_transformed_args(manual_windows)
         self.amplitude_windows = AmplitudeWindows()
 
 

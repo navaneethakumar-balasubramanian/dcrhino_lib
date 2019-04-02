@@ -1,3 +1,4 @@
+from dcrhino3.feature_extraction.feature_windowing import get_default_time_windows
 from dcrhino3.process_flow.modules.base_module import BaseModule
 from dcrhino3.plotters.rhino_display_v3.rhino_display import RhinoDisplay
 from dcrhino3.plotters.rhino_display_v3.rhino_display_panel import Header, Heatmap, Curve
@@ -6,6 +7,7 @@ from dcrhino3.models.bit_types import BitTypes
 from dcrhino3.models.sensor_installation_locations import SensorInstallationLocations
 import matplotlib.pyplot as plt
 import pandas as pd
+import pdb
 import numpy as np
 from dcrhino3.process_flow.modules.plotters.rhino_plotter_module import RhinoPlotterModule
 from dcrhino3.helpers.general_helper_functions import init_logging
@@ -64,7 +66,7 @@ class DraggableLine(object):
 
 class RhinoPlotterPickerModule(RhinoPlotterModule):
     def __init__(self, json, output_path,process_flow,order):
-        RhinoPlotterModule.__init__(self, json, output_path,process_flow,order)
+        RhinoPlotterModule.__init__(self, json, output_path, process_flow, order)
         self.id = "rhino_plotter_picker"
         self.default_args.update({
             "component":"axial"
@@ -78,12 +80,35 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
         self.boundaries = 0.2
         self.maskTop = None
 
-        self.lines_default_values = [0,2,5,7,15,20]
+        self.lines_default_values = [0,2,5,7,15,20, 25, 30]
+
+
+    def populate_lines_default_values(self, manual_time_windows):
+        """
+        .. :todo review if we really want to use units of ms here
+        """
+        using_ms = True
+        self.lines_default_values[0] = manual_time_windows.time_window['primary'].lower_bound
+        self.lines_default_values[1] = manual_time_windows.time_window['primary'].upper_bound
+        self.lines_default_values[2] = manual_time_windows.time_window['multiple_1'].lower_bound
+        self.lines_default_values[3] = manual_time_windows.time_window['multiple_1'].upper_bound
+        self.lines_default_values[4] = manual_time_windows.time_window['multiple_2'].lower_bound
+        self.lines_default_values[5] = manual_time_windows.time_window['multiple_2'].upper_bound
+        self.lines_default_values[6] = manual_time_windows.time_window['multiple_3'].lower_bound
+        self.lines_default_values[7] = manual_time_windows.time_window['multiple_3'].upper_bound
+        if using_ms:
+            qq = np.asarray(self.lines_default_values)
+            qq *= 1000.0
+            self.lines_default_values = list(qq)
 
 
     def process_trace(self, trace):
         rhino_display = RhinoDisplay()
         transformed_args = self.get_transformed_args(trace.first_global_config)
+        #<added 20190402 for default windows>
+        default_time_windows = get_default_time_windows(transformed_args)
+        self.populate_lines_default_values(default_time_windows)
+        #</added 20190402 for default windows>
         self.transformed_args = transformed_args
         rhino_display.padding_left = transformed_args.padding_left
         rhino_display.padding_right = transformed_args.padding_right
