@@ -139,10 +139,10 @@ class RhinoDisplayPanel(object):
 
     @property
     def sampling_rate(self):
-        """
-        update to take from column later, for now use first_global_config
-        """
-        sampling_rate = self.trace_data.first_global_config.sampling_rate
+        if "sampling_rate" in self.trace_data.dataframe.columns:
+            sampling_rate = self.trace_data.dataframe["sampling_rate"].values[0]
+        else:
+            sampling_rate = self.trace_data.first_global_config.sampling_rate
         return sampling_rate
 
 
