@@ -94,11 +94,12 @@ class RhinoDisplayPanel(object):
             window_widths = json.loads(window_widths)
         return window_widths
 
-    def _get_multiple_delays_from_h5(self, component_id):
+    def _get_multiple_delays_from_h5(self):
         """
         .. todo: CAREFUL! This should possibly return a time or depth or df-indeexed
         quantity ...
         """
+        component_id = self.component
         global_config = self.trace_data.first_global_config
         sensor_distance_to_bit = global_config.sensor_distance_to_source
         distance_sensor_to_shock_sub_bottom = global_config.sensor_distance_to_shocksub

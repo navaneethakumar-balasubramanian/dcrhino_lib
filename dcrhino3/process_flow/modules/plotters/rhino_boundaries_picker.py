@@ -110,8 +110,8 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
         self.ax.set_rasterized(True)
         self.lines.append(DraggableLine(fig.axes[0], X,self.lines_default_values[0],'yellow',"Primary start",self.boundaries))
         self.lines.append(DraggableLine(fig.axes[0], X,self.lines_default_values[1], 'yellow', "Primary end", self.boundaries))
-        self.lines.append(DraggableLine(fig.axes[0], X,self.lines_default_values[2], 'k', "Multiple 1 start", self.boundaries))
-        self.lines.append(DraggableLine(fig.axes[0], X,self.lines_default_values[3], 'k', "Multiple 1 end", self.boundaries))
+        self.lines.append(DraggableLine(fig.axes[0], X,self.lines_default_values[2], 'limegreen', "Multiple 1 start", self.boundaries))
+        self.lines.append(DraggableLine(fig.axes[0], X,self.lines_default_values[3], 'limegreen', "Multiple 1 end", self.boundaries))
         self.lines.append(DraggableLine(fig.axes[0], X,self.lines_default_values[4], 'k', "Multiple 2 start", self.boundaries))
         self.lines.append(DraggableLine(fig.axes[0], X,self.lines_default_values[5], 'k', "Multiple 2 end", self.boundaries))
 
