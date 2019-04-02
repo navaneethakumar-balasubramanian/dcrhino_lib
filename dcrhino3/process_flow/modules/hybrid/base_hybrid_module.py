@@ -73,8 +73,9 @@ class BaseHybridModule(BaseModule):
         config_groups = trace.dataframe.groupby("acorr_file_id")
         for config_group in list(config_groups):
             df = config_group[1]
-            global_config = trace.global_config_by_index(df["acorr_file_id"].values[0])
-            transformed_args = self.get_transformed_args(global_config)
-            trace_group = SplittedTrace(df,transformed_args)
-            trace_groups.append(trace_group)
+            if len(df) > 0:
+                global_config = trace.global_config_by_index(df["acorr_file_id"].values[0])
+                transformed_args = self.get_transformed_args(global_config)
+                trace_group = SplittedTrace(df,transformed_args)
+                trace_groups.append(trace_group)
         return trace_groups
