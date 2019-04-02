@@ -42,8 +42,9 @@ class FeatureExtractorJ2(object):
         manual_windows = getattr(transformed_args.manual_time_windows, component_id)
         self.manual_windows = ManualTimeWindows()
         self.manual_windows.populate_from_transformed_args(manual_windows)
+        amplitude_half_widths = getattr(transformed_args.amplitude_half_widths, component_id)
         self.amplitude_windows = AmplitudeWindows()
-
+        self.amplitude_windows.populate_from_transformed_args(amplitude_half_widths)
 
     def extract_primary_max_time(self, window_first_time, window_final_time):
         cond1 = self.trace.time_vector >= window_first_time
@@ -120,9 +121,9 @@ class FeatureExtractorJ2(object):
         primary_start, primary_final = self.manual_windows.get_time_window('primary')
         multiple_1_start, multiple_1_final = self.manual_windows.get_time_window('multiple_1')
         multiple_2_start, multiple_2_final = self.manual_windows.get_time_window('multiple_2')
-        #pdb.set_trace()
+
         for feature_label in time_features:
-            #print(feature_label)
+
             if feature_label=='primary_max_time':
                 result = self.extract_primary_max_time(primary_start, primary_final)
             elif feature_label=='multiple_1_zero_crossing_time':
@@ -136,7 +137,7 @@ class FeatureExtractorJ2(object):
             extracted_features_dict[output_label] = result
 
         for feature_label in amplitude_features:
-            #print(feature_label)
+
             window_label = feature_label.split('_integrated_absolute_amplitude')[0]
             if window_label=='primary':
                 reference_label = 'primary_max_time'; rotate_angle=False;
@@ -151,7 +152,7 @@ class FeatureExtractorJ2(object):
 
             window_center_time_label = '{}_{}'.format(self.trace.component_id, reference_label)
             window_center = extracted_features_dict[window_center_time_label]
-            #pdb.set_trace()
+
             result = self.extract_average_absolute_amplitude(window_center,
                     self.amplitude_windows.half_widths[window_label],
                     rotate_angle=rotate_angle)
@@ -167,13 +168,7 @@ class FeatureExtractorJ2(object):
         multiple_2_time_label = '{}_multiple_2_min_time'.format(self.trace.component_id)
         extracted_features_dict[delay_1_label] = extracted_features_dict[multiple_1_time_label] - extracted_features_dict[primary_time_label]
         extracted_features_dict[delay_2_label] = extracted_features_dict[multiple_2_time_label] - extracted_features_dict[multiple_1_time_label]
-#        @property
-#        def axial_delay_1(self):
-#        return self.df_dict['axial_multiple_1_max_time'] - self.df_dict['axial_primary_max_time']
-#
-#    @property
-#    def axial_delay_2(self):
-#        return self.df_dict['axial_multiple_2_max_time'] - self.df_dict['axial_multiple_1_max_time']
+
         for key in extracted_features_dict.keys():
             extracted_features_dict['J2_{}'.format(key)] = extracted_features_dict.pop('{}'.format(key))
         return extracted_features_dict

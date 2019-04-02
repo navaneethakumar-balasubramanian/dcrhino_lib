@@ -100,6 +100,20 @@ class AmplitudeWindows(object):
         self.half_widths['multiple_1'] = 0.00105
         self.half_widths['multiple_2'] = 0.00105
 
+    def populate_from_transformed_args(self, amplitude_half_widths):
+        """
+        method to assign window start and end from json, also could be from gui
+        or otherwhere
+        """
+        wavelet_id = 'primary'
+        self.half_widths[wavelet_id] = getattr(amplitude_half_widths, wavelet_id)
+        wavelet_id = 'multiple_1'
+        self.half_widths[wavelet_id] = getattr(amplitude_half_widths, wavelet_id)
+        wavelet_id = 'multiple_2'
+        self.half_widths[wavelet_id] = getattr(amplitude_half_widths, wavelet_id)
+        wavelet_id = 'multiple_3'
+        self.half_widths[wavelet_id] = getattr(amplitude_half_widths, wavelet_id)
+
 
 
 class ManualTimeWindows(object):
@@ -151,19 +165,19 @@ class ManualTimeWindows(object):
                                                 window_label=wavelet_id,
                                                 search_feature='maximum')
         wavelet_id = 'multiple_1'
-        tmp = getattr(manual_time_windows,wavelet_id)
+        tmp = getattr(manual_time_windows, wavelet_id)
         self.time_window[wavelet_id] = SearchWindow(lower_bound=tmp[0],
                                                     upper_bound=tmp[1],
                                                     window_label=wavelet_id,
                                                 search_feature='zero_crossing')
         wavelet_id = 'multiple_2'
-        tmp = getattr(manual_time_windows,wavelet_id)
+        tmp = getattr(manual_time_windows, wavelet_id)
         self.time_window[wavelet_id] = SearchWindow(lower_bound=tmp[0],
                                                     upper_bound=tmp[1],
                                                     window_label=wavelet_id,
                                                 search_feature='minimum')
         wavelet_id = 'multiple_3'
-        tmp = getattr(manual_time_windows,wavelet_id)
+        tmp = getattr(manual_time_windows, wavelet_id)
         self.time_window[wavelet_id] = SearchWindow(lower_bound=tmp[0],
                                                     upper_bound=tmp[1],
                                                     window_label=wavelet_id,
