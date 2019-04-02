@@ -153,35 +153,39 @@ class ManualTimeWindows(object):
         t_final = self.time_window[window_label].upper_bound
         return t_start, t_final
 
-    def populate_from_transformed_args(self, manual_time_windows):
+    def populate_from_transformed_args(self, manual_time_windows, time_picks):
         """
         method to assign window start and end from json, also could be from gui
         or otherwhere
         """
         wavelet_id = 'primary'
-        tmp = getattr(manual_time_windows, wavelet_id)
-        self.time_window[wavelet_id] = SearchWindow(lower_bound=tmp[0],
-                                                upper_bound=tmp[1],
+        bounds = getattr(manual_time_windows, wavelet_id)
+        pick_type = getattr(time_picks, wavelet_id)
+        self.time_window[wavelet_id] = SearchWindow(lower_bound=bounds[0],
+                                                upper_bound=bounds[1],
                                                 window_label=wavelet_id,
-                                                search_feature='maximum')
+                                                search_feature=pick_type)
         wavelet_id = 'multiple_1'
-        tmp = getattr(manual_time_windows, wavelet_id)
-        self.time_window[wavelet_id] = SearchWindow(lower_bound=tmp[0],
-                                                    upper_bound=tmp[1],
+        bounds = getattr(manual_time_windows, wavelet_id)
+        pick_type = getattr(time_picks, wavelet_id)
+        self.time_window[wavelet_id] = SearchWindow(lower_bound=bounds[0],
+                                                    upper_bound=bounds[1],
                                                     window_label=wavelet_id,
-                                                search_feature='zero_crossing')
+                                                search_feature=pick_type)
         wavelet_id = 'multiple_2'
-        tmp = getattr(manual_time_windows, wavelet_id)
-        self.time_window[wavelet_id] = SearchWindow(lower_bound=tmp[0],
-                                                    upper_bound=tmp[1],
+        bounds = getattr(manual_time_windows, wavelet_id)
+        pick_type = getattr(time_picks, wavelet_id)
+        self.time_window[wavelet_id] = SearchWindow(lower_bound=bounds[0],
+                                                    upper_bound=bounds[1],
                                                     window_label=wavelet_id,
-                                                search_feature='minimum')
+                                                search_feature=pick_type)
         wavelet_id = 'multiple_3'
-        tmp = getattr(manual_time_windows, wavelet_id)
-        self.time_window[wavelet_id] = SearchWindow(lower_bound=tmp[0],
-                                                    upper_bound=tmp[1],
+        bounds = getattr(manual_time_windows, wavelet_id)
+        pick_type = getattr(time_picks, wavelet_id)
+        self.time_window[wavelet_id] = SearchWindow(lower_bound=bounds[0],
+                                                    upper_bound=bounds[1],
                                                     window_label=wavelet_id,
-                                                search_feature='zero_crossing')
+                                                search_feature=pick_type)
 
 
     def populate_from_old_window_boundaries(self, window_boundaries):

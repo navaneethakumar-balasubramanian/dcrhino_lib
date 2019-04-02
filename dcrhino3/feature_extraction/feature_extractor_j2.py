@@ -40,8 +40,9 @@ class FeatureExtractorJ2(object):
         self.trace = SymmetricTrace(trimmed_trace, self.sampling_rate, component_id=component_id)
         self.transformed_args = transformed_args
         manual_windows = getattr(transformed_args.manual_time_windows, component_id)
+        time_picks = getattr(transformed_args.time_picks, component_id)
         self.manual_windows = ManualTimeWindows()
-        self.manual_windows.populate_from_transformed_args(manual_windows)
+        self.manual_windows.populate_from_transformed_args(manual_windows, time_picks)
         amplitude_half_widths = getattr(transformed_args.amplitude_half_widths, component_id)
         self.amplitude_windows = AmplitudeWindows()
         self.amplitude_windows.populate_from_transformed_args(amplitude_half_widths)
