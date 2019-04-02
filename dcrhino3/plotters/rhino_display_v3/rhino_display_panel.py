@@ -22,7 +22,7 @@ from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.physics.util import get_resonance_period
 from dcrhino3.plotters.rhino_display_v3.plot_helper import axis_lims_method_1
 from dcrhino3.helpers.general_helper_functions import init_logging
-
+from dcrhino3.plotters.window_picker import WindowPicker
 logger = init_logging(__name__)
 
 
@@ -49,8 +49,9 @@ class RhinoDisplayPanel(object):
             #ax1.set_ylabel(curve.label).set_color("k")
 
             ax1.set_ylim(axis_lims_method_1(curve.data,'buffer'))
+            ax1.set_ylabel(curve.label)
             if curve.color is not None:
-                ax1.set_ylabel(curve.column_label).set_color(curve.color)
+                ax1.set_ylabel(curve.label).set_color(curve.color)
                 ax1.spines[curve.spine_side].set_color(curve.color)
 
             ax1.yaxis.set_label_position(curve.spine_side)
@@ -93,11 +94,12 @@ class RhinoDisplayPanel(object):
             window_widths = json.loads(window_widths)
         return window_widths
 
-    def _get_multiple_delays_from_h5(self, component_id):
+    def _get_multiple_delays_from_h5(self):
         """
         .. todo: CAREFUL! This should possibly return a time or depth or df-indeexed
         quantity ...
         """
+        component_id = self.component
         global_config = self.trace_data.first_global_config
         sensor_distance_to_bit = global_config.sensor_distance_to_source
         distance_sensor_to_shock_sub_bottom = global_config.sensor_distance_to_shocksub
@@ -383,6 +385,9 @@ class Heatmap(RhinoDisplayPanel):
             #curve_ax.legend()
         #ax.legend();
         ax.set_title(str(self.component).capitalize(),loc="left")
+
+
+
         return ax, heatmap
 
     def plot(self, ax):
