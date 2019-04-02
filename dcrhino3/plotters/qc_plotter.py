@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 import pdb
 
 from dcrhino3.feature_extraction.feature_windowing import WindowBoundaries
-from dcrhino3.physics.util import get_expected_multiple_times
+#from dcrhino3.physics.util import get_expected_multiple_times
+from dcrhino3.physics.util import get_resonance_period
 from dcrhino3.plotters.colour_bar_axis_limits import ColourBarAxisLimits
 
 
@@ -158,13 +159,24 @@ class QCLogPlotter():
         try:
             if self.transformed_args.plot.wavelet_windows_to_show is not None:
                 window_widths = self.transformed_args.window_widths
-                expected_multiple_periods = get_expected_multiple_times(self.transformed_args)
+                #expected_multiple_periods = get_expected_multiple_times(self.transformed_args)
                 window_boundaries = {}
+                sensor_distance_to_bit = self.transformed_args.sensor_distance_to_source
+                distance_sensor_to_shock_sub_bottom = self.transformed_args.sensor_distance_to_shocksub
+
                 for component_id in self.transformed_args.components_to_process:
+                    if component_id=='axial':
+                        velocity_steel = self.transformed_args.ACOUSTIC_VELOCITY
+                    elif component_id=='tangential':
+                        velocity_steel = self.transformed_args.SHEAR_VELOCITY
+                    resonance_period = get_resonance_period(component_id, sensor_distance_to_bit,
+                                                            distance_sensor_to_shock_sub_bottom,
+                                                            velocity_steel)
+
                     primary_shift = -1.0 * getattr(window_widths, component_id).primary / 2.0
                     wb = WindowBoundaries()
                     wb.assign_window_boundaries(component_id, window_widths,
-                                                expected_multiple_periods,
+                                                resonance_period,
                                                 primary_shift=primary_shift)
                     window_boundaries[component_id] = wb.window_boundaries_time
         except AttributeError:

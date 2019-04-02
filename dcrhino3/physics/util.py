@@ -36,12 +36,6 @@ def get_expected_multiple_times(global_config, recipe='J1'):
         expected_multiple_periods = get_expected_multiple_periods(sensor_distance_to_bit,
                                   distance_sensor_to_shock_sub_bottom,
                                   axial_velocity_steel, shear_velocity_steel)
-#        expected_multiple_periods = {}
-#        total_distance = sensor_distance_to_bit + distance_sensor_to_shock_sub_bottom
-#        expected_multiple_periods['axial-multiple_1'] = 2 * total_distance / axial_velocity_steel
-#        expected_multiple_periods['tangential-multiple_1'] = 2 * total_distance / shear_velocity_steel
-#        expected_multiple_periods['axial-multiple_2'] = 4 * total_distance / axial_velocity_steel
-#        expected_multiple_periods['tangential-multiple_2'] = 4 * total_distance / shear_velocity_steel
     return expected_multiple_periods
 
 
@@ -68,6 +62,23 @@ def get_expected_multiple_periods(sensor_distance_to_bit,
     expected_multiple_periods['axial-multiple_2'] = 4 * total_distance / axial_velocity_steel
     expected_multiple_periods['tangential-multiple_2'] = 4 * total_distance / shear_velocity_steel
     return expected_multiple_periods
+
+
+
+def get_resonance_period(component_id, sensor_distance_to_bit,
+                         distance_sensor_to_shock_sub_bottom, velocity_steel):
+    """
+    Calculates the two way travel time for a wave travelling at velocity_steel.
+
+    Parameters:
+        component_id (axial, tangential), : metadata on drilling apparatus (distances etc.)
+
+    Returns:
+        (float): resonance_period
+    """
+    total_distance = sensor_distance_to_bit + distance_sensor_to_shock_sub_bottom
+    resonance_period = 2 * total_distance / velocity_steel
+    return resonance_period
 
 def my_function():
     """

@@ -10,7 +10,7 @@ import time
 from dcrhino3.models.config import Config
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.helpers.h5_helper import H5Helper
-from dcrhino3.helpers.general_helper_functions import init_logging, interpolate_data
+from dcrhino3.helpers.general_helper_functions import init_logging, interpolate_data, calibrate_data
 from dcrhino3.process_flow.modules.trace_processing.autocorrelate import autocorrelate_trace
 
 
@@ -125,35 +125,13 @@ class RawTraceData(TraceData):
         #</numpy function>
         return interpolate_data(raw_timestamps, component_array, ideal_timestamps)
 
-    def calibrate_1d_component_array(self,component_array,global_config,sensitivity):
-        t0 = time.time()
+    def calibrate_1d_component_array(self, component_array, global_config, sensitivity):
         output = component_array
-        is_ide_file = not int(global_config.sensor_type) == 2
+        is_ide_file = not int(global_config.sensor_type) == 2 or global_config.rhino_version is None
 
-        if "rhino_version" not in vars(global_config):
-           global_config.rhino_version = 1.0
+        return calibrate_data(component_array, sensitivity, float(global_config.accelerometer_max_voltage),
+                              float(global_config.rhino_version), is_ide_file)
 
-        if is_ide_file or global_config.rhino_version == None:
-            return output / sensitivity
-        else:
-            if float(global_config.rhino_version) == 1.0:
-                output = (output * 5.0) / 65535 #Covert to Voltage
-                output = (float(global_config.accelerometer_max_voltage)/2.0) - output #Calculate difference from reference voltage
-            elif float(global_config.rhino_version) == 1.1:
-                #<Convert to Voltage>
-                tmp = output
-                output = output.astype(np.int32)#need to change the type so that the operation - pow_of_2 works
-                pow_of_2 = pow(2,32)
-                volt_per_bit = float(global_config.accelerometer_max_voltage)/pow(2.0,31)
-                # output = np.asarray([x - pow_of_2 if x& 0x80000000 == 0x80000000 else x for x in output])
-                mask_true_or_false = tmp&0x80000000==0x80000000
-                output[mask_true_or_false] = tmp[mask_true_or_false]-pow_of_2
-                output = np.round(output/2.0,0) * volt_per_bit
-                #</Convert to Voltage>
-            else:
-                raise ValueError("Calibration Error: The Rhino Hardware version should be 1.0 or 1.1")
-            output = output / (sensitivity/1000.0) #Convert to G's
-            return output
 
     def autocorrelate_1d_component_array(self,input_trace, samples_per_trace):
         return autocorrelate_trace(input_trace, samples_per_trace)
