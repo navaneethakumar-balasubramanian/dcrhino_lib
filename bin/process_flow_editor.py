@@ -3,7 +3,7 @@ import tkMessageBox
 import ttk
 import pdb
 import json
-import os
+import os, sys
 import tkFileDialog
 import time
 from process_flow import process_glob
@@ -569,13 +569,16 @@ class GUI():
         self.glob_str = file_name
 
     def process(self):
-        if self.saved and self.json is not None and self.glob_str is not None:
-            t0= time.time()
-            process_glob(self.json, self.glob_str)
-            tkMessageBox.showinfo("Processing Done", "Processing Done in {} sec".format(time.time()-t0))
-        else:
-            tkMessageBox.showinfo("Unable to Process", "Please make sure JSON file is loaded, modifications are "
-                                                       "saved, and data path has been selected")
+        try:
+            if self.saved and self.json is not None and self.glob_str is not None:
+                t0 = time.time()
+                process_glob(self.json, self.glob_str)
+                tkMessageBox.showinfo("Processing Done", "Processing Done in {} sec".format(time.time()-t0))
+            else:
+                tkMessageBox.showinfo("Unable to Process", "Please make sure JSON file is loaded, modifications are "
+                                                           "saved, and data path has been selected")
+        except:
+            print(sys.exc_info())
 
     def exit(self):
         if self.saved:
