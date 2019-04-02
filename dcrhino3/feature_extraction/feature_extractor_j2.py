@@ -2,20 +2,19 @@
 Author kkappler
 
 """
-import json
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import numpy as np
 import pdb
-import re
 
-from feature_windowing import WindowBoundaries, TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION
+#from feature_windowing import TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION
+from feature_windowing import AmplitudeWindows
+from feature_windowing import ManualTimeWindows
 from dcrhino3.feature_extraction.intermediate_derived_features import IntermediateFeatureDeriver
 from dcrhino3.helpers.general_helper_functions import flatten
 from dcrhino3.helpers.general_helper_functions import init_logging
-from dcrhino3.models.interval import Interval
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
 from dcrhino3.signal_processing.phase_rotation import rotate_phase, rotate_phase_true
-from dcrhino3.physics.util import get_expected_multiple_times
+#from dcrhino3.physics.util import get_expected_multiple_times
 
 from feature_extractor_j1a import calculate_boolean_features
 
@@ -23,38 +22,6 @@ from feature_extractor_j1a import calculate_boolean_features
 logger = init_logging(__name__)
 
 
-class ManualTimeWindows(object):
-    """
-    prototype, to make so changes propagate through J2, and eventually into
-    plotter and json
-
-    TODO: decide to use positive or negative for adjustments ... ??Always Add??
-    """
-    def __init__(self):
-        self.time_window = {}
-        self.time_window['primary'] = Interval(lower_bound=-0.00082,
-                                                upper_bound=0.00118)
-        self.time_window['multiple_1'] = Interval(lower_bound=0.00989,
-                                                    upper_bound=0.0119)
-        self.time_window['multiple_2'] = Interval(lower_bound=0.020249,
-                                                    upper_bound=0.02425)
-
-
-        self.half_widths_amplitude = {}
-        self.half_widths_amplitude['primary'] = 0.00105
-        self.half_widths_amplitude['multiple_1'] = 0.00105
-        self.half_widths_amplitude['multiple_2'] = 0.00105
-
-
-
-    def get_set_time_window(self, window_label):
-        """
-        yes, this sucks and should be done with a dict BUT it is flexible
-        for half-baked test changes ... so live with it for now
-        """
-        t_start = self.time_window[window_label].lower_bound
-        t_final = self.time_window[window_label].upper_bound
-        return t_start, t_final
 
 class FeatureExtractorJ2(object):
     """
@@ -73,6 +40,7 @@ class FeatureExtractorJ2(object):
         self.trace = SymmetricTrace(trimmed_trace, self.sampling_rate, component_id=component_id)
         self.transformed_args = transformed_args
         self.manual_windows = ManualTimeWindows()
+        self.amplitude_windows = AmplitudeWindows()
 
 
     def extract_primary_max_time(self, window_first_time, window_final_time):
@@ -147,9 +115,9 @@ class FeatureExtractorJ2(object):
         amplitude_features = ['primary_integrated_absolute_amplitude',
                                'multiple_1_integrated_absolute_amplitude',
                                'multiple_2_integrated_absolute_amplitude']
-        primary_start, primary_final = self.manual_windows.get_set_time_window('primary')
-        multiple_1_start, multiple_1_final = self.manual_windows.get_set_time_window('multiple_1')
-        multiple_2_start, multiple_2_final = self.manual_windows.get_set_time_window('multiple_2')
+        primary_start, primary_final = self.manual_windows.get_time_window('primary')
+        multiple_1_start, multiple_1_final = self.manual_windows.get_time_window('multiple_1')
+        multiple_2_start, multiple_2_final = self.manual_windows.get_time_window('multiple_2')
         #pdb.set_trace()
         for feature_label in time_features:
             #print(feature_label)
@@ -183,7 +151,7 @@ class FeatureExtractorJ2(object):
             window_center = extracted_features_dict[window_center_time_label]
             #pdb.set_trace()
             result = self.extract_average_absolute_amplitude(window_center,
-                    self.manual_windows.half_widths_amplitude[window_label],
+                    self.amplitude_windows.half_widths[window_label],
                     rotate_angle=rotate_angle)
 
             output_label = '{}_{}'.format(self.trace.component_id, feature_label)
