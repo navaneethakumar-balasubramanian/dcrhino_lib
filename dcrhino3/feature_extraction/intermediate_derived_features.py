@@ -67,7 +67,6 @@ class IntermediateFeatureDeriver(object):
 
     @property
     def axial_primary_peak(self):
-        pdb.set_trace()
         return self.df_dict['axial-primary-max_amplitude']
 
 

@@ -270,7 +270,7 @@ class FeatureExtractorJ1(object):
         #                               self.trace.data, self.trace.time_vector)
         extracted_features_dict = self.extract_features_from_each_window(window_data_dict,
                                                                     window_time_vector_dict)
-        pdb.set_trace()
+
         for key in extracted_features_dict.keys():
             extracted_features_dict['J1-{}'.format(key)] = extracted_features_dict.pop('{}'.format(key))
         return extracted_features_dict
