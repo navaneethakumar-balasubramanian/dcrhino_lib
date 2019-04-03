@@ -47,7 +47,7 @@ class FeatureExtractorJ2(object):
         self.amplitude_windows = AmplitudeWindows()
         self.amplitude_windows.populate_from_transformed_args(amplitude_half_widths)
 
-    def extract_primary_max_time(self, window_first_time, window_final_time):
+    def extract_max_time(self, window_first_time, window_final_time):
         cond1 = self.trace.time_vector >= window_first_time
         cond2 = self.trace.time_vector <  window_final_time
         active_indices = np.where(cond1 & cond2)[0]
@@ -57,7 +57,7 @@ class FeatureExtractorJ2(object):
         primary_max_time = window_time[primary_max_time_index]
         return primary_max_time
 
-    def extract_multiple_1_zero_crossing_time(self, window_first_time, window_final_time):
+    def extract_zero_crossing_time(self, window_first_time, window_final_time):
         """
         total bonehead way to do this - just for POC.  How to do for real:
             probably do a LPF, then walk out from ZX until you find nearest
@@ -74,7 +74,7 @@ class FeatureExtractorJ2(object):
         zero_crossing_time = window_time[zero_crossing_index]
         return zero_crossing_time
 
-    def extract_multiple_2_min_time(self, window_first_time, window_final_time):
+    def extract_min_time(self, window_first_time, window_final_time):
         """
         yes this is a copy of extract_primary_max_time() with a -1.0 multiplier
         """
@@ -112,6 +112,8 @@ class FeatureExtractorJ2(object):
         """
         This will be changed so that features_to_extract is taken from the json,
         but for now will develop here;
+        .. : todo: modify primary_max_time to be primary-max_time;
+        Does this break anything downstream??
         """
         extracted_features_dict = {}
         time_features = ['primary_max_time', 'multiple_1_zero_crossing_time',
@@ -126,11 +128,11 @@ class FeatureExtractorJ2(object):
         for feature_label in time_features:
 
             if feature_label=='primary_max_time':
-                result = self.extract_primary_max_time(primary_start, primary_final)
+                result = self.extract_max_time(primary_start, primary_final)
             elif feature_label=='multiple_1_zero_crossing_time':
-                result = self.extract_multiple_1_zero_crossing_time(multiple_1_start, multiple_1_final)
+                result = self.extract_zero_crossing_time(multiple_1_start, multiple_1_final)
             elif feature_label=='multiple_2_min_time':
-                result = self.extract_multiple_2_min_time(multiple_2_start, multiple_2_final)
+                result = self.extract_min_time(multiple_2_start, multiple_2_final)
             else:
                 print('logger.warning feature {} not yet supported'.format(feature_label))
                 result = None
