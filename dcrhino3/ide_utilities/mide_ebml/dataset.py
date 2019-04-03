@@ -51,6 +51,7 @@ from collections import Iterable
 from datetime import datetime
 from itertools import imap, izip
 from time import sleep
+import pdb
 
 import h5py
 import numpy
@@ -2866,9 +2867,9 @@ class EventList(Transformable):
         output_path = os.path.join(outFile, "piezo")
 
         if str(sensor_serial_number) in fname:
-            fname ="{}_{}".format(fname,resampling_rate)
+            fname ="{}_{}".format(fname, resampling_rate)
         else:
-            fname ="{}_{}_{}".format(fname,sensor_serial_number,resampling_rate)
+            fname ="{}_{}_{}".format(fname, sensor_serial_number,resampling_rate)
 
         if os.path.exists(output_path):
             if os.path.exists(os.path.join(output_path, "{}.h5".format(fname))):
@@ -2884,7 +2885,7 @@ class EventList(Transformable):
         buffer_size = 10000
         first_timestamp = None
         h5f = h5py.File(output_path, 'a')
-        h5f = config_file_to_attrs(config,h5f)
+        h5f = config_file_to_attrs(config, h5f)
         self.saveNumpyToFile(h5f, "sensitivity",
                              numpy.asarray([config.getfloat("PLAYBACK", "ide_multiplier")], dtype=numpy.float64))
         axis = numpy.asarray([config.getint("INSTALLATION", "sensor_axial_axis"),

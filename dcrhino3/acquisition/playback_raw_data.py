@@ -13,10 +13,16 @@ from dcrhino3.acquisition.config_file_utilities import extract_metadata_from_h5_
 from dcrhino3.helpers.general_helper_functions import init_logging, interpolate_data, calibrate_data
 
 def main(args):
-    # pdb.set_trace()
-    save_raw = True
-    save_csv = True
-    save_numpy = False
+    debug = False
+    if debug:
+        save_raw = False
+        save_csv = False
+        save_numpy = False
+    else:
+        save_raw = False
+        save_csv = True
+        save_numpy = False
+
     t0 = datetime.now()
     if args.sampling_rate is None:
         print("NEED A RESAMPLE RATE")
@@ -127,8 +133,8 @@ def main(args):
         # z_data = ((accelerometer_max_voltage/2.0)-(np.asarray(hf.get('z'),dtype=np.int32)*5.0/65535))/(x_sensitivity/1000.0)#/1e6
         print("IDE file")
         x_data = calibrate_data(np.asarray(hf.get('x'), dtype=np.float32), sensitivity[0], is_ide_file)
-        y_data = calibrate_data(np.asarray(hf.get('y'), dtype=np.float32), sensitivity[1], is_ide_file)
-        z_data = calibrate_data(np.asarray(hf.get('z'), dtype=np.float32), sensitivity[2], is_ide_file)
+        y_data = calibrate_data(np.asarray(hf.get('y'), dtype=np.float32), sensitivity[0], is_ide_file)
+        z_data = calibrate_data(np.asarray(hf.get('z'), dtype=np.float32), sensitivity[0], is_ide_file)
     else:
         print("Rhino file")
         x_data = calibrate_data(np.asarray(hf.get('x'), dtype=np.uint32), sensitivity[0], accelerometer_max_voltage,

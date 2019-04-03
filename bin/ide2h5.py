@@ -18,9 +18,9 @@ import time
 from datetime import datetime
 from sys import platform
 
-import data_formats as df
-import path_manager as pm
-import rhino
+import dcrhino3.ide_utilities.data_formats as df
+import dcrhino3.ide_utilities.path_manager as pm
+import dcrhino3.ide_utilities.rhino
 from dcrhino3.ide_utilities.mide_ebml import importer
 
 
@@ -115,7 +115,7 @@ def ideExport(ideFileObj,channels=None,resampling_rate=3200, time_offset=0, **kw
     updater = kwargs.get('updater', importer.nullUpdater)
     exporter = exportH5
     exportArgs = {}
-    Rhino = rhino.RHINO()
+    Rhino = dcrhino3.ide_utilities.rhino.RHINO()
 
     doc = importer.importFile(ideFileObj.AbsPath)
     sensor_serial_number = doc.recorderInfo["RecorderSerial"]
@@ -156,7 +156,7 @@ if __name__ == "__main__":
 
     # channel_list = args.channel
     channel_list = [8]
-    time_offset = args.time_offset
+    time_offset = float(args.time_offset)
     # if args.bvr == 'True':
     noBvr = True
     # else:

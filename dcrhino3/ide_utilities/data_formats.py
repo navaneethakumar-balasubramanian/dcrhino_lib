@@ -12,14 +12,14 @@ from datetime import datetime, timedelta
 from obspy import Trace, Stream
 from obspy.core import AttribDict
 from obspy.io.segy.segy import SEGYTraceHeader, SEGYBinaryFileHeader
-from trace_header import \
+from dcrhino3.ide_utilities.trace_header import \
     define_obspy_trace_header  # This module needs to remain here in order to redefine the trace headers
 
 define_obspy_trace_header()
 import numpy
 import pandas as pd
-import rhino#This module needs to remain here in order to use the RHINO Object
-import path_manager as pm
+import dcrhino3.ide_utilities.rhino#This module needs to remain here in order to use the RHINO Object
+import dcrhino3.ide_utilities.path_manager as pm
 import math
 
 #from dcrhino.analysis.signal_processing.seismic_processing import resample_trace_to_idealized_sampling_rate
