@@ -9,14 +9,15 @@ import pdb
 #from feature_windowing import TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION
 from feature_windowing import AmplitudeWindows
 from feature_windowing import ManualTimeWindows
-from dcrhino3.feature_extraction.intermediate_derived_features import IntermediateFeatureDeriver
+#from dcrhino3.feature_extraction.intermediate_derived_features import IntermediateFeatureDeriver
+from dcrhino3.feature_extraction.intermediate_derived_features_j2 import IntermediateFeatureDeriver
 from dcrhino3.helpers.general_helper_functions import flatten
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
 from dcrhino3.signal_processing.phase_rotation import rotate_phase
 #from dcrhino3.physics.util import get_expected_multiple_times
 
-from feature_extractor_j1a import calculate_boolean_features
+#from feature_extractor_j1a import calculate_boolean_features
 
 
 logger = init_logging(__name__)
@@ -116,64 +117,69 @@ class FeatureExtractorJ2(object):
         Does this break anything downstream??
         """
         extracted_features_dict = {}
-        time_features = ['primary_max_time', 'multiple_1_zero_crossing_time',
-                               'multiple_2_min_time']
-        amplitude_features = ['primary_integrated_absolute_amplitude',
-                               'multiple_1_integrated_absolute_amplitude',
-                               'multiple_2_integrated_absolute_amplitude']
+        time_features = ['primary-max_time', 'multiple_1-zero_crossing_time',
+                               'multiple_2-min_time']
+        amplitude_features = ['primary-integrated_absolute_amplitude',
+                               'multiple_1-integrated_absolute_amplitude',
+                               'multiple_2-integrated_absolute_amplitude']
         primary_start, primary_final = self.manual_windows.get_time_window('primary')
         multiple_1_start, multiple_1_final = self.manual_windows.get_time_window('multiple_1')
         multiple_2_start, multiple_2_final = self.manual_windows.get_time_window('multiple_2')
 
         for feature_label in time_features:
 
-            if feature_label=='primary_max_time':
+            if feature_label=='primary-max_time':
                 result = self.extract_max_time(primary_start, primary_final)
-            elif feature_label=='multiple_1_zero_crossing_time':
+            elif feature_label=='multiple_1-zero_crossing_time':
                 result = self.extract_zero_crossing_time(multiple_1_start, multiple_1_final)
-            elif feature_label=='multiple_2_min_time':
+            elif feature_label=='multiple_2-min_time':
                 result = self.extract_min_time(multiple_2_start, multiple_2_final)
             else:
                 print('logger.warning feature {} not yet supported'.format(feature_label))
                 result = None
-            output_label = '{}_{}'.format(self.trace.component_id, feature_label)
+            output_label = '{}-{}'.format(self.trace.component_id, feature_label)
             extracted_features_dict[output_label] = result
 
         for feature_label in amplitude_features:
 
-            window_label = feature_label.split('_integrated_absolute_amplitude')[0]
+            window_label = feature_label.split('-integrated_absolute_amplitude')[0]
             if window_label=='primary':
-                reference_label = 'primary_max_time'; rotate_angle=False;
+                reference_label = 'primary-max_time'; rotate_angle=False;
             elif window_label=='multiple_1':
-                reference_label = 'multiple_1_zero_crossing_time'; rotate_angle=-90.0;
+                reference_label = 'multiple_1-zero_crossing_time'; rotate_angle=-90.0;
             elif window_label=='multiple_2':
-                reference_label = 'multiple_2_min_time'; rotate_angle=False;
+                reference_label = 'multiple_2-min_time'; rotate_angle=False;
             else:
                 reference_label = None
                 print('bugger off!')
                 continue
 
-            window_center_time_label = '{}_{}'.format(self.trace.component_id, reference_label)
+            window_center_time_label = '{}-{}'.format(self.trace.component_id, reference_label)
             window_center = extracted_features_dict[window_center_time_label]
 
             result = self.extract_average_absolute_amplitude(window_center,
                     self.amplitude_windows.half_widths[window_label],
                     rotate_angle=rotate_angle)
 
-            output_label = '{}_{}'.format(self.trace.component_id, feature_label)
+            output_label = '{}-{}'.format(self.trace.component_id, feature_label)
             extracted_features_dict[output_label] = result
 
 
-        delay_1_label = '{}_delay_1'.format(self.trace.component_id)
-        delay_2_label = '{}_delay_2'.format(self.trace.component_id)
-        primary_time_label = '{}_primary_max_time'.format(self.trace.component_id)
-        multiple_1_time_label = '{}_multiple_1_zero_crossing_time'.format(self.trace.component_id)
-        multiple_2_time_label = '{}_multiple_2_min_time'.format(self.trace.component_id)
-        extracted_features_dict[delay_1_label] = extracted_features_dict[multiple_1_time_label] - extracted_features_dict[primary_time_label]
-        extracted_features_dict[delay_2_label] = extracted_features_dict[multiple_2_time_label] - extracted_features_dict[multiple_1_time_label]
+        #tmp2[self.trace.component_id] = new_features_dict
+        #unnested_dictionary = flatten(tmp2)
+        feature_deriver = IntermediateFeatureDeriver(df_dict=extracted_features_dict)
+        unnested_dictionary = feature_deriver.derive_features(self.trace.component_id)
+        #pdb.set_trace()
+#        delay_1_label = '{}-delay_1'.format(self.trace.component_id)
+#        delay_2_label = '{}-delay_2'.format(self.trace.component_id)
+#        primary_time_label = '{}-primary-max_time'.format(self.trace.component_id)
+#        multiple_1_time_label = '{}-multiple_1-zero_crossing_time'.format(self.trace.component_id)
+#        multiple_2_time_label = '{}-multiple_2-min_time'.format(self.trace.component_id)
+#        extracted_features_dict[delay_1_label] = extracted_features_dict[multiple_1_time_label] - extracted_features_dict[primary_time_label]
+#        extracted_features_dict[delay_2_label] = extracted_features_dict[multiple_2_time_label] - extracted_features_dict[multiple_1_time_label]
 
         for key in extracted_features_dict.keys():
-            extracted_features_dict['J2_{}'.format(key)] = extracted_features_dict.pop('{}'.format(key))
+            extracted_features_dict['J2-{}'.format(key)] = extracted_features_dict.pop('{}'.format(key))
         return extracted_features_dict
 
 
