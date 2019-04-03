@@ -63,7 +63,7 @@ def identify_phase_rotation(data):
     degrees_advance = 0.0
     if phase_state == 'left_low':
         while phase_state=='left_low':
-            degrees_advance -= 1;#print(degrees_advance)
+            degrees_advance += 1;#print(degrees_advance)
             rotated_data = rotate_phase(data, degrees_advance);
             phase_state = determine_phase_state(rotated_data, trough_search_width)
             if phase_state=='indeterminate':
@@ -74,7 +74,7 @@ def identify_phase_rotation(data):
                     pdb.set_trace()
     elif phase_state == 'right_low':
         while phase_state=='right_low':
-            degrees_advance += 1;#print(degrees_advance)
+            degrees_advance -= 1;#print(degrees_advance)
             rotated_data = rotate_phase(data, degrees_advance);
             phase_state = determine_phase_state(rotated_data, trough_search_width)
             if phase_state=='indeterminate':

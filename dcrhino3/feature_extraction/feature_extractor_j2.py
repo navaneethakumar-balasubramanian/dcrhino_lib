@@ -13,7 +13,7 @@ from dcrhino3.feature_extraction.intermediate_derived_features import Intermedia
 from dcrhino3.helpers.general_helper_functions import flatten
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
-from dcrhino3.signal_processing.phase_rotation import rotate_phase, rotate_phase_true
+from dcrhino3.signal_processing.phase_rotation import rotate_phase
 #from dcrhino3.physics.util import get_expected_multiple_times
 
 from feature_extractor_j1a import calculate_boolean_features
@@ -92,7 +92,7 @@ class FeatureExtractorJ2(object):
     def extract_average_absolute_amplitude(self, time_center, window_half_width, rotate_angle=False):
         trace_data = self.trace.data.copy()
         if rotate_angle:
-            trace_data = rotate_phase_true(trace_data, rotate_angle)
+            trace_data = rotate_phase(trace_data, rotate_angle)
 #            pdb.set_trace()
 #            print("truewho?")
         window_first_time = time_center - window_half_width

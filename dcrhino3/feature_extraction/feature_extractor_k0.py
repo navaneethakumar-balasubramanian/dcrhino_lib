@@ -3,7 +3,7 @@ Author: kkappler
 
 .. todo:: remove explicit declaration of ACOUSTIC_VELOCITY, and replace with
     value from global_config
-    
+
 """
 import matplotlib.pyplot as plt #for debug
 import numpy as np
@@ -20,14 +20,6 @@ from dcrhino3.unstable.phase_algorithm_helpers import identify_phase_rotation
 from dcrhino3.unstable.phase_algorithm_helpers import identify_primary_neighbourhood
 
 logger = init_logging(__name__)
-
-
-#WINDOW_BOUNDARIES_INDICES = {}
-#WINDOW_BOUNDARIES_INDICES['axial'] = {}
-#WINDOW_BOUNDARIES_INDICES['tangential'] = {}
-
-#TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION = ['primary', 'multiple_1', 'multiple_2',
-#                                        'multiple_3', 'noise_1', 'noise_2']
 
 
 
@@ -53,10 +45,10 @@ class FeatureExtractorK0(FeatureExtractorJ1):
         """
         Associate with each window_label, the data in that window, and the time
         takes a dictionary of times as input.
-        
+
         Returns:
             (dict): a dictionary of same keys, but [ndx0, ndx1] replaced by data_series
-            
+
         .. todo:: Spruce this up by using iterative dictionary comprehension
         .. todo:: time vector splitting is redundant -  calulate once outside here?
         """
@@ -73,11 +65,11 @@ class FeatureExtractorK0(FeatureExtractorJ1):
             tmp = trimmed_trace.copy()
             if self.apply_secondary_rotations:
                 if window_label == 'multiple_1':
-                    tmp = rotate_phase(trimmed_trace, 90.0)
+                    tmp = rotate_phase(trimmed_trace, -90.0)
                 elif window_label == 'multiple_2':
                     tmp *= -1.0
                 elif window_label == 'multiple_3':
-                    tmp = rotate_phase(trimmed_trace, -90.0)
+                    tmp = rotate_phase(trimmed_trace, 90.0)
             trace_data_window_dict[window_label] = tmp[lower_index:upper_index]
             trace_time_vector_dict[window_label] = trimmed_time_vector[lower_index:upper_index]
 
@@ -85,23 +77,23 @@ class FeatureExtractorK0(FeatureExtractorJ1):
 
     def extract_features_from_each_window(self, window_data_dict, time_vector_dict):
         """
-        Feature extractor that moves window by window, finds features, and 
-        stores them under window label. Calc's the following and gives them to 
+        Feature extractor that moves window by window, finds features, and
+        stores them under window label. Calc's the following and gives them to
         :class:`~intermediate_derived_features.IntermediateFeatureDeriver`.
-            
+
             + max_amplitude
             + max_time
             + min_amplitude
             + min_time
             + integrated_absolute_amplitude
-        
+
         Parameters:
             window_data_dict (dict): window labels, time_boundaries dictionary
             time_vector_dict (dict): dictionary of time_vectors for each window_label
-            
+
         Returns:
             (dict): dictionary (unnested) from :class:`~intermediate_derived_features.IntermediateFeatureDeriver`
-            
+
         .. todo:: 20190218: this is the old way to handle this ...
         """
         new_feature_dict = {}
@@ -124,7 +116,7 @@ class FeatureExtractorK0(FeatureExtractorJ1):
         """
         Conducts the feature_extractor_k0 to set_window_boundaries, extract features,
         and output a dictionary of extracted features.
-        
+
         Returns:
             (dict): unnested dictionary of extracted/derived features from :class:`~intermediate_derived_features.IntermediateFeatureDeriver`
         """
