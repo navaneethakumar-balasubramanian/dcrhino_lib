@@ -10,8 +10,8 @@ __copyright__ = "Copyright 2017 Mide Technology Corporation"
 import datetime
 import sys
 
-from decoding import _struct_uint64, _struct_int64
 from decoding import _struct_float32, _struct_float64
+from decoding import _struct_uint64, _struct_int64
 
 #===============================================================================
 # 

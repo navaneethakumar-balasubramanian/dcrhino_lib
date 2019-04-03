@@ -31,10 +31,10 @@ Items marked with [REV2] indicate features only supported by the Rev2+ firmware
 @var CONFIG_PARSER: A `struct.Struct` to parse (or pack) a config file's
     contents.
 '''
-from collections import OrderedDict
-from datetime import datetime
 import struct
 import time
+from collections import OrderedDict
+from datetime import datetime
 
 # Comments are (mostly) verbatim from the C code.
 CONFIG_FIELDS = OrderedDict((

@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import parse as parse_xml
-from .base import INT, UINT, FLOAT, STRING, UNICODE, DATE, BINARY, CONTAINER, Element, Document
 
+from .base import INT, UINT, FLOAT, STRING, UNICODE, DATE, BINARY, CONTAINER, Element, Document
 
 SPECDATA_TYPES = {
     'integer': INT,

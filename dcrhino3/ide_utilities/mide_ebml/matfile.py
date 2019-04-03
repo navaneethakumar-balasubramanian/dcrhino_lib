@@ -2,11 +2,12 @@
 MATLAB .MAT file exporting.
 '''
 
-from datetime import datetime
-from glob import glob
 import os.path
 import string
 import struct
+from datetime import datetime
+from glob import glob
+
 
 # NOTE: 64 bit Scipy is unstable; avoid using it for now (v0.13.2, 12/2014).
 # from scipy.io.matlab import mio5_params as MP

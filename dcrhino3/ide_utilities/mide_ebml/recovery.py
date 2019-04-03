@@ -22,6 +22,7 @@ import sys
 from mide_ebml.ebmlite import loadSchema, UnknownElement
 from mide_ebml.ebmlite.encoding import encodeId
 
+
 #===============================================================================
 # 
 #===============================================================================

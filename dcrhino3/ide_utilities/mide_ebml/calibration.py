@@ -21,11 +21,11 @@ Created on Nov 27, 2013
 # __all__ = ['Transform', 'AccelTransform', 'AccelTransform10G', 
 #            'Univariate', 'Bivariate']
 
-from collections import OrderedDict
+import logging
 import math
+from collections import OrderedDict
 from time import sleep
 
-import logging
 logger = logging.getLogger('mide_ebml')
 
 #===============================================================================

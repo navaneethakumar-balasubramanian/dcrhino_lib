@@ -1,4 +1,6 @@
-import abc, os
+import abc
+import os
+
 try:
     from cStringIO import StringIO
 except ImportError:

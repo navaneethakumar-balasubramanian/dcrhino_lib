@@ -7,13 +7,13 @@ Created on Jan 26, 2016
 @author: dstokes
 '''
 
-from datetime import datetime
 import importlib
 import locale
 import os.path
 import platform
 import sys
 import time
+from datetime import datetime
 
 # Song and dance to find libraries in sibling folder.
 # Should not matter after PyInstaller builds it.

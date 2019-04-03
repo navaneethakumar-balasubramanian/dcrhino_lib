@@ -4,17 +4,16 @@ Created on Sep 11, 2015
 @author: dstokes
 '''
 
-from collections import namedtuple
-from datetime import datetime
 import os
 import sys
 import textwrap
+from collections import namedtuple
+from datetime import datetime
 from xml.dom.minidom import parse
 
 from ebml.core import encode_element_id
 # from ebml.schema.base import INT, UINT, FLOAT, STRING, UNICODE, DATE, BINARY, CONTAINER
 from ebml.schema.mide import MideDocument
-
 from util import getSchemaModule, getSchemaDocument
 
 Element = namedtuple("Element", ('name','level','id','type','mandatory','multiple'))

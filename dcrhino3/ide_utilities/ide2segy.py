@@ -9,21 +9,24 @@ Created on Jan 26, 2016
 Modified by NRN on May 22, 2018
 '''
 from __future__ import absolute_import, division, print_function
-from datetime import datetime
-from sys import platform
+
+import csv
+import glob
 import locale
 import os.path
 import sys
-import time#import pdb
-import glob
-from mide_ebml import importer
-import csv
+import time  # import pdb
+from datetime import datetime
+from sys import platform
+
 import BH_times_from_pressure as bht
 import data_formats as df
 import pandas as pd
 import path_manager as pm
 import rhino
-import pdb
+from mide_ebml import importer
+
+
 #import dcrhino.constants as CONST
 
 #===============================================================================

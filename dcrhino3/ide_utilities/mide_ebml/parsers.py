@@ -36,12 +36,11 @@ Created on Sep 26, 2013
 @author: dstokes
 '''
 
-from collections import OrderedDict, Sequence
 import math
 import struct
 import sys
 import types
-import pdb
+from collections import OrderedDict, Sequence
 
 import calibration
 # from util import parse_ebml, decode_attributes
