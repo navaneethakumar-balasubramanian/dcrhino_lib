@@ -66,7 +66,51 @@ class RhinoDisplay(object):
             panel = self.panels[0]
             panel.plot(ax)
 
+        print(n_panels)
+        print('ok, start plotting')
 
+        if output_path:
+            plt.savefig(output_path,dpi=300)
+        #plt.show(block=True)
+        return fig,ax
+    
+    def plot_with_legend(self, output_path=False,title=False):
+        """
+        plotty_mcplotsalot(self.dict)
+        """
+        n_panels = len(self.json_dict.keys())
+        n_panels = len(self.panels)
+        fig, ax = plt.subplots(n_panels, sharex=False, figsize=self.dc_plot_lim())
+        plt.subplots_adjust(left=0.05 + self.padding_left,right=0.95 - self.padding_right,bottom=0.2,top=0.9,hspace = 0.2)
+        if title:
+            fig.text(0.01, 0.99, title[0],verticalalignment='top')
+            fig.text(0.5, 0.99, title[1], verticalalignment='top',horizontalalignment="center")
+            fig.text(0.99, 0.99, title[2], verticalalignment='top',horizontalalignment="right")
+
+
+        if n_panels > 1:
+            #first_ax = ax[0]
+            for i_panel in range(n_panels):
+                axx = ax[i_panel]
+                panel = self.panels[i_panel]
+                
+                sub = panel.plot(axx)
+
+                
+        else:
+            #first_ax = ax
+            panel = self.panels[0]
+            panel.plot(ax)
+
+        
+
+        fig.legend(
+                   bbox_to_anchor = (0.55,0.15),   # Position of legend
+                   borderaxespad=0.1,    # Small spacing around legend box
+                   title="Curve Legend",  # Title for the legend
+                   facecolor = "darkgrey",
+                   ncol = 3
+                   )
 
 
         print(n_panels)

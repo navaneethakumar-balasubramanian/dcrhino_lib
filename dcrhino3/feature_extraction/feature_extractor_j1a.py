@@ -5,19 +5,15 @@ Author kkapler
     value from global_config
     #wavelet_feature_extractor_types = ['sample', 'polynomial', 'ricker',]
 """
-import json
 import matplotlib.pyplot as plt
 import numpy as np
 import pdb
-import re
 
-from feature_windowing import test_populate_window_data_dict
 from feature_windowing import WindowBoundaries, TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION
 from dcrhino3.feature_extraction.intermediate_derived_features import IntermediateFeatureDeriver
 from dcrhino3.helpers.general_helper_functions import flatten
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
-#from dcrhino3.physics.util import get_expected_multiple_times
 from dcrhino3.physics.util import get_resonance_period
 
 logger = init_logging(__name__)
@@ -248,7 +244,7 @@ class FeatureExtractorJ1(object):
         new_features_dict['boolean'] = boolean_features_dict
         tmp2 = {}
         tmp2[self.trace.component_id] = new_features_dict
-        unnested_dictionary = flatten(tmp2)
+        unnested_dictionary = flatten(tmp2, sep='-')
         feature_deriver = IntermediateFeatureDeriver(df_dict=unnested_dictionary)
         unnested_dictionary = feature_deriver.derive_features(self.trace.component_id)
         return unnested_dictionary
@@ -276,7 +272,7 @@ class FeatureExtractorJ1(object):
                                                                     window_time_vector_dict)
 
         for key in extracted_features_dict.keys():
-            extracted_features_dict['J1_{}'.format(key)] = extracted_features_dict.pop('{}'.format(key))
+            extracted_features_dict['J1-{}'.format(key)] = extracted_features_dict.pop('{}'.format(key))
         return extracted_features_dict
 
 
