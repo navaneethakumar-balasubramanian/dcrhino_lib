@@ -54,225 +54,131 @@ class IntermediateFeatureDeriver(object):
         + tangential_pseudo_velocity_1
 
     """
-    def __init__(self, df_dict=None):#, df):
+    def __init__(self, component_id, df_dict=None):#, df):
         """
         """
         self.df_dict = df_dict
-        self.sampling_rate_of_trace = None
-        self.hole_start_time = None
-        self.observer_row = None
-        self.data_level_path = None
-        self.mount_point = None
-        self.plot_meta = None
-        self.time_stamps = None
-        self.component_trace_index = None
+        self.component_id = component_id
+#        self.hole_start_time = None
+#        self.observer_row = None
+#        self.data_level_path = None
+#        self.mount_point = None
+#        self.plot_meta = None
+#        self.time_stamps = None
+#        self.component_trace_index = None
 
 #<Axial>
     @property
-    def axial_primary_peak(self):
+    def primary_peak(self):
         """
         axial_primary_peak_feature <-- get from a control argument
         """
         peak_feature = 'integrated_absolute_amplitude'
-        peak_label = 'axial-primary-{}'.format(peak_feature)
+        peak_label = '{}-primary-{}'.format(self.component_id, peak_feature)
         return self.df_dict[peak_label]
 
 
     @property
-    def axial_multiple_1_peak(self):
+    def multiple_1_peak(self):
         """
         axial_multiple_1_peak_feature <-- get from a control argument
         """
         peak_feature = 'integrated_absolute_amplitude'#axial_multiple_1_peak_feature
-        peak_label = 'axial-multiple_1-{}'.format(peak_feature)
+        peak_label = '{}-multiple_1-{}'.format(self.component_id, peak_feature)
         return self.df_dict[peak_label]
 
     @property
-    def axial_multiple_2_peak(self):
+    def multiple_2_peak(self):
         """
         axial_multiple_2_peak_feature <-- get from a control argument
         """
         peak_feature = 'integrated_absolute_amplitude'#axial_multiple_1_peak_feature
-        peak_label = 'axial-multiple_2-{}'.format(peak_feature)
+        peak_label = '{}-multiple_2-{}'.format(self.component_id, peak_feature)
         return self.df_dict[peak_label]
 
 
     @property
-    def axial_primary_time(self):
+    def primary_time(self):
         """
         axial_primary_time_feature <-- get from a control argument
         default: 'max_time'
         """
         feature = 'max_time'
-        full_label = 'axial-primary-{}'.format(feature)
+        full_label = '{}-primary-{}'.format(self.component_id, feature)
         return self.df_dict[full_label]
 
     @property
-    def axial_multiple_1_time(self):
+    def multiple_1_time(self):
         """
         axial_multiple_1_time_feature <-- get from a control argument
         default: 'zero_crossing_time'
         """
         feature = 'zero_crossing_time'
-        full_label = 'axial-multiple_1-{}'.format(feature)
+        full_label = '{}-multiple_1-{}'.format(self.component_id, feature)
         return self.df_dict[full_label]
 
     @property
-    def axial_multiple_2_time(self):
+    def multiple_2_time(self):
         """
         axial_multiple_1_time_feature <-- get from a control argument
         default: 'min_time'
         """
         feature = 'min_time'
-        full_label = 'axial-multiple_2-{}'.format(feature)
+        full_label = '{}-multiple_2-{}'.format(self.component_id, feature)
         return self.df_dict[full_label]
 
 
     @property
-    def axial_amplitude_ratio_1(self):
-        return self.axial_multiple_1_peak / self.axial_primary_peak
+    def amplitude_ratio_1(self):
+        return self.multiple_1_peak / self.primary_peak
 
     @property
-    def axial_amplitude_ratio_2(self):
-        return self.axial_multiple_2_peak / self.axial_multiple_1_peak
+    def amplitude_ratio_2(self):
+        return self.multiple_2_peak / self.multiple_1_peak
 
     @property
-    def axial_reflection_coefficient_1(self):
-        return (1.0 - self.axial_amplitude_ratio_1) / (1.0 + self.axial_amplitude_ratio_1)
+    def reflection_coefficient_1(self):
+        return (1.0 - self.amplitude_ratio_1) / (1.0 + self.amplitude_ratio_1)
 
     @property
-    def axial_reflection_coefficient_2(self):
-        return (1.0 - self.axial_amplitude_ratio_2) / (1.0 + self.axial_amplitude_ratio_2)
+    def reflection_coefficient_2(self):
+        return (1.0 - self.amplitude_ratio_2) / (1.0 + self.amplitude_ratio_2)
 
     @property
-    def axial_delay_1(self):
+    def delay_1(self):
         #self.axial_multiple_1_peak
-        return self.axial_multiple_1_time - self.axial_primary_time
+        return self.multiple_1_time - self.primary_time
 
     @property
-    def axial_delay_2(self):
-        return self.axial_multiple_2_time - self.axial_multiple_1_time
-#        return self.df_dict['axial_multiple_2_max_time'] - self.df_dict['axial_multiple_1_max_time']
+    def delay_2(self):
+        return self.multiple_2_time - self.multiple_1_time
 
     @property
-    def axial_pseudo_velocity_1(self):
-        return 1. / self.axial_delay_1
+    def pseudo_velocity_1(self):
+        return 1. / self.delay_1
         #return 1. / self.primary_wavelet_width
 
     @property
-    def axial_pseudo_velocity_2(self):
-        return 1. / self.axial_delay_2
-        #return 1. / self.primary_wavelet_width
+    def pseudo_velocity_2(self):
+        return 1. / self.delay_2
 
+
+#<AXIAL_ONLY>
     @property
     def pseudo_ucs(self):
-        return np.sqrt(self.axial_primary_peak)
+        return np.sqrt(self.primary_peak)
 
 
     @property
     def pseudo_density(self):
-        return 1e6 * self.axial_reflection_coefficient_1 / self.axial_pseudo_velocity_1**2
+        return 1e6 * self.reflection_coefficient_1 / self.pseudo_velocity_1**2
+#</AXIAL_ONLY>
 
 ##################################################################################
 #</Axial>
 
 
-#<Tangential>
 
-    @property
-    def tangential_primary_peak(self):
-        """
-        tangential_primary_peak_feature <-- get from a control argument
-        """
-        peak_feature = 'integrated_absolute_amplitude'
-        peak_label = 'tangential-primary-{}'.format(peak_feature)
-        return self.df_dict[peak_label]
-
-
-    @property
-    def tangential_multiple_1_peak(self):
-        """
-        tangential_multiple_1_peak_feature <-- get from a control argument
-        """
-        peak_feature = 'integrated_absolute_amplitude'#tangential_multiple_1_peak_feature
-        peak_label = 'tangential-multiple_1-{}'.format(peak_feature)
-        return self.df_dict[peak_label]
-
-    @property
-    def tangential_multiple_2_peak(self):
-        """
-        tangential_multiple_2_peak_feature <-- get from a control argument
-        """
-        peak_feature = 'integrated_absolute_amplitude'#tangential_multiple_1_peak_feature
-        peak_label = 'tangential-multiple_2-{}'.format(peak_feature)
-        return self.df_dict[peak_label]
-
-
-    @property
-    def tangential_primary_time(self):
-        """
-        tangential_primary_time_feature <-- get from a control argument
-        default: 'max_time'
-        """
-        feature = 'max_time'
-        full_label = 'tangential-primary-{}'.format(feature)
-        return self.df_dict[full_label]
-
-    @property
-    def tangential_multiple_1_time(self):
-        """
-        tangential_multiple_1_time_feature <-- get from a control argument
-        default: 'zero_crossing_time'
-        """
-        feature = 'zero_crossing_time'
-        full_label = 'tangential-multiple_1-{}'.format(feature)
-        return self.df_dict[full_label]
-
-    @property
-    def tangential_multiple_2_time(self):
-        """
-        tangential_multiple_1_time_feature <-- get from a control argument
-        default: 'min_time'
-        """
-        feature = 'min_time'
-        full_label = 'tangential-multiple_2-{}'.format(feature)
-        return self.df_dict[full_label]
-
-    @property
-    def tangential_primary_peak(self):
-        return self.df_dict['tangential_primary_max_amplitude']
-
-    @property
-    def tangential_primary_peak_time(self):
-        return self.df_dict['tangential_primary_max_time']
-
-    @property
-    def tangential_delay_1(self):
-        return self.df_dict['tangential_multiple_1_max_time'] - self.tangential_primary_peak_time
-
-    @property
-    def tangential_delay_2(self):
-        return self.df_dict['tangential_multiple_2_max_time'] - self.df_dict['tangential_multiple_1_max_time']
-
-    @property
-    def tangential_amplitude_ratio_1(self):
-        return self.df_dict['tangential_multiple_1_max_amplitude'] / self.tangential_primary_peak
-
-    @property
-    def tangential_amplitude_ratio_2(self):
-        return self.df_dict['tangential_multiple_2_max_amplitude'] / self.df_dict['tangential_multiple_3_max_amplitude']
-
-    @property
-    def tangential_reflection_coefficient_1(self):
-        return (1.0 - self.tangential_amplitude_ratio_1) / (1.0 + self.tangential_amplitude_ratio_1)
-
-    @property
-    def tangential_reflection_coefficient_2(self):
-        return (1.0 - self.tangential_amplitude_ratio_2) / (1.0 + self.tangential_amplitude_ratio_2)
-
-    @property
-    def tangential_pseudo_velocity_1(self):
-        return 1.0 / self.tangential_delay_1
 
 
 
@@ -302,25 +208,25 @@ class IntermediateFeatureDeriver(object):
         """
         if component_id == 'axial':
             self.df_dict['pseudo_ucs'] = self.pseudo_ucs
-            self.df_dict['axial_pseudo_velocity_1'] = self.axial_pseudo_velocity_1
+            self.df_dict['axial-pseudo_velocity_1'] = self.pseudo_velocity_1
             self.df_dict['pseudo_density'] = self.pseudo_density
-            self.df_dict['axial_reflection_coefficient_1'] = self.axial_reflection_coefficient_1
+            self.df_dict['axial-reflection_coefficient_1'] = self.reflection_coefficient_1
             try:
-                self.df_dict['axial-reflection_coefficient_2'] = self.axial_reflection_coefficient_2
+                self.df_dict['axial-reflection_coefficient_2'] = self.reflection_coefficient_2
             except:
 
                 logger.warn("Couldnt calculate axial-reflection_coefficient_2")
-            self.df_dict['axial-delay_1'] = self.axial_delay_1
+            self.df_dict['axial-delay_1'] = self.delay_1
 
         elif component_id == 'tangential':
 
-            self.df_dict['tangential-reflection_coefficient_1'] = self.tangential_reflection_coefficient_1
+            self.df_dict['tangential-reflection_coefficient_1'] = self.reflection_coefficient_1
             try:
-                self.df_dict['tangential-reflection_coefficient_2'] = self.tangential_reflection_coefficient_2
+                self.df_dict['tangential-reflection_coefficient_2'] = self.reflection_coefficient_2
             except:
-                logger.warn("Couldnt calculate tangential_reflection_coefficient_2")
+                logger.warn("Couldnt calculate tangential-reflection_coefficient_2")
 
-            self.df_dict['tangential-delay_1'] = self.tangential_delay_1
-            self.df_dict['tangential-pseudo_velocity_1'] = self.tangential_pseudo_velocity_1
+            self.df_dict['tangential-delay_1'] = self.delay_1
+            self.df_dict['tangential-pseudo_velocity_1'] = self.pseudo_velocity_1
 
         return self.df_dict

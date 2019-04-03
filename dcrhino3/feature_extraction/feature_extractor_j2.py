@@ -167,7 +167,8 @@ class FeatureExtractorJ2(object):
 
         #tmp2[self.trace.component_id] = new_features_dict
         #unnested_dictionary = flatten(tmp2)
-        feature_deriver = IntermediateFeatureDeriver(df_dict=extracted_features_dict)
+        feature_deriver = IntermediateFeatureDeriver(self.trace.component_id,
+                                                     df_dict=extracted_features_dict)
         unnested_dictionary = feature_deriver.derive_features(self.trace.component_id)
         #pdb.set_trace()
 #        delay_1_label = '{}-delay_1'.format(self.trace.component_id)
