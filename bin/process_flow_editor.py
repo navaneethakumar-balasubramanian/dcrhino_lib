@@ -385,10 +385,11 @@ class GUI():
                 line_value = self.value.get(str(float(line + 1)), str(float(line + 2)))
                 value += line_value.strip()
                 value_list.append(line_value.strip())
-            if isinstance(eval(value), dict):
-                value = eval(value)
-            else:
-                value = [json.loads(x) for x in value_list]
+            try:
+                if isinstance(eval(value), dict):
+                    value = eval(value)
+            except:
+                value = list([json.loads(x) for x in value_list])
             self.set_value(value)
         else:
             value = raw_value.strip()
@@ -396,7 +397,6 @@ class GUI():
         self.refresh()
 
     def set_value(self, value):
-        pdb.set_trace()
         json_levels_list = list()
         if len(self.path) > 1:
             json_levels_list.append(self.json[self.path[0]])
@@ -584,13 +584,14 @@ class GUI():
             if self.saved and self.json is not None and self.glob_str is not None:
                 t0 = time.time()
                 seconds_to_process = False
-                if int(str(self.seconds_to_process.get())) > 0:
+                if str(self.seconds_to_process.get()) != "":
                     seconds_to_process = int(str(self.seconds_to_process.get()))
                 process_glob(self.json, self.glob_str, seconds_to_process=seconds_to_process)
                 tkMessageBox.showinfo("Processing Done", "Processing Done in {} sec".format(time.time()-t0))
             else:
                 tkMessageBox.showinfo("Unable to Process", "Please make sure JSON file is loaded, modifications are "
                                                            "saved, and data path has been selected")
+            # os.system("xdg-open " + dirname_variable)
         except:
             print(sys.exc_info())
 
