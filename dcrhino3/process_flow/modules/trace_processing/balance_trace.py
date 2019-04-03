@@ -12,10 +12,7 @@ default_json =
           "sampling_rate": "|global_config.sampling_rate|",
           "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
           "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
-          "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
-          "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|",
-          "n_mix": 5,
-          "n_clip_lr": 1
+          "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|"
         }
       },
 

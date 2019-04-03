@@ -15,12 +15,38 @@ import pdb
 import re
 
 from dcrhino3.helpers.general_helper_functions import init_logging
-from dcrhino3.models.interval import Interval
+from dcrhino3.models.interval import TimePeriod
+from dcrhino3.physics.util import get_resonance_period
 
 logger = init_logging(__name__)
 
 TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION = ['primary', 'multiple_1', 'multiple_2',
                                         'multiple_3', 'noise_1', 'noise_2']
+
+
+class SearchWindow(TimePeriod):
+    """
+    this is intended to be used for "time-picks",
+    Can be modified to support search in frequency domain, but maybe better
+    to create a FrequencyInterval class
+    .. :note if this gets cumbersome because of the underlying TimePeriod class
+    we can just add lower_bound, and upper_bound attrs directly to this class
+
+    """
+    def __init__(self, **kwargs):
+        """
+        ivars: window_label  should be one of ['primary', 'multiple_1', 'multiple_2', 'multiple_3',]
+        ivars: search feature  should be one of ['maxima', 'minima', 'zero_crossing']
+
+        Normal mode of operation will be (primary, maximum), (multiple_1, zero_crossing),
+        (multiple_2, minimum), (multiple_3, zero_crossing),
+        """
+        TimePeriod.__init__(self,**kwargs);
+        self.window_label = kwargs.get('window_label', None)
+        self.search_feature = kwargs.get('search_feature', None)
+
+
+
 
 class WindowBoundaries(object):
     def __init__(self):#, component_id, trimmed_trace, transformed_args, timestamp):
@@ -74,6 +100,20 @@ class AmplitudeWindows(object):
         self.half_widths['multiple_1'] = 0.00105
         self.half_widths['multiple_2'] = 0.00105
 
+    def populate_from_transformed_args(self, amplitude_half_widths):
+        """
+        method to assign window start and end from json, also could be from gui
+        or otherwhere
+        """
+        wavelet_id = 'primary'
+        self.half_widths[wavelet_id] = getattr(amplitude_half_widths, wavelet_id)
+        wavelet_id = 'multiple_1'
+        self.half_widths[wavelet_id] = getattr(amplitude_half_widths, wavelet_id)
+        wavelet_id = 'multiple_2'
+        self.half_widths[wavelet_id] = getattr(amplitude_half_widths, wavelet_id)
+        wavelet_id = 'multiple_3'
+        self.half_widths[wavelet_id] = getattr(amplitude_half_widths, wavelet_id)
+
 
 
 class ManualTimeWindows(object):
@@ -87,21 +127,22 @@ class ManualTimeWindows(object):
     """
     def __init__(self):
         self.time_window = {}
-        self.time_window['primary'] = Interval(lower_bound=-0.00082,
-                                                upper_bound=0.00118)
-        self.time_window['multiple_1'] = Interval(lower_bound=0.00989,
-                                                    upper_bound=0.0119)
-        self.time_window['multiple_2'] = Interval(lower_bound=0.020249,
-                                                    upper_bound=0.02425)
-        self.time_window['multiple_3'] = Interval(lower_bound=0.030249,
-                                                    upper_bound=0.03425)
-
-    def populate_from_transformed_args(self):
-        """
-        method to assign window start and end from json, also could be from gui
-        or otherwhere
-        """
-        pass
+        self.time_window['primary'] = SearchWindow(lower_bound=-0.00082,
+                                                upper_bound=0.00118,
+                                                window_label='primary',
+                                                search_feature='maximum')
+        self.time_window['multiple_1'] = SearchWindow(lower_bound=0.00989,
+                                                    upper_bound=0.0119,
+                                                    window_label='multiple_1',
+                                                search_feature='zero_crossing')
+        self.time_window['multiple_2'] = SearchWindow(lower_bound=0.020249,
+                                                    upper_bound=0.02425,
+                                                    window_label='multiple_2',
+                                                search_feature='minimum')
+        self.time_window['multiple_3'] = SearchWindow(lower_bound=0.030249,
+                                                    upper_bound=0.03425,
+                                                    window_label='multiple_3',
+                                                search_feature='zero_crossing')
 
     def get_time_window(self, window_label):
         """
@@ -112,6 +153,104 @@ class ManualTimeWindows(object):
         t_final = self.time_window[window_label].upper_bound
         return t_start, t_final
 
+    def populate_from_transformed_args(self, manual_time_windows, time_picks):
+        """
+        method to assign window start and end from json, also could be from gui
+        or otherwhere
+        """
+        wavelet_id = 'primary'
+        bounds = getattr(manual_time_windows, wavelet_id)
+        pick_type = getattr(time_picks, wavelet_id)
+        self.time_window[wavelet_id] = SearchWindow(lower_bound=bounds[0],
+                                                upper_bound=bounds[1],
+                                                window_label=wavelet_id,
+                                                search_feature=pick_type)
+        wavelet_id = 'multiple_1'
+        bounds = getattr(manual_time_windows, wavelet_id)
+        pick_type = getattr(time_picks, wavelet_id)
+        self.time_window[wavelet_id] = SearchWindow(lower_bound=bounds[0],
+                                                    upper_bound=bounds[1],
+                                                    window_label=wavelet_id,
+                                                search_feature=pick_type)
+        wavelet_id = 'multiple_2'
+        bounds = getattr(manual_time_windows, wavelet_id)
+        pick_type = getattr(time_picks, wavelet_id)
+        self.time_window[wavelet_id] = SearchWindow(lower_bound=bounds[0],
+                                                    upper_bound=bounds[1],
+                                                    window_label=wavelet_id,
+                                                search_feature=pick_type)
+        wavelet_id = 'multiple_3'
+        bounds = getattr(manual_time_windows, wavelet_id)
+        pick_type = getattr(time_picks, wavelet_id)
+        self.time_window[wavelet_id] = SearchWindow(lower_bound=bounds[0],
+                                                    upper_bound=bounds[1],
+                                                    window_label=wavelet_id,
+                                                search_feature=pick_type)
+
+
+    def populate_from_old_window_boundaries(self, window_boundaries):
+        tmp = window_boundaries.window_boundaries_time
+        self.time_window = {}
+        self.time_window['primary'] = SearchWindow(lower_bound=tmp['primary'][0],
+                                                upper_bound=tmp['primary'][1],
+                                                window_label='primary',
+                                                search_feature='maximum')
+        self.time_window['multiple_1'] = SearchWindow(lower_bound=tmp['multiple_1'][0],
+                                                    upper_bound=tmp['multiple_1'][1],
+                                                    window_label='multiple_1',
+                                                search_feature='zero_crossing')
+        self.time_window['multiple_2'] = SearchWindow(lower_bound=tmp['multiple_2'][0],
+                                                    upper_bound=tmp['multiple_2'][1],
+                                                    window_label=tmp['multiple_2'][0],
+                                                search_feature='minimum')
+        self.time_window['multiple_3'] = SearchWindow(lower_bound=tmp['multiple_3'][0],
+                                                    upper_bound=tmp['multiple_3'][0],
+                                                    window_label='multiple_3',
+                                                search_feature='zero_crossing')
+
+
+
+    def get_search_feature(self, window_label):
+        pass
+
+    def set_search_feature(self, window_label):
+        pass
+
+
+def get_default_time_windows(transformed_args):
+    """
+    prototype, to make so changes propagate through J2, and eventually into
+    plotter and json.  Rather than start fresh here (whihc I would like to)
+    will use the WindowBoundaries class so that these default windows are those used
+    by J1, K0 ... this can be changed later.
+
+    .. todo: KEY here is make this manual windows have the same structure as the
+    old WindowBoundaries() class.  It is less important which format we follow, can
+    change old class to use this, or make this match the old ...
+
+
+    """
+    component_id = transformed_args.component
+    sensor_distance_to_bit = transformed_args.sensor_distance_to_source
+    distance_sensor_to_shock_sub_bottom = transformed_args.sensor_distance_to_shocksub
+    if component_id=='axial':
+        velocity_steel = transformed_args.ACOUSTIC_VELOCITY
+    elif component_id=='tangential':
+        velocity_steel = transformed_args.SHEAR_VELOCITY
+    expected_resonance_period = get_resonance_period(component_id, sensor_distance_to_bit,
+                                            distance_sensor_to_shock_sub_bottom,
+                                            velocity_steel)
+    #pdb.set_trace()
+    primary_shift = -1.0*getattr(getattr(transformed_args.window_widths, component_id), 'primary')/2.0
+    window_widths = transformed_args.window_widths
+    #window_widths = window_widths.__dict__
+    wb = WindowBoundaries()
+    wb.assign_window_boundaries(component_id, window_widths, expected_resonance_period,
+                                primary_shift=primary_shift)
+
+    default_time_windows = ManualTimeWindows()
+    default_time_windows.populate_from_old_window_boundaries(wb)
+    return default_time_windows
 
 
 def test_populate_window_data_dict(trace_data_window_dict, trace_time_vector_dict,

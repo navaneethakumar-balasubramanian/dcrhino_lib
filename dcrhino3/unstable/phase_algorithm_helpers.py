@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pdb
 
-from dcrhino3.physics.util import get_expected_multiple_times
+from dcrhino3.physics.util import get_resonance_period
 from dcrhino3.signal_processing.phase_rotation import rotate_phase
 from dcrhino3.signal_processing.phase_rotation import determine_phase_state
 
@@ -28,10 +28,10 @@ def identify_primary_neighbourhood(symmetric_trace_in, global_config):
     """
     n_regions = 2 #2 number of same-sign regions to keep L and R of center
     symmetric_trace = symmetric_trace_in._clone()
-    qq = get_expected_multiple_times(global_config)
-    #n_steps_keep = int(qq[symmetric_trace.component_id] / symmetric_trace.dt)
-    n_steps_keep = int(qq['axial-multiple_1'] / symmetric_trace.dt)
-    #mrs_trace.plot()
+    resonance_period = get_resonance_period('axial', global_config.sensor_distance_to_source,
+                              global_config.sensor_distance_to_shocksub, global_config.ACOUSTIC_VELOCITY)
+
+    n_steps_keep = int(resonance_period / symmetric_trace.dt)
     symmetric_trace.trim_to_num_points_lr(n_steps_keep)
     signs = np.sign(symmetric_trace.data)
     d_signs = np.diff(signs) #when index i of d_signs is +2 it means
@@ -63,7 +63,7 @@ def identify_phase_rotation(data):
     degrees_advance = 0.0
     if phase_state == 'left_low':
         while phase_state=='left_low':
-            degrees_advance -= 1;#print(degrees_advance)
+            degrees_advance += 1;#print(degrees_advance)
             rotated_data = rotate_phase(data, degrees_advance);
             phase_state = determine_phase_state(rotated_data, trough_search_width)
             if phase_state=='indeterminate':
@@ -74,7 +74,7 @@ def identify_phase_rotation(data):
                     pdb.set_trace()
     elif phase_state == 'right_low':
         while phase_state=='right_low':
-            degrees_advance += 1;#print(degrees_advance)
+            degrees_advance -= 1;#print(degrees_advance)
             rotated_data = rotate_phase(data, degrees_advance);
             phase_state = determine_phase_state(rotated_data, trough_search_width)
             if phase_state=='indeterminate':

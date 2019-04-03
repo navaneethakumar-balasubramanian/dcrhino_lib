@@ -83,15 +83,15 @@ class FeatureExtractorJ1(object):
         #self.expected_multiple_periods = get_expected_multiple_times(transformed_args)
 
         if component_id=='axial':
-            self.velocity_steel = transformed_args.ACOUSTIC_VELOCITY
+            velocity_steel = transformed_args.ACOUSTIC_VELOCITY
         elif component_id=='tangential':
-            self.velocity_steel = transformed_args.SHEAR_VELOCITY
+            velocity_steel = transformed_args.SHEAR_VELOCITY
         #pdb.set_trace()
         sensor_distance_to_bit = transformed_args.sensor_distance_to_source
         distance_sensor_to_shock_sub_bottom = transformed_args.sensor_distance_to_shocksub
         self.resonance_period = get_resonance_period(component_id, sensor_distance_to_bit,
                                                      distance_sensor_to_shock_sub_bottom,
-                                                     self.velocity_steel)
+                                                     velocity_steel)
         self.sensor_saturation_g = transformed_args.sensor_saturation_g
         self.trace = SymmetricTrace(trimmed_trace, self.sampling_rate, component_id=component_id)
         self.transformed_args = transformed_args
