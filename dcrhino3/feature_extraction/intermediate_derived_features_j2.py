@@ -59,19 +59,12 @@ class IntermediateFeatureDeriver(object):
         """
         self.df_dict = df_dict
         self.component_id = component_id
-#        self.hole_start_time = None
-#        self.observer_row = None
-#        self.data_level_path = None
-#        self.mount_point = None
-#        self.plot_meta = None
-#        self.time_stamps = None
-#        self.component_trace_index = None
 
-#<Axial>
+
     @property
     def primary_peak(self):
         """
-        axial_primary_peak_feature <-- get from a control argument
+        primary_peak_feature <-- get from a control argument
         """
         peak_feature = 'integrated_absolute_amplitude'
         peak_label = '{}-primary-{}'.format(self.component_id, peak_feature)
@@ -81,7 +74,7 @@ class IntermediateFeatureDeriver(object):
     @property
     def multiple_1_peak(self):
         """
-        axial_multiple_1_peak_feature <-- get from a control argument
+        multiple_1_peak_feature <-- get from a control argument
         """
         peak_feature = 'integrated_absolute_amplitude'#axial_multiple_1_peak_feature
         peak_label = '{}-multiple_1-{}'.format(self.component_id, peak_feature)
@@ -90,7 +83,7 @@ class IntermediateFeatureDeriver(object):
     @property
     def multiple_2_peak(self):
         """
-        axial_multiple_2_peak_feature <-- get from a control argument
+        multiple_2_peak_feature <-- get from a control argument
         """
         peak_feature = 'integrated_absolute_amplitude'#axial_multiple_1_peak_feature
         peak_label = '{}-multiple_2-{}'.format(self.component_id, peak_feature)
@@ -100,7 +93,7 @@ class IntermediateFeatureDeriver(object):
     @property
     def primary_time(self):
         """
-        axial_primary_time_feature <-- get from a control argument
+        primary_time_feature <-- get from a control argument
         default: 'max_time'
         """
         feature = 'max_time'
@@ -110,7 +103,7 @@ class IntermediateFeatureDeriver(object):
     @property
     def multiple_1_time(self):
         """
-        axial_multiple_1_time_feature <-- get from a control argument
+        multiple_1_time_feature <-- get from a control argument
         default: 'zero_crossing_time'
         """
         feature = 'zero_crossing_time'
@@ -120,7 +113,7 @@ class IntermediateFeatureDeriver(object):
     @property
     def multiple_2_time(self):
         """
-        axial_multiple_1_time_feature <-- get from a control argument
+        multiple_1_time_feature <-- get from a control argument
         default: 'min_time'
         """
         feature = 'min_time'
