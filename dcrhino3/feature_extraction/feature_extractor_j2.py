@@ -164,20 +164,9 @@ class FeatureExtractorJ2(object):
             output_label = '{}-{}'.format(self.trace.component_id, feature_label)
             extracted_features_dict[output_label] = result
 
-
-        #tmp2[self.trace.component_id] = new_features_dict
-        #unnested_dictionary = flatten(tmp2)
         feature_deriver = IntermediateFeatureDeriver(self.trace.component_id,
                                                      df_dict=extracted_features_dict)
-        unnested_dictionary = feature_deriver.derive_features(self.trace.component_id)
-        #pdb.set_trace()
-#        delay_1_label = '{}-delay_1'.format(self.trace.component_id)
-#        delay_2_label = '{}-delay_2'.format(self.trace.component_id)
-#        primary_time_label = '{}-primary-max_time'.format(self.trace.component_id)
-#        multiple_1_time_label = '{}-multiple_1-zero_crossing_time'.format(self.trace.component_id)
-#        multiple_2_time_label = '{}-multiple_2-min_time'.format(self.trace.component_id)
-#        extracted_features_dict[delay_1_label] = extracted_features_dict[multiple_1_time_label] - extracted_features_dict[primary_time_label]
-#        extracted_features_dict[delay_2_label] = extracted_features_dict[multiple_2_time_label] - extracted_features_dict[multiple_1_time_label]
+        extracted_features_dict = feature_deriver.derive_features(self.trace.component_id)
 
         for key in extracted_features_dict.keys():
             extracted_features_dict['J2-{}'.format(key)] = extracted_features_dict.pop('{}'.format(key))
