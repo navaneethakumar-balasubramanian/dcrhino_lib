@@ -11,6 +11,7 @@ from Tkinter import *
 from Tkinter import _setit as RESET
 import ttk
 import tkFileDialog
+import tkMessageBox
 import tkFont
 from datetime import datetime
 from dcrhino3.models.metadata import StandardString,Measurement,Drill_String_Component, Metadata
@@ -80,6 +81,7 @@ class GUI():
         self.loaded = False
         self.tx_configuration_process = None
         self.rx_configuration_process = None
+        self.shocksub_length = 0
         row = 0
 
         master.title("Rhino Configuration Settings")
@@ -527,8 +529,16 @@ class GUI():
 
         Label(page2, text="Sensor Distance to Source").grid(row=row)
         self.sensor_distance_to_source = StringVar(page2)
-        Label(page2, text="", textvariable=self.sensor_distance_to_source,fg="green").grid(row=row,column=1)
-        Label(page2, text="m",fg="green").grid(row=row,column=2)
+        self.sensor_distance_to_source_lbl = Label(page2, text="", textvariable=self.sensor_distance_to_source,
+                                                   fg="green")
+        self.sensor_distance_to_source_lbl.grid(row=row, column=1)
+        row += 1
+
+        Label(page2, text="Sensor Distance to Shocksub").grid(row=row)
+        self.sensor_distance_to_shocksub = StringVar(page2)
+        self.sensor_distance_to_shocksub_lbl = Label(page2, text="", textvariable=self.sensor_distance_to_shocksub,
+                                                     fg="green")
+        self.sensor_distance_to_shocksub_lbl.grid(row=row, column=1)
         row += 1
 
         Label(page2, text="Sensor Mount Size").grid(row=row)
@@ -911,6 +921,9 @@ class GUI():
             ds_comp_od_vars[comp].insert(0,self.current_component._od)
             ds_comp_od_units_vars[comp].set(measurement_units_options[self.current_component._od_units-1])
 
+            if self.current_component.type == 5 and self.current_component.status == 1:
+                self.shocksub_length = self.current_component.length_in_meters
+
         self.drill_string_total_length.set(config.get("INSTALLATION","drill_string_total_length"))
 
         data = config.get("INSTALLATION","drill_string_steel_od").split(',')
@@ -962,13 +975,15 @@ class GUI():
         self.sensor_position.insert(0,measurement._value)
         self.sensor_position_units.set(measurement_units_options[measurement._units-1])
 
-        self.sensor_distance_to_source.set(self.calculate_sensor_distance_to_source())
+        self.sensor_distance_to_source.set("{} m".format(self.calculate_sensor_distance_to_source()))
+        self.sensor_distance_to_shocksub.set("{} m".format(self.calculate_sensor_distance_to_shocksub()))
+
 
         self.sensor_axial_axis.set(sensor_channel_options[config.getint("INSTALLATION","sensor_axial_axis")-1])
         self.sensor_tangential_axis.set(sensor_channel_options[config.getint("INSTALLATION","sensor_tangential_axis")-1])
 
-        self.comments.delete(1.0,END)
-        self.comments.insert(1.0,config.get("INSTALLATION","comments"))
+        self.comments.delete(1.0, END)
+        self.comments.insert(1.0, config.get("INSTALLATION","comments"))
 
 
 
@@ -1114,6 +1129,12 @@ class GUI():
 
 
     def save_file(self):
+
+        if float(self.sensor_distance_to_shocksub.get().split(" ")[0]) < 0 or \
+                float(self.sensor_distance_to_source.get().split(" ")[0]) < 0:
+            tkMessageBox.showinfo("Config File Error", "Unable to save file. Check errors on drill string lengths")
+            return
+
         config.set("INSTALLATION","country",self.country.get())
         config.set("INSTALLATION","company",self.company.get())
         config.set("INSTALLATION","mine_name",self.mine_name.get())
@@ -1287,17 +1308,25 @@ class GUI():
             ds_comp_status_vars =[self.drill_string_component1_status,self.drill_string_component2_status,self.drill_string_component3_status,
             self.drill_string_component4_status,self.drill_string_component5_status,self.drill_string_component6_status,
             self.drill_string_component7_status,self.drill_string_component8_status,self.drill_string_component9_status,self.drill_string_component10_status]
+            ds_comp_type_vars = [self.drill_string_component1_type, self.drill_string_component2_type,
+                                 self.drill_string_component3_type, self.drill_string_component4_type,
+                                 self.drill_string_component5_type, self.drill_string_component6_type,
+                                 self.drill_string_component7_type, self.drill_string_component8_type,
+                                 self.drill_string_component9_type, self.drill_string_component10_type]
             total = 0
 
             for comp in range(10):
                 if drill_string_component_status_options.index(ds_comp_status_vars[comp].get())+1 != 3:
                     value = ds_comp_length_vars[comp].get()
                     units = measurement_units_options.index(ds_comp_length_units_vars[comp].get())+1
-                    if value == "" or units =="":
+                    if value == "" or units == "":
                         return
-                    m = Measurement((value,units))
+                    m = Measurement((value, units))
+                    if ds_comp_type_vars[comp].get() == "SHOCK_SUB":
+                        self.shocksub_length = m.value_in_meters()
                     total += m.value_in_meters()
-            total = round(total,2)
+
+            total = round(total, 2)
             self.drill_string_total_length.set(total)
             self.update_sensor_distance_to_source()
             return
@@ -1306,9 +1335,26 @@ class GUI():
         if self.loaded:
             value = self.sensor_position_var.get()
             units = measurement_units_options.index(self.sensor_position_units.get())+1
-            if value == "" or units =="":
+            if value == "" or units == "":
                 return
-            self.sensor_distance_to_source.set(self.calculate_sensor_distance_to_source())
+
+            distance = self.calculate_sensor_distance_to_source()
+            if distance < 0:
+                self.sensor_distance_to_source_lbl.config(fg="red")
+            else:
+                self.sensor_distance_to_source_lbl.config(fg="green")
+            self.sensor_distance_to_source.set("{} m".format(distance))
+            self.update_sensor_distance_to_shocksub()
+
+
+    def update_sensor_distance_to_shocksub(self):
+        distance = self.calculate_sensor_distance_to_shocksub()
+        if distance < 0:
+            self.sensor_distance_to_shocksub_lbl.config(fg="red")
+        else:
+            self.sensor_distance_to_shocksub_lbl.config(fg="green")
+
+        self.sensor_distance_to_shocksub.set("{} m".format(distance))
 
     def update_mine_names(self,sv=None,clear_selection=True):
         # pdb.set_trace()
@@ -1339,8 +1385,14 @@ class GUI():
         var.set(not var.get())
 
     def calculate_sensor_distance_to_source(self):
-        m = Measurement((float(self.sensor_position.get()),measurement_units_options.index(self.sensor_position_units.get())+1))
-        return round(float(self.drill_string_total_length.get()) - m.value_in_meters(),2)
+        m = Measurement((float(self.sensor_position.get()), measurement_units_options.index(
+            self.sensor_position_units.get())+1))
+        return round(float(self.drill_string_total_length.get()) - m.value_in_meters(), 2)
+
+    def calculate_sensor_distance_to_shocksub(self):
+        sensor_position = Measurement((float(self.sensor_position.get()), measurement_units_options.index(
+            self.sensor_position_units.get())+1))
+        return round(sensor_position.value_in_meters() - self.shocksub_length, 2)
 
     def create_ts(self):
         dt = [self.year.get(),self.month.get(),self.day.get(),self.hour.get(),self.minute.get(),self.second.get()]

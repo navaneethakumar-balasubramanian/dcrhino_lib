@@ -48,7 +48,8 @@ config_collection_file_path = os.path.join(PATH,'collection_daemon.cfg')
 
 config = ConfigParser.SafeConfigParser()
 config.read(config_collection_file_path)
-global_config = Config(config_parser=config)
+# global_config = Config(config_parser=config)
+global_config = Config(metadata=Metadata(config))
 
 
 def get_rhino_ttyusb():
@@ -675,7 +676,7 @@ class CollectionDaemonThread(threading.Thread):
                                 self.logQ.put(m)
                                 first = False
                                 h5f, m = config_file_to_attrs(config, h5f)
-                                global_config = Config(Metadata(config))
+                                # global_config = Config(metadata=Metadata(config))
                                 self.displayQ.put(m)
                                 self.logQ.put(m)
                                 sensitivity = np.array([config.getfloat('PLAYBACK', 'x_sensitivity'),
@@ -911,7 +912,7 @@ def main_run(run=True):
     # last_filename=None
 
     realtime_trace = RawTraceData()
-    realtime_trace.add_global_config(global_config,file_id='0')
+    realtime_trace.add_global_config(global_config ,file_id='0')
 
     fig1 = plt.figure("DataCloud Rhino Real Time Data",figsize=(6,4))
     plt.subplots_adjust(hspace=0.8)

@@ -97,11 +97,11 @@ class Drill_String_Component():
 
     @property
     def type(self):
-        return drill_string_component_types[self._type-1]
+        return self._type
 
     @property
     def status(self):
-        return drill_string_component_status_options[self._status-1]
+        return self._status
 
     @property
     def length_in_meters(self):
