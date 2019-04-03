@@ -44,27 +44,40 @@ class BaseModule(object):
         return os.path.join(self.output_path,output_file_name)
 
 
-    def get_transformed_args(self, global_config):
+    def get_transformed_args(self, global_config,args = None):
         transformed = dict()
-        self.default_args.update(self.args)
-        self.args = self.default_args
-        for key in self.args.keys():
-            val = self.args[key]
-            if type(val) == list:
+        if args is None:
+            self.default_args.update(self.args)
+            self.args = self.default_args
+            args = self.args
+
+        for key in args.keys():
+            val = args[key]
+            if type(val) == dict:
+                transformed[key] =  self.get_transformed_args(global_config,val)
+            elif type(val) == list:
+
                 ## USE GLOBAL_CONFIG OR DEFAULT
                 if (type(val[0]) == unicode or type(val[0]) == str) and "|global_config." in str(val[0]):
-                    gc_var_name = val[0].replace("|","").replace("global_config.","")
+                    gc_var_name = val[0].replace("|", "").replace("global_config.", "")
                     if gc_var_name in vars(global_config):
                         transformed[key] = getattr(global_config, gc_var_name)
                     else:
                         transformed[key] = val[1]
                 else:
+                    for i, item in enumerate(val):
+                        if type(item) == dict:
+                            val[i] = self.get_transformed_args(global_config, item)
+                        else:
+                            val[i] = val[i]
                     transformed[key] = val
                 ################################
-
             elif (type(val) == unicode or type(val) == str) and "|global_config." in str(val):
                 gc_var_name = val.replace("|","").replace("global_config.","")
                 transformed[key] = getattr(global_config, gc_var_name)
+            elif (type(val) == unicode or type(val) == str) and "|process_flow." in str(val):
+                gc_var_name = val.replace("|","").replace("process_flow.","")
+                transformed[key] = self.process_flow.process_json["vars"][gc_var_name]
             else:
                 transformed[key] = val
 

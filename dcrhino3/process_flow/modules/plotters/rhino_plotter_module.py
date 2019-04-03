@@ -55,11 +55,11 @@ class RhinoPlotterModule(BaseModule):
         rhino_display.padding_right = transformed_args.padding_right
         panels = []
         for panel in transformed_args.panels:
-            if panel["type"] == "curves":
+            if panel.type == "curves":
                 have_curve_to_plot = False
                 curves = []
-                if "curves" in panel.keys():
-                    for curve in panel['curves']:
+                if "curves" in vars(panel):
+                    for curve in panel.curves:
                         temp_curve = self.create_curve(curve)
                         curves.append(temp_curve)
                         if temp_curve.column_label in trace.dataframe.columns:
@@ -67,21 +67,28 @@ class RhinoPlotterModule(BaseModule):
                 if have_curve_to_plot:
                     panel = Header(trace_data=trace, curves=curves)
                     panels.append(panel)
-            elif panel['type'] == "heatmap":
+            elif panel.type == "heatmap":
                 curves = []
-                if "curves" in panel.keys():
-                    for curve in panel['curves']:
+                if "curves" in vars(panel):
+                    for curve in panel.curves:
                         curves.append(self.create_curve(curve))
 
-                if "wavelet_windows_to_show" not in panel.keys():
-                    panel["wavelet_windows_to_show"] = []
-                    
-                if panel["component"] in self.components_to_process:
-                    panel = Heatmap(trace_data=trace, component=panel["component"],
-                                        wavelet_windows_to_show=panel["wavelet_windows_to_show"],curves=curves)
+                if "wavelet_windows_to_show" not in vars(panel):
+                    wavelet_windows_to_show = []
+                else:
+                    wavelet_windows_to_show = panel.wavelet_windows_to_show
+
+                if "manual_time_windows" not in vars(panel):
+                    manual_time_windows = None
+                else:
+                    manual_time_windows = panel.manual_time_windows
+
+                if panel.component in self.components_to_process:
+                    panel = Heatmap(trace_data=trace, component=panel.component,
+                                        wavelet_windows_to_show=wavelet_windows_to_show ,curves=curves,manual_time_windows=manual_time_windows)
                     panels.append(panel)
                 else:
-                    logger.warn("Ignored heatmap panel, this component is not on components_to_process " + str(panel["component"]))
+                    logger.warn("Ignored heatmap panel, this component is not on components_to_process " + str(panel.component))
 
         if len(panels) == 0:
             return trace
@@ -99,4 +106,4 @@ class RhinoPlotterModule(BaseModule):
         if isinstance(_obj, basestring):
             return Curve(column_label=_obj, x_axis_label='depth')
         else:
-            return Curve(**_obj)
+            return Curve(**vars(_obj))

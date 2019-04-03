@@ -1,10 +1,9 @@
 from dcrhino3.feature_extraction.feature_windowing import get_default_time_windows
-from dcrhino3.process_flow.modules.base_module import BaseModule
+
 from dcrhino3.plotters.rhino_display_v3.rhino_display import RhinoDisplay
 from dcrhino3.plotters.rhino_display_v3.rhino_display_panel import Header, Heatmap, Curve
-from dcrhino3.models.drill_types import DrillTypes
-from dcrhino3.models.bit_types import BitTypes
-from dcrhino3.models.sensor_installation_locations import SensorInstallationLocations
+import matplotlib.animation as animation
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import pdb
@@ -57,6 +56,7 @@ class DraggableLine(object):
         self.line_label.set_color("k")
 
     def moveY(self,y):
+        #print (y)
         if y <= self.maxY and y >= self.minY:
             self.line.set_ydata(np.full(len(self.x_list), y))
             self.line_label.set_y(y-0.2)
@@ -127,18 +127,24 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
         plot_title = self.get_plot_title(transformed_args,trace)
         fig,ax = rhino_display.plot(False,title=plot_title)
 
+        self.fig = fig
         cid = fig.canvas.mpl_connect('button_press_event', self.onclick)
         X = panel.x_from_depth()
         self.x_list = X
         self.y_list = np.full(len(self.x_list), 0)
         self.ax = fig.axes[0]
-        self.ax.set_rasterized(True)
+        self.background = fig.canvas.copy_from_bbox(self.ax.bbox)
+        #self.ax.set_rasterized(True)
         self.lines.append(DraggableLine(fig.axes[0], X,self.lines_default_values[0],'yellow',"Primary start",self.boundaries))
         self.lines.append(DraggableLine(fig.axes[0], X,self.lines_default_values[1], 'yellow', "Primary end", self.boundaries))
         self.lines.append(DraggableLine(fig.axes[0], X,self.lines_default_values[2], 'limegreen', "Multiple 1 start", self.boundaries))
         self.lines.append(DraggableLine(fig.axes[0], X,self.lines_default_values[3], 'limegreen', "Multiple 1 end", self.boundaries))
         self.lines.append(DraggableLine(fig.axes[0], X,self.lines_default_values[4], 'k', "Multiple 2 start", self.boundaries))
         self.lines.append(DraggableLine(fig.axes[0], X,self.lines_default_values[5], 'k', "Multiple 2 end", self.boundaries))
+        self.lines.append(
+            DraggableLine(fig.axes[0], X, self.lines_default_values[6], 'k', "Multiple 3 start", self.boundaries))
+        self.lines.append(
+            DraggableLine(fig.axes[0], X, self.lines_default_values[7], 'k', "Multiple 3 end", self.boundaries))
 
         self.c = fig.canvas
         self.follower = self.c.mpl_connect("motion_notify_event", self.followmouse)
@@ -166,20 +172,29 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
     def btnext(self, event):
         print("continue")
 
-        self.set_prop_process(self.transformed_args.component + "_primary_start",self.lines[0].y)
-        self.set_prop_process(self.transformed_args.component + "_primary_end", self.lines[1].y)
-        self.set_prop_process(self.transformed_args.component + "_multiple_1_start", self.lines[2].y)
-        self.set_prop_process(self.transformed_args.component + "_multiple_1_end", self.lines[3].y)
-        self.set_prop_process(self.transformed_args.component + "_multiple_2_start", self.lines[4].y)
-        self.set_prop_process(self.transformed_args.component + "_multiple_2_end", self.lines[5].y)
+        self.set_prop_process(self.transformed_args.component + "_primary",[self.lines[0].y/1000,self.lines[1].y/1000])
+        self.set_prop_process(self.transformed_args.component + "_multiple_1", [self.lines[2].y/1000,self.lines[3].y/1000])
+        self.set_prop_process(self.transformed_args.component + "_multiple_2", [self.lines[4].y/1000,self.lines[5].y/1000])
+        self.set_prop_process(self.transformed_args.component + "_multiple_3", [self.lines[6].y/1000, self.lines[7].y/1000])
         self.close()
 
     def close(self):
         plt.close()
 
+
+
+    def redraw(self):
+        self.fig.canvas.restore_region(self.background)
+        #for line in self.lines:
+        #    self.ax.draw_artist(self.line.line)
+        #self.fig.canvas.blit(self.fig.bbox)
+
     def followmouse(self,event):
-        print ("moveee")
+        print ("moveee",self.dragging_line)
         if self.dragging_line is not None:
+            #print ("AAA",self.dragging_line.moveY)
+            #animation.FuncAnimation(self.fig, self.dragging_line.moveY, 25, fargs=(event.ydata),
+            #                        interval=2, blit=True)
             self.dragging_line.moveY(event.ydata)
 
 
@@ -189,13 +204,14 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
 
             else:
                 line.hoverOff()
-        plt.draw()
+        #plt.draw()
+        #self.redraw()
 
     def onrelease(self,event):
         print ("release")
         self.dragging_line = None
         self.c.mpl_disconnect(self.releaser)
-        plt.draw()
+        #plt.draw()
 
     def onclick(self,event):
         print('%s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
@@ -208,7 +224,8 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
                 self.follower = self.c.mpl_connect("motion_notify_event", self.followmouse)
                 self.releaser = self.c.mpl_connect("button_release_event", self.onrelease)
 
-        plt.draw()
+        #plt.draw()
+        #self.redraw()
 
 
 

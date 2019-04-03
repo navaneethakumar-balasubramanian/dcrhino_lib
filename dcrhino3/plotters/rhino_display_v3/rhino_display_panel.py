@@ -257,6 +257,7 @@ class Heatmap(RhinoDisplayPanel):
         self.wavelet_windows_to_show = kwargs.get('wavelet_windows_to_show', ['primary', 'multiple_1', 'multiple_2'])
         self.curves = kwargs.get('curves', [])
         self.load_curve_data_from_dataframe()
+        self.manual_time_windows = kwargs.get('manual_time_windows', 35.0)
 
 
 
@@ -356,6 +357,7 @@ class Heatmap(RhinoDisplayPanel):
             colours['primary'] = 'black'
             colours['multiple_1'] = 'blue'
             colours['multiple_2'] = 'red'
+            colours['multiple_3'] = 'darkorange'
             window_widths = self._get_window_widths_from_h5()
             resonance_period = self._get_multiple_delays_from_h5()
             #pdb.set_trace()
@@ -365,9 +367,14 @@ class Heatmap(RhinoDisplayPanel):
             wb.assign_window_boundaries(self.component, window_widths,
                                         resonance_period, primary_shift=primary_shift)
             window_boundaries = wb.window_boundaries_time
-            for wavelet_id in self.wavelet_windows_to_show:
-                y_values = window_boundaries[wavelet_id]
-                ax.hlines(1000*y_values, X[0], X[-1], color=colours[wavelet_id],linestyle = '-',linewidth = 1.05)
+            if self.manual_time_windows is None:
+                for wavelet_id in self.wavelet_windows_to_show:
+                    y_values = window_boundaries[wavelet_id]
+                    ax.hlines(1000*y_values, X[0], X[-1], color=colours[wavelet_id],linestyle = '-',linewidth = 1.05)
+            else:
+                for wavelet_id in self.wavelet_windows_to_show:
+                    y_values = np.array(vars(vars(self.manual_time_windows)[self.component])[wavelet_id])*1000
+                    ax.hlines(y_values, X[0], X[-1], color=colours[wavelet_id],linestyle = '-',linewidth = 1.05)
 
         ax.set_xlim(X[0], X[-1])
         x_maj_tick = (np.arange(X[0],X[-1])-X[0])
