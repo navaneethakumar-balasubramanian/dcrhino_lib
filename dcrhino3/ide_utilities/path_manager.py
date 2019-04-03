@@ -5,12 +5,13 @@ Created on Tue Jun 26 15:10:45 2018
 @author: Natal
 """
 from __future__ import absolute_import, division, print_function
-import numpy as np
-import pandas as pd
-from datetime import datetime
-from enum import Enum
+
 import os
 import pdb
+from datetime import datetime
+
+from enum import Enum
+
 
 #TODO: Don't modify the name whith addPrefix/Suffix, only return the modified string
 

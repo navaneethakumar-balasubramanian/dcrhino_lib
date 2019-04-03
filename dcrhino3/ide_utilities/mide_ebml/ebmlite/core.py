@@ -27,18 +27,18 @@ __all__ = ['BinaryElement', 'DateElement', 'Document', 'Element',
            'UnknownElement', 'VoidElement', 'loadSchema', 'INT','UINT',
            'FLOAT','STRING','UNICODE','DATE', 'BINARY','CONTAINER','UNKNOWN']
 
-from collections import OrderedDict
-from datetime import datetime
 import errno
 import os.path
 from StringIO import StringIO
+from collections import OrderedDict
+from datetime import datetime
 from xml.etree import ElementTree as ET
 
+import encoding
+import schemata
 from decoding import readElementID, readElementSize
 from decoding import readFloat, readInt, readUInt, readDate
 from decoding import readString, readUnicode
-import encoding
-import schemata
 
 #===============================================================================
 #

@@ -5,13 +5,13 @@ Functions for opening multiple IDE files as one.
 
 '''
 import fnmatch
-import os.path
-
-from importer import openFile, readData
-from importer import nullUpdater #, SimpleUpdater, testFile
-
 # TODO: Remove this testing stuff.
 import glob
+import os.path
+
+from importer import nullUpdater  # , SimpleUpdater, testFile
+from importer import openFile, readData
+
 testFiles = glob.glob(r"C:\Users\dstokes\workspace\SSXViewer\test_recordings\Combine_Files\*.ide")
 
 #===============================================================================

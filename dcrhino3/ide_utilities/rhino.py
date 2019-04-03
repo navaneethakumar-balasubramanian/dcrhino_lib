@@ -5,12 +5,13 @@ Created on Thu Jun 07 18:51:35 2018
 @author: Natal
 """
 from __future__ import absolute_import, division, print_function
-#import numpy as np
-import pandas as pd
-from datetime import datetime
-from enum import Enum
+
 import sys
-import pdb
+from datetime import datetime
+
+# import numpy as np
+import pandas as pd
+from enum import Enum
 
 #TODO Validate data before adding it
 

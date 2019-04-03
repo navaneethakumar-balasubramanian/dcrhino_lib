@@ -9,15 +9,15 @@ beware maybe imprecise or errors in :
 """
 
 from __future__ import absolute_import, division, print_function
-import datetime
-import pdb
 
-###############################################################################
-#Redefine OBSPY Headers
+import datetime
 
 import obspy.io.segy.header
 
-    # [length, name, special_type, start_byte]
+###############################################################################
+# Redefine OBSPY Headers
+
+# [length, name, special_type, start_byte]
 TRACE_HEADER_FORMAT_LIST = [
     [4, 'trace_sequence_number_within_line', 'I', 0],
     [4, 'ensemble_number', 'I', 4],

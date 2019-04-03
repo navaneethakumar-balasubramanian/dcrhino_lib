@@ -1,12 +1,10 @@
 import unittest
 
-from mide_ebml.dataset import *
-from mide_ebml import importer
-
-import mide_ebml.parsers as parsers
 import mide_ebml.calibration as calibration
-from mide_ebml.parsers import ChannelDataBlock
-from wx.lib.floatcanvas.FloatCanvas import _cycleidxs
+import mide_ebml.parsers as parsers
+from mide_ebml import importer
+from mide_ebml.dataset import *
+
 
 class GenericObject(object):
     """ Provide a generic object to pass as an argument in order to mock 

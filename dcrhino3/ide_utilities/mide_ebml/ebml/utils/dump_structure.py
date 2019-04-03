@@ -29,7 +29,6 @@ def dump_document(document):
 
 
 if __name__ == '__main__':
-	import sys
 	from optparse import OptionParser
 	
 	parser = OptionParser(usage='Usage: %prog [OPTION] FILE')

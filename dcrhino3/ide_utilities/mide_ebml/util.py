@@ -11,25 +11,23 @@ Created on Dec 10, 2013
 
 '''
 
-from collections import Sequence, OrderedDict
 import datetime
 import errno
 import importlib
 import os.path
 import pkgutil
-from StringIO import StringIO
 import sys
 import time
 import types
 import xml.dom.minidom
+from StringIO import StringIO
+from collections import Sequence, OrderedDict
 
-import ebml #@UnusedImport
 from ebml import core as ebml_core
 from ebml.schema import base as schema_base
 from ebml.schema import specs as schema_specs
-
-from ebmlite import Schema
 from ebmlite import INT, UINT, FLOAT, STRING, UNICODE, DATE, BINARY, CONTAINER
+from ebmlite import Schema
 
 #===============================================================================
 # 

@@ -41,28 +41,27 @@ Created on Sep 26, 2013
 #
 # TODO: Clean up the min/mean/max stuff.
 
-from bisect import bisect_right
-from collections import Iterable
-from datetime import datetime
-from itertools import imap, izip
+import ConfigParser
 import os.path
 import random
 import struct
 import sys
+from bisect import bisect_right
+from collections import Iterable
+from datetime import datetime
+from itertools import imap, izip
 from time import sleep
-import numpy
-from calibration import Transform, CombinedPoly, PolyPoly
-from parsers import getParserTypes, getParserRanges
-import data_formats as df
-import path_manager as pm
-from ebmlite.core import loadSchema
-import pdb
-from infi.clickhouse_orm.database import Database
-from dcrhino.models.raw_data import RawDataModel
-from dcrhino.real_time.metadata import Metadata
-import h5py
-import ConfigParser
 
+import h5py
+import numpy
+from dcrhino.models.raw_data import RawDataModel
+# import data_formats as df
+from dcrhino3.ide_utilities import data_formats as df
+from infi.clickhouse_orm.database import Database
+
+from calibration import Transform, CombinedPoly, PolyPoly
+from ebmlite.core import loadSchema
+from parsers import getParserTypes, getParserRanges
 
 SCHEMA_FILE = 'mide.xml'
 
@@ -2750,10 +2749,11 @@ class EventList(Transformable):
 
 
 
-    def exportNPY(self, sensor_serial_number,ideFileObj,resampling_rate,start=0, stop=-1, step=1, subchannels=True,
+    def exportH5(self, sensor_serial_number,ideFileObj,resampling_rate, time_offset=0, start=0, stop=-1, step=1,
+                 subchannels=True,
                       callback=None, callbackInterval=0.01, timeScalar=1,
                       raiseExceptions=False, dataFormat="%.6f",delimiter=",",
-                      useUtcTime=False, useIsoFormat=False, headers=False,
+                      useUtcTime=False, useIsoFormat=False,
                       removeMean="TotalMean", meanSpan=None, display=False):
 
     #TODO: Clean the list of parameters that are not needed
@@ -2804,33 +2804,33 @@ class EventList(Transformable):
         noCallback = callback is None
         _self = self.copy()
 
-        sr = self.getSampleRate(None)
-        sr = int(round(sr))
+        # sr = self.getSampleRate(None)
+        # sr = int(round(sr))
 
 
-        # Create a function for formatting the event time.
-        if useUtcTime and _self.session.utcStartTime:
-            if useIsoFormat:
-                timeFormatter = lambda x: datetime.utcfromtimestamp(x[-2] * timeScalar + _self.session.utcStartTime).isoformat()
-            else:
-                timeFormatter = lambda x: dataFormat % (x[-2] * timeScalar + _self.session.utcStartTime)
-        else:
-            timeFormatter = lambda x: dataFormat % (x[-2] * timeScalar)
+        # # Create a function for formatting the event time.
+        # if useUtcTime and _self.session.utcStartTime:
+        #     if useIsoFormat:
+        #         timeFormatter = lambda x: datetime.utcfromtimestamp(x[-2] * timeScalar + _self.session.utcStartTime).isoformat()
+        #     else:
+        #         timeFormatter = lambda x: dataFormat % (x[-2] * timeScalar + _self.session.utcStartTime)
+        # else:
+        #     timeFormatter = lambda x: dataFormat % (x[-2] * timeScalar)
 
         # Create the function for formatting an entire row.
         if _self.hasSubchannels:
             if isinstance(subchannels, Iterable):
-                fstr = '%s' + delimiter + delimiter.join([dataFormat] * len(subchannels))
-                formatter = lambda x: fstr % ((timeFormatter(x),) + \
-                                              tuple([x[-1][v] for v in subchannels]))
+                # fstr = '%s' + delimiter + delimiter.join([dataFormat] * len(subchannels))
+                # formatter = lambda x: fstr % ((timeFormatter(x),) + \
+                #                               tuple([x[-1][v] for v in subchannels]))
                 names = [_self.parent.subchannels[x].name for x in subchannels]
             else:
-                fstr = '%s' + delimiter + delimiter.join([dataFormat] * len(_self.parent.types))
-                formatter = lambda x: fstr % ((timeFormatter(x),) + x[-1])
+                # fstr = '%s' + delimiter + delimiter.join([dataFormat] * len(_self.parent.types))
+                # formatter = lambda x: fstr % ((timeFormatter(x),) + x[-1])
                 names = [x.name for x in _self.parent.subchannels]
         else:
-            fstr = "%%s%s%s" % (delimiter, dataFormat)
-            formatter = lambda x: fstr % (timeFormatter(x),x[-1])
+            # fstr = "%%s%s%s" % (delimiter, dataFormat)
+            # formatter = lambda x: fstr % (timeFormatter(x),x[-1])
             names = [_self.parent.name]
 
         if removeMean is not None:
@@ -2850,32 +2850,20 @@ class EventList(Transformable):
 
         # Catch all or no exceptions
         ex = None if raiseExceptions or noCallback else Exception
-        #Get the samplig rate
+
         t0 = datetime.now()
 
         counter = 0
-        #fname = datetime.utcfromtimestamp(_self.session.utcStartTime).strftime("%Y_%m_%d_%H%M%S")+"_"+str(sensor_serial_number)+"_"+str(sr)+".npy"
-
-
-
-
-        #fname ="{}_{}".format(ideFileObj.Name,sensor_serial_number)
         fname = ideFileObj.Name
 
         config = ConfigParser.SafeConfigParser()
-        #config_path = os.path.join(ideFileObj.Path,fname+"_"+str(resampling_rate)+".cfg")
-        config_path = os.path.join(ideFileObj.Path,fname+".cfg")
+        config_path = os.path.join(ideFileObj.Path, fname+".cfg")
         config.read(config_path)
-        m = Metadata(config)
 
 
         outFile = ideFileObj.Path
-        outFile = outFile.replace("level_0","level_1")
-        # output_path = os.path.join(outFile,"piezoelectric","{}hz".format(resampling_rate))
-        output_path = os.path.join(outFile,"piezo")
-
-        # output_path = m.level_1_path()
-
+        outFile = outFile.replace("level_0", "level_1")
+        output_path = os.path.join(outFile, "piezo")
 
         if str(sensor_serial_number) in fname:
             fname ="{}_{}".format(fname,resampling_rate)
@@ -2883,89 +2871,56 @@ class EventList(Transformable):
             fname ="{}_{}_{}".format(fname,sensor_serial_number,resampling_rate)
 
         if os.path.exists(output_path):
-            if os.path.exists(os.path.join(output_path,"{}.h5".format(fname))):
-                output_path = os.path.join(output_path,"{}_{}.h5".format(fname,datetime.now().strftime("%Y%m%d%H%M%S")))
+            if os.path.exists(os.path.join(output_path, "{}.h5".format(fname))):
+                output_path = os.path.join(output_path, "{}_{}.h5".format(fname,datetime.now().strftime(
+                    "%Y%m%d%H%M%S")))
             else:
-                output_path = os.path.join(output_path,"{}.h5".format(fname))
+                output_path = os.path.join(output_path, "{}.h5".format(fname))
         else:
             os.makedirs(output_path)
-            output_path = os.path.join(output_path,"{}.h5".format(fname))
+            output_path = os.path.join(output_path, "{}.h5".format(fname))
 
-
-
-
-        #pdb.set_trace()
-        #output_path = os.path.join("/","home","natal","toconvert","npy_output",fname)
-        buffer = []
+        buffer = list()
         buffer_size = 10000
         first_timestamp = None
-
-        loop_counter = 0
-        start = buffer_size * loop_counter
-        end = start + buffer_size
-        ideal_timestamps = numpy.arange(start,end)*(1.0/resampling_rate)
-        # metadata = Metadata(config)
         h5f = h5py.File(output_path, 'a')
         h5f = config_file_to_attrs(config,h5f)
-        self.saveNumpyToFile(h5f,"sensitivity",numpy.asarray([config.getfloat("PLAYBACK","ide_multiplier")],dtype=numpy.float64))
-        axis = numpy.asarray([config.getint("INSTALLATION","sensor_axial_axis"),config.getint("INSTALLATION","sensor_tangential_axis")],dtype=numpy.int32)
-        self.saveNumpyToFile(h5f,"axis",axis)
-        import matplotlib.pyplot as plt
+        self.saveNumpyToFile(h5f, "sensitivity",
+                             numpy.asarray([config.getfloat("PLAYBACK", "ide_multiplier")], dtype=numpy.float64))
+        axis = numpy.asarray([config.getint("INSTALLATION", "sensor_axial_axis"),
+                              config.getint("INSTALLATION", "sensor_tangential_axis")], dtype=numpy.int32)
+        self.saveNumpyToFile(h5f, "axis", axis)
         try:
             for num, evt in enumerate(_self.iterSlice(start, stop, step, display=display)):
-                sample_ts = (evt[0]/1000000)+_self.session.utcStartTime
+                sample_ts = (evt[0]/1000000)+_self.session.utcStartTime + time_offset
                 if first_timestamp is None:
                     first_timestamp = sample_ts
-                dt = datetime.utcfromtimestamp(sample_ts)
-                #scale_factor = 1e6
-                scale_factor = 1.0
-                x = evt[1][0]#*scale_factor
-                y = evt[1][1]#*scale_factor
+                x = evt[1][0]
+                y = evt[1][1]
                 z = 0
-                if len(evt)>2:
-                    z = evt[1][2]#*scale_factor
-                #row = numpy.asarray([sample_ts,x,y,z])
-                #row = [sample_ts,counter,counter,int(x),int(y),int(z)]
-                row = [sample_ts,counter,counter,x,y,z]
-                # print(row)
-                #if data is None:
-                #    data = row
-                #else:
-                #    data = numpy.vstack((data,row))
+                if len(evt) > 2:
+                    z = evt[1][2]
+                row = [sample_ts, counter, counter, x, y, z]
                 buffer.append(row)
-                counter +=1
+                counter += 1
                 if counter % buffer_size == 0:
                     print ("{} samples procesed".format(counter))
                     #pdb.set_trace()
                     buffer = numpy.asarray(buffer)
-                    #digitizer_timestamps = buffer[:,0] - first_timestamp
-                    digitizer_timestamps = numpy.asarray(buffer[:,0],dtype=numpy.float64)
-                    seq = numpy.asarray(buffer[:,1],dtype=numpy.int32)
-                    ticks = numpy.asarray(buffer[:,2],dtype=numpy.int32)
-                    x_data = numpy.asarray(buffer[:,3],dtype=numpy.float32)
-                    y_data = numpy.asarray(buffer[:,4],dtype=numpy.float32)
-                    z_data = numpy.asarray(buffer[:,5],dtype=numpy.float32)
+                    digitizer_timestamps = numpy.asarray(buffer[:, 0], dtype=numpy.float64)
+                    seq = numpy.asarray(buffer[:, 1], dtype=numpy.int32)
+                    ticks = numpy.asarray(buffer[:, 2], dtype=numpy.int32)
+                    x_data = numpy.asarray(buffer[:, 3], dtype=numpy.float32)
+                    y_data = numpy.asarray(buffer[:, 4], dtype=numpy.float32)
+                    z_data = numpy.asarray(buffer[:, 5], dtype=numpy.float32)
 
-                    #x_interp = self.interpolate_data(ideal_timestamps,digitizer_timestamps,buffer[:,1])
-                    #y_interp = self.interpolate_data(ideal_timestamps,digitizer_timestamps,buffer[:,2])
-                    #z_interp = self.interpolate_data(ideal_timestamps,digitizer_timestamps,buffer[:,3])
-
-                    #x_data_to_save = numpy.vstack((ideal_timestamps,x_interp)).T
-                    #y_data_to_save = numpy.vstack((ideal_timestamps,y_interp)).T
-                    #z_data_to_save = numpy.vstack((ideal_timestamps,z_interp)).T
-                    #pdb.set_trace()
-                    self.saveNumpyToFile(h5f,"ts",digitizer_timestamps)
-                    self.saveNumpyToFile(h5f,"seq",seq)
-                    self.saveNumpyToFile(h5f,"cticks",ticks)
-                    self.saveNumpyToFile(h5f,"x",x_data)
-                    self.saveNumpyToFile(h5f,"y",y_data)
-                    self.saveNumpyToFile(h5f,"z",z_data)
-                    buffer = []
-                    #loop_counter +=1
-                    #start = buffer_size * loop_counter
-                    #end = start + buffer_size
-                    #pdb.set_trace()
-                    #ideal_timestamps = numpy.arange(start,end)*(1.0/resampling_rate)
+                    self.saveNumpyToFile(h5f, "ts", digitizer_timestamps)
+                    self.saveNumpyToFile(h5f, "seq", seq)
+                    self.saveNumpyToFile(h5f, "cticks", ticks)
+                    self.saveNumpyToFile(h5f, "x", x_data)
+                    self.saveNumpyToFile(h5f, "y", y_data)
+                    self.saveNumpyToFile(h5f, "z", z_data)
+                    buffer = list()
                 if callback is not None:
                     if getattr(callback, 'cancelled', False):
                         callback(done=True)
@@ -2977,28 +2932,24 @@ class EventList(Transformable):
                 callback(done=True)
             #pdb.set_trace()
             buffer = numpy.asarray(buffer)
-            digitizer_timestamps = numpy.asarray(buffer[:,0],dtype=numpy.float64)
-            seq = numpy.asarray(buffer[:,1],dtype=numpy.int32)
-            ticks = numpy.asarray(buffer[:,2],dtype=numpy.int32)
-            x_data = numpy.asarray(buffer[:,3],dtype=numpy.float32)
-            y_data = numpy.asarray(buffer[:,4],dtype=numpy.float32)
-            z_data = numpy.asarray(buffer[:,5],dtype=numpy.float32)
-            self.saveNumpyToFile(h5f,"ts",digitizer_timestamps)
-            self.saveNumpyToFile(h5f,"seq",seq)
-            self.saveNumpyToFile(h5f,"cticks",ticks)
-            self.saveNumpyToFile(h5f,"x",x_data)
-            self.saveNumpyToFile(h5f,"y",y_data)
-            self.saveNumpyToFile(h5f,"z",z_data)
+            digitizer_timestamps = numpy.asarray(buffer[:, 0], dtype=numpy.float64)
+            seq = numpy.asarray(buffer[:, 1], dtype=numpy.int32)
+            ticks = numpy.asarray(buffer[:, 2], dtype=numpy.int32)
+            x_data = numpy.asarray(buffer[:, 3], dtype=numpy.float32)
+            y_data = numpy.asarray(buffer[:, 4], dtype=numpy.float32)
+            z_data = numpy.asarray(buffer[:, 5], dtype=numpy.float32)
+            self.saveNumpyToFile(h5f, "ts", digitizer_timestamps)
+            self.saveNumpyToFile(h5f, "seq", seq)
+            self.saveNumpyToFile(h5f, "cticks", ticks)
+            self.saveNumpyToFile(h5f, "x", x_data)
+            self.saveNumpyToFile(h5f, "y", y_data)
+            self.saveNumpyToFile(h5f, "z", z_data)
 
             h5f.close()
 
         except ex as e:
             callback(error=e)
         return num+1, datetime.now() - t0
-
-    def interpolate_data(self, ideal_timestamps,digitizer_timestamps,data):
-        interp_data = numpy.interp(ideal_timestamps,digitizer_timestamps,data)
-        return interp_data
 
 
         #This function is used to export the Pressure/Temperature data to calculate the drill times

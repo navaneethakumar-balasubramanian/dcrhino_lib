@@ -17,26 +17,21 @@ Time to read file:
 From Slam Stick X: 0:06:47.506000
 '''
 
-from datetime import datetime
+import logging
 import os.path
 import sys
-from time import time as time_time
+from datetime import datetime
 from time import sleep
-import pdb
-
-import struct
+from time import time as time_time
 
 import calibration
-from dataset import Dataset
 import parsers
+from dataset import Dataset
 
-#===============================================================================
-# 
-#===============================================================================
-
+# ===============================================================================
+#
+# ===============================================================================
 # from dataset import __DEBUG__
-
-import logging
 logger = logging.getLogger('mide_ebml')
 
 

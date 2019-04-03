@@ -8,9 +8,9 @@ Created on Dec 20, 2013
 
 import argparse
 import os.path
-from StringIO import StringIO
 import xml.dom.minidom
 import xml.sax.saxutils
+from StringIO import StringIO
 
 from ebml import core as ebml_core
 from util import getSchemaElements, getSchemaDocument, getElementSizes, ENCODERS

@@ -7,13 +7,14 @@ Created on Mar 5, 2014
 '''
 
 import abc
-from collections import Iterable
 import os
 import random
+from collections import Iterable
 
 import numpy
-
 from mide_ebml import dataset as DS
+
+
 # from mide_ebml.calibration import Transform, CombinedPoly, PolyPoly
 
 #===============================================================================

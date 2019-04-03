@@ -1,9 +1,9 @@
 
-from ebml.schema import EBMLDocument, UnknownElement, CONTAINER, BINARY
-
-import json
-import os
 import datetime
+import os
+
+from ebml.schema import CONTAINER
+
 
 class EBMLData(object):
 

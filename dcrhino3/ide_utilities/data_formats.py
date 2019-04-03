@@ -4,22 +4,23 @@ Created on Thu Jun 07 14:54:29 2018
 @author: Natal
 """
 from __future__ import absolute_import, division, print_function
-from datetime import datetime,timedelta
+
 import sys
-#import csv
+from datetime import datetime, timedelta
+
+# import csv
 from obspy import Trace, Stream
-from obspy.core import AttribDict, UTCDateTime
+from obspy.core import AttribDict
 from obspy.io.segy.segy import SEGYTraceHeader, SEGYBinaryFileHeader
-from trace_header import define_obspy_trace_header #This module needs to remain here in order to redefine the trace headers
+from trace_header import \
+    define_obspy_trace_header  # This module needs to remain here in order to redefine the trace headers
+
 define_obspy_trace_header()
 import numpy
-import matplotlib.pyplot as plt
 import pandas as pd
 import rhino#This module needs to remain here in order to use the RHINO Object
 import path_manager as pm
-import os
 import math
-import pdb
 
 #from dcrhino.analysis.signal_processing.seismic_processing import resample_trace_to_idealized_sampling_rate
 
