@@ -127,20 +127,20 @@ class ManualTimeWindows(object):
     """
     def __init__(self):
         self.time_window = {}
-        self.time_window['primary'] = SearchWindow(lower_bound=-0.00082,
-                                                upper_bound=0.00118,
+        self.time_window['primary'] = SearchWindow(lower_bound=None,
+                                                upper_bound=None,
                                                 window_label='primary',
                                                 search_feature='maximum')
-        self.time_window['multiple_1'] = SearchWindow(lower_bound=0.00989,
-                                                    upper_bound=0.0119,
+        self.time_window['multiple_1'] = SearchWindow(lower_bound=None,
+                                                    upper_bound=None,
                                                     window_label='multiple_1',
                                                 search_feature='zero_crossing')
-        self.time_window['multiple_2'] = SearchWindow(lower_bound=0.020249,
-                                                    upper_bound=0.02425,
+        self.time_window['multiple_2'] = SearchWindow(lower_bound=None,
+                                                    upper_bound=None,
                                                     window_label='multiple_2',
                                                 search_feature='minimum')
-        self.time_window['multiple_3'] = SearchWindow(lower_bound=0.030249,
-                                                    upper_bound=0.03425,
+        self.time_window['multiple_3'] = SearchWindow(lower_bound=None,
+                                                    upper_bound=None,
                                                     window_label='multiple_3',
                                                 search_feature='zero_crossing')
 
@@ -152,6 +152,9 @@ class ManualTimeWindows(object):
         t_start = self.time_window[window_label].lower_bound
         t_final = self.time_window[window_label].upper_bound
         return t_start, t_final
+
+    def get_search_feature(self, window_label):
+        return self.time_window[window_label].search_feature
 
     def populate_from_transformed_args(self, manual_time_windows, time_picks):
         """
@@ -209,12 +212,6 @@ class ManualTimeWindows(object):
                                                 search_feature='zero_crossing')
 
 
-
-    def get_search_feature(self, window_label):
-        pass
-
-    def set_search_feature(self, window_label):
-        pass
 
 
 def get_default_time_windows(transformed_args):

@@ -151,7 +151,6 @@ class FeatureExtractorJ2(object):
                 reference_label = 'multiple_2-min_time'; rotate_angle=False;
             else:
                 reference_label = None
-                print('bugger off!')
                 continue
 
             window_center_time_label = '{}-{}'.format(self.trace.component_id, reference_label)
