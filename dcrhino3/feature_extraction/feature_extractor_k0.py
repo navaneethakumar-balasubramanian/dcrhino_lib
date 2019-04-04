@@ -154,7 +154,7 @@ class FeatureExtractorK0(FeatureExtractorJ1):
             if key == '{}_trace'.format(self.trace.component_id):
                 pass
             else:
-                unnested_dictionary['K0_{}'.format(key)] = unnested_dictionary.pop('{}'.format(key))
+                unnested_dictionary['K0-{}'.format(key)] = unnested_dictionary.pop('{}'.format(key))
 
         #pdb.set_trace()
         return unnested_dictionary
