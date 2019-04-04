@@ -83,19 +83,32 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
         self.lines_default_values = [0,2,5,7,15,20, 25, 30]
 
 
-    def populate_lines_default_values(self, manual_time_windows):
+    def populate_lines_default_values(self, manual_time_windows,component):
         """
         .. :todo review if we really want to use units of ms here
         """
         using_ms = True
-        self.lines_default_values[0] = manual_time_windows.time_window['primary'].lower_bound
-        self.lines_default_values[1] = manual_time_windows.time_window['primary'].upper_bound
-        self.lines_default_values[2] = manual_time_windows.time_window['multiple_1'].lower_bound
-        self.lines_default_values[3] = manual_time_windows.time_window['multiple_1'].upper_bound
-        self.lines_default_values[4] = manual_time_windows.time_window['multiple_2'].lower_bound
-        self.lines_default_values[5] = manual_time_windows.time_window['multiple_2'].upper_bound
-        self.lines_default_values[6] = manual_time_windows.time_window['multiple_3'].lower_bound
-        self.lines_default_values[7] = manual_time_windows.time_window['multiple_3'].upper_bound
+        if "vars" in self.process_flow.process_json.keys():
+            vars = self.process_flow.process_json["vars"]
+            self.lines_default_values[0] = vars[component + "_primary"][0]
+            self.lines_default_values[1] = vars[component + "_primary"][1]
+            self.lines_default_values[2] = vars[component + "_multiple_1"][0]
+            self.lines_default_values[3] = vars[component + "_multiple_1"][1]
+            self.lines_default_values[4] = vars[component + "_multiple_2"][0]
+            self.lines_default_values[5] = vars[component + "_multiple_2"][1]
+            self.lines_default_values[6] = vars[component + "_multiple_3"][0]
+            self.lines_default_values[7] = vars[component + "_multiple_3"][1]
+        else:
+
+            self.lines_default_values[0] = manual_time_windows.time_window['primary'].lower_bound
+            self.lines_default_values[1] = manual_time_windows.time_window['primary'].upper_bound
+            self.lines_default_values[2] = manual_time_windows.time_window['multiple_1'].lower_bound
+            self.lines_default_values[3] = manual_time_windows.time_window['multiple_1'].upper_bound
+            self.lines_default_values[4] = manual_time_windows.time_window['multiple_2'].lower_bound
+            self.lines_default_values[5] = manual_time_windows.time_window['multiple_2'].upper_bound
+            self.lines_default_values[6] = manual_time_windows.time_window['multiple_3'].lower_bound
+            self.lines_default_values[7] = manual_time_windows.time_window['multiple_3'].upper_bound
+
         if using_ms:
             qq = np.asarray(self.lines_default_values)
             qq *= 1000.0
@@ -105,10 +118,8 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
     def process_trace(self, trace):
         rhino_display = RhinoDisplay()
         transformed_args = self.get_transformed_args(trace.first_global_config)
-        #<added 20190402 for default windows>
         default_time_windows = get_default_time_windows(transformed_args)
-        self.populate_lines_default_values(default_time_windows)
-        #</added 20190402 for default windows>
+        self.populate_lines_default_values(default_time_windows,transformed_args.component)
         self.transformed_args = transformed_args
         rhino_display.padding_left = transformed_args.padding_left
         rhino_display.padding_right = transformed_args.padding_right

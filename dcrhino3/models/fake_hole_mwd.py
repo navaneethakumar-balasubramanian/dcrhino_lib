@@ -21,6 +21,7 @@ class FakeHoleMwd(object):
         self.start_depth = kwargs.get('start_depth', 0)
         self.end_depth = kwargs.get('end_depth', 15)
         self.depth_resolution = kwargs.get('depth_resolution', 0.1)
+        self.collar_elevation = kwargs.get('collar_elevation', 700)
 
 
     @property
@@ -43,6 +44,9 @@ class FakeHoleMwd(object):
             line['northing'] = self.northing
             line['start_depth'] = self.start_depth + (i * self.depth_resolution)
             line['end_depth'] = self.start_depth + ((i+1) * self.depth_resolution)
+            line['collar_elevation'] = self.collar_elevation
+            line['computed_elevation'] = self.collar_elevation + ((line['end_depth'] - line['start_depth'])/2) + line['start_depth']
+            line['mse'] = np.random.randint(10,20)
 
             if i == 0:
                 line['time_start'] = pd.to_datetime(self.start_time)

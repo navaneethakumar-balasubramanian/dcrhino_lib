@@ -8,11 +8,11 @@ Created on Fri Jan 25 11:44:16 2019
 
 ## HACK TO WORK ON SERVERS NON INTERACTIVE MODE
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 import matplotlib.rcsetup as rcsetup
 #print(rcsetup.all_backends)
 #matplotlib.use('TkCairo')
-#matplotlib.use('TkAgg')
+matplotlib.use('TkAgg')
 
 import numexpr as ne
 import argparse
@@ -42,7 +42,7 @@ def process_glob(process_json,glob_str,env_config_path="env_config.json", second
     h5_files_list = glob2.glob(glob_str)
 
     seconds_to_process = seconds_to_process
-    #seconds_to_process = 100
+    #seconds_to_process = 10
 
     output_path = False
 
