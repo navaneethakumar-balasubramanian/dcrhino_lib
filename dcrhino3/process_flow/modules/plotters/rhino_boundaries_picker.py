@@ -116,8 +116,12 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
 
 
     def process_trace(self, trace):
-        rhino_display = RhinoDisplay()
+
         transformed_args = self.get_transformed_args(trace.first_global_config)
+        if transformed_args.component not in self.components_to_process:
+            return trace
+
+        rhino_display = RhinoDisplay()
         default_time_windows = get_default_time_windows(transformed_args)
         self.populate_lines_default_values(default_time_windows,transformed_args.component)
         self.transformed_args = transformed_args
