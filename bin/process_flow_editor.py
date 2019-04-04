@@ -187,7 +187,7 @@ class GUI():
         for i in range(100):
             self.master.grid_columnconfigure(i, weight=1)
             self.master.grid_rowconfigure(i, weight=1)
-            
+
     def pretty_print(self):
         self.value.config(state=NORMAL)
         self.value.delete(1.0, END)

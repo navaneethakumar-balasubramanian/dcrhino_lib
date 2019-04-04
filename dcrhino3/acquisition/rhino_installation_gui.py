@@ -832,6 +832,20 @@ class GUI():
         Button(master, text='Apply Changes', command=self.save_file).grid(row=row, column=2, sticky=W, pady=4)
         Button(master, text='Save File As', command=self.save_as).grid(row=row, column=3, sticky=W, pady=4)
 
+        for i in range(100):
+            master.grid_columnconfigure(i, weight=1)
+            master.grid_rowconfigure(i, weight=1)
+            page1.grid_columnconfigure(i, weight=1)
+            page1.grid_rowconfigure(i, weight=1)
+            page2.grid_columnconfigure(i, weight=1)
+            page2.grid_rowconfigure(i, weight=1)
+            page3.grid_columnconfigure(i, weight=1)
+            page3.grid_rowconfigure(i, weight=1)
+            page4.grid_columnconfigure(i, weight=1)
+            page4.grid_rowconfigure(i, weight=1)
+            page5.grid_columnconfigure(i, weight=1)
+            page5.grid_rowconfigure(i, weight=1)
+
         self.load_file()
         self.loaded = True
 
