@@ -168,7 +168,10 @@ class GUI():
         self.corrupt_packets_label.grid(row=row,column=7,sticky="news", columnspan=column_span)
         self.corrupt_packets_label.config(bg="#deebf7")
         row+=1
-        # self.master.mainloop()
+
+        for i in range(100):
+            self.master.grid_columnconfigure(i, weight=1)
+            self.master.grid_rowconfigure(i, weight=1)
 
     def print_line(self):
         while not self.displayQ.empty():
