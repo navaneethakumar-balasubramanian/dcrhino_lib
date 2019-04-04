@@ -44,9 +44,14 @@ class FeatureExtractorJ2(object):
         time_picks = getattr(transformed_args.time_picks, component_id)
         self.manual_windows = ManualTimeWindows()
         self.manual_windows.populate_from_transformed_args(manual_windows, time_picks)
+
+        #<fix this up>
         amplitude_half_widths = getattr(transformed_args.amplitude_half_widths, component_id)
+        amplitude_picks = getattr(transformed_args.amplitude_picks, component_id)
         self.amplitude_windows = AmplitudeWindows()
-        self.amplitude_windows.populate_from_transformed_args(amplitude_half_widths)
+        self.amplitude_windows.populate_from_transformed_args(amplitude_half_widths,
+                                                              amplitude_picks)
+        #</fix this up>
 
     def extract_max_time(self, window_first_time, window_final_time):
         cond1 = self.trace.time_vector >= window_first_time
@@ -94,8 +99,6 @@ class FeatureExtractorJ2(object):
         trace_data = self.trace.data.copy()
         if rotate_angle:
             trace_data = rotate_phase(trace_data, rotate_angle)
-#            pdb.set_trace()
-#            print("truewho?")
         window_first_time = time_center - window_half_width
         window_final_time = time_center + window_half_width
         cond1 = self.trace.time_vector >= window_first_time
@@ -117,50 +120,53 @@ class FeatureExtractorJ2(object):
         Does this break anything downstream??
         """
         extracted_features_dict = {}
-        time_features = ['primary-max_time', 'multiple_1-zero_crossing_time',
-                               'multiple_2-min_time']
-        amplitude_features = ['primary-integrated_absolute_amplitude',
-                               'multiple_1-integrated_absolute_amplitude',
-                               'multiple_2-integrated_absolute_amplitude']
-        primary_start, primary_final = self.manual_windows.get_time_window('primary')
-        multiple_1_start, multiple_1_final = self.manual_windows.get_time_window('multiple_1')
-        multiple_2_start, multiple_2_final = self.manual_windows.get_time_window('multiple_2')
+        time_wavelets_to_pick = ['primary', 'multiple_1', 'multiple_2', 'multiple_3']
+        amplitude_wavelets_to_pick = ['primary', 'multiple_1', 'multiple_2', 'multiple_3']
 
-        for feature_label in time_features:
-
-            if feature_label=='primary-max_time':
-                result = self.extract_max_time(primary_start, primary_final)
-            elif feature_label=='multiple_1-zero_crossing_time':
-                result = self.extract_zero_crossing_time(multiple_1_start, multiple_1_final)
-            elif feature_label=='multiple_2-min_time':
-                result = self.extract_min_time(multiple_2_start, multiple_2_final)
+        for wavelet_id in time_wavelets_to_pick:
+            search_feature = self.manual_windows.get_search_feature(wavelet_id)
+            start, final = self.manual_windows.get_time_window(wavelet_id)
+            #<HACK>
+            if start>=final:
+                logger.error('really? start is after the end? \
+                             I refuse to work with this ... ')
+                final = start+0.004
+            #</HACK>
+            if search_feature=='maximum':
+                result = self.extract_max_time(start, final)
+            elif search_feature=='zero_crossing':
+                result = self.extract_zero_crossing_time(start, final)
+            elif search_feature=='minimum':
+                result = self.extract_min_time(start, final)
             else:
-                print('logger.warning feature {} not yet supported'.format(feature_label))
+                print('logger.warning feature {} not yet supported'.format(search_feature))
                 result = None
-            output_label = '{}-{}'.format(self.trace.component_id, feature_label)
+            output_label = '{}-{}-{}_time'.format(self.trace.component_id, wavelet_id, search_feature)
             extracted_features_dict[output_label] = result
 
-        for feature_label in amplitude_features:
+        for wavelet_id in amplitude_wavelets_to_pick:
+            amplitude_window = self.amplitude_windows.windows[wavelet_id]
 
-            window_label = feature_label.split('-integrated_absolute_amplitude')[0]
-            if window_label=='primary':
-                reference_label = 'primary-max_time'; rotate_angle=False;
-            elif window_label=='multiple_1':
-                reference_label = 'multiple_1-zero_crossing_time'; rotate_angle=-90.0;
-            elif window_label=='multiple_2':
-                reference_label = 'multiple_2-min_time'; rotate_angle=False;
+            if wavelet_id=='primary':
+                reference_label = 'maximum_time'; rotate_angle=False;
+            elif wavelet_id=='multiple_1':
+                reference_label = 'zero_crossing_time'; rotate_angle=-90.0;
+            elif wavelet_id=='multiple_2':
+                reference_label = 'minimum_time'; rotate_angle=False;
+            elif wavelet_id=='multiple_3':
+                reference_label = 'zero_crossing_time'; rotate_angle=90;
             else:
                 reference_label = None
                 continue
 
-            window_center_time_label = '{}-{}'.format(self.trace.component_id, reference_label)
+            window_center_time_label = '{}-{}-{}'.format(self.trace.component_id, wavelet_id, reference_label)
             window_center = extracted_features_dict[window_center_time_label]
-
-            result = self.extract_average_absolute_amplitude(window_center,
-                    self.amplitude_windows.half_widths[window_label],
-                    rotate_angle=rotate_angle)
-
-            output_label = '{}-{}'.format(self.trace.component_id, feature_label)
+            if amplitude_window.feature=='integrated_absolute_amplitude':
+                amplitude_window.center_time = window_center
+                result = self.extract_average_absolute_amplitude(window_center,
+                                                    amplitude_window.half_width,
+                                                    rotate_angle=rotate_angle)
+            output_label = '{}-{}-{}'.format(self.trace.component_id, wavelet_id, amplitude_window.feature)
             extracted_features_dict[output_label] = result
 
         feature_deriver = IntermediateFeatureDeriver(self.trace.component_id,

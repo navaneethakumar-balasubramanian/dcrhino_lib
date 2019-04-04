@@ -46,6 +46,23 @@ class SearchWindow(TimePeriod):
         self.search_feature = kwargs.get('search_feature', None)
 
 
+class AmplitudeWindow(TimePeriod):
+    def __init__(self, **kwargs):
+        """
+        ivars: window_label  should be one of ['primary', 'multiple_1', 'multiple_2', 'multiple_3',]
+        ivars: feature  ['maximum', 'minimum', 'integrated_absolute_amplitude']
+
+        Normal mode of operation will be
+        (primary, integrated_absolute_amplitude),
+        (multiple_1, integrated_absolute_amplitude),
+        (multiple_2, integrated_absolute_amplitude),
+        (multiple_3, integrated_absolute_amplitude),
+        """
+        TimePeriod.__init__(self,**kwargs);
+        self.window_label = kwargs.get('window_label', None)
+        self.feature = kwargs.get('feature', None)
+        self.half_width = kwargs.get('half_width', None)
+        self.center_time = kwargs.get('center_time', None)
 
 
 class WindowBoundaries(object):
@@ -95,6 +112,43 @@ class AmplitudeWindows(object):
     20190401: baked in default values ... will move to json ASAP
     """
     def __init__(self):
+        self.windows = {}
+#        self.half_widths = {}
+#        self.half_widths['primary'] = 0.00105
+#        self.half_widths['multiple_1'] = 0.00105
+#        self.half_widths['multiple_2'] = 0.00105
+
+    def populate_from_default(self):
+        for wavelet_id in ['primary', 'multiple_1', 'multiple_2', 'multiple_3', ]:
+            ww = AmplitudeWindow(window_label=wavelet_id,
+                                 feature='integrated_absolute_amplitude',
+                                 half_width=0.00105)
+            self.windows[wavelet_id] = ww
+
+    def populate_from_transformed_args(self, amplitude_half_widths, amplitude_picks):
+        """
+        method to assign window start and end from json, also could be from gui
+        or otherwhere
+        """
+        for wavelet_id in ['primary', 'multiple_1', 'multiple_2', 'multiple_3', ]:
+            ww = AmplitudeWindow(window_label=wavelet_id,
+                                 feature=getattr(amplitude_picks, wavelet_id),
+                                 half_width=getattr(amplitude_half_widths, wavelet_id))
+            self.windows[wavelet_id] = ww
+#        wavelet_id = 'primary'
+#        self.half_widths[wavelet_id] = getattr(amplitude_half_widths, wavelet_id)
+#        wavelet_id = 'multiple_1'
+#        self.half_widths[wavelet_id] = getattr(amplitude_half_widths, wavelet_id)
+#        wavelet_id = 'multiple_2'
+#        self.half_widths[wavelet_id] = getattr(amplitude_half_widths, wavelet_id)
+#        wavelet_id = 'multiple_3'
+#        self.half_widths[wavelet_id] = getattr(amplitude_half_widths, wavelet_id)
+
+class AmplitudeWindowsOld(object):
+    """
+    20190401: baked in default values ... will move to json ASAP
+    """
+    def __init__(self):
         self.half_widths = {}
         self.half_widths['primary'] = 0.00105
         self.half_widths['multiple_1'] = 0.00105
@@ -113,7 +167,6 @@ class AmplitudeWindows(object):
         self.half_widths[wavelet_id] = getattr(amplitude_half_widths, wavelet_id)
         wavelet_id = 'multiple_3'
         self.half_widths[wavelet_id] = getattr(amplitude_half_widths, wavelet_id)
-
 
 
 class ManualTimeWindows(object):

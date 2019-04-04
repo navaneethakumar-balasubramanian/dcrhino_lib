@@ -94,9 +94,10 @@ class IntermediateFeatureDeriver(object):
     def primary_time(self):
         """
         primary_time_feature <-- get from a control argument
-        default: 'max_time'
+        default: J0, J1, K0: 'max_time'
+        default: J2, 'maximum_time'
         """
-        feature = 'max_time'
+        feature = 'maximum_time'
         full_label = '{}-primary-{}'.format(self.component_id, feature)
         return self.df_dict[full_label]
 
@@ -114,9 +115,10 @@ class IntermediateFeatureDeriver(object):
     def multiple_2_time(self):
         """
         multiple_1_time_feature <-- get from a control argument
-        default: 'min_time'
+        default: J0, J1, K0: 'min_time'
+        default: J2, 'minimum_time'
         """
-        feature = 'min_time'
+        feature = 'minimum_time'
         full_label = '{}-multiple_2-{}'.format(self.component_id, feature)
         return self.df_dict[full_label]
 
