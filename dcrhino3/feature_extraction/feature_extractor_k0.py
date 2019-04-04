@@ -147,7 +147,7 @@ class FeatureExtractorK0(FeatureExtractorJ1):
         new_features_dict[self.trace.component_id] = extracted_features_dict
 
         #pdb.set_trace()
-        unnested_dictionary = flatten(new_features_dict)#print('now dump out with dict keys concatenated')
+        unnested_dictionary = flatten(new_features_dict, sep='-')#print('now dump out with dict keys concatenated')
         feature_deriver = IntermediateFeatureDeriver(df_dict=unnested_dictionary)
         unnested_dictionary = feature_deriver.derive_features(component_id)
         for key in unnested_dictionary.keys():
