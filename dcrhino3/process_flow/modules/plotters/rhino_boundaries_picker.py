@@ -205,7 +205,7 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
         #self.fig.canvas.blit(self.fig.bbox)
 
     def followmouse(self,event):
-        print ("moveee",self.dragging_line)
+        #print ("moveee",self.dragging_line)
         if self.dragging_line is not None:
             #print ("AAA",self.dragging_line.moveY)
             #animation.FuncAnimation(self.fig, self.dragging_line.moveY, 25, fargs=(event.ydata),
