@@ -38,12 +38,15 @@ from dcrhino3.process_flow.modules.plotters.rhino_boundaries_picker import Rhino
 from dcrhino3.process_flow.modules.plotters.rhino_plotter_repicker import RhinoPlotterRepickerModule
 
 from dcrhino3.models.trace_dataframe import TraceData
+from dcrhino3.process_flow.modules.hybrid.band_pass_filter_hybrid import BandPassFilterModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.columns_to_dataframe_module import ColumnsToDataframeModule
-from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import UnfoldAutocorrelationModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.lead_channel_deconvolution import LeadChannelDeconvolutionModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.band_pass_filter_hybrid import BandPassFilterModuleHybrid
+from dcrhino3.process_flow.modules.hybrid.template_hybrid import TemplateModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.trim_trace import TrimTraceModuleHybrid
+from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import UnfoldAutocorrelationModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.upsample_hybrid import UpsampleModuleHybrid
+
 
 logger = init_logging(__name__)
 
@@ -86,7 +89,8 @@ class ProcessFlow:
             "rhino_plotter": RhinoPlotterModule,
             "rhino_plotter_picker":RhinoPlotterPickerModule,
             "rhino_plotter_repicker": RhinoPlotterRepickerModule,
-            "columns_to_df": ColumnsToDataframeModule
+            "columns_to_df": ColumnsToDataframeModule,
+            "template": TemplateModuleHybrid
         }
 
 
