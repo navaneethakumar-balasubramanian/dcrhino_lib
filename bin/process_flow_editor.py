@@ -388,11 +388,16 @@ class GUI():
             value_list = list()
             for line in range(lines):
                 line_value = self.value.get(str(float(line + 1)), str(float(line + 2)))
+                line_value = line_value.replace("\"","")
                 value += line_value.strip()
-                value_list.append(line_value.strip())
+                line_value = line_value.strip()
+                if len(line_value) > 0:
+                    value_list.append(line_value.strip())
             try:
                 if isinstance(json.loads(value), dict):
                     value = json.loads(value)
+                else:
+                    value = value_list
             except:
                 value = list([x.replace("\"", "") for x in value_list])
             self.set_value(value)
