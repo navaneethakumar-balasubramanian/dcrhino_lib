@@ -1,0 +1,184 @@
+{
+ "id": "v3.2_manual_picker_j2",
+ "output_to_file":true,
+ "components_to_process":["axial"],
+  "modules": [
+   {
+    "type": "columns_to_df",
+    "output_to_file": true,
+    "args": {
+    "sampling_rate": "|global_config.sampling_rate|"
+    }
+   },
+   {
+    "type": "unfold_hybrid",
+    "output_to_file": true,
+    "args": {}
+   },
+   {
+    "type": "lead_channel_deconvolution_hybrid",
+    "output_to_file": true,
+    "args": {
+     "deconvolution_filter_duration": 0.1
+    }
+    },
+   {
+    "type": "band_pass_filter_hybrid",
+    "output_to_file": true,
+    "args": {
+         "trapezoidal_bpf_corner_1": "|global_config.trapezoidal_bpf_corner_1|",
+         "trapezoidal_bpf_corner_2": "|global_config.trapezoidal_bpf_corner_2|",
+         "trapezoidal_bpf_corner_3": "|global_config.trapezoidal_bpf_corner_3|",
+         "trapezoidal_bpf_corner_4": "|global_config.trapezoidal_bpf_corner_4|",
+         "trapezoidal_bpf_duration": "|global_config.trapezoidal_bpf_duration|"
+       }
+   },
+      {
+        "type": "trim_hybrid",
+        "output_to_file": true,
+        "args": {
+          "max_lag_trimmed_trace": "|global_config.max_lag_trimmed_trace|",
+          "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|"
+        }
+      },
+
+        {
+       "type": "rhino_plotter_picker",
+       "output_to_file": true,
+       "args":{
+         "component": "axial",
+         "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
+         "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
+          "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
+          "window_widths":"|global_config.window_widths"
+       }
+     },
+      {
+       "type": "rhino_plotter_picker",
+       "output_to_file": true,
+       "args":{
+         "component": "tangential",
+         "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
+         "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
+          "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
+          "window_widths":"|global_config.window_widths",
+         "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|"
+       }
+     },
+    {
+        "type": "upsample_hybrid",
+        "output_to_file": true,
+        "args": {
+          "trimmed_trace_duration": "|global_config.trimmed_trace_duration|",
+          "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
+          "max_lag_trimmed_trace": "|global_config.max_lag_trimmed_trace|",
+          "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
+          "upsample_interpolation_kind": ["|global_config.upsample_interpolation_kind|", "quadratic"]
+        }
+      },
+        {
+        "type": "j2",
+        "output_to_file": true,
+        "args": {
+          "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
+          "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
+          "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
+          "sensor_saturation_g": "|global_config.sensor_saturation_g|",
+          "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
+          "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|",
+          "time_picks" : {
+              "axial": {
+                  "primary": "maximum",
+                  "multiple_1": "zero_crossing",
+                  "multiple_2": "minimum",
+                  "multiple_3": "zero_crossing"
+              },
+              "tangential": {
+                "primary": "maximum",
+                  "multiple_1": "zero_crossing",
+                  "multiple_2": "minimum",
+                  "multiple_3": "zero_crossing"
+              }
+              },
+          "manual_time_windows" : {
+              "axial": {
+                  "primary": "|process_flow.axial_primary|",
+                  "multiple_1": "|process_flow.axial_multiple_1|",
+                  "multiple_2": "|process_flow.axial_multiple_2|",
+                  "multiple_3": "|process_flow.axial_multiple_3|"
+              },
+              "tangential": {
+                "primary": [-0.002, 0.002],
+                "multiple_1": [0.013, 0.017],
+                "multiple_2": [0.030, 0.034],
+                "multiple_3": [0.044, 0.055]
+              }
+              },
+        "amplitude_picks" : {
+            "axial":{
+            "primary": "integrated_absolute_amplitude",
+            "multiple_1": "integrated_absolute_amplitude",
+            "multiple_2": "integrated_absolute_amplitude",
+            "multiple_3": "integrated_absolute_amplitude"
+        },
+            "tangential":{
+            "primary": "integrated_absolute_amplitude",
+            "multiple_1": "integrated_absolute_amplitude",
+            "multiple_2": "integrated_absolute_amplitude",
+            "multiple_3": "integrated_absolute_amplitude"
+        }
+      },
+            "amplitude_half_widths" : {
+            "axial":{
+            "primary": 0.00105,
+            "multiple_1": 0.00105,
+            "multiple_2": 0.00105,
+            "multiple_3": 0.00105
+        },
+            "tangential":{
+            "primary": 0.00105,
+            "multiple_1": 0.00105,
+            "multiple_2": 0.00105,
+            "multiple_3": 0.00105
+        }
+      }
+    }
+    },
+    {
+       "type": "rhino_plotter_repicker",
+       "output_to_file": true,
+       "args":{
+         "picker_module_idx": 5,
+         "padding_right": 0.03,
+         "panels": [
+           {
+              "type": "curves",
+              "curves": [
+                {"column_label":"J2-axial-primary-integrated_absolute_amplitude",       "color": "red",  "spine_side": "left",   "scale":"current" , "space": 0},
+                {"column_label":"J2-axial-reflection_coefficient_1",    "color": "blue", "spine_side": "right",  "scale":"new",  "space": 0},
+                {"column_label": "J2-axial-delay_1",                    "color": "lime", "spine_side": "right",  "scale":"new",  "space": 60}
+              ]
+            },
+           {
+             "type": "heatmap",
+             "component": "axial",
+             "wavelet_windows_to_show": ["primary", "multiple_1", "multiple_2", "multiple_3"],
+             "curves": [
+               {"column_label":"J2-axial-primary-maximum_time","formula":"data*1000", "label": "primary Max", "linewidth": 2 , "color": "#FFFFFF"},
+               {"column_label":"J2-axial-multiple_1-zero_crossing_time","formula":"data*1000", "label": "M1 Zx", "linewidth": 2 , "color": "#FFFFFF"},
+               {"column_label":"J2-axial-multiple_2-minimum_time","formula":"data*1000", "label": "M2 Min", "linewidth": 2 , "color": "#FFFFFF"}
+             ],
+             "manual_time_windows" : {
+              "axial": {
+                  "primary": "|process_flow.axial_primary|",
+                  "multiple_1": "|process_flow.axial_multiple_1|",
+                  "multiple_2": "|process_flow.axial_multiple_2|",
+                  "multiple_3": "|process_flow.axial_multiple_3|"
+              }
+              }
+           }
+         ]
+       }
+     }
+  ]
+}
