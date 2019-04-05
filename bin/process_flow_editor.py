@@ -7,6 +7,7 @@ import os, sys
 import tkFileDialog
 import time
 from process_flow import process_glob
+from subprocess import Popen
 
 debug_path = '/home/natal/toconvert/test2.json'
 debug = False
@@ -590,7 +591,11 @@ class GUI():
                 seconds_to_process = False
                 if str(self.seconds_to_process.get()) != "":
                     seconds_to_process = int(str(self.seconds_to_process.get()))
-                process_glob(self.json, self.glob_str, seconds_to_process=seconds_to_process)
+                # p = Process(target=process_glob, args=(self.json, self.glob_str))
+                # process_glob(self.json, self.glob_str, seconds_to_process=seconds_to_process)
+                cmd = "python {} -f {} {}".format(os.path.abspath('process_flow.py'), self.json_path, self.glob_str)
+                print cmd
+                p = Popen(cmd, shell=True)
                 tkMessageBox.showinfo("Processing Done", "Processing Done in {} sec".format(time.time()-t0))
             else:
                 tkMessageBox.showinfo("Unable to Process", "Please make sure JSON file is loaded, modifications are "
