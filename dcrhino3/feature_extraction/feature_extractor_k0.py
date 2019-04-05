@@ -140,7 +140,8 @@ class FeatureExtractorK0(FeatureExtractorJ1):
         #pdb.set_trace()
         if self.apply_primary_rotation:
             extracted_features_dict['primary_phi'.format(component_id)] = phi
-            extracted_features_dict['trace'] = self.trace.data
+            #label = '{}_trace'.format(self.trace.component_id)
+            #extracted_features_dict[label] = self.trace.data
 
         boolean_features_dict = calculate_boolean_features(extracted_features_dict, self.sensor_saturation_g)
         extracted_features_dict['boolean'] = boolean_features_dict
