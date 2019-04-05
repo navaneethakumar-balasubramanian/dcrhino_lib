@@ -35,6 +35,7 @@ from dcrhino3.process_flow.modules.log_processing.rhino_physics import RhinoPhys
 from dcrhino3.process_flow.modules.plotters.qc_plotter_module import QCPlotterModule
 from dcrhino3.process_flow.modules.plotters.rhino_plotter_module import RhinoPlotterModule
 from dcrhino3.process_flow.modules.plotters.rhino_boundaries_picker import RhinoPlotterPickerModule
+from dcrhino3.process_flow.modules.plotters.rhino_plotter_repicker import RhinoPlotterRepickerModule
 
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.process_flow.modules.hybrid.columns_to_dataframe_module import ColumnsToDataframeModule
@@ -84,6 +85,7 @@ class ProcessFlow:
             "export_segy": ExportSEGYModule,
             "rhino_plotter": RhinoPlotterModule,
             "rhino_plotter_picker":RhinoPlotterPickerModule,
+            "rhino_plotter_repicker": RhinoPlotterRepickerModule,
             "columns_to_df": ColumnsToDataframeModule
         }
 

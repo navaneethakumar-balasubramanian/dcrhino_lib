@@ -30,6 +30,7 @@ class RhinoPlotterModule(BaseModule):
             "mine_name": "|global_config.mine_name|",
             "padding_right": 0,
             "padding_left": 0,
+            "show": False
         }
 
     def get_plot_title(self,transformed_args, trace):
@@ -97,7 +98,7 @@ class RhinoPlotterModule(BaseModule):
         if self.output_to_file:
             output_path = self.output_file_basepath(extension=".png")
         plot_title = self.get_plot_title(transformed_args,trace)
-        rhino_display.plot(output_path,title=plot_title)
+        rhino_display.plot(output_path,title=plot_title,show=transformed_args.show)
         return trace
 
 

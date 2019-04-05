@@ -41,7 +41,7 @@ class RhinoDisplay(object):
         return dc_plot_lim
 
 
-    def plot(self,output_path=False,title=False):
+    def plot(self,output_path=False,title=False,show=False):
         """
         plotty_mcplotsalot(self.dict)
         """
@@ -58,6 +58,7 @@ class RhinoDisplay(object):
         if n_panels > 1:
             #first_ax = ax[0]
             for i_panel in range(n_panels):
+                print(i_panel)
                 axx = ax[i_panel]
                 panel = self.panels[i_panel]
                 panel.plot(axx)
@@ -66,15 +67,13 @@ class RhinoDisplay(object):
             panel = self.panels[0]
             panel.plot(ax)
 
-        print(n_panels)
-        print('ok, start plotting')
-
         if output_path:
             plt.savefig(output_path,dpi=300)
-        #plt.show(block=True)
+        if show:
+            plt.show(block=True)
         return fig,ax
     
-    def plot_with_legend(self, output_path=False,title=False):
+    def plot_with_legend(self, output_path=False,title=False,show=False):
         """
         plotty_mcplotsalot(self.dict)
         """
@@ -112,13 +111,10 @@ class RhinoDisplay(object):
                    ncol = 3
                    )
 
-
-        print(n_panels)
-        print('ok, start plotting')
-
         if output_path:
             plt.savefig(output_path,dpi=300)
-        #plt.show(block=True)
+        if show:
+            plt.show(block=True)
         return fig,ax
 
 
