@@ -16,8 +16,6 @@ class RhinoPlotterRepickerModule(RhinoPlotterModule):
             "picker_module_idx":3
         })
 
-
-
     def process_trace(self, trace):
         rhino_display = RhinoDisplay()
         transformed_args = self.get_transformed_args(trace.first_global_config)
@@ -76,11 +74,15 @@ class RhinoPlotterRepickerModule(RhinoPlotterModule):
         #breset.on_clicked(self.btreset)
 
         rhino_display.padding_bottom = 0.1
-        fig,ax = rhino_display.plot(False, title=plot_title, show=False)
+        output_path = False
+        if self.output_to_file:
+            output_path = self.output_file_basepath(extension=".png")
+        fig,ax = rhino_display.plot(output_path, title=plot_title, show=False)
 
 
         axnext = plt.axes([0.85, 0.03, 0.1, 0.08])
         bnext = Button(axnext, 'Save')
+        bnext.on_clicked(self.save)
         axrepick = plt.axes([0.72, 0.03, 0.1, 0.08])
         btrepick = Button(axrepick, 'Repick')
         btrepick.on_clicked(self.repick)
@@ -93,4 +95,7 @@ class RhinoPlotterRepickerModule(RhinoPlotterModule):
 
     def repick(self,event):
         self.process_flow.actual_module = self.picker_module_idx-1
+        plt.close()
+
+    def save(self, event):
         plt.close()
