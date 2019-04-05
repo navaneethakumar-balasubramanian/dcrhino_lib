@@ -1,5 +1,14 @@
 # -*- coding: utf-8 -*-
-
+"""
+ {
+        "type": "template",
+        "output_to_file": false,
+        "args": {
+          "max_lag_trimmed_trace": "|global_config.max_lag_trimmed_trace|",
+          "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|"
+        }
+      },
+"""
 import pdb
 
 from dcrhino3.helpers.general_helper_functions import init_logging
