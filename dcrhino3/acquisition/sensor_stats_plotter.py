@@ -4,6 +4,7 @@ from datetime import datetime
 import ConfigParser
 from dcrhino3.acquisition.constants import RAM_PATH
 from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
+from dcrhino3.models.config import Config
 if plt.get_backend() == "Qt4Agg":
     pass
 else:
@@ -21,10 +22,137 @@ def get_min_max_values(config_value):
     max = float(config_value.split(",")[1])
     return min, max
 
+class StatsPlotter():
+
+    def __init__(self, global_config):
+        self.fig = plt.figure("DataCloud Rhino Sensor Stats", figsize=(6, 4))
+        plt.subplots_adjust(hspace=1.0, wspace=0.5, top=0.8, bottom=.1)
+        plt.pause(.05)
+        self.fig.canvas.draw()
+        self.global_config = global_config
+
+    def create_plots(self):
+        rows = 3
+        columns = 2
+
+        row = 0
+        column = 0
+
+        axis_font = {'fontname': 'Arial', 'size': '8'}
+        title_font = {'fontname': 'Arial', 'size': '10'}
+        tick_font_size = 8
+
+        self.packets_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1)
+        self.packets_plot.tick_params(labelsize=tick_font_size)
+        self.packets_plot.set_title("Packet Loss", **title_font)
+        self.packets_plot.set_xlabel("Percentage", **axis_font)
+        self.packet_bins = np.arange(0, 7, 1)
+        self.packets_plot.set_xticks(self.packet_bins)
+        self.packets_plot.set_xticklabels(["0", "1", "2", "3", "4", "5", "6+"])
+        row += 1
+
+        self.rssi_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1)
+        self.rssi_plot.tick_params(labelsize=tick_font_size)
+        self.rssi_plot.set_title("RSSI", **title_font)
+        self.rssi_plot.set_xlabel("Signal Strength", **axis_font)
+        # min, max = get_min_max_values(self.config.get("SYSTEM_HEALTH_PLOTS", "rssi_y_lim"))
+        min, max = get_min_max_values(self.global_config.rssi_y_lim)
+        self.rssi_bins = np.arange(min, max, 1)
+        row += 1
+
+        self.temp_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1)
+        self.temp_plot.tick_params(labelsize=tick_font_size)
+        self.temp_plot.set_title("Board Temperature", **title_font)
+        self.temp_plot.set_xlabel("degC", **axis_font)
+        # min, max = get_min_max_values(self.config.get("SYSTEM_HEALTH_PLOTS", "temperature_y_lim"))
+        min, max = get_min_max_values(self.global_config.temperature_y_lim)
+        self.temp_bins = np.arange(min, max, 1)
+        row += 1
+
+        column = 1
+        row = 0
+
+        self.axial_accel_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1)
+        self.axial_accel_plot.tick_params(labelsize=tick_font_size)
+        self.axial_accel_plot.set_title("Axial Acceleration", **title_font)
+        self.axial_accel_plot.set_xlabel("G", **axis_font)
+        # self.accel_plot_bins = np.arange(config.getint("INSTALLATION", "sensor_saturation_g") * -1.1,
+        #                                  config.getint("INSTALLATION", "sensor_saturation_g") * 1.1, 1)
+        sensor_saturation_g = int(global_config.sensor_saturation_g)
+        self.accel_plot_bins = np.arange(sensor_saturation_g * -1.1,
+                                         sensor_saturation_g * 1.1, 1)
+        row += 1
+
+        self.tangential_accel_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1)
+        self.tangential_accel_plot.tick_params(labelsize=tick_font_size)
+        self.tangential_accel_plot.set_title("Tangential Acceleration", **title_font)
+        self.tangential_accel_plot.set_xlabel("G", **axis_font)
+        row += 1
+
+        self.radial_accel_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1)
+        self.radial_accel_plot.tick_params(labelsize=tick_font_size)
+        self.radial_accel_plot.set_title("Radial Acceleration", **title_font)
+        self.radial_accel_plot.set_xlabel("G", **axis_font)
+        row += 1
+
+    def set_title(self, title):
+        plt.suptitle(title, fontsize=10)
+
+    def plot(self, packets, temp, rssi, max_axial_accel, min_axial_accel, max_tangential_accel, min_tangential_accel,
+             max_radial_accel, min_radial_accel):
+        packets_array = np.absolute(np.asarray(packets) / ideal_packets - 1) * 100
+        packets_array = packets_array[~np.isnan(packets_array)]
+        packets_array[packets_array > self.packet_bins[-1]] = self.packet_bins[-1]
+        self.packets_plot.hist(packets_array, bins=self.packet_bins, edgecolor='black', align="mid", density=True)
+
+        temp_array = np.asarray(temp)
+        temp_array = temp_array[~np.isnan(temp_array)]
+        temp_array[temp_array < self.temp_bins[0]] = self.temp_bins[0]
+        temp_array[temp_array > self.temp_bins[-1]] = self.temp_bins[-1]
+        self.temp_plot.hist(temp_array, bins=self.temp_bins, edgecolor='black', align="left", density=True)  # 3
+
+        rssi_array = np.asarray(rssi)
+        rssi_array = rssi_array[~np.isnan(rssi_array)]
+        rssi_array[rssi_array < self.rssi_bins[0]] = self.rssi_bins[0]
+        rssi_array[rssi_array > self.rssi_bins[-1]] = self.rssi_bins[-1]
+        self.rssi_plot.hist(rssi_array, bins=self.rssi_bins, edgecolor='black',
+                            weights=np.ones(len(rssi_array)) / len(rssi_array), density=False, align="left")  # 2
+
+        axial_accel_array = np.hstack((max_axial_accel, min_axial_accel))
+        axial_accel_array = axial_accel_array[~np.isnan(axial_accel_array)]
+        axial_accel_array[axial_accel_array > self.accel_plot_bins[-1]] = self.accel_plot_bins[-1]
+        self.axial_accel_plot.hist(axial_accel_array, bins=self.accel_plot_bins, edgecolor='black',
+                                   weights=np.ones(len(axial_accel_array)) / len(axial_accel_array), density=False,
+                                   align="left")
+
+        tangential_accel_array = np.hstack((max_tangential_accel, min_tangential_accel))
+        tangential_accel_array = tangential_accel_array[~np.isnan(tangential_accel_array)]
+        tangential_accel_array[tangential_accel_array > self.accel_plot_bins[-1]] = self.accel_plot_bins[-1]
+        self.tangential_accel_plot.hist(tangential_accel_array, bins=self.accel_plot_bins, edgecolor='black',
+                                        weights=np.ones(len(tangential_accel_array)) / len(tangential_accel_array),
+                                        density=False, align="left")
+
+        radial_accel_array = np.hstack((max_radial_accel, min_radial_accel))
+        radial_accel_array = radial_accel_array[~np.isnan(radial_accel_array)]
+        radial_accel_array[radial_accel_array > self.accel_plot_bins[-1]] = self.accel_plot_bins[-1]
+        self.radial_accel_plot.hist(radial_accel_array, bins=self.accel_plot_bins, edgecolor='black',
+                                    weights=np.ones(len(radial_accel_array)) / len(radial_accel_array), density=False,
+                                    align="left")
+
+    def save_figure(self, path):
+        self.fig.savefig(path)
+
+    def draw(self):
+        self.fig.canvas.draw()
+        plt.pause(0.15)
+        time.sleep(.15)
+        plt.clf()
+
 
 config_collection_file_path = os.path.join(PATH, 'collection_daemon.cfg')
 config = ConfigParser.SafeConfigParser()
 config.read(config_collection_file_path)
+global_config = Config(config_parser=config)
 
 length = config.getint("SYSTEM_HEALTH_PLOTS", "histogram_length_in_sec")
 rhino_version = config.getfloat("COLLECTION", "rhino_version")
@@ -45,10 +173,7 @@ min_radial_accel = list()
 tracetime_list = list()
 
 
-fig1 = plt.figure("DataCloud Rhino Sensor Stats", figsize=(6, 4))
-plt.subplots_adjust(hspace=1.0, wspace=0.5, top=0.8, bottom=.1)
-plt.pause(.05)
-fig1.canvas.draw()
+plotter = StatsPlotter(global_config)
 previous_tracetime = 0
 
 initial_tracetime = datetime.now()
@@ -59,62 +184,8 @@ while True:
         system_health = os.path.join(RAM_PATH, "system_health.npy")
         if os.path.exists(system_health):
             health = np.load(system_health)
-        rows = 3
-        columns = 2
 
-        row = 0
-        column = 0
-
-        axis_font = {'fontname': 'Arial', 'size': '8'}
-        title_font = {'fontname': 'Arial', 'size': '10'}
-        tick_font_size = 8
-
-        packets_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1)
-        packets_plot.tick_params(labelsize=tick_font_size)
-        packets_plot.set_title("Packet Loss", **title_font)
-        packets_plot.set_xlabel("Percentage", **axis_font)
-        packet_bins = np.arange(0, 7, 1)
-        packets_plot.set_xticks(packet_bins)
-        packets_plot.set_xticklabels(["0", "1", "2", "3", "4", "5", "6+"])
-        row +=1
-
-        rssi_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1)
-        rssi_plot.tick_params(labelsize=tick_font_size)
-        rssi_plot.set_title("RSSI", **title_font)
-        rssi_plot.set_xlabel("Signal Strength", **axis_font)
-        min, max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS", "rssi_y_lim"))
-        rssi_bins = np.arange(min, max, 1)
-        row +=1
-
-        temp_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1)
-        temp_plot.tick_params(labelsize=tick_font_size)
-        temp_plot.set_title("Board Temperature", **title_font)
-        temp_plot.set_xlabel("degC", **axis_font)
-        min, max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS", "temperature_y_lim"))
-        temp_bins = np.arange(min, max, 1)
-        row += 1
-
-        column = 1
-        row = 0
-
-        axial_accel_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1)
-        axial_accel_plot.tick_params(labelsize=tick_font_size)
-        axial_accel_plot.set_title("Axial Acceleration", **title_font)
-        axial_accel_plot.set_xlabel("G", **axis_font)
-        accel_plot_bins = np.arange(sensor_saturation_g*-1.1, sensor_saturation_g*1.1, 1)
-        row += 1
-
-        tangential_accel_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1)
-        tangential_accel_plot.tick_params(labelsize=tick_font_size)
-        tangential_accel_plot.set_title("Tangential Acceleration", **title_font)
-        tangential_accel_plot.set_xlabel("G", **axis_font)
-        row += 1
-
-        radial_accel_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1)
-        radial_accel_plot.tick_params(labelsize=tick_font_size)
-        radial_accel_plot.set_title("Radial Acceleration", **title_font)
-        radial_accel_plot.set_xlabel("G", **axis_font)
-        row += 1
+        plotter.create_plots()
 
         tracetime = health[6]
         if previous_tracetime != tracetime:
@@ -150,54 +221,16 @@ while True:
             now = health[7]
             sec_delay = delay[-1]
 
-            plt.suptitle(tracetime.strftime('%H:%M:%S') + " plotted at " + datetime.utcfromtimestamp(
+            plotter.set_title(tracetime.strftime('%H:%M:%S') + " plotted at " + datetime.utcfromtimestamp(
                 now).strftime('%H:%M:%S') + " delay of " + str(sec_delay) + "\n" + "Data From: {} to {}".format(
-                initial_tracetime.strftime('%H:%M:%S'), tracetime.strftime('%H:%M:%S')), fontsize=10)
+                initial_tracetime.strftime('%H:%M:%S'), tracetime.strftime('%H:%M:%S')))
 
-            packets_array = np.absolute(np.asarray(packets)/ideal_packets-1)*100
-            packets_array = packets_array[~np.isnan(packets_array)]
-            packets_array[packets_array > packet_bins[-1]] = packet_bins[-1]
-            packets_plot.hist(packets_array,  bins=packet_bins, edgecolor='black', align="mid", density=True)
+            plotter.plot(packets, temp, rssi, max_axial_accel, min_axial_accel, max_tangential_accel,
+                         min_tangential_accel, max_radial_accel, min_radial_accel)
+            plotter.save_figure(os.path.join(RAM_PATH, "histogram.png"))
+            plotter.draw()
 
-            temp_array = np.asarray(temp)
-            temp_array = temp_array[~np.isnan(temp_array)]
-            temp_array[temp_array < temp_bins[0]] = temp_bins[0]
-            temp_array[temp_array > temp_bins[-1]] = temp_bins[-1]
-            temp_plot.hist(temp_array, bins=temp_bins, edgecolor='black', align="left", density=True)#3
 
-            rssi_array = np.asarray(rssi)
-            rssi_array = rssi_array[~np.isnan(rssi_array)]
-            rssi_array[rssi_array < rssi_bins[0]] = rssi_bins[0]
-            rssi_array[rssi_array > rssi_bins[-1]] = rssi_bins[-1]
-            rssi_plot.hist(rssi_array, bins=rssi_bins, edgecolor='black', weights=np.ones(len(rssi_array)) / len(
-                rssi_array), density=False, align="left")  # 2
-
-            axial_accel_array = np.hstack((max_axial_accel, min_axial_accel))
-            axial_accel_array = axial_accel_array[~np.isnan(axial_accel_array)]
-            axial_accel_array[axial_accel_array > accel_plot_bins[-1]] = accel_plot_bins[-1]
-            axial_accel_plot.hist(axial_accel_array, bins=accel_plot_bins, edgecolor='black',
-                                  weights=np.ones(len(axial_accel_array)) / len(axial_accel_array), density=False,
-                                  align="left")
-
-            tangential_accel_array = np.hstack((max_tangential_accel, min_tangential_accel))
-            tangential_accel_array = tangential_accel_array[~np.isnan(tangential_accel_array)]
-            tangential_accel_array[tangential_accel_array > accel_plot_bins[-1]] = accel_plot_bins[-1]
-            tangential_accel_plot.hist(tangential_accel_array, bins=accel_plot_bins, edgecolor='black',
-                                       weights=np.ones(len(tangential_accel_array)) / len(tangential_accel_array),
-                                       density=False, align="left")
-
-            radial_accel_array = np.hstack((max_radial_accel, min_radial_accel))
-            radial_accel_array = radial_accel_array[~np.isnan(radial_accel_array)]
-            radial_accel_array[radial_accel_array > accel_plot_bins[-1]] = accel_plot_bins[-1]
-            radial_accel_plot.hist(radial_accel_array, bins=accel_plot_bins, edgecolor='black',
-                                   weights=np.ones(len(radial_accel_array)) / len(radial_accel_array), density=False,
-                                   align="left")
-
-            fig1.savefig(os.path.join(RAM_PATH, "histogram.png"))
-            fig1.canvas.draw()
-            plt.pause(0.15)
-            time.sleep(.15)
-            plt.clf()
         else:
             time.sleep(.15)
     except NameError:
