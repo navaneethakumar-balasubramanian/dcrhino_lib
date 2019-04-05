@@ -42,6 +42,19 @@
         }
       },
 
+    {
+        "type": "upsample_hybrid",
+        "output_to_file": true,
+        "args": {
+          "trimmed_trace_duration": "|global_config.trimmed_trace_duration|",
+          "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
+          "max_lag_trimmed_trace": "|global_config.max_lag_trimmed_trace|",
+          "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
+          "upsample_interpolation_kind": ["|global_config.upsample_interpolation_kind|", "quadratic"]
+        }
+      },
+
+
         {
        "type": "rhino_plotter_picker",
        "output_to_file": true,
@@ -50,7 +63,8 @@
          "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
          "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
           "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
-          "window_widths":"|global_config.window_widths"
+          "window_widths":"|global_config.window_widths",
+         "trace_downsample_factor": 10
        }
      },
       {
@@ -65,17 +79,7 @@
          "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|"
        }
      },
-    {
-        "type": "upsample_hybrid",
-        "output_to_file": true,
-        "args": {
-          "trimmed_trace_duration": "|global_config.trimmed_trace_duration|",
-          "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
-          "max_lag_trimmed_trace": "|global_config.max_lag_trimmed_trace|",
-          "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
-          "upsample_interpolation_kind": ["|global_config.upsample_interpolation_kind|", "quadratic"]
-        }
-      },
+
         {
         "type": "j2",
         "output_to_file": true,
@@ -148,7 +152,7 @@
        "type": "rhino_plotter_repicker",
        "output_to_file": true,
        "args":{
-         "picker_module_idx": 5,
+         "picker_module_idx": 6,
          "padding_right": 0.03,
          "panels": [
            {
@@ -166,7 +170,8 @@
              "curves": [
                {"column_label":"J2-axial-primary-maximum_time","formula":"data*1000", "label": "primary Max", "linewidth": 2 , "color": "#FFFFFF"},
                {"column_label":"J2-axial-multiple_1-zero_crossing_time","formula":"data*1000", "label": "M1 Zx", "linewidth": 2 , "color": "#FFFFFF"},
-               {"column_label":"J2-axial-multiple_2-minimum_time","formula":"data*1000", "label": "M2 Min", "linewidth": 2 , "color": "#FFFFFF"}
+               {"column_label":"J2-axial-multiple_2-minimum_time","formula":"data*1000", "label": "M2 Min", "linewidth": 2 , "color": "#FFFFFF"},
+               {"column_label":"J2-axial-multiple_3-zero_crossing_time","formula":"data*1000", "label": "M3 Zx", "linewidth": 2 , "color": "#FFFFFF"}
              ],
              "manual_time_windows" : {
               "axial": {

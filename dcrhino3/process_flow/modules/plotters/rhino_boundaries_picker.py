@@ -127,10 +127,11 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
         self.transformed_args = transformed_args
         rhino_display.padding_left = transformed_args.padding_left
         rhino_display.padding_right = transformed_args.padding_right
+        trace_downsample_factor = transformed_args.trace_downsample_factor
         panels = []
         if transformed_args.component in self.components_to_process:
             panel = Heatmap(trace_data=trace, component=transformed_args.component,
-                                wavelet_windows_to_show=[])
+                                wavelet_windows_to_show=[],trace_downsample_factor = trace_downsample_factor)
             panels.append(panel)
             self.panel = panel
         else:
@@ -140,7 +141,10 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
             return trace
         rhino_display.panels = panels
         plot_title = self.get_plot_title(transformed_args,trace)
-        fig,ax = rhino_display.plot(False,title=plot_title)
+        output_path = False
+        if self.output_to_file:
+            output_path = self.output_file_basepath(extension=".png")
+        fig,ax = rhino_display.plot(output_path,title=plot_title)
 
         self.fig = fig
         cid = fig.canvas.mpl_connect('button_press_event', self.onclick)

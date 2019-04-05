@@ -258,6 +258,7 @@ class Heatmap(RhinoDisplayPanel):
         self.curves = kwargs.get('curves', [])
         self.load_curve_data_from_dataframe()
         self.manual_time_windows = kwargs.get('manual_time_windows', 35.0)
+        self.trace_downsample_factor = kwargs.get('trace_downsample_factor', 1)
 
 
 
@@ -320,18 +321,17 @@ class Heatmap(RhinoDisplayPanel):
     def plot_hole_as_heatmap(self, ax, X, Y, Z, y_tick_locations,
                          two_way_travel_time_ms=None, multiple_search_back_ms=None,
                          multiple_search_forward_ms=None,delay=None,delay_2=None,
-                         wavelet_windows_to_show=[], window_boundaries=None,
-                         trace_downsample_factor=1):
+                         wavelet_windows_to_show=[], window_boundaries=None):
         """
         .. todo: are v_min, v_max as called in previous None or +-0.5?
         """
 
         minor_locator = AutoMinorLocator(8)
         #pdb.set_trace()
-        if trace_downsample_factor > 1:
+        if self.trace_downsample_factor > 1:
             #it has to be an integer!
-            X = X[::trace_downsample_factor];
-            Z = Z[:,::trace_downsample_factor]
+            X = X[::self.trace_downsample_factor];
+            Z = Z[:,::self.trace_downsample_factor]
 
         if any([x is None for x in [self.v_min, self.v_max]]):# autoselcet color axes
             heatmap = ax.pcolormesh(X, Y, Z, cmap=self.cmap_string)
