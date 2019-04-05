@@ -3,6 +3,8 @@
 import pdb
 import os
 import json
+import copy
+
 from collections import namedtuple
 from dcrhino3.helpers.general_helper_functions import json_string_to_object,dict_to_object
 
@@ -32,7 +34,7 @@ class BaseModule(object):
         if "vars" not in self.process_flow.process_json.keys():
             self.process_flow.process_json["vars"] = dict()
         self.process_flow.process_json["vars"][var_name] = var_value
-
+        pass
 
     def process_trace(self,trace):
         return trace
@@ -46,10 +48,14 @@ class BaseModule(object):
 
     def get_transformed_args(self, global_config,args = None):
         transformed = dict()
+        #self.args = self.args.copy()
         if args is None:
-            self.default_args.update(self.args)
-            self.args = self.default_args
-            args = self.args
+            temp = copy.deepcopy(self.default_args)
+            temp2 = copy.deepcopy(self.args)
+            temp.update(temp2)
+            args = temp
+            #self.args = temp
+            #args = self.args
 
         for key in args.keys():
             val = args[key]

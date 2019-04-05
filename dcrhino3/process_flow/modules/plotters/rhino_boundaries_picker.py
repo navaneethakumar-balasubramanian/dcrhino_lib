@@ -150,6 +150,7 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
         self.ax = fig.axes[0]
         self.background = fig.canvas.copy_from_bbox(self.ax.bbox)
         #self.ax.set_rasterized(True)
+        self.lines = []
         self.lines.append(DraggableLine(fig.axes[0], X,self.lines_default_values[0],'yellow',"Primary start",self.boundaries))
         self.lines.append(DraggableLine(fig.axes[0], X,self.lines_default_values[1], 'yellow', "Primary end", self.boundaries))
         self.lines.append(DraggableLine(fig.axes[0], X,self.lines_default_values[2], 'limegreen', "Multiple 1 start", self.boundaries))

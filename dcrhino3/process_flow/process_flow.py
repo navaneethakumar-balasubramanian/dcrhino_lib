@@ -153,12 +153,16 @@ class ProcessFlow:
                 and folders will be created if needed)
         """
         output_trace = trace_data
-        for module in self.modules_flow:
+        self.modules_to_process = len(self.modules_flow)
+        self.actual_module = 0
+        while self.actual_module != self.modules_to_process:
+            module = self.modules_flow[self.actual_module]
             t0 = time.time()
             logger.info("Applying " + str(module.id) + " with: " + str(module.args))
             output_trace = module.process_trace(output_trace)
             delta_t = time.time() - t0
             logger.info("{} ran in {}s ".format(module.id, delta_t))
+            self.actual_module += 1
 
         if self.output_to_file:
             with open(os.path.join(process_flow_output_path, "process_flow.json"), 'w') as outfile:
