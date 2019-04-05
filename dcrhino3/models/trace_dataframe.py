@@ -259,7 +259,7 @@ class TraceData(object):
         h5f.close()
         return
 
-    def realtime_append_to_h5(self,path,file_id='0',global_config=None):
+    def realtime_append_to_h5(self,path, file_id='0', global_config=None):
         """
         Add to h5 file found at path
         
@@ -272,26 +272,28 @@ class TraceData(object):
         """
         all_columns = list(self.dataframe.columns)
         max_shape = (None,)
-        dtype = np.uint32
         h5f = h5py.File(path, 'a')
         for column in all_columns:
-
-            if column[-9:]=="ial_trace":
-                dtype = np.float32
+            dtype = np.float32
+            if column[-9:] == "ial_trace":
+                # dtype = np.float32
                 data=list([self.dataframe[column][0],])
-                max_shape = (None,None)
-            elif "acceleration" in column:
-                dtype = np.float32
-                data = np.asarray(self.dataframe[column],dtype=dtype)
+                max_shape = (None, None)
+            # elif "acceleration" in column:
+            #     # dtype = np.float32
+            #     data = np.asarray(self.dataframe[column], dtype=dtype)
+            elif "timestamp" in column:
+                dtype = np.uint32
+                data = np.asarray(self.dataframe[column], dtype=dtype)
             else:
-                data = np.asarray(self.dataframe[column],dtype=dtype)
+                data = np.asarray(self.dataframe[column], dtype=dtype)
             if column in h5f.keys():
                 ds = h5f[column]
                 ds.resize(ds.shape[0] + 1, axis = 0)
                 ds[-1:] = data
             else:
-                ds = h5f.create_dataset(column, chunks=True,data=data,
-                                        dtype=dtype, maxshape=max_shape,compression="gzip", compression_opts=9)
+                ds = h5f.create_dataset(column, chunks=True, data=data,
+                                        dtype=dtype, maxshape=max_shape, compression="gzip", compression_opts=9)
         #<config>
         configs_dict = {}
         if file_id in self._global_configs.keys():
