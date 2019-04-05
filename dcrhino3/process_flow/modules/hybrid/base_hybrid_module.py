@@ -64,6 +64,11 @@ class BaseHybridModule(BaseModule):
         if not self.can_create_columns:
             trace.dataframe = trace.dataframe[self.original_columns]
 
+        trace.add_applied_module(self.applied_module_string(self.args))
+
+        if self.output_to_file:
+            trace.save_to_h5(self.output_file_basepath(extension=".h5"))
+            
         return trace
 
     def split_trace_by_acor_file_id(self,trace):
