@@ -391,10 +391,10 @@ class GUI():
                 value += line_value.strip()
                 value_list.append(line_value.strip())
             try:
-                if isinstance(eval(value), dict):
-                    value = eval(value)
+                if isinstance(json.loads(value), dict):
+                    value = json.loads(value)
             except:
-                value = list([json.loads(x) for x in value_list])
+                value = list([x.replace("\"", "") for x in value_list])
             self.set_value(value)
         else:
             value = raw_value.strip()
