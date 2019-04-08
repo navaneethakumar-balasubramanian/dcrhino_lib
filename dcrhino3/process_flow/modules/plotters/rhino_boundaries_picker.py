@@ -69,7 +69,8 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
         RhinoPlotterModule.__init__(self, json, output_path, process_flow, order)
         self.id = "rhino_plotter_picker"
         self.default_args.update({
-            "component":"axial"
+            "component":"axial",
+            "ignore_picker" : "|process_flow.ignore_picker|"
         })
         self.panel = None
         self.fig = None
@@ -119,6 +120,8 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
 
         transformed_args = self.get_transformed_args(trace.first_global_config)
         if transformed_args.component not in self.components_to_process:
+            return trace
+        if transformed_args.ignore_picker is not None:
             return trace
 
         rhino_display = RhinoDisplay()
@@ -184,19 +187,26 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
 
         return trace
 
+    def save_vars(self):
+        self.set_prop_process(self.transformed_args.component + "_primary",
+                              [self.lines[0].y / 1000, self.lines[1].y / 1000])
+        self.set_prop_process(self.transformed_args.component + "_multiple_1",
+                              [self.lines[2].y / 1000, self.lines[3].y / 1000])
+        self.set_prop_process(self.transformed_args.component + "_multiple_2",
+                              [self.lines[4].y / 1000, self.lines[5].y / 1000])
+        self.set_prop_process(self.transformed_args.component + "_multiple_3",
+                              [self.lines[6].y / 1000, self.lines[7].y / 1000])
+
     def btreset(self,event):
         for line in self.lines:
             line.reset_to_default_values()
         plt.draw()
 
     def btnext(self, event):
-        print("continue")
-
-        self.set_prop_process(self.transformed_args.component + "_primary",[self.lines[0].y/1000,self.lines[1].y/1000])
-        self.set_prop_process(self.transformed_args.component + "_multiple_1", [self.lines[2].y/1000,self.lines[3].y/1000])
-        self.set_prop_process(self.transformed_args.component + "_multiple_2", [self.lines[4].y/1000,self.lines[5].y/1000])
-        self.set_prop_process(self.transformed_args.component + "_multiple_3", [self.lines[6].y/1000, self.lines[7].y/1000])
+        self.save_vars()
         self.close()
+
+
 
     def close(self):
         plt.close()

@@ -29,6 +29,8 @@ from dcrhino3.process_flow.process_flow import ProcessFlow
 #from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.helpers.general_helper_functions import init_logging
+import multiprocessing
+
 
 logger = init_logging(__name__)
 
@@ -39,10 +41,12 @@ def process_glob(process_json,glob_str,env_config_path="env_config.json", second
 
 
     process_flow = ProcessFlow()
+    manager = multiprocessing.Manager()
+    return_dict = manager.dict()
     h5_files_list = glob2.glob(glob_str)
 
     seconds_to_process = seconds_to_process
-    #seconds_to_process = 10
+    seconds_to_process = 100
 
     output_path = False
 
@@ -60,18 +64,21 @@ def process_glob(process_json,glob_str,env_config_path="env_config.json", second
                 if env_config.is_file_blacklisted(ffile) is False and file_in_file != '':
                     p = Process(target=process_flow.process_file,
                                 args=(process_json, file_path,
-                                      env_config, seconds_to_process))
+                                      env_config, seconds_to_process,return_dict))
                     p.start()
                     p.join()
+                    process_json = return_dict["process_json"]
 
 
         elif '.h5' in os.path.splitext(ffile)[1]:
             if env_config.is_file_blacklisted(ffile) is False:
                 p = Process(target=process_flow.process_file,
-                            args=(process_json, ffile, env_config, seconds_to_process))
+                            args=(process_json, ffile, env_config, seconds_to_process,return_dict))
                 p.start()
                 p.join()
                 # process_flow.process_file(process_json,file,env_config)
+                process_json = return_dict["process_json"]
+
 
 
 if __name__ == '__main__':
