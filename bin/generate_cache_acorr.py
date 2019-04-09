@@ -26,35 +26,35 @@ logger = init_logging(__name__)
 
 
 def generate_cache_acorr(mine_name):
-    
+
     envConfig = EnvConfig()
     holes_cached_folder = envConfig.get_hole_h5_interpolated_cache_folder(mine_name)
-    
+
     conn = envConfig.get_rhino_db_connection_from_mine_name(mine_name)
     mwd_helper = MWDHelper(envConfig)
     logger.info("Generating cache for mine: " + str(mine_name))
-    
-    
+
+
     #CFG_VERSION = 1 #we need to discuss cases when this could be different from 1
-    
+
     if conn is not False:
         db_helper = RhinoDBHelper(conn=conn)
         mwd_df = mwd_helper.get_rhino_mwd_from_mine_name(mine_name)
         files = db_helper.get_files_list()
         merger = MWDRhinoMerger(files,mwd_df)
         matches = merger.observed_blasthole_catalog
-        
+
         #pdb.set_trace()
-    
+
         for line in matches.itertuples():
-    
+
             h5_filename = str(line.bench_name) + "_" + str(line.pattern_name) + "_" + str(line.hole_name) + "_" + str(line.hole_id)+"_"+str(line.sensor_id)+"_"+str(line.digitizer_id) + ".h5"
 
-            
+
             h5_path = os.path.join(holes_cached_folder, h5_filename)
             temp_h5_path = h5_path.replace(".h5","temp.h5")
             acor_trace = TraceData()
-    
+
             if os.path.exists(h5_path) and os.path.isfile(h5_path):
                 #acor_trace.load_from_h5(h5_path)
                 #pdb.set_trace()
@@ -67,7 +67,7 @@ def generate_cache_acorr(mine_name):
                 files_ids = np.array(str(line.files_ids).split(','))
                 min_ts = int((hole_mwd['start_time'].astype(int)/1000000000).min())
                 max_ts = int((hole_mwd['start_time'].astype(int)/1000000000).max())
-    
+
                 acor_trace.load_from_db(db_helper, files_ids, min_ts, max_ts)
                 #pdb.set_trace()
                 acor_trace.dataframe = merger.merge_mwd_with_trace(hole_mwd,acor_trace)
@@ -79,7 +79,7 @@ def generate_cache_acorr(mine_name):
                 #reloaded_traces = TraceData()
                 #reloaded_traces.load_from_h5(temp)
 
-    
+
 if __name__ == '__main__':
     use_argparse = True
     if use_argparse:
