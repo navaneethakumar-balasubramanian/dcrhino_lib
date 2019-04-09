@@ -46,7 +46,7 @@ def process_glob(process_json,glob_str,env_config_path="env_config.json", second
     h5_files_list = glob2.glob(glob_str)
 
     seconds_to_process = seconds_to_process
-    seconds_to_process = 100
+    #seconds_to_process = 100
 
     output_path = False
 
@@ -88,12 +88,15 @@ if __name__ == '__main__':
         argparser.add_argument('-f', '--flow-path', help="JSON File Path", required=True)
         argparser.add_argument('-env', '--env-path', help="ENV CONFIG File Path", default="env_config.json")
         argparser.add_argument('-tid', '--task-id', help="Task ID", default=False)
+        argparser.add_argument('-stp', '--seconds-to-process', help="Seconds to process", default=False)
+
         argparser.add_argument("h5_path", metavar="path", type=str,
         help="Path to files to be processed; enclose in quotes, accepts * as wildcard for directories or filenames" )
         args = argparser.parse_args()
         process_flow_path = args.flow_path
         h5_path = args.h5_path
         env_path = args.env_path
+        seconds_to_process = args.seconds_to_process
     else:
         home = os.path.expanduser('~/')
         process_flow_dir = os.path.join(home, 'software/datacloud/dcrhino_lib/bin/process_flows')
@@ -101,8 +104,9 @@ if __name__ == '__main__':
         process_flow_path = os.path.join(process_flow_dir, process_flow_json_filehandle)
         h5_path = os.path.join(home, '.cache/datacloud/line_creek/acorr/23831_5208_5208.h5')
         env_path = "env_config.json"
+        seconds_to_process = False
 
     with open(process_flow_path) as f:
         process_json = json.load(f)
 
-    process_glob(process_json,h5_path,env_path)
+    process_glob(process_json,h5_path,env_path,seconds_to_process)
