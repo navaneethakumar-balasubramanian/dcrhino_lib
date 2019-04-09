@@ -257,10 +257,10 @@ class ManualTimeWindows(object):
                                                 search_feature='zero_crossing')
         self.time_window['multiple_2'] = SearchWindow(lower_bound=tmp['multiple_2'][0],
                                                     upper_bound=tmp['multiple_2'][1],
-                                                    window_label=tmp['multiple_2'][0],
+                                                    window_label='multiple_2',
                                                 search_feature='minimum')
         self.time_window['multiple_3'] = SearchWindow(lower_bound=tmp['multiple_3'][0],
-                                                    upper_bound=tmp['multiple_3'][0],
+                                                    upper_bound=tmp['multiple_3'][1],
                                                     window_label='multiple_3',
                                                 search_feature='zero_crossing')
 

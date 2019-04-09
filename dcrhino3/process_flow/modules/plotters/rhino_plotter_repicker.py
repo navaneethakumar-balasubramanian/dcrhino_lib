@@ -13,12 +13,16 @@ class RhinoPlotterRepickerModule(RhinoPlotterModule):
         self.id = "rhino_plotter_repicker"
         self.default_args.update({
             "show": True,
-            "picker_module_idx":3
+            "picker_module_idx":3,
+            "ignore_picker": "|process_flow.ignore_picker|"
         })
 
     def process_trace(self, trace):
+
         rhino_display = RhinoDisplay()
         transformed_args = self.get_transformed_args(trace.first_global_config)
+        if transformed_args.ignore_picker is not None:
+            return trace
         self.picker_module_idx = transformed_args.picker_module_idx
         rhino_display.padding_left = transformed_args.padding_left
         rhino_display.padding_right = transformed_args.padding_right
@@ -52,10 +56,15 @@ class RhinoPlotterRepickerModule(RhinoPlotterModule):
                 else:
                     manual_time_windows = panel.manual_time_windows
 
+                if "upper_num_ms" not in vars(panel):
+                    upper_num_ms = 35
+                else:
+                    upper_num_ms = panel.upper_num_ms
+
                 if panel.component in self.components_to_process:
                     panel = Heatmap(trace_data=trace, component=panel.component,
                                     wavelet_windows_to_show=wavelet_windows_to_show, curves=curves,
-                                    manual_time_windows=manual_time_windows)
+                                    manual_time_windows=manual_time_windows, upper_num_ms=upper_num_ms)
                     panels.append(panel)
                 else:
                     logger.warn("Ignored heatmap panel, this component is not on components_to_process " + str(
@@ -88,6 +97,7 @@ class RhinoPlotterRepickerModule(RhinoPlotterModule):
         btrepick.on_clicked(self.repick)
         axignorenext = plt.axes([0.05, 0.03, 0.2, 0.08])
         bignore = Button(axignorenext, 'Save and use these windows on next picks')
+        bignore.on_clicked(self.btnextandignorenexts)
 
         plt.show(block=True)
 
@@ -95,6 +105,10 @@ class RhinoPlotterRepickerModule(RhinoPlotterModule):
 
     def repick(self,event):
         self.process_flow.actual_module = self.picker_module_idx-1
+        plt.close()
+
+    def btnextandignorenexts(self, event):
+        self.set_prop_process("ignore_picker",True)
         plt.close()
 
     def save(self, event):

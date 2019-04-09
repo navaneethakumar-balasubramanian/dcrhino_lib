@@ -181,8 +181,10 @@ class ProcessFlow:
         return output_trace
 
 
-    def process_file(self,process_json, acorr_h5_file_path, env_config = False, seconds_to_process = False):
+    def process_file(self,process_json, acorr_h5_file_path, env_config = False, seconds_to_process = False,return_dict = dict()):
         logger.info("PROCESSING FILE:" + str(acorr_h5_file_path))
+
+
         acorr_trace = TraceData()
         acorr_trace.load_from_h5(acorr_h5_file_path)
         if seconds_to_process is not False:
@@ -198,4 +200,6 @@ class ProcessFlow:
         self.set_process_flow(process_json)
 
         acorr_trace = self.process(acorr_trace)
-        return acorr_trace
+        return_dict["acorr_trace"] = acorr_trace
+        return_dict["process_json"] = process_json
+        return acorr_trace, self.process_json

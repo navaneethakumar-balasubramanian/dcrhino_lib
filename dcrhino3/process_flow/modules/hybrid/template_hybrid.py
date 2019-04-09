@@ -38,11 +38,14 @@ class TemplateModuleHybrid(BaseHybridModule):
         for component_id in self.components_to_process:
             data_array = splitted_traces.component_as_array(component_id)
             n_traces, n_samples_per_trace = data_array.shape
-
+            #my_feature_array = np.full(n_traces, np.nan)
             for i_trace in range(n_traces):
                 trace_data = data_array[i_trace,:] + 1.0
                 trace_data = example_function(trace_data)
                 data_array[i_trace,:] = trace_data
+                #my_feature = feature_extract(data_array, metadata)
+                #my_feature_array[i_trace] = my_feature
 
             splitted_traces.assign_component_from_array(component_id, data_array)
+            #splitted_traces.dataframe['my_feature_label'] = my_feature_array
         return splitted_traces

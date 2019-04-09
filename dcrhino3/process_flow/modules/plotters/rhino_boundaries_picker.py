@@ -35,7 +35,7 @@ class DraggableLine(object):
         self.boundaries = boundaries
 
         self.line = ax.plot(self.x_list, self.y_list, color=self.original_color, linestyle='--', linewidth=2)[0]
-        self.line_label = self.ax.text(x.max() *1.001, self.y, self.label, fontsize=10, va="center",horizontalalignment='left',bbox=dict(boxstyle="round",
+        self.line_label = self.ax.text(x[0], self.y, self.label, fontsize=10, va="center",horizontalalignment='left',bbox=dict(boxstyle="round",
                    ec=(1., 0.5, 0.5),
                    fc=(1., 0.8, 0.8),
                    ))
@@ -69,7 +69,10 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
         RhinoPlotterModule.__init__(self, json, output_path, process_flow, order)
         self.id = "rhino_plotter_picker"
         self.default_args.update({
-            "component":"axial"
+            "component":"axial",
+            "ignore_picker" : "|process_flow.ignore_picker|",
+            "trace_downsample_factor": 5,
+            "upper_num_ms" :35
         })
         self.panel = None
         self.fig = None
@@ -88,7 +91,7 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
         .. :todo review if we really want to use units of ms here
         """
         using_ms = True
-        if "vars" in self.process_flow.process_json.keys():
+        if "vars" in self.process_flow.process_json.keys() and component in self.process_flow.process_json["vars"].keys():
             vars = self.process_flow.process_json["vars"]
             self.lines_default_values[0] = vars[component + "_primary"][0]
             self.lines_default_values[1] = vars[component + "_primary"][1]
@@ -120,6 +123,8 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
         transformed_args = self.get_transformed_args(trace.first_global_config)
         if transformed_args.component not in self.components_to_process:
             return trace
+        if transformed_args.ignore_picker is not None:
+            return trace
 
         rhino_display = RhinoDisplay()
         default_time_windows = get_default_time_windows(transformed_args)
@@ -131,7 +136,7 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
         panels = []
         if transformed_args.component in self.components_to_process:
             panel = Heatmap(trace_data=trace, component=transformed_args.component,
-                                wavelet_windows_to_show=[],trace_downsample_factor = trace_downsample_factor)
+                                wavelet_windows_to_show=[],trace_downsample_factor = trace_downsample_factor, upper_num_ms=transformed_args.upper_num_ms)
             panels.append(panel)
             self.panel = panel
         else:
@@ -184,19 +189,26 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
 
         return trace
 
+    def save_vars(self):
+        self.set_prop_process(self.transformed_args.component + "_primary",
+                              [self.lines[0].y / 1000, self.lines[1].y / 1000])
+        self.set_prop_process(self.transformed_args.component + "_multiple_1",
+                              [self.lines[2].y / 1000, self.lines[3].y / 1000])
+        self.set_prop_process(self.transformed_args.component + "_multiple_2",
+                              [self.lines[4].y / 1000, self.lines[5].y / 1000])
+        self.set_prop_process(self.transformed_args.component + "_multiple_3",
+                              [self.lines[6].y / 1000, self.lines[7].y / 1000])
+
     def btreset(self,event):
         for line in self.lines:
             line.reset_to_default_values()
         plt.draw()
 
     def btnext(self, event):
-        print("continue")
-
-        self.set_prop_process(self.transformed_args.component + "_primary",[self.lines[0].y/1000,self.lines[1].y/1000])
-        self.set_prop_process(self.transformed_args.component + "_multiple_1", [self.lines[2].y/1000,self.lines[3].y/1000])
-        self.set_prop_process(self.transformed_args.component + "_multiple_2", [self.lines[4].y/1000,self.lines[5].y/1000])
-        self.set_prop_process(self.transformed_args.component + "_multiple_3", [self.lines[6].y/1000, self.lines[7].y/1000])
+        self.save_vars()
         self.close()
+
+
 
     def close(self):
         plt.close()

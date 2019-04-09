@@ -1,6 +1,78 @@
 """
 Author kkappler
 
+Example json control block:
+
+    {
+        "type": "j2",
+        "output_to_file": true,
+        "args": {
+          "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
+          "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
+          "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
+          "sensor_saturation_g": "|global_config.sensor_saturation_g|",
+          "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
+          "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|",
+          "time_picks" : {
+              "axial": {
+                  "primary": "maximum",
+                  "multiple_1": "zero_crossing",
+                  "multiple_2": "minimum",
+                  "multiple_3": "zero_crossing"
+              },
+              "tangential": {
+                "primary": "maximum",
+                  "multiple_1": "zero_crossing",
+                  "multiple_2": "minimum",
+                  "multiple_3": "zero_crossing"
+              }
+              },
+          "manual_time_windows" : {
+              "axial": {
+                  "primary": "|process_flow.axial_primary|",
+                  "multiple_1": "|process_flow.axial_multiple_1|",
+                  "multiple_2": "|process_flow.axial_multiple_2|",
+                  "multiple_3": "|process_flow.axial_multiple_3|"
+              },
+              "tangential": {
+                "primary": [-0.002, 0.002],
+                "multiple_1": [0.013, 0.017],
+                "multiple_2": [0.030, 0.034],
+                "multiple_3": [0.044, 0.055]
+              }
+              },
+        "amplitude_picks" : {
+            "axial":{
+            "primary": "integrated_absolute_amplitude",
+            "multiple_1": "integrated_absolute_amplitude",
+            "multiple_2": "integrated_absolute_amplitude",
+            "multiple_3": "integrated_absolute_amplitude"
+        },
+            "tangential":{
+            "primary": "integrated_absolute_amplitude",
+            "multiple_1": "integrated_absolute_amplitude",
+            "multiple_2": "integrated_absolute_amplitude",
+            "multiple_3": "integrated_absolute_amplitude"
+        }
+      },
+            "amplitude_half_widths" : {
+            "axial":{
+            "primary": 0.00105,
+            "multiple_1": 0.00105,
+            "multiple_2": 0.00105,
+            "multiple_3": 0.00105
+        },
+            "tangential":{
+            "primary": 0.00105,
+            "multiple_1": 0.00105,
+            "multiple_2": 0.00105,
+            "multiple_3": 0.00105
+        }
+      }
+    }
+    },
+
+
 """
 #import matplotlib.pyplot as plt
 import numpy as np
@@ -11,11 +83,10 @@ from feature_windowing import AmplitudeWindows
 from feature_windowing import ManualTimeWindows
 #from dcrhino3.feature_extraction.intermediate_derived_features import IntermediateFeatureDeriver
 from dcrhino3.feature_extraction.intermediate_derived_features_j2 import IntermediateFeatureDeriver
-from dcrhino3.helpers.general_helper_functions import flatten
+#from dcrhino3.helpers.general_helper_functions import flatten
 from dcrhino3.helpers.general_helper_functions import init_logging
-from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
+from dcrhino3.signal_processing.time_picker import TimePicker
 from dcrhino3.signal_processing.phase_rotation import rotate_phase
-#from dcrhino3.physics.util import get_expected_multiple_times
 
 #from feature_extractor_j1a import calculate_boolean_features
 
@@ -32,13 +103,21 @@ class FeatureExtractorJ2(object):
         .. todo:: window_boundaries time should just have a .to_index() method
         .. note:: given this is run component-by-component we can simplify window_boundaries
             to a simple dict {} rather than having 'axial', 'tangential',
+        .. todo: access sampling_rate from process_flow
+        .. todo: merge extract_max_time, extract_min_time, extract_zero_crossing_time
+            to get a single function that takes the "time_pick" argument.  Call it
+            pick_time(start, end, pick_type).  Also, these can be methods of SymmetricTrace()
         """
+        logger.warning("Without a hybrid module or at least the ability\
+                       to add/read_from the process_flow we need this hokey, \
+                       error prone handling of sampling rate below")
         try:
             self.sampling_rate = transformed_args.upsample_sampling_rate
-        #pdb.set_trace()
         except AttributeError:
             self.sampling_rate = transformed_args.output_sampling_rate
-        self.trace = SymmetricTrace(trimmed_trace, self.sampling_rate, component_id=component_id)
+
+        #self.trace = SymmetricTrace(trimmed_trace, self.sampling_rate, component_id=component_id)
+        self.trace = TimePicker(trimmed_trace, self.sampling_rate, component_id=component_id)
         self.transformed_args = transformed_args
         manual_windows = getattr(transformed_args.manual_time_windows, component_id)
         time_picks = getattr(transformed_args.time_picks, component_id)
@@ -53,47 +132,7 @@ class FeatureExtractorJ2(object):
                                                               amplitude_picks)
         #</fix this up>
 
-    def extract_max_time(self, window_first_time, window_final_time):
-        cond1 = self.trace.time_vector >= window_first_time
-        cond2 = self.trace.time_vector <  window_final_time
-        active_indices = np.where(cond1 & cond2)[0]
-        window_time = self.trace.time_vector[active_indices].copy()
-        window_data = self.trace.data[active_indices].copy()
-        primary_max_time_index = np.argmax(window_data)
-        primary_max_time = window_time[primary_max_time_index]
-        return primary_max_time
 
-    def extract_zero_crossing_time(self, window_first_time, window_final_time):
-        """
-        total bonehead way to do this - just for POC.  How to do for real:
-            probably do a LPF, then walk out from ZX until you find nearest
-            +to- polarity change.
-        Recenter to this value and sharpen (narrow) the window
-        """
-        cond1 = self.trace.time_vector >= window_first_time
-        cond2 = self.trace.time_vector <  window_final_time
-        active_indices = np.where(cond1 & cond2)[0]
-        window_time = self.trace.time_vector[active_indices].copy()
-        window_data = self.trace.data[active_indices].copy()
-
-        zero_crossing_index = np.argmin(np.abs(window_data))
-        zero_crossing_time = window_time[zero_crossing_index]
-        return zero_crossing_time
-
-    def extract_min_time(self, window_first_time, window_final_time):
-        """
-        yes this is a copy of extract_primary_max_time() with a -1.0 multiplier
-        """
-        cond1 = self.trace.time_vector >= window_first_time
-        cond2 = self.trace.time_vector <  window_final_time
-        active_indices = np.where(cond1 & cond2)[0]
-        window_time = self.trace.time_vector[active_indices].copy()
-        window_data = self.trace.data[active_indices].copy()
-        #pdb.set_trace()
-        window_data *= -1.0 #flip trough to a peak
-        result_time_index = np.argmax(window_data)
-        result_time = window_time[result_time_index]
-        return result_time
 
     def extract_average_absolute_amplitude(self, time_center, window_half_width, rotate_angle=False):
         trace_data = self.trace.data.copy()
@@ -132,15 +171,11 @@ class FeatureExtractorJ2(object):
                              I refuse to work with this ... ')
                 final = start+0.004
             #</HACK>
-            if search_feature=='maximum':
-                result = self.extract_max_time(start, final)
-            elif search_feature=='zero_crossing':
-                result = self.extract_zero_crossing_time(start, final)
-            elif search_feature=='minimum':
-                result = self.extract_min_time(start, final)
-            else:
-                print('logger.warning feature {} not yet supported'.format(search_feature))
-                result = None
+#            if wavelet_id=='multiple_1':
+#                result = self.trace.extract_time_pick(start, final,
+#                                                      search_feature, info='p2n')
+            result = self.trace.extract_time_pick(start, final, search_feature)
+
             output_label = '{}-{}-{}_time'.format(self.trace.component_id, wavelet_id, search_feature)
             extracted_features_dict[output_label] = result
 

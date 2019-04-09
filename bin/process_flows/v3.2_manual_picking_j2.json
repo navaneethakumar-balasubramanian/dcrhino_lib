@@ -1,7 +1,7 @@
 {
  "id": "v3.2_manual_picker_j2",
  "output_to_file":true,
- "components_to_process":["axial"],
+ "components_to_process":["axial","tangential"],
   "modules": [
    {
     "type": "columns_to_df",
@@ -76,7 +76,8 @@
          "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
           "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
           "window_widths":"|global_config.window_widths",
-         "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|"
+         "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|",
+         "upper_num_ms": 100
        }
      },
 
@@ -112,10 +113,10 @@
                   "multiple_3": "|process_flow.axial_multiple_3|"
               },
               "tangential": {
-                "primary": [-0.002, 0.002],
-                "multiple_1": [0.013, 0.017],
-                "multiple_2": [0.030, 0.034],
-                "multiple_3": [0.044, 0.055]
+                "primary": "|process_flow.tangential_primary|",
+                  "multiple_1": "|process_flow.tangential_multiple_1|",
+                  "multiple_2": "|process_flow.tangential_multiple_2|",
+                  "multiple_3": "|process_flow.tangential_multiple_3|"
               }
               },
         "amplitude_picks" : {
@@ -181,9 +182,95 @@
                   "multiple_3": "|process_flow.axial_multiple_3|"
               }
               }
+           },
+           {
+              "type": "curves",
+              "curves": [
+                {"column_label":"J2-tangential-primary-integrated_absolute_amplitude",       "color": "red",  "spine_side": "left",   "scale":"current" , "space": 0},
+                {"column_label":"J2-tangential-reflection_coefficient_1",    "color": "blue", "spine_side": "right",  "scale":"new",  "space": 0},
+                {"column_label": "J2-tangential-delay_1",                    "color": "lime", "spine_side": "right",  "scale":"new",  "space": 60}
+              ]
+            },
+           {
+             "type": "heatmap",
+             "component": "tangential",
+             "wavelet_windows_to_show": ["primary", "multiple_1", "multiple_2", "multiple_3"],
+             "upper_num_ms": 100,
+             "curves": [
+               {"column_label":"J2-tangential-primary-maximum_time","formula":"data*1000", "label": "primary Max", "linewidth": 2 , "color": "#FFFFFF"},
+               {"column_label":"J2-tangential-multiple_1-zero_crossing_time","formula":"data*1000", "label": "M1 Zx", "linewidth": 2 , "color": "#FFFFFF"},
+               {"column_label":"J2-tangential-multiple_2-minimum_time","formula":"data*1000", "label": "M2 Min", "linewidth": 2 , "color": "#FFFFFF"},
+               {"column_label":"J2-tangential-multiple_3-zero_crossing_time","formula":"data*1000", "label": "M3 Zx", "linewidth": 2 , "color": "#FFFFFF"}
+             ],
+             "manual_time_windows" : {
+              "tangential": {
+                  "primary": "|process_flow.tangential_primary|",
+                  "multiple_1": "|process_flow.tangential_multiple_1|",
+                  "multiple_2": "|process_flow.tangential_multiple_2|",
+                  "multiple_3": "|process_flow.tangential_multiple_3|"
+              }
+              }
            }
          ]
        }
-     }
+     },
+    {
+        "type": "binning",
+        "output_to_file": false,
+        "args": {
+          "interval_in_meters": 0.05
+        }
+      },
+      {
+        "type": "rhino_physics",
+        "output_to_file": true,
+        "args": {
+          "recipe_to_use": "J2"
+        }
+      },
+      {
+        "type": "rhino_plotter",
+        "output_to_file": true,
+        "args":{
+          "panels": [
+            {
+              "type": "curves",
+              "curves": [
+                "a_density"
+              ]
+            },
+            {
+              "type": "curves",
+              "curves": [
+                "a_velocity"
+              ]
+            },
+            {
+              "type": "curves",
+              "curves": [
+                "a_delay"
+              ]
+            },
+            {
+              "type": "curves",
+              "curves": [
+                "a_modulus"
+              ]
+            },
+            {
+              "type": "curves",
+              "curves": [
+                "a_ratio"
+              ]
+            },
+            {
+              "type": "curves",
+              "curves": [
+                "a_reflection_coef"
+              ]
+            }
+          ]
+        }
+      }
   ]
 }

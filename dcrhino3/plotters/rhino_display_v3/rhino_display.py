@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 #import os
 import pdb
 
-font_size = 11
+font_size = 9
 params = {
         'legend.fontsize': font_size,
          'axes.labelsize': font_size,

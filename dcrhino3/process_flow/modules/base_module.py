@@ -83,7 +83,10 @@ class BaseModule(object):
                 transformed[key] = getattr(global_config, gc_var_name)
             elif (type(val) == unicode or type(val) == str) and "|process_flow." in str(val):
                 gc_var_name = val.replace("|","").replace("process_flow.","")
-                transformed[key] = self.process_flow.process_json["vars"][gc_var_name]
+                if "vars" in self.process_flow.process_json.keys() and gc_var_name in self.process_flow.process_json["vars"].keys():
+                    transformed[key] = self.process_flow.process_json["vars"][gc_var_name]
+                else :
+                    transformed[key] = None
             else:
                 transformed[key] = val
 
