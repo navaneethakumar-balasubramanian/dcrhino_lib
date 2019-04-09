@@ -1,7 +1,7 @@
 {
  "id": "v3.2_manual_picker_j2",
  "output_to_file":true,
- "components_to_process":["axial","tangential"],
+ "components_to_process":["axial"],
   "modules": [
    {
     "type": "columns_to_df",
@@ -64,7 +64,7 @@
          "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
           "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
           "window_widths":"|global_config.window_widths",
-         "trace_downsample_factor": 10
+         "trace_downsample_factor": 2
        }
      },
       {
