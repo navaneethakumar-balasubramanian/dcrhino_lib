@@ -575,7 +575,7 @@ class GUI():
             self.tree.item(id, open=open_all)
 
     def get_data_path(self):
-        dir_name = tkFileDialog.askdirectory()
+        dir_name = os.path.join(tkFileDialog.askdirectory(),"*")
         self.data_path.delete(0, 'end')
         self.data_path.insert(0, dir_name)
         self.data_path.xview_moveto(1)
@@ -598,9 +598,11 @@ class GUI():
                     seconds_to_process = int(str(self.seconds_to_process.get()))
                 # p = Process(target=process_glob, args=(self.json, self.glob_str))
                 # process_glob(self.json, self.glob_str, seconds_to_process=seconds_to_process)
-                cmd = "python {} -f {} {}".format(os.path.abspath('process_flow.py'), self.json_path, self.glob_str)
+                cmd = "python {} -f {} '{}'".format(os.path.abspath('process_flow.py'), self.json_path, self.glob_str)
                 print cmd
                 p = Popen(cmd, shell=True)
+                while p.poll() is None:
+                    time.sleep(1)
                 tkMessageBox.showinfo("Processing Done", "Processing Done in {} sec".format(time.time()-t0))
             else:
                 tkMessageBox.showinfo("Unable to Process", "Please make sure JSON file is loaded, modifications are "
