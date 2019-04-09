@@ -596,9 +596,11 @@ class GUI():
                 seconds_to_process = False
                 if str(self.seconds_to_process.get()) != "":
                     seconds_to_process = int(str(self.seconds_to_process.get()))
-                # p = Process(target=process_glob, args=(self.json, self.glob_str))
-                # process_glob(self.json, self.glob_str, seconds_to_process=seconds_to_process)
-                cmd = "python {} -f {} '{}'".format(os.path.abspath('process_flow.py'), self.json_path, self.glob_str)
+                    cmd = "python {} -f {} -stp {} '{}'".format(os.path.abspath('process_flow.py'), self.json_path,
+                                                                seconds_to_process, self.glob_str)
+                else:
+                    cmd = "python {} -f {} '{}'".format(os.path.abspath('process_flow.py'), self.json_path,
+                                                        self.glob_str)
                 print cmd
                 p = Popen(cmd, shell=True)
                 while p.poll() is None:
