@@ -29,7 +29,7 @@ class BandPassFilterModuleHybrid(BaseHybridModule):
 
     def __init__(self, json, output_path,process_flow,order):
         BaseHybridModule.__init__(self, json, output_path,process_flow,order)
-        self.id = "band_pass_filter"
+        self.id = "band_pass_filter_hybrid"
 
     def process_splitted_trace(self, splitted_traces):
         """
