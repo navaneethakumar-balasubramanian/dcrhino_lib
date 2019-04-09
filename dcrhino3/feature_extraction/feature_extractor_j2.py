@@ -1,6 +1,78 @@
 """
 Author kkappler
 
+Example json control block:
+
+    {
+        "type": "j2",
+        "output_to_file": true,
+        "args": {
+          "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
+          "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
+          "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
+          "sensor_saturation_g": "|global_config.sensor_saturation_g|",
+          "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
+          "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|",
+          "time_picks" : {
+              "axial": {
+                  "primary": "maximum",
+                  "multiple_1": "zero_crossing",
+                  "multiple_2": "minimum",
+                  "multiple_3": "zero_crossing"
+              },
+              "tangential": {
+                "primary": "maximum",
+                  "multiple_1": "zero_crossing",
+                  "multiple_2": "minimum",
+                  "multiple_3": "zero_crossing"
+              }
+              },
+          "manual_time_windows" : {
+              "axial": {
+                  "primary": "|process_flow.axial_primary|",
+                  "multiple_1": "|process_flow.axial_multiple_1|",
+                  "multiple_2": "|process_flow.axial_multiple_2|",
+                  "multiple_3": "|process_flow.axial_multiple_3|"
+              },
+              "tangential": {
+                "primary": [-0.002, 0.002],
+                "multiple_1": [0.013, 0.017],
+                "multiple_2": [0.030, 0.034],
+                "multiple_3": [0.044, 0.055]
+              }
+              },
+        "amplitude_picks" : {
+            "axial":{
+            "primary": "integrated_absolute_amplitude",
+            "multiple_1": "integrated_absolute_amplitude",
+            "multiple_2": "integrated_absolute_amplitude",
+            "multiple_3": "integrated_absolute_amplitude"
+        },
+            "tangential":{
+            "primary": "integrated_absolute_amplitude",
+            "multiple_1": "integrated_absolute_amplitude",
+            "multiple_2": "integrated_absolute_amplitude",
+            "multiple_3": "integrated_absolute_amplitude"
+        }
+      },
+            "amplitude_half_widths" : {
+            "axial":{
+            "primary": 0.00105,
+            "multiple_1": 0.00105,
+            "multiple_2": 0.00105,
+            "multiple_3": 0.00105
+        },
+            "tangential":{
+            "primary": 0.00105,
+            "multiple_1": 0.00105,
+            "multiple_2": 0.00105,
+            "multiple_3": 0.00105
+        }
+      }
+    }
+    },
+
+
 """
 #import matplotlib.pyplot as plt
 import numpy as np
