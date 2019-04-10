@@ -51,11 +51,10 @@ class RhinoDisplay(object):
         n_panels = len(self.panels)
         fig, ax = plt.subplots(n_panels, sharex=False, figsize=self.dc_plot_lim())
 
-        padding_leg = 0.05
         if legend:
-            padding_leg = 0.2
+            self.padding_bottom = 0.2
 
-        plt.subplots_adjust(left=0.05 + self.padding_left,right=0.95 - self.padding_right,bottom=padding_leg + self.padding_bottom,top=0.9 - self.padding_top ,hspace = 0.2)
+        plt.subplots_adjust(left=0.05 + self.padding_left,right=0.95 - self.padding_right,bottom=self.padding_bottom,top=0.9 - self.padding_top ,hspace = 0.2)
         if title:
             fig.text(0.01, 0.99, title[0],verticalalignment='top')
             fig.text(0.5, 0.99, title[1], verticalalignment='top',horizontalalignment="center")
@@ -83,10 +82,13 @@ class RhinoDisplay(object):
                     new_leg_list.append(line)
                     listed.append(line._label)
 
+
             f_leg.remove()
+            transfig = fig.transFigure
 
             s_leg = plt.legend(iter(new_leg_list), listed,
-                        bbox_to_anchor=(0.5, -1.75),  # Position of legend
+                        bbox_transform=transfig,
+                        bbox_to_anchor=(0.5, 0.1),  # Position of legend
                         borderaxespad=0.1,  # Small spacing around legend box
                         title="Curve Legend",  # Title for the legend
                         facecolor="darkgrey",
