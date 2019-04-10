@@ -70,7 +70,7 @@
         "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
         "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
         "window_widths": "|global_config.window_widths",
-        "trace_downsample_factor": 2
+        "trace_downsample_factor": 10
       }
     },
     {
@@ -83,7 +83,8 @@
         "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
         "window_widths": "|global_config.window_widths",
         "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|",
-        "upper_num_ms": 60
+        "upper_num_ms": 60,
+        "trace_downsample_factor": 10
       }
     },
     {
@@ -323,7 +324,7 @@
       "output_to_file": true,
       "args": {
         "padding_right": 0.03,
-        "show": true,
+        "show": false,
         "legend": true,
         "panels": [
           {
