@@ -45,7 +45,7 @@ class FakeHoleMwd(object):
             line['start_depth'] = self.start_depth + (i * self.depth_resolution)
             line['end_depth'] = self.start_depth + ((i+1) * self.depth_resolution)
             line['collar_elevation'] = self.collar_elevation
-            line['computed_elevation'] = self.collar_elevation + ((line['end_depth'] - line['start_depth'])/2) + line['start_depth']
+            line['computed_elevation'] = self.collar_elevation - (((line['end_depth'] - line['start_depth'])/2) + line['start_depth'])
             line['mse'] = np.random.randint(10,20)
 
             if i == 0:
