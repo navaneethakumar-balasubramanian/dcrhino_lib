@@ -30,7 +30,8 @@ class RhinoPlotterModule(BaseModule):
             "mine_name": "|global_config.mine_name|",
             "padding_right": 0,
             "padding_left": 0,
-            "show": False
+            "show": False,
+            "legend":False
         }
 
     def get_plot_title(self,transformed_args, trace):
@@ -84,9 +85,14 @@ class RhinoPlotterModule(BaseModule):
                 else:
                     manual_time_windows = panel.manual_time_windows
 
+                if "upper_num_ms" not in vars(panel):
+                    upper_num_ms = 35
+                else:
+                    upper_num_ms = panel.upper_num_ms
+
                 if panel.component in self.components_to_process:
                     panel = Heatmap(trace_data=trace, component=panel.component,
-                                        wavelet_windows_to_show=wavelet_windows_to_show ,curves=curves,manual_time_windows=manual_time_windows)
+                                        wavelet_windows_to_show=wavelet_windows_to_show ,curves=curves,manual_time_windows=manual_time_windows,upper_num_ms=upper_num_ms)
                     panels.append(panel)
                 else:
                     logger.warn("Ignored heatmap panel, this component is not on components_to_process " + str(panel.component))
@@ -98,7 +104,7 @@ class RhinoPlotterModule(BaseModule):
         if self.output_to_file:
             output_path = self.output_file_basepath(extension=".png")
         plot_title = self.get_plot_title(transformed_args,trace)
-        rhino_display.plot(output_path,title=plot_title,show=transformed_args.show)
+        rhino_display.plot(output_path,title=plot_title,show=transformed_args.show, legend=transformed_args.legend)
         return trace
 
 

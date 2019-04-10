@@ -82,7 +82,7 @@ class RhinoPlotterRepickerModule(RhinoPlotterModule):
         #bnext.on_clicked(self.btnext)
         #breset.on_clicked(self.btreset)
 
-        rhino_display.padding_bottom = 0.1
+        rhino_display.padding_bottom = 0.15
         output_path = False
         if self.output_to_file:
             output_path = self.output_file_basepath(extension=".png")

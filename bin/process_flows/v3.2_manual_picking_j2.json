@@ -2,7 +2,8 @@
   "id": "v3.2_manual_picker_j2",
   "output_to_file": true,
   "components_to_process": [
-    "axial"
+    "axial",
+    "tangential"
   ],
   "modules": [
     {
@@ -82,7 +83,7 @@
         "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
         "window_widths": "|global_config.window_widths",
         "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|",
-        "upper_num_ms": 100
+        "upper_num_ms": 60
       }
     },
     {
@@ -168,6 +169,7 @@
             "curves": [
               {
                 "column_label": "J2-axial-primary-integrated_absolute_amplitude",
+                "label": "J2-ax-prim-int-abs-amp",
                 "color": "red",
                 "spine_side": "left",
                 "scale": "current",
@@ -242,6 +244,7 @@
             "curves": [
               {
                 "column_label": "J2-tangential-primary-integrated_absolute_amplitude",
+                "label": "J2-tang-prim-int-abs-amp",
                 "color": "red",
                 "spine_side": "left",
                 "scale": "current",
@@ -272,7 +275,7 @@
               "multiple_2",
               "multiple_3"
             ],
-            "upper_num_ms": 100,
+            "upper_num_ms": 60,
             "curves": [
               {
                 "column_label": "J2-tangential-primary-maximum_time",
@@ -321,12 +324,14 @@
       "args": {
         "padding_right": 0.03,
         "show": true,
+        "legend": true,
         "panels": [
           {
             "type": "curves",
             "curves": [
               {
                 "column_label": "J2-axial-primary-integrated_absolute_amplitude",
+                "label": "J2-ax-prim-int-abs-amp",
                 "color": "red",
                 "spine_side": "left",
                 "scale": "current",
@@ -401,6 +406,7 @@
             "curves": [
               {
                 "column_label": "J2-tangential-primary-integrated_absolute_amplitude",
+                "label": "J2-tang-prim-int-abs-amp",
                 "color": "red",
                 "spine_side": "left",
                 "scale": "current",
@@ -431,7 +437,7 @@
               "multiple_2",
               "multiple_3"
             ],
-            "upper_num_ms": 100,
+            "upper_num_ms": 60,
             "curves": [
               {
                 "column_label": "J2-tangential-primary-maximum_time",
