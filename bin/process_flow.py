@@ -96,7 +96,10 @@ if __name__ == '__main__':
         process_flow_path = args.flow_path
         h5_path = args.h5_path
         env_path = args.env_path
-        seconds_to_process = int(args.seconds_to_process)
+        if args.seconds_to_process is not False:
+            seconds_to_process = int(args.seconds_to_process)
+        else:
+            seconds_to_process = args.seconds_to_process
     else:
         home = os.path.expanduser('~/')
         process_flow_dir = os.path.join(home, 'software/datacloud/dcrhino_lib/bin/process_flows')
