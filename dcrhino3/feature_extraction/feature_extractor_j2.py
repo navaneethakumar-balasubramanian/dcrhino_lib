@@ -108,9 +108,7 @@ class FeatureExtractorJ2(object):
             to get a single function that takes the "time_pick" argument.  Call it
             pick_time(start, end, pick_type).  Also, these can be methods of SymmetricTrace()
         """
-        logger.warning("Without a hybrid module or at least the ability\
-                       to add/read_from the process_flow we need this hokey, \
-                       error prone handling of sampling rate below")
+
         try:
             self.sampling_rate = transformed_args.upsample_sampling_rate
         except AttributeError:
