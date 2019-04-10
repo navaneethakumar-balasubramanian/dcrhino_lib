@@ -8,26 +8,26 @@
   "modules": [
     {
       "type": "columns_to_df",
-      "output_to_file": true,
+      "output_to_file": false,
       "args": {
         "sampling_rate": "|global_config.sampling_rate|"
       }
     },
     {
       "type": "unfold_hybrid",
-      "output_to_file": true,
+      "output_to_file": false,
       "args": {}
     },
     {
       "type": "lead_channel_deconvolution_hybrid",
-      "output_to_file": true,
+      "output_to_file": false,
       "args": {
         "deconvolution_filter_duration": 0.1
       }
     },
     {
       "type": "band_pass_filter_hybrid",
-      "output_to_file": true,
+      "output_to_file": false,
       "args": {
         "trapezoidal_bpf_corner_1": "|global_config.trapezoidal_bpf_corner_1|",
         "trapezoidal_bpf_corner_2": "|global_config.trapezoidal_bpf_corner_2|",
@@ -38,7 +38,7 @@
     },
     {
       "type": "trim_hybrid",
-      "output_to_file": true,
+      "output_to_file": false,
       "args": {
         "max_lag_trimmed_trace": "|global_config.max_lag_trimmed_trace|",
         "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|"
@@ -46,7 +46,7 @@
     },
     {
       "type": "upsample_hybrid",
-      "output_to_file": true,
+      "output_to_file": false,
       "args": {
         "trimmed_trace_duration": "|global_config.trimmed_trace_duration|",
         "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
@@ -63,7 +63,7 @@
     },
     {
       "type": "rhino_plotter_picker",
-      "output_to_file": true,
+      "output_to_file": false,
       "args": {
         "component": "axial",
         "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
@@ -75,7 +75,7 @@
     },
     {
       "type": "rhino_plotter_picker",
-      "output_to_file": true,
+      "output_to_file": false,
       "args": {
         "component": "tangential",
         "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
@@ -89,7 +89,7 @@
     },
     {
       "type": "j2",
-      "output_to_file": true,
+      "output_to_file": false,
       "args": {
         "upsample_sampling_rate": [
           "|global_config.upsample_sampling_rate|",
@@ -490,7 +490,7 @@
     },
     {
       "type": "rhino_physics",
-      "output_to_file": true,
+      "output_to_file": false,
       "args": {
         "recipe_to_use": "J2"
       }
