@@ -20,6 +20,9 @@ class J2FeaturesModule(BaseFeatureModule):
     def extract_feature_component(self, component_id, trace_to_process, transformed_args, timestamp):
         if component_id == 'radial':
             return {}
+        #logger.warning("Without a hybrid module or at least the ability\
+        #                       to add/read_from the process_flow we need this hokey, \
+        #                       error prone handling of sampling rate below")
         feature_extractor = FeatureExtractorJ2(component_id, trace_to_process, transformed_args, timestamp)
         #pdb.set_trace()
         line_feature_dict = feature_extractor.extract_features()#(component_id, trace_to_process, transformed_args, timestamp)
