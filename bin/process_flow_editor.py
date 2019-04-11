@@ -56,6 +56,7 @@ class popupWindow(object):
         self.b = Button(top, text='Ok', command=self.cleanup)
         self.b.pack()
         self.value = None
+        self.clipboard = None
 
     def cleanup(self):
         self.value = self.e.get()
@@ -104,6 +105,8 @@ class GUI():
         self.tree_popup.add_command(label="Add Module Below", command=self.add_module_below)
         self.tree_popup.add_command(label="Add Plotter Above", command=self.add_plotter_above)
         self.tree_popup.add_command(label="Add Plotter Below", command=self.add_plotter_below)
+        self.tree_popup.add_command(label="Duplicate", command=self.duplicate)
+
         self.tree_popup.add_separator()
         self.tree_popup.add_command(label="Delete Module", command=self.delete_module)
         self.tree_popup.add_separator()
@@ -267,6 +270,31 @@ class GUI():
     def add_plotter_below(self):
         self.add_to_list(2, False)
 
+    def duplicate(self):
+        selection = self.tree.selection()
+        selection_text = self.tree.item(selection)['text']
+
+        if "module_" in selection_text or "panel_" in selection_text or "curve_" in selection_text:
+            module_index = int(selection_text.split("_")[1])
+            list_type = selection_text.split("_")[0]
+            json_levels_list = list()
+            json_levels_list.append(self.json[self.path[0]])
+            for key in self.path[1:-1]:
+                if "module_" in key or "panel_" in key or "curve_" in key:
+                    key = int(key.split("_")[1])
+                # print(key)
+                json_levels_list.append(json_levels_list[-1][key])
+
+            index_offset = -1
+            module_to_check = "{}_{}".format(list_type, len(json_levels_list[-1]) - 1)
+            if module_to_check != selection_text:
+                # print("Moving")
+                json_levels_list[-1].insert(module_index - index_offset, json_levels_list[-1][module_index])
+                self.refresh(added=False, toggle=False)
+            # else:
+            #     print("Ignoring")
+
+
     def add_heatmap_panel(self):
         self.add_to_list(3)
 
@@ -388,8 +416,8 @@ class GUI():
             value_list = list()
             for line in range(lines):
                 line_value = self.value.get(str(float(line + 1)), str(float(line + 2)))
-                line_value = line_value.replace("\"","")
                 value += line_value.strip()
+                line_value = line_value.replace("\"", "")
                 line_value = line_value.strip()
                 if len(line_value) > 0:
                     value_list.append(line_value.strip())
@@ -506,7 +534,11 @@ class GUI():
         reverse_path.reverse()
         for item in reverse_path:
             if "module_" in item or "panel_" in item or "curve_" in item:
-                key = int(item.split("_")[1])
+                tmp = item.split("_")[1]
+                if tmp.isdigit():
+                    key = int(tmp)
+                else:
+                    key = item
             else:
                 key = item
             value_object = value_object[key]
