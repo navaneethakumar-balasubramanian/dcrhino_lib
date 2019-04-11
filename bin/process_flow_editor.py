@@ -3,11 +3,14 @@ import tkMessageBox
 import ttk
 import pdb
 import json
-import os, sys
+import os
+import sys
 import tkFileDialog
 import time
-from process_flow import process_glob
+import glob
 from subprocess import Popen
+from dcrhino3.models.trace_dataframe import TraceData
+
 
 debug_path = '/home/natal/toconvert/test2.json'
 debug = False
@@ -56,7 +59,6 @@ class popupWindow(object):
         self.b = Button(top, text='Ok', command=self.cleanup)
         self.b.pack()
         self.value = None
-        self.clipboard = None
 
     def cleanup(self):
         self.value = self.e.get()
@@ -69,12 +71,20 @@ class GUI():
         self.master = Tk()
         self.master.title("DataCloud Json Editor")
         self.master.option_add("*Font", "TkDefaultFont 16")
-        self.master.geometry('1500x1250')
+        self.master.geometry('1500x1075')
         self.path = []
         self.iid = 0
         self.saved = True
         self.glob_str = None
         self.json = None
+        self.env_config = json.load(open("env_config.json"))
+        self.acorr_path = self.env_config["mines"][self.env_config["mines"].keys()[0]]["paths"][
+            "hole_h5_interpolated_cache_folder"]
+        self.acorr_path = os.path.abspath(os.path.join(self.acorr_path, "..", ".."))
+        self.json_dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "process_flows")
+        if not os.path.exists(self.acorr_path):
+            self.acorr_path = self.json_dir_path
+        self.trace = TraceData()
 
         #create the file menu
         self.menubar = Menu(self.master)
@@ -125,16 +135,17 @@ class GUI():
         row = 0
         column = 0
 
-        Label(self.master, text="Project Data Path: ").grid(row=row, column=column, sticky="news")
+        Label(self.master, text="Project Data Path: ").grid(row=row, column=column, sticky="news",rowspan=4)
         column += 1
-        self.data_path = Entry(self.master)
-        self.data_path.grid(row=row, column=column, sticky="news", columnspan=6)
-        row += 1
+        self.sv = StringVar(self.master)
+        self.sv.trace("w", lambda name, index, mode, sv=self.sv: self.set_glob_str(sv))
+        self.data_path = Entry(self.master, textvariable=self.sv)
+        self.data_path.grid(row=row, column=column, sticky="news", columnspan=6, rowspan=4)
 
         column = 0
         # Label(self.master, text="JSON Tree Display").grid(row=row, column=column)
-        row += 1
-        self.tree = ttk.Treeview(self.master, height=60)
+        row = 10
+        self.tree = ttk.Treeview(self.master, height=40)
         self.tree.grid(row=row, column=column, sticky="news", rowspan=30)
         self.tree.column("#0", stretch=NO, width=500)
         self.tree.heading("#0", text="Section")
@@ -147,14 +158,14 @@ class GUI():
             self.add_child_node(self.json)
 
         column += 1
-        row = 2
-        self.value = Text(self.master, height=60, font=("Helvetica", 15))
+        row = 10
+        self.value = Text(self.master, height=40, font=("Helvetica", 15))
         self.value.grid(row=row, columnspan=6, rowspan=30, column=1, sticky="news")
         self.value.config(state=DISABLED)
         self.value.bind("<Button-3>", self.do_popup)
 
         column += 6
-        row = 2
+        row = 10
         self.open_btn = Button(self.master, text="Open JSON File", command=self.open_file)
         self.open_btn.grid(row=row, column=column, rowspan=1, columnspan=1, sticky="news")
         row += 1
@@ -191,6 +202,10 @@ class GUI():
         for i in range(100):
             self.master.grid_columnconfigure(i, weight=1)
             self.master.grid_rowconfigure(i, weight=1)
+
+    def set_glob_str(self, sv):
+        self.glob_str = self.sv.get()
+        print(self.glob_str)
 
     def pretty_print(self):
         self.value.config(state=NORMAL)
@@ -456,7 +471,6 @@ class GUI():
     def do_nothing(self):
         pass
 
-
     def refresh_from_button(self):
         self.refresh(added=False)
 
@@ -588,7 +602,8 @@ class GUI():
 
     def open_file(self):
         extension = [('JSON File', '*.json')]
-        self.json_path = tkFileDialog.askopenfilename(defaultextension=".json", filetypes=extension)
+        self.json_path = tkFileDialog.askopenfilename(initialdir=self.json_dir_path, defaultextension=".json",
+                                                      filetypes=extension)
         if self.json_path is None:  # asksaveasfile return `None` if dialog closed with "cancel".
             return
         self.json = json.load(open(self.json_path))
@@ -607,7 +622,11 @@ class GUI():
             self.tree.item(id, open=open_all)
 
     def get_data_path(self):
-        dir_name = os.path.join(tkFileDialog.askdirectory(),"*")
+        dir_name = tkFileDialog.askdirectory(initialdir=self.acorr_path)
+        if len(dir_name) == 0:
+            return
+        self.acorr_path = dir_name
+        dir_name = os.path.join(dir_name, "*")
         self.data_path.delete(0, 'end')
         self.data_path.insert(0, dir_name)
         self.data_path.xview_moveto(1)
@@ -616,6 +635,9 @@ class GUI():
     def get_data_file(self):
         extension = [('H5 File', '*.h5')]
         file_name = tkFileDialog.askopenfilename(defaultextension=".h5", filetypes=extension)
+        if len(file_name) == 0:
+            return
+        self.acorr_path = os.path.dirname(file_name)
         self.data_path.delete(0, 'end')
         self.data_path.insert(0, file_name)
         self.data_path.xview_moveto(1)
@@ -623,6 +645,12 @@ class GUI():
 
     def process(self):
         try:
+            last_file = sorted(glob.glob(self.glob_str))
+            last_file = [x for x in last_file if ".h5" in x][-1]
+            self.trace.load_from_h5(last_file)
+            output_folder = self.env_config["mines"][self.trace.mine_name.lower()]["paths"][
+            "hole_h5_processed_cache_folder"]
+            self.trace = TraceData()
             if self.saved and self.json is not None and self.glob_str is not None:
                 t0 = time.time()
                 seconds_to_process = False
@@ -641,7 +669,7 @@ class GUI():
             else:
                 tkMessageBox.showinfo("Unable to Process", "Please make sure JSON file is loaded, modifications are "
                                                            "saved, and data path has been selected")
-            # os.system("xdg-open " + dirname_variable)
+            os.system("xdg-open " + output_folder)
         except:
             print(sys.exc_info())
 
