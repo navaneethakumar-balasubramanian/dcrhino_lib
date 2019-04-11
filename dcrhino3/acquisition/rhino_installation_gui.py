@@ -1146,7 +1146,8 @@ class GUI():
 
         if float(self.sensor_distance_to_shocksub.get().split(" ")[0]) < 0 or \
                 float(self.sensor_distance_to_source.get().split(" ")[0]) < 0:
-            tkMessageBox.showinfo("Config File Error", "Unable to save file. Check errors on drill string lengths")
+            tkMessageBox.showinfo("Short between the chair and the keyboard",
+                                  "Config File Error. Unable to save file. Check errors on drill string lengths")
             return
 
         config.set("INSTALLATION","country",self.country.get())
