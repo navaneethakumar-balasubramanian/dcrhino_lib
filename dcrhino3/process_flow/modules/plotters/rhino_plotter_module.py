@@ -104,6 +104,7 @@ class RhinoPlotterModule(BaseModule):
         if self.output_to_file:
             output_path = self.output_file_basepath(extension=".png")
         plot_title = self.get_plot_title(transformed_args,trace)
+        rhino_display.padding_bottom = 0.1
         rhino_display.plot(output_path,title=plot_title,show=transformed_args.show, legend=transformed_args.legend)
         return trace
 
