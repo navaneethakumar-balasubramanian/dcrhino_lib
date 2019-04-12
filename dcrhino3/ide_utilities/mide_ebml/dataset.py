@@ -2709,20 +2709,20 @@ class EventList(Transformable):
 #
 #
 #
-#     def saveNumpyToFile(self,h5file,key,nparr):
-#         N = len(nparr)
-#         x=nparr
-#
-#         my_key = key
-#         if my_key in h5file.keys():
-#             ds = h5file[my_key]
-#             ds.resize((h5file[my_key].shape[0] + x.shape[0]), axis = 0)
-#             ds[-N:] = x
-#         else:
-#             #pdb.set_trace()
-#             ds = h5file.create_dataset(my_key, data=x, chunks=True,
-#                                     dtype=x.dtype , maxshape=(None,),compression="gzip", compression_opts=9)
-#             ds[:] = x
+    def saveNumpyToFile(self,h5file,key,nparr):
+        N = len(nparr)
+        x=nparr
+
+        my_key = key
+        if my_key in h5file.keys():
+            ds = h5file[my_key]
+            ds.resize((h5file[my_key].shape[0] + x.shape[0]), axis = 0)
+            ds[-N:] = x
+        else:
+            #pdb.set_trace()
+            ds = h5file.create_dataset(my_key, data=x, chunks=True,
+                                    dtype=x.dtype , maxshape=(None,),compression="gzip", compression_opts=9)
+            ds[:] = x
 #
 #     # def saveNumpyToFile(self,filename,key,nparr):
 #     #     try:

@@ -188,7 +188,7 @@ if __name__ == "__main__":
 
     df.initBivariates(noBvr)
     try:
-        print(sourceFiles)
+        # print(sourceFiles)
         totalSamples = 0
         t0 = datetime.now()
         updater = SimpleUpdater()
@@ -198,7 +198,7 @@ if __name__ == "__main__":
             else:
                 config_name = args.config_file
             config = ConfigParser.ConfigParser()
-            print(config_name)
+            # print(config_name)
             config.read(config_name)
             resampling_rate = config.getint("COLLECTION", "output_sampling_rate")
             source_file = pm.FileObject(f)
