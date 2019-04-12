@@ -41,7 +41,7 @@ Created on Sep 26, 2013
 #
 # TODO: Clean up the min/mean/max stuff.
 
-import ConfigParser
+# import ConfigParser
 import os.path
 import random
 import struct
@@ -55,10 +55,10 @@ import pdb
 
 import h5py
 import numpy
-from dcrhino.models.raw_data import RawDataModel
+# from dcrhino.models.raw_data import RawDataModel
 # import data_formats as df
 from dcrhino3.ide_utilities import data_formats as df
-from infi.clickhouse_orm.database import Database
+# from infi.clickhouse_orm.database import Database
 
 from calibration import Transform, CombinedPoly, PolyPoly
 from ebmlite.core import loadSchema
@@ -2544,171 +2544,171 @@ class EventList(Transformable):
 # DATACLOUD MODIFICATIONS
 #===============================================================================
 
-    #NRN The following function exports data to a SEGY file.  It is a modification of the exportCsv method above
-    def exportDB(self, sensor_serial_number,start=0, stop=-1, step=1, subchannels=True,
-                      callback=None, callbackInterval=0.01, timeScalar=1,
-                      raiseExceptions=False, dataFormat="%.6f",delimiter=",",
-                      useUtcTime=False, useIsoFormat=False, headers=False,
-                      removeMean="TotalMean", meanSpan=None, display=False, dbName="rhino_test"):
-
-
-
-
-#TODO: Clean the list of parameters that are not needed
-
-
-        """ Export events as SEGY to a stream (e.g. a file).
-
-                @param fileName: The output name of the SEGY file.
-                @param Rhino: RHINO Onject that has all the drill headers information for SEGY
-                @keyword start: The first event index to export.
-                @keyword stop: The last event index to export.
-                @keyword step: The number of events between exported lines.
-                @keyword subchannels: A sequence of individual subchannel numbers
-                    to export. Only applicable to objects with subchannels.
-                    `True` (default) exports them all.
-                @keyword callback: A function (or function-like object) to notify
-                    as work is done. It should take four keyword arguments:
-                    `count` (the current line number), `total` (the total number
-                    of lines), `error` (an exception, if raised during the
-                    export), and `done` (will be `True` when the export is
-                    complete). If the callback object has a `cancelled`
-                    attribute that is `True`, the CSV export will be aborted.
-                    The default callback is `None` (nothing will be notified).
-                @keyword callbackInterval: The frequency of update, as a
-                    normalized percent of the total lines to export.
-                @keyword timeScalar: A scaling factor for the even times.
-                    The default is 1 (microseconds).
-                @keyword raiseExceptions:
-                @keyword dataFormat: The number of decimal places to use for the
-                    data. This is the same format as used when formatting floats.
-                @keyword useUtcTime: If `True`, times are written as the UTC
-                    timestamp. If `False`, times are relative to the recording.
-                @keyword useIsoFormat: If `True`, the time column is written as
-                    the standard ISO date/time string. Only applies if `useUtcTime`
-                    is `True`.
-                @keyword headers: If `True`, the first line of the CSV will contain
-                    the names of each column.
-                @keyword removeMean: Overrides the EventList's mean removal for the
-                    export.
-                @keyword meanSpan: The span of the mean removal for the export.
-                    -1 removes the total mean.
-                @keyword display: If `True`, export using the EventList's 'display'
-                    transform (e.g. unit conversion).
-                @return: Tuple: The number of rows exported and the elapsed time.
-            """
-
-        noCallback = callback is None
-        _self = self.copy()
-
-        sr = self.getSampleRate(None)
-        sr = int(round(sr))
-
-        database_name = "{}_{}_{}".format(dbName,sensor_serial_number,sr)
-
-        #db = Database(dbName)
-        db = Database(database_name)
-        db.create_table(RawDataModel)
-        lines = []
-
-
-        # Create a function for formatting the event time.
-        if useUtcTime and _self.session.utcStartTime:
-            if useIsoFormat:
-                timeFormatter = lambda x: datetime.utcfromtimestamp(x[-2] * timeScalar + _self.session.utcStartTime).isoformat()
-            else:
-                timeFormatter = lambda x: dataFormat % (x[-2] * timeScalar + _self.session.utcStartTime)
-        else:
-            timeFormatter = lambda x: dataFormat % (x[-2] * timeScalar)
-
-        # Create the function for formatting an entire row.
-        if _self.hasSubchannels:
-            if isinstance(subchannels, Iterable):
-                fstr = '%s' + delimiter + delimiter.join([dataFormat] * len(subchannels))
-                formatter = lambda x: fstr % ((timeFormatter(x),) + \
-                                              tuple([x[-1][v] for v in subchannels]))
-                names = [_self.parent.subchannels[x].name for x in subchannels]
-            else:
-                fstr = '%s' + delimiter + delimiter.join([dataFormat] * len(_self.parent.types))
-                formatter = lambda x: fstr % ((timeFormatter(x),) + x[-1])
-                names = [x.name for x in _self.parent.subchannels]
-        else:
-            fstr = "%%s%s%s" % (delimiter, dataFormat)
-            formatter = lambda x: fstr % (timeFormatter(x),x[-1])
-            names = [_self.parent.name]
-
-        if removeMean is not None:
-            _self.removeMean = _self.allowMeanRemoval and removeMean
-        if meanSpan is not None:
-            _self.rollingMeanSpan = meanSpan
-
-        totalLines = (stop - start) / (step + 0.0)
-        if totalLines < 0:
-            totalLines = len(_self)
-        numChannels = len(names)
-        totalSamples = totalLines * numChannels
-        updateInt = int(totalLines * callbackInterval)
-
-        start = start + len(self) if start < 0 else start
-        stop = stop + len(self) if stop < 0 else stop
-
-        # Catch all or no exceptions
-        ex = None if raiseExceptions or noCallback else Exception
-        #Get the samplig rate
-        t0 = datetime.now()
-
-        counter = 0
-
-        try:
-            for num, evt in enumerate(_self.iterSlice(start, stop, step, display=display)):
-#                pdb.set_trace()
-                sample_ts = (evt[0]/1000000)+_self.session.utcStartTime
-                dt = datetime.utcfromtimestamp(sample_ts)
-                scale_factor = 1e6
-
-                x = evt[1][0]*scale_factor
-                y = evt[1][1]*scale_factor
-                #z = evt[1][2]*scale_factor
-
-                temp = RawDataModel()
-                temp.set_date_fields(dt)
-                temp.gps_ts_secs = temp.ts_secs
-                temp.gps_ts_micro = temp.ts_micro
-                temp.x = x
-                temp.y = y
-                if len(evt[1]) == 3:
-                    z = evt[1][2]*scale_factor
-                    temp.z = z
-                else:
-                    temp.z = 0
-
-                temp.srl_nmbr = str(sensor_serial_number)
-                temp.seq = temp.clk = temp.seq2 = temp.txseq2 = counter
-                counter +=1
-
-                lines.append(temp)
-                if counter % 50000 == 0:
-                    print ("Saved from: " + str(datetime.fromtimestamp(float(lines[0].ts))) + " to " + str(datetime.fromtimestamp(float(lines[len(lines)-1].ts))) )
-                    db.insert(lines)
-                    lines = []
-
-                if callback is not None:
-                    if getattr(callback, 'cancelled', False):
-                        callback(done=True)
-                        break
-                    if updateInt == 0 or num % updateInt == 0:
-                        callback(num*numChannels, total=totalSamples)
-            print ("Last Saved from: " + str(datetime.fromtimestamp(float(lines[0].ts))) + " to " + str(datetime.fromtimestamp(float(lines[len(lines)-1].ts))) )
-            db.insert(lines)
-            lines = []
-            if callback is not None:
-                callback(done=True)
-        except ex as e:
-            callback(error=e)
-        return num+1, datetime.now() - t0
-
-
-
+#     #NRN The following function exports data to a SEGY file.  It is a modification of the exportCsv method above
+#     def exportDB(self, sensor_serial_number,start=0, stop=-1, step=1, subchannels=True,
+#                       callback=None, callbackInterval=0.01, timeScalar=1,
+#                       raiseExceptions=False, dataFormat="%.6f",delimiter=",",
+#                       useUtcTime=False, useIsoFormat=False, headers=False,
+#                       removeMean="TotalMean", meanSpan=None, display=False, dbName="rhino_test"):
+#
+#
+#
+#
+# #TODO: Clean the list of parameters that are not needed
+#
+#
+#         """ Export events as SEGY to a stream (e.g. a file).
+#
+#                 @param fileName: The output name of the SEGY file.
+#                 @param Rhino: RHINO Onject that has all the drill headers information for SEGY
+#                 @keyword start: The first event index to export.
+#                 @keyword stop: The last event index to export.
+#                 @keyword step: The number of events between exported lines.
+#                 @keyword subchannels: A sequence of individual subchannel numbers
+#                     to export. Only applicable to objects with subchannels.
+#                     `True` (default) exports them all.
+#                 @keyword callback: A function (or function-like object) to notify
+#                     as work is done. It should take four keyword arguments:
+#                     `count` (the current line number), `total` (the total number
+#                     of lines), `error` (an exception, if raised during the
+#                     export), and `done` (will be `True` when the export is
+#                     complete). If the callback object has a `cancelled`
+#                     attribute that is `True`, the CSV export will be aborted.
+#                     The default callback is `None` (nothing will be notified).
+#                 @keyword callbackInterval: The frequency of update, as a
+#                     normalized percent of the total lines to export.
+#                 @keyword timeScalar: A scaling factor for the even times.
+#                     The default is 1 (microseconds).
+#                 @keyword raiseExceptions:
+#                 @keyword dataFormat: The number of decimal places to use for the
+#                     data. This is the same format as used when formatting floats.
+#                 @keyword useUtcTime: If `True`, times are written as the UTC
+#                     timestamp. If `False`, times are relative to the recording.
+#                 @keyword useIsoFormat: If `True`, the time column is written as
+#                     the standard ISO date/time string. Only applies if `useUtcTime`
+#                     is `True`.
+#                 @keyword headers: If `True`, the first line of the CSV will contain
+#                     the names of each column.
+#                 @keyword removeMean: Overrides the EventList's mean removal for the
+#                     export.
+#                 @keyword meanSpan: The span of the mean removal for the export.
+#                     -1 removes the total mean.
+#                 @keyword display: If `True`, export using the EventList's 'display'
+#                     transform (e.g. unit conversion).
+#                 @return: Tuple: The number of rows exported and the elapsed time.
+#             """
+#
+#         noCallback = callback is None
+#         _self = self.copy()
+#
+#         sr = self.getSampleRate(None)
+#         sr = int(round(sr))
+#
+#         database_name = "{}_{}_{}".format(dbName,sensor_serial_number,sr)
+#
+#         #db = Database(dbName)
+#         db = Database(database_name)
+#         db.create_table(RawDataModel)
+#         lines = []
+#
+#
+#         # Create a function for formatting the event time.
+#         if useUtcTime and _self.session.utcStartTime:
+#             if useIsoFormat:
+#                 timeFormatter = lambda x: datetime.utcfromtimestamp(x[-2] * timeScalar + _self.session.utcStartTime).isoformat()
+#             else:
+#                 timeFormatter = lambda x: dataFormat % (x[-2] * timeScalar + _self.session.utcStartTime)
+#         else:
+#             timeFormatter = lambda x: dataFormat % (x[-2] * timeScalar)
+#
+#         # Create the function for formatting an entire row.
+#         if _self.hasSubchannels:
+#             if isinstance(subchannels, Iterable):
+#                 fstr = '%s' + delimiter + delimiter.join([dataFormat] * len(subchannels))
+#                 formatter = lambda x: fstr % ((timeFormatter(x),) + \
+#                                               tuple([x[-1][v] for v in subchannels]))
+#                 names = [_self.parent.subchannels[x].name for x in subchannels]
+#             else:
+#                 fstr = '%s' + delimiter + delimiter.join([dataFormat] * len(_self.parent.types))
+#                 formatter = lambda x: fstr % ((timeFormatter(x),) + x[-1])
+#                 names = [x.name for x in _self.parent.subchannels]
+#         else:
+#             fstr = "%%s%s%s" % (delimiter, dataFormat)
+#             formatter = lambda x: fstr % (timeFormatter(x),x[-1])
+#             names = [_self.parent.name]
+#
+#         if removeMean is not None:
+#             _self.removeMean = _self.allowMeanRemoval and removeMean
+#         if meanSpan is not None:
+#             _self.rollingMeanSpan = meanSpan
+#
+#         totalLines = (stop - start) / (step + 0.0)
+#         if totalLines < 0:
+#             totalLines = len(_self)
+#         numChannels = len(names)
+#         totalSamples = totalLines * numChannels
+#         updateInt = int(totalLines * callbackInterval)
+#
+#         start = start + len(self) if start < 0 else start
+#         stop = stop + len(self) if stop < 0 else stop
+#
+#         # Catch all or no exceptions
+#         ex = None if raiseExceptions or noCallback else Exception
+#         #Get the samplig rate
+#         t0 = datetime.now()
+#
+#         counter = 0
+#
+#         try:
+#             for num, evt in enumerate(_self.iterSlice(start, stop, step, display=display)):
+# #                pdb.set_trace()
+#                 sample_ts = (evt[0]/1000000)+_self.session.utcStartTime
+#                 dt = datetime.utcfromtimestamp(sample_ts)
+#                 scale_factor = 1e6
+#
+#                 x = evt[1][0]*scale_factor
+#                 y = evt[1][1]*scale_factor
+#                 #z = evt[1][2]*scale_factor
+#
+#                 temp = RawDataModel()
+#                 temp.set_date_fields(dt)
+#                 temp.gps_ts_secs = temp.ts_secs
+#                 temp.gps_ts_micro = temp.ts_micro
+#                 temp.x = x
+#                 temp.y = y
+#                 if len(evt[1]) == 3:
+#                     z = evt[1][2]*scale_factor
+#                     temp.z = z
+#                 else:
+#                     temp.z = 0
+#
+#                 temp.srl_nmbr = str(sensor_serial_number)
+#                 temp.seq = temp.clk = temp.seq2 = temp.txseq2 = counter
+#                 counter +=1
+#
+#                 lines.append(temp)
+#                 if counter % 50000 == 0:
+#                     print ("Saved from: " + str(datetime.fromtimestamp(float(lines[0].ts))) + " to " + str(datetime.fromtimestamp(float(lines[len(lines)-1].ts))) )
+#                     db.insert(lines)
+#                     lines = []
+#
+#                 if callback is not None:
+#                     if getattr(callback, 'cancelled', False):
+#                         callback(done=True)
+#                         break
+#                     if updateInt == 0 or num % updateInt == 0:
+#                         callback(num*numChannels, total=totalSamples)
+#             print ("Last Saved from: " + str(datetime.fromtimestamp(float(lines[0].ts))) + " to " + str(datetime.fromtimestamp(float(lines[len(lines)-1].ts))) )
+#             db.insert(lines)
+#             lines = []
+#             if callback is not None:
+#                 callback(done=True)
+#         except ex as e:
+#             callback(error=e)
+#         return num+1, datetime.now() - t0
+#
+#
+#
     def saveNumpyToFile(self,h5file,key,nparr):
         N = len(nparr)
         x=nparr
@@ -2723,34 +2723,34 @@ class EventList(Transformable):
             ds = h5file.create_dataset(my_key, data=x, chunks=True,
                                     dtype=x.dtype , maxshape=(None,),compression="gzip", compression_opts=9)
             ds[:] = x
-
-    # def saveNumpyToFile(self,filename,key,nparr):
-    #     try:
-    #        h5f = h5py.File(filename, 'a')
-    #        #pdb.set_trace()
-    #
-    #        N = len(nparr)
-    #        x=nparr
-    #        #pdb.set_trace()
-    #        #print (key)
-    #        my_key = key
-    #        if my_key in h5f.keys():
-    #            #pdb.set_trace()
-    #            ds = h5f[my_key]
-    #            ds.resize(h5f[my_key].shape[0] + x.shape[0],axis=0)
-    #            ds[-N:] = x
-    #        else:
-    #            ds = h5f.create_dataset(my_key,shape=x.shape, chunks=True,
-    #                                    dtype=x.dtype , maxshape=(None,),compression="gzip", compression_opts=9)
-    #            ds[:] = x
-    #        h5f.close()
-    #     except:
-    #        print(sys.exc_info())
-
-
+#
+#     # def saveNumpyToFile(self,filename,key,nparr):
+#     #     try:
+#     #        h5f = h5py.File(filename, 'a')
+#     #        #pdb.set_trace()
+#     #
+#     #        N = len(nparr)
+#     #        x=nparr
+#     #        #pdb.set_trace()
+#     #        #print (key)
+#     #        my_key = key
+#     #        if my_key in h5f.keys():
+#     #            #pdb.set_trace()
+#     #            ds = h5f[my_key]
+#     #            ds.resize(h5f[my_key].shape[0] + x.shape[0],axis=0)
+#     #            ds[-N:] = x
+#     #        else:
+#     #            ds = h5f.create_dataset(my_key,shape=x.shape, chunks=True,
+#     #                                    dtype=x.dtype , maxshape=(None,),compression="gzip", compression_opts=9)
+#     #            ds[:] = x
+#     #        h5f.close()
+#     #     except:
+#     #        print(sys.exc_info())
 
 
-    def exportH5(self, sensor_serial_number,ideFileObj,resampling_rate, time_offset=0, start=0, stop=-1, step=1,
+
+
+    def exportH5(self, sensor_serial_number,ideFileObj,resampling_rate, config, time_offset=0, start=0, stop=-1, step=1,
                  subchannels=True,
                       callback=None, callbackInterval=0.01, timeScalar=1,
                       raiseExceptions=False, dataFormat="%.6f",delimiter=",",
@@ -2857,9 +2857,9 @@ class EventList(Transformable):
         counter = 0
         fname = ideFileObj.Name
 
-        config = ConfigParser.SafeConfigParser()
-        config_path = os.path.join(ideFileObj.Path, fname+".cfg")
-        config.read(config_path)
+        # config = ConfigParser.SafeConfigParser()
+        # config_path = os.path.join(ideFileObj.Path, fname+".cfg")
+        # config.read(config_path)
 
 
         outFile = ideFileObj.Path

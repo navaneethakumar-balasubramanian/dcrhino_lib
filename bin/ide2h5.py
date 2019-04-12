@@ -28,10 +28,10 @@ class IDEExportError(Exception):
     pass
 
 
-def exportH5(events, serial_number, ideFileObj, resampling_rate, time_offset, **kwargs):
+def exportH5(events, serial_number, ideFileObj, resampling_rate, config, time_offset, **kwargs):
     """ Wrapper for H5 export
     """
-    return events.exportH5(serial_number, ideFileObj, resampling_rate, time_offset=time_offset, **kwargs)
+    return events.exportH5(serial_number, ideFileObj, resampling_rate, config=config, time_offset=time_offset, **kwargs)
 
 
 
@@ -109,7 +109,7 @@ class SimpleUpdater(object):
 
 
 
-def ideExport(ideFileObj,channels=None,resampling_rate=3200, time_offset=0, **kwargs):
+def ideExport(ideFileObj, config, channels=None,resampling_rate=3200, time_offset=0, **kwargs):
     """ The main function that handles generating exported files from an IDE file.
     """
     updater = kwargs.get('updater', importer.nullUpdater)
@@ -133,8 +133,8 @@ def ideExport(ideFileObj,channels=None,resampling_rate=3200, time_offset=0, **kw
         try:
             print("  Exporting Channel %d (%s) to %s..." % (ch.id, ch.name, "H5 file"))
             events = ch.getSession()#This gets a session that already exists, so it won't change the noBivariates flag at all
-            numSamples += exporter(events, sensor_serial_number, ideFileObj, resampling_rate, time_offset=time_offset,
-                                   callback=updater, **exportArgs)[0]
+            numSamples += exporter(events, sensor_serial_number, ideFileObj, resampling_rate,
+                                   config=config, time_offset=time_offset, callback=updater, **exportArgs)[0]
         except None:
             pass
     doc.close()
@@ -152,6 +152,9 @@ if __name__ == "__main__":
     # argparser.add_argument('-s', '--sample_rate', help="Expected Sample Rate", default = '3200')
     argparser.add_argument('-p', '--path', help="Path for the input files", default='~/Downloads')
     argparser.add_argument('-TO', '--time_offset', help="Time Offset for clock differences", default=0)
+    argparser.add_argument('-fl', '--file_list', help='List of files to be used with the same config file',
+                           default=None)
+    argparser.add_argument('-cfg', '--config_file', help='Path to the config file to be used', default=None)
     args = argparser.parse_args()
 
     # channel_list = args.channel
@@ -168,24 +171,34 @@ if __name__ == "__main__":
         print("Input path does not exist.  Try a different path")
         sys.exit(0)
 
-    sourceFiles = []
-    if os.path.isdir(path):
-        for root, dirs, files in os.walk(path, topdown=True):
-            for name in files:
-                if name[-4:] == ".IDE":
-                    sourceFiles.append(os.path.join(root, name))
+    sourceFiles = list()
+    if args.file_list is None:
+        if os.path.isdir(path):
+            for root, dirs, files in os.walk(path, topdown=True):
+                for name in files:
+                    if name[-4:] == ".IDE":
+                        sourceFiles.append(os.path.join(root, name))
+        else:
+            sourceFiles.append(path)
+            path = os.path.dirname(path)
     else:
-        sourceFiles.append(path)
-        path = os.path.dirname(path)
+        with open(args.file_list, "r") as f:
+            files_in_list = f.readlines()
+        sourceFiles = [os.path.join(path, x.strip()) for x in files_in_list]
 
     df.initBivariates(noBvr)
     try:
+        # print(sourceFiles)
         totalSamples = 0
         t0 = datetime.now()
         updater = SimpleUpdater()
         for f in sourceFiles:
-            config_name = f.replace(".IDE", ".cfg")
+            if args.config_file is None:
+                config_name = f.replace(".IDE", ".cfg")
+            else:
+                config_name = args.config_file
             config = ConfigParser.ConfigParser()
+            # print(config_name)
             config.read(config_name)
             resampling_rate = config.getint("COLLECTION", "output_sampling_rate")
             source_file = pm.FileObject(f)
@@ -193,10 +206,11 @@ if __name__ == "__main__":
             updater.precision = max(0, min(2, (len(str(os.path.getsize(os.path.join(path,f))))/2)-1))
             updater(starting=True)
             numSamples, file_Rhino = ideExport(source_file,
-                                      channels=channel_list,
-                                      resampling_rate=resampling_rate,
-                                      time_offset=time_offset,
-                                      updater=updater)
+                                               channels=channel_list,
+                                               resampling_rate=resampling_rate,
+                                               config=config,
+                                               time_offset=time_offset,
+                                               updater=updater)
             totalSamples += numSamples
 
         totalTime = datetime.now() - t0

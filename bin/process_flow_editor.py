@@ -205,7 +205,6 @@ class GUI():
 
     def set_glob_str(self, sv):
         self.glob_str = self.sv.get()
-        print(self.glob_str)
 
     def pretty_print(self):
         self.value.config(state=NORMAL)
@@ -590,6 +589,8 @@ class GUI():
             json.dump(self.json, f, indent=4)
         f.close()
         self.saved = True
+        self.json_path = save_path
+        self.master.title("DataCloud Json Editor: {}".format(os.path.basename(self.json_path)))
 
     def save_file_as(self):
         extension = [('JSON File', '*.json')]
@@ -608,6 +609,7 @@ class GUI():
             return
         self.json = json.load(open(self.json_path))
         self.refresh()
+        self.master.title("DataCloud Json Editor: {}".format(os.path.basename(self.json_path)))
 
     def expand(self):
         self.open_tree_items(True)
@@ -634,7 +636,8 @@ class GUI():
 
     def get_data_file(self):
         extension = [('H5 File', '*.h5')]
-        file_name = tkFileDialog.askopenfilename(defaultextension=".h5", filetypes=extension)
+        file_name = tkFileDialog.askopenfilename(initialdir=self.acorr_path, defaultextension=".h5",
+                                                 filetypes=extension)
         if len(file_name) == 0:
             return
         self.acorr_path = os.path.dirname(file_name)
