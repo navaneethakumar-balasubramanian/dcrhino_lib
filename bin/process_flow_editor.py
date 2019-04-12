@@ -10,6 +10,7 @@ import time
 import glob
 from subprocess import Popen
 from dcrhino3.models.trace_dataframe import TraceData
+from dcrhino3.models.env_config import EnvConfig
 
 
 debug_path = '/home/natal/toconvert/test2.json'
@@ -77,9 +78,9 @@ class GUI():
         self.saved = True
         self.glob_str = None
         self.json = None
-        self.env_config = json.load(open("env_config.json"))
-        self.acorr_path = self.env_config["mines"][self.env_config["mines"].keys()[0]]["paths"][
-            "hole_h5_interpolated_cache_folder"]
+        self.env_config = EnvConfig("env_config.json")
+        self.acorr_path = self.env_config.get_hole_h5_interpolated_cache_folder(
+            self.env_config.__dict__["mines"].keys()[0])
         self.acorr_path = os.path.abspath(os.path.join(self.acorr_path, "..", ".."))
         self.json_dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "process_flows")
         if not os.path.exists(self.acorr_path):
@@ -651,8 +652,7 @@ class GUI():
             last_file = sorted(glob.glob(self.glob_str))
             last_file = [x for x in last_file if ".h5" in x][-1]
             self.trace.load_from_h5(last_file)
-            output_folder = self.env_config["mines"][self.trace.mine_name.lower()]["paths"][
-            "hole_h5_processed_cache_folder"]
+            output_folder = self.env_config.get_hole_h5_processed_cache_folder(self.trace.mine_name())
             self.trace = TraceData()
             if self.saved and self.json is not None and self.glob_str is not None:
                 t0 = time.time()
