@@ -35,7 +35,7 @@ class DraggableLine(object):
         self.boundaries = boundaries
 
         self.line = ax.plot(self.x_list, self.y_list, color=self.original_color, linestyle='--', linewidth=2)[0]
-        self.line_label = self.ax.text(x[0], self.y, self.label, fontsize=10, va="center",horizontalalignment='left',bbox=dict(boxstyle="round",
+        self.line_label = self.ax.text(x[0], self.y, self.label + ":" + str(round(self.y,3)), fontsize=10, va="center",horizontalalignment='left',bbox=dict(boxstyle="round",
                    ec=(1., 0.5, 0.5),
                    fc=(1., 0.8, 0.8),
                    ))
@@ -61,6 +61,7 @@ class DraggableLine(object):
             self.line.set_ydata(np.full(len(self.x_list), y))
             self.line_label.set_y(y-0.2)
             self.y = y
+            self.line_label.set_text(self.label + ":" + str(round(self.y,3)))
 
 
 
@@ -91,7 +92,7 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
         .. :todo review if we really want to use units of ms here
         """
         using_ms = True
-        if "vars" in self.process_flow.process_json.keys() and component in self.process_flow.process_json["vars"].keys():
+        if "vars" in self.process_flow.process_json.keys() and str(component + "_primary") in self.process_flow.process_json["vars"].keys():
             vars = self.process_flow.process_json["vars"]
             self.lines_default_values[0] = vars[component + "_primary"][0]
             self.lines_default_values[1] = vars[component + "_primary"][1]
