@@ -82,7 +82,6 @@ class GUI():
             "hole_h5_interpolated_cache_folder"]
         self.acorr_path = os.path.abspath(os.path.join(self.acorr_path, "..", ".."))
         self.json_dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "process_flows")
-        print self.acorr_path
         if not os.path.exists(self.acorr_path):
             self.acorr_path = self.json_dir_path
         self.trace = TraceData()
@@ -206,7 +205,6 @@ class GUI():
 
     def set_glob_str(self, sv):
         self.glob_str = self.sv.get()
-        print(self.glob_str)
 
     def pretty_print(self):
         self.value.config(state=NORMAL)
