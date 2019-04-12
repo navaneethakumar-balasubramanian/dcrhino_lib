@@ -2750,7 +2750,7 @@ class EventList(Transformable):
 
 
 
-    def exportH5(self, sensor_serial_number,ideFileObj,resampling_rate, time_offset=0, start=0, stop=-1, step=1,
+    def exportH5(self, sensor_serial_number,ideFileObj,resampling_rate, config, time_offset=0, start=0, stop=-1, step=1,
                  subchannels=True,
                       callback=None, callbackInterval=0.01, timeScalar=1,
                       raiseExceptions=False, dataFormat="%.6f",delimiter=",",
@@ -2857,9 +2857,9 @@ class EventList(Transformable):
         counter = 0
         fname = ideFileObj.Name
 
-        config = ConfigParser.SafeConfigParser()
-        config_path = os.path.join(ideFileObj.Path, fname+".cfg")
-        config.read(config_path)
+        # config = ConfigParser.SafeConfigParser()
+        # config_path = os.path.join(ideFileObj.Path, fname+".cfg")
+        # config.read(config_path)
 
 
         outFile = ideFileObj.Path
