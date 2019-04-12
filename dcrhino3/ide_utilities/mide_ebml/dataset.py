@@ -41,7 +41,7 @@ Created on Sep 26, 2013
 #
 # TODO: Clean up the min/mean/max stuff.
 
-import ConfigParser
+# import ConfigParser
 import os.path
 import random
 import struct
@@ -58,7 +58,7 @@ import numpy
 # from dcrhino.models.raw_data import RawDataModel
 # import data_formats as df
 from dcrhino3.ide_utilities import data_formats as df
-from infi.clickhouse_orm.database import Database
+# from infi.clickhouse_orm.database import Database
 
 from calibration import Transform, CombinedPoly, PolyPoly
 from ebmlite.core import loadSchema
