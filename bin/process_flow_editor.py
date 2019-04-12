@@ -82,6 +82,7 @@ class GUI():
             "hole_h5_interpolated_cache_folder"]
         self.acorr_path = os.path.abspath(os.path.join(self.acorr_path, "..", ".."))
         self.json_dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "process_flows")
+        print self.acorr_path
         if not os.path.exists(self.acorr_path):
             self.acorr_path = self.json_dir_path
         self.trace = TraceData()
@@ -590,6 +591,8 @@ class GUI():
             json.dump(self.json, f, indent=4)
         f.close()
         self.saved = True
+        self.json_path = save_path
+        self.master.title("DataCloud Json Editor: {}".format(os.path.basename(self.json_path)))
 
     def save_file_as(self):
         extension = [('JSON File', '*.json')]
@@ -608,6 +611,7 @@ class GUI():
             return
         self.json = json.load(open(self.json_path))
         self.refresh()
+        self.master.title("DataCloud Json Editor: {}".format(os.path.basename(self.json_path)))
 
     def expand(self):
         self.open_tree_items(True)
@@ -634,7 +638,8 @@ class GUI():
 
     def get_data_file(self):
         extension = [('H5 File', '*.h5')]
-        file_name = tkFileDialog.askopenfilename(defaultextension=".h5", filetypes=extension)
+        file_name = tkFileDialog.askopenfilename(initialdir=self.acorr_path, defaultextension=".h5",
+                                                 filetypes=extension)
         if len(file_name) == 0:
             return
         self.acorr_path = os.path.dirname(file_name)
