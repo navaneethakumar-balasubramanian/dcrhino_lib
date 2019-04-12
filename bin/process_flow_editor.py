@@ -652,7 +652,7 @@ class GUI():
             last_file = sorted(glob.glob(self.glob_str))
             last_file = [x for x in last_file if ".h5" in x][-1]
             self.trace.load_from_h5(last_file)
-            output_folder = self.env_config.get_hole_h5_processed_cache_folder(self.trace.mine_name())
+            output_folder = self.env_config.get_hole_h5_processed_cache_folder(self.trace.mine_name)
             self.trace = TraceData()
             if self.saved and self.json is not None and self.glob_str is not None:
                 t0 = time.time()
