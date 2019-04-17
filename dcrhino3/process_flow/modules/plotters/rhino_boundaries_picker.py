@@ -18,7 +18,8 @@ from matplotlib.widgets import Button
 import matplotlib.lines as lines
 import matplotlib as mpl
 
-mpl.rcParams['toolbar'] = 'None'
+# Toolbar Default to On
+#mpl.rcParams['toolbar'] = 'None'
 
 
 class DraggableLine(object):
