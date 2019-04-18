@@ -72,6 +72,7 @@ battery_lower_limit = config.getfloat("INSTALLATION","battery_min_voltage")
 sampling_rate = config.getfloat("COLLECTION", "output_sampling_rate")
 delta_t = 1.0/sampling_rate
 remove_mean = config.getboolean("RUNTIME", "remove_mean")
+missed_packets_threshold = config.getint("RUNTIME", "missed packets_threshold")
 
 
 local_folder = config.get("DATA_TRANSMISSION","local_folder", DATA_PATH)
@@ -148,6 +149,7 @@ class Packet_v11(object):
         self.temp = 0
         self.batt = 0
         self.sleep_time = 0
+        self.valid_trace = True
         self.packet_decoder(q_data)
 
     def calc_rssi_value(self, rssi_val):
@@ -247,6 +249,8 @@ class FileFlusher(threading.Thread):
     def calculate_packet_timestamp(self, packet):
         reference = time.time()
         self.elapsed_tx_sequences = packet.tx_sequence - self.sequence
+        if self.elapsed_tx_sequences > missed_packets_threshold:
+            packet.valid_trace = False
         self.packet_index_in_trace += self.elapsed_tx_sequences
         # self.packet_index_in_trace += int(round(self.elapsed_tx_sequences/25.))
         self.current_timestamp += self.elapsed_tx_sequences * delta_t
@@ -260,7 +264,7 @@ class FileFlusher(threading.Thread):
                 self.logQ.put(m)
                 self.displayQ.put(m)
                 m = "Difference is {} sec, changing time from {} to {}\n".format(diff, repr(self.current_timestamp),
-                                                                               repr(reference))
+                                                                                 repr(reference))
                 self.logQ.put(m)
                 self.displayQ.put(m)
                 self.current_timestamp = reference
@@ -277,18 +281,18 @@ class FileFlusher(threading.Thread):
                     self.logQ.put(m)
                     self.displayQ.put(m)
         self.previous_second = int(self.current_timestamp)
-        return self.current_timestamp
+        return packet
 
     def save_row_to_processing_q(self, packet):
 
         try:
             row = (self.current_timestamp, packet.tx_sequence, packet.x, packet.y, packet.z, self.sequence,
                    packet.rx_sequence, packet.rssi, packet.temp, packet.batt, self.counter_changes,
-                   self.rhino_serial_number)
+                   self.rhino_serial_number, packet.valid_trace)
         except:  # This is for v1.0 that uses tx_clock ticks instead of sequence number
             row = (self.current_timestamp, packet.tx_clock_ticks, packet.x, packet.y, packet.z, self.sequence,
                    packet.rx_sequence, packet.rssi, packet.temp, packet.batt, self.counter_changes,
-                   self.rhino_serial_number)
+                   self.rhino_serial_number, packet.valid_trace)
         self.bufferQ.put(row)
 
     def stop(self):
@@ -375,7 +379,7 @@ class FileFlusher(threading.Thread):
                         #if it is a consecutive packet or if we missed any
                         # if packet.tx_clock_ticks > self.sequence:
                         if packet.tx_sequence > self.sequence:
-                            self.calculate_packet_timestamp(packet)
+                            packet = self.calculate_packet_timestamp(packet)
                             self.save_row_to_processing_q(packet)
                         # elif packet.tx_clock_ticks == self.sequence:
                         elif packet.tx_sequence == self.sequence:
@@ -624,6 +628,7 @@ class CollectionDaemonThread(threading.Thread):
         lastFileName = None
         look_for_time = True
         file_change_interval_in_min = config.getint("RUNTIME", "file_change_interval_in_min")
+        valid_trace = True
         while True:
             try:
                 if not self.bufferQ.empty():
@@ -639,7 +644,12 @@ class CollectionDaemonThread(threading.Thread):
                     # 9=packet.batt,
                     # 10=self.counter_changes,
                     # 11=self.rhino_serial_number)
-                    row = np.asarray(self.bufferQ.get()[0:-1], dtype=np.float64)#It has to be [0:-1] because the last
+                    # 12=packet.valid_trace
+                    # TODO use a dictionary instead of a list so I can access the values by key and not by indices
+                    buffer_entry = self.bufferQ.get()
+                    if not buffer_entry[12]:
+                        valid_trace = False
+                    row = np.asarray(buffer_entry[0:11], dtype=np.float64)
                     # entry is the rhino serial number and that is a string
 
                     if self.lastSecond != int(row[0]):
@@ -734,62 +744,69 @@ class CollectionDaemonThread(threading.Thread):
                             self.logQ.put(m)
                             self.displayQ.put(m)
 
-                            #process the raw data the same way that it is being done in the processing Pipeline
-                            # accelerometer_max_voltage = config.getfloat("PLAYBACK","accelerometer_max_voltage")
-                            # is_ide_file=False
-                            raw_trace_data = RawTraceData()
-                            component_trace_dict = {}
-                            acceleration_dict = {}
-                            axial_index = int(axis[0])-1
-                            tangential_index = int(axis[1])-1
-                            radial_index = 3-axial_index-tangential_index
+                            if valid_trace:
 
-                            # component_sensitivity = {"axial":sensitivity[axial_index],"tangential":sensitivity[tangential_index],"radial":sensitivity[radial_index]}
-                            component_labels = ["axial","tangential","radial"]
-                            channel_trace_raw_data = [x,y,z]
+                                #process the raw data the same way that it is being done in the processing Pipeline
+                                # accelerometer_max_voltage = config.getfloat("PLAYBACK","accelerometer_max_voltage")
+                                # is_ide_file=False
+                                raw_trace_data = RawTraceData()
+                                component_trace_dict = {}
+                                acceleration_dict = {}
+                                axial_index = int(axis[0])-1
+                                tangential_index = int(axis[1])-1
+                                radial_index = 3-axial_index-tangential_index
 
-                            component_trace_raw_data = {"axial":channel_trace_raw_data[axial_index],"tangential":channel_trace_raw_data[tangential_index],"radial":channel_trace_raw_data[radial_index]}
-                            # secondless_timestamps = ts - int(ts[0])
+                                # component_sensitivity = {"axial":sensitivity[axial_index],"tangential":sensitivity[tangential_index],"radial":sensitivity[radial_index]}
+                                component_labels = ["axial","tangential","radial"]
+                                channel_trace_raw_data = [x,y,z]
 
-                            initial_trace_timestamp = self.calculate_initial_tracetime_from_timestamp(ts[0])
-                            # print("T0", repr(initial_trace_timestamp))
+                                component_trace_raw_data = {"axial":channel_trace_raw_data[axial_index],"tangential":channel_trace_raw_data[tangential_index],"radial":channel_trace_raw_data[radial_index]}
+                                # secondless_timestamps = ts - int(ts[0])
 
-                            ideal_timestamps = 1./float(global_config.output_sampling_rate) * np.arange(0,int(global_config.output_sampling_rate)) + initial_trace_timestamp
+                                initial_trace_timestamp = self.calculate_initial_tracetime_from_timestamp(ts[0])
+                                # print("T0", repr(initial_trace_timestamp))
 
-                            number_of_samples = int(global_config.auto_correlation_trace_duration *
-                                                    global_config.output_sampling_rate)
+                                ideal_timestamps = 1./float(global_config.output_sampling_rate) * np.arange(0,int(global_config.output_sampling_rate)) + initial_trace_timestamp
 
-                            for label in component_labels:
-                                calibrated_data = raw_trace_data.calibrate_1d_component_array(
-                                    component_trace_raw_data[label], global_config,
-                                    global_config.sensor_sensitivity[label])
-                                interp_data = raw_trace_data.interpolate_1d_component_array(ts, calibrated_data,
-                                                                                            ideal_timestamps)
-                                acorr_data = raw_trace_data.autocorrelate_1d_component_array(interp_data,
-                                                                                             number_of_samples)
-                                component_trace_dict[label] = {"{}_calibrated".format(label): calibrated_data,
-                                                               "{}_interpolated".format(label): interp_data,
-                                                               "{}_auto_correlated".format(label): acorr_data}
-                                if remove_mean:
-                                    acceleration_dict[label] = {"max": np.max(calibrated_data-np.mean(calibrated_data)),
-                                                                "min": np.min(calibrated_data)-np.mean(calibrated_data)}
-                                else:
-                                    acceleration_dict[label] = {"max": np.max(calibrated_data),
-                                                                "min": np.min(calibrated_data)}
-                            #Send data to the Q so that it can be plotted
-                            self.tracesQ.put({"timestamp": np.asarray([temp_lastSecond, ], dtype=np.float64),
-                                              "raw_timestamps": ts,
-                                              "ideal_timestamps": ideal_timestamps,
-                                              "raw_data": component_trace_raw_data,
-                                              "trace_data": component_trace_dict,
-                                              "rssi": rssi_avg, #np.asarray([rssi_avg, ], dtype=np.float32),
-                                              "temp": temp[0],
-                                              "batt": batt[0],
-                                              "acceleration": acceleration_dict,
-                                              "counter_changes": counterchanges,
-                                              "disk_usage": disk_usage,
-                                              "filename": filename})
+                                number_of_samples = int(global_config.auto_correlation_trace_duration *
+                                                        global_config.output_sampling_rate)
 
+                                for label in component_labels:
+                                    calibrated_data = raw_trace_data.calibrate_1d_component_array(
+                                        component_trace_raw_data[label], global_config,
+                                        global_config.sensor_sensitivity[label])
+                                    interp_data = raw_trace_data.interpolate_1d_component_array(ts, calibrated_data,
+                                                                                                ideal_timestamps)
+                                    acorr_data = raw_trace_data.autocorrelate_1d_component_array(interp_data,
+                                                                                                 number_of_samples)
+                                    component_trace_dict[label] = {"{}_calibrated".format(label): calibrated_data,
+                                                                   "{}_interpolated".format(label): interp_data,
+                                                                   "{}_auto_correlated".format(label): acorr_data}
+                                    if remove_mean:
+                                        acceleration_dict[label] = {"max": np.max(calibrated_data-np.mean(calibrated_data)),
+                                                                    "min": np.min(calibrated_data)-np.mean(calibrated_data)}
+                                    else:
+                                        acceleration_dict[label] = {"max": np.max(calibrated_data),
+                                                                    "min": np.min(calibrated_data)}
+                                #Send data to the Q so that it can be plotted
+                                self.tracesQ.put({"timestamp": np.asarray([temp_lastSecond, ], dtype=np.float64),
+                                                  "raw_timestamps": ts,
+                                                  "ideal_timestamps": ideal_timestamps,
+                                                  "raw_data": component_trace_raw_data,
+                                                  "trace_data": component_trace_dict,
+                                                  "rssi": rssi_avg, #np.asarray([rssi_avg, ], dtype=np.float32),
+                                                  "temp": temp[0],
+                                                  "batt": batt[0],
+                                                  "acceleration": acceleration_dict,
+                                                  "counter_changes": counterchanges,
+                                                  "disk_usage": disk_usage,
+                                                  "filename": filename})
+                            else:
+                                m = "{}: TRACE WAS DISCARDED DUE TO LARGE GAP IN DATA\n".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+                                self.logQ.put(m)
+                                self.displayQ.put(m)
+                                print(m)
+                                valid_trace = True
                         self.bufferThisSecond = list()
                     self.bufferThisSecond.append(row)
                 else:
