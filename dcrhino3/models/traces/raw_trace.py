@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import pdb
 import time
+import sys
 
 
 from dcrhino3.models.config import Config
@@ -44,6 +45,23 @@ class RawTraceData(TraceData):
         temp_df = pd.DataFrame()
         temp_df['timestamp'] = h5_helper.ts.astype(np.int64)
         temp_df['raw_timestamp'] = h5_helper.ts.astype(np.float64)
+	if "rssi" in h5_helper.h5f.keys():
+	    temp_df["rssi"] = np.asarray(h5_helper.h5f.get("rssi"), dtype=np.float32)
+	else:
+	    temp_df["rssi"] = np.nan()
+	
+
+
+	# Remove the timestamps that have gapqs greater than
+        tx_sequence_diff = np.diff(h5_helper.h5f["cticks"].__array__())
+        try:
+            gap_indices = np.where(tx_sequence_diff > global_config.missed_packets_threshold)
+        except:
+            gap_indices = np.where(tx_sequence_diff>10)
+            logger.warning("Missed packets Threshold not defined in global config. Using default of 10")
+        bad_timestamps = temp_df["timestamp"][temp_df["timestamp"].index.values[gap_indices]].unique()
+        
+
         for component_id in global_config.components_to_process:
             component_index = global_config.component_index(component_id)
             temp_df[component_id] = data[component_index]
@@ -53,6 +71,7 @@ class RawTraceData(TraceData):
         output_dict = dict()
         output_dict['timestamp'] = np.asarray(groups_list)
         output_dict['raw_timestamps'] = num_traces * [None]
+	output_dict['rssi']=num_traces * [None]
         for component_id in global_config.components_to_process:
              output_dict[component_id] = num_traces * [None]
 
@@ -60,11 +79,30 @@ class RawTraceData(TraceData):
             group_id = groups_list[i_trace]
             group = ts_groups.get_group(group_id)
             output_dict['raw_timestamps'][i_trace] = np.array(group['raw_timestamp'])
+	    output_dict["rssi"][i_trace]=np.mean(group["rssi"])
+	    packets = len(group["rssi"])
             for component_id in global_config.components_to_process:
                 output_dict[component_id][i_trace] = np.array(group[component_id])
 
         output_df = pd.DataFrame(output_dict)
+	if "batt" in h5_helper.h5f.keys():
+	    output_df["batt"] = np.asarray(h5_helper.h5f.get("batt"), dtype=np.float32)
+	else:
+	    output_df["batt"] = np.nan
+
+	if "temp" in h5_helper.h5f.keys():
+	    output_df["temp"] = np.asarray(h5_helper.h5f.get("temp"), dtype=np.float32)
+	else:
+	    output_df["temp"] = np.nan
+
+	if "packets" in h5_helper.h5f.keys():
+	    output_df["packets"] = np.asarray(h5_helper.h5f.get("packets"), dtype=np.float32)
+	else:
+	    output_df["packets"] = packets
+
         output_df.index = output_df['timestamp']
+	output_df = output_df[~output_df['timestamp'].isin(bad_timestamps)]
+	#pdb.set_trace()
         return output_df, global_config
 
     def calibrate_l1h5(self,df,global_config):
