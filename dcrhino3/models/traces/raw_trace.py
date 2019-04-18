@@ -45,10 +45,11 @@ class RawTraceData(TraceData):
         temp_df = pd.DataFrame()
         temp_df['timestamp'] = h5_helper.ts.astype(np.int64)
         temp_df['raw_timestamp'] = h5_helper.ts.astype(np.float64)
+        temp_df["rssi"] = np.nan
 	# if "rssi" in h5_helper.h5f.keys():
 	#     temp_df["rssi"] = np.asarray(h5_helper.h5f.get("rssi"), dtype=np.float32)
 	# else:
-	    temp_df["rssi"] = np.nan
+
 	
 
 
