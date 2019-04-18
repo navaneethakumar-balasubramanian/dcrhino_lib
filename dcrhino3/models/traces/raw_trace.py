@@ -48,7 +48,7 @@ class RawTraceData(TraceData):
 	if "rssi" in h5_helper.h5f.keys():
 	    temp_df["rssi"] = np.asarray(h5_helper.h5f.get("rssi"), dtype=np.float32)
 	else:
-	    temp_df["rssi"] = np.nan()
+	    temp_df["rssi"] = np.nan
 	
 
 
