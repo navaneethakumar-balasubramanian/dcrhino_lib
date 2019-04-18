@@ -46,14 +46,14 @@ class RawTraceData(TraceData):
         temp_df['timestamp'] = h5_helper.ts.astype(np.int64)
         temp_df['raw_timestamp'] = h5_helper.ts.astype(np.float64)
         temp_df["rssi"] = np.nan
-	# if "rssi" in h5_helper.h5f.keys():
-	#     temp_df["rssi"] = np.asarray(h5_helper.h5f.get("rssi"), dtype=np.float32)
-	# else:
+        # if "rssi" in h5_helper.h5f.keys():
+        #     temp_df["rssi"] = np.asarray(h5_helper.h5f.get("rssi"), dtype=np.float32)
+        # else:
 
 	
 
 
-	# Remove the timestamps that have gapqs greater than
+	    # Remove the timestamps that have gapqs greater than
         tx_sequence_diff = np.diff(h5_helper.h5f["cticks"].__array__())
         try:
             gap_indices = np.where(tx_sequence_diff > global_config.missed_packets_threshold)
@@ -72,7 +72,7 @@ class RawTraceData(TraceData):
         output_dict = dict()
         output_dict['timestamp'] = np.asarray(groups_list)
         output_dict['raw_timestamps'] = num_traces * [None]
-	    output_dict['rssi']=num_traces * [None]
+        output_dict['rssi']=num_traces * [None]
         for component_id in global_config.components_to_process:
              output_dict[component_id] = num_traces * [None]
 
@@ -80,8 +80,8 @@ class RawTraceData(TraceData):
             group_id = groups_list[i_trace]
             group = ts_groups.get_group(group_id)
             output_dict['raw_timestamps'][i_trace] = np.array(group['raw_timestamp'])
-	        output_dict["rssi"][i_trace]=np.mean(group["rssi"])
-	        packets = len(group["rssi"])
+            output_dict["rssi"][i_trace]=np.mean(group["rssi"])
+            packets = len(group["rssi"])
             for component_id in global_config.components_to_process:
                 output_dict[component_id][i_trace] = np.array(group[component_id])
 
@@ -101,9 +101,9 @@ class RawTraceData(TraceData):
         # else:
         output_df["packets"] = packets
 
-            output_df.index = output_df['timestamp']
+        output_df.index = output_df['timestamp']
         output_df = output_df[~output_df['timestamp'].isin(bad_timestamps)]
-	#pdb.set_trace()
+        # pdb.set_trace()
         return output_df, global_config
 
     def calibrate_l1h5(self,df,global_config):
