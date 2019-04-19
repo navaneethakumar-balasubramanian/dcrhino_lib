@@ -53,9 +53,7 @@ class RawTraceData(TraceData):
 	    # Remove the timestamps that have gapqs greater than
         tx_sequence_diff = np.diff(h5_helper.h5f["cticks"].__array__())
 
-        import matplotlib.pyplot as plt
-        plt.plot(tx_sequence_diff)
-        plt.show()
+        pdb.set_trace()
 
 
 
