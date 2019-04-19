@@ -1,5 +1,16 @@
 """
 Author kkappler
+.. todo:: The logic for amplitude picking is still dependant on some assumptions about time picking.  This should be changed.
+Will do after time-picking for polarity-aware zero-crossings is implemented.
+.. todo:: Add support for max, min as well as integrated absolute amplitude
+.. todo:: Differentiate between integrated absolute amplitude and integrated average amplitude
+.. todo:: Add to doc the choices for the json and what is needed or not; Especially
+time_picks is one of {maxmium, minimum, zero_crossing, zero_crossing_positive_slope, zero_crossing_negative_slope,
+amplitude_picks  is one of {integrated_absolute_amplitude, maximum_value, minimum_value}
+.. todo:: Describe the logic for phase rotation and calculation of ampltiudes based on time_pick and wavelet_id;
+i.e. primary, integrated_absolute_amplitude, is centered on the time_pick,
+multiple_1, integrated_absolute_amplitude, is centered on the zero_crossing time_pick, with data -90deg rotated
+but in general we should have a tree of {time_pick_type, amplitude_pick_type} --> algortihm description
 
 Example json control block:
 
@@ -81,7 +92,6 @@ import pdb
 #from feature_windowing import TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION
 from feature_windowing import AmplitudeWindows
 from feature_windowing import ManualTimeWindows
-#from dcrhino3.feature_extraction.intermediate_derived_features import IntermediateFeatureDeriver
 from dcrhino3.feature_extraction.intermediate_derived_features_j2 import IntermediateFeatureDeriver
 #from dcrhino3.helpers.general_helper_functions import flatten
 from dcrhino3.helpers.general_helper_functions import init_logging
@@ -113,8 +123,6 @@ class FeatureExtractorJ2(object):
             self.sampling_rate = transformed_args.upsample_sampling_rate
         except AttributeError:
             self.sampling_rate = transformed_args.output_sampling_rate
-
-        #self.trace = SymmetricTrace(trimmed_trace, self.sampling_rate, component_id=component_id)
         self.trace = TimePicker(trimmed_trace, self.sampling_rate, component_id=component_id)
         self.transformed_args = transformed_args
         manual_windows = getattr(transformed_args.manual_time_windows, component_id)
@@ -151,43 +159,46 @@ class FeatureExtractorJ2(object):
 
     def extract_features(self):
         """
-        This will be changed so that features_to_extract is taken from the json,
-        but for now will develop here;
-        .. : todo: modify primary_max_time to be primary-max_time;
-        Does this break anything downstream??
+        .. todo:: lists of time_wavelets to pick should be taken from json, rather than explicitly hard coded here
+        .. todo:: review rotation angles for mult1/3 zerocrossings
         """
         extracted_features_dict = {}
         time_wavelets_to_pick = ['primary', 'multiple_1', 'multiple_2', 'multiple_3']
-        amplitude_wavelets_to_pick = ['primary', 'multiple_1', 'multiple_2', 'multiple_3']
+        amplitude_wavelets_to_pick = time_wavelets_to_pick
 
         for wavelet_id in time_wavelets_to_pick:
             search_feature = self.manual_windows.get_search_feature(wavelet_id)
+            reference_label = '{}_time'.format(search_feature)
             start, final = self.manual_windows.get_time_window(wavelet_id)
-            #<HACK>
+
             if start>=final:
-                logger.error('really? start is after the end? \
-                             I refuse to work with this ... ')
+                logger.error('window end time must be greater than start time - applying adhoc correction')
                 final = start+0.004
-            #</HACK>
-#            if wavelet_id=='multiple_1':
-#                result = self.trace.extract_time_pick(start, final,
-#                                                      search_feature, info='p2n')
+
             result = self.trace.extract_time_pick(start, final, search_feature)
 
-            output_label = '{}-{}-{}_time'.format(self.trace.component_id, wavelet_id, search_feature)
+            output_label = '{}-{}-{}'.format(self.trace.component_id, wavelet_id, reference_label)
             extracted_features_dict[output_label] = result
 
         for wavelet_id in amplitude_wavelets_to_pick:
             amplitude_window = self.amplitude_windows.windows[wavelet_id]
-
+            search_feature = self.manual_windows.get_search_feature(wavelet_id)
+            reference_label = '{}_time'.format(search_feature)
             if wavelet_id=='primary':
-                reference_label = 'maximum_time'; rotate_angle=False;
+                rotate_angle=False;
             elif wavelet_id=='multiple_1':
-                reference_label = 'zero_crossing_time'; rotate_angle=-90.0;
+                if search_feature[0:4]=='zero':
+                    rotate_angle=-90.0;
+                else:
+                    rotate_angle = False
             elif wavelet_id=='multiple_2':
-                reference_label = 'minimum_time'; rotate_angle=False;
+                rotate_angle=False;
             elif wavelet_id=='multiple_3':
-                reference_label = 'zero_crossing_time'; rotate_angle=90;
+                if search_feature[0:4]=='zero':
+                    rotate_angle=90.0;
+                else:
+                    rotate_angle = False
+
             else:
                 reference_label = None
                 continue
@@ -202,7 +213,7 @@ class FeatureExtractorJ2(object):
             output_label = '{}-{}-{}'.format(self.trace.component_id, wavelet_id, amplitude_window.feature)
             extracted_features_dict[output_label] = result
 
-        feature_deriver = IntermediateFeatureDeriver(self.trace.component_id,
+        feature_deriver = IntermediateFeatureDeriver(self.trace.component_id, self.manual_windows,
                                                      df_dict=extracted_features_dict)
         extracted_features_dict = feature_deriver.derive_features(self.trace.component_id)
 
