@@ -54,11 +54,13 @@ class IntermediateFeatureDeriver(object):
         + tangential_pseudo_velocity_1
 
     """
-    def __init__(self, component_id, df_dict=None):#, df):
+    def __init__(self, component_id, manual_windows, df_dict=None):
         """
+        added manual_windows 20190418 so that we can pick times on expected features
         """
         self.df_dict = df_dict
         self.component_id = component_id
+        self.manual_windows = manual_windows
 
 
     @property
@@ -106,9 +108,12 @@ class IntermediateFeatureDeriver(object):
         """
         multiple_1_time_feature <-- get from a control argument
         default: 'zero_crossing_time'
+        .. todo:: there are two ways to do this
         """
-        feature = 'zero_crossing_time'
-        full_label = '{}-multiple_1-{}'.format(self.component_id, feature)
+        wavelet_id = 'multiple_1'
+        #feature = 'zero_crossing_time'
+        feature = self.manual_windows.get_search_feature(wavelet_id)
+        full_label = '{}-{}-{}_time'.format(self.component_id, wavelet_id, feature)
         return self.df_dict[full_label]
 
     @property
