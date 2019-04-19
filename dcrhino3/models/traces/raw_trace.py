@@ -24,7 +24,7 @@ class RawTraceData(TraceData):
         self.dataframe , global_config = self._cast_h5_to_dataframe(path)
         self._global_configs["0"] = global_config
 
-    def _cast_h5_to_dataframe(self,h5_filename):
+    def _cast_h5_to_dataframe(self, h5_filename):
         """
 
         @property
@@ -35,7 +35,7 @@ class RawTraceData(TraceData):
 
         output_dict = {}
 
-        f1 = h5py.File(h5_filename,'r+')
+        f1 = h5py.File(h5_filename, 'r+')
         h5_helper = H5Helper(f1)
         global_config = Config(h5_helper.metadata)
         #pdb.set_trace()
@@ -50,16 +50,20 @@ class RawTraceData(TraceData):
         #     temp_df["rssi"] = np.asarray(h5_helper.h5f.get("rssi"), dtype=np.float32)
         # else:
 
-	
-
-
 	    # Remove the timestamps that have gapqs greater than
         tx_sequence_diff = np.diff(h5_helper.h5f["cticks"].__array__())
+
+        import matplotlib.pyplot as plt
+        plt.plot(tx_sequence_diff)
+        plt.show()
+
+
+
         try:
             gap_indices = np.where(tx_sequence_diff > global_config.missed_packets_threshold)
         except:
-            gap_indices = np.where(tx_sequence_diff>10)
-            logger.warning("Missed packets Threshold not defined in global config. Using default of 10")
+            gap_indices = np.where(tx_sequence_diff > 20)
+            logger.warning("Missed packets Threshold not defined in global config. Using default of 20")
         bad_timestamps = temp_df["timestamp"][temp_df["timestamp"].index.values[gap_indices]].unique()
         
 

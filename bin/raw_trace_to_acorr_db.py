@@ -28,15 +28,14 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
     try:
         print(global_config.upsample_factor)
     except AttributeError:
-        logger.warning("this warning will be removed once the \
-                   upsample factor is coming from the global cfg")
+        logger.warning("this warning will be removed once the upsample factor is coming from the global cfg")
         global_config.output_sampling_rate *= upsample_factor
 
     #db_helper = RhinoDBHelper('13.66.189.94',database='mont_wright')
     logger.info("Mine name on file:" + str(global_config.mine_name))
     conn = env_config.get_rhino_db_connection_from_mine_name(global_config.mine_name)
     db_helper= RhinoDBHelper(conn=conn)
-    dupes = db_helper.check_for_pre_saved_acorr_traces(l1h5_dataframe['timestamp'],global_config.sensor_serial_number)
+    dupes = db_helper.check_for_pre_saved_acorr_traces(l1h5_dataframe['timestamp'], global_config.sensor_serial_number)
 
     if len(dupes)>0:
         l1h5_dataframe = l1h5_dataframe[~l1h5_dataframe['timestamp'].isin(dupes)]
@@ -51,7 +50,8 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
     if file_id is False:
         min_ts = l1h5_dataframe['timestamp'].min()
         max_ts = l1h5_dataframe['timestamp'].max()
-        file_id = db_helper.create_acorr_file(h5_file_path,global_config.rig_id,global_config.sensor_serial_number,str(global_config.digitizer_serial_number),min_ts,max_ts)
+        file_id = db_helper.create_acorr_file(h5_file_path, global_config.rig_id, global_config.sensor_serial_number,
+                                              str(global_config.digitizer_serial_number), min_ts, max_ts)
 
     json_str = json.dumps(vars(global_config), indent=4)
 
@@ -122,10 +122,10 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
                                            min_tangential_acceleration=calibrated_dataframe['min_tangential_acceleration'],
                                            max_radial_acceleration=calibrated_dataframe['max_radial_acceleration'],
                                            min_radial_acceleration=calibrated_dataframe['min_radial_acceleration'],
-					   rssi=calibrated_dataframe["rssi"],
-					   temp=calibrated_dataframe["temp"],
-				  	   batt=calibrated_dataframe["batt"],
-					   packets=calibrated_dataframe["packets"]
+                                           rssi=calibrated_dataframe["rssi"],
+                                           temp=calibrated_dataframe["temp"],
+                                           batt=calibrated_dataframe["batt"],
+                                           packets=calibrated_dataframe["packets"]
                                            )
 
 
