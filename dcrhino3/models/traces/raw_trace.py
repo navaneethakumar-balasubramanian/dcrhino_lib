@@ -53,16 +53,16 @@ class RawTraceData(TraceData):
 	    # Remove the timestamps that have gapqs greater than
         tx_sequence_diff = np.diff(h5_helper.h5f["cticks"].__array__())
 
-        pdb.set_trace()
 
 
-
-        try:
-            gap_indices = np.where(tx_sequence_diff > global_config.missed_packets_threshold)
-        except:
-            gap_indices = np.where(tx_sequence_diff > 20)
-            logger.warning("Missed packets Threshold not defined in global config. Using default of 20")
-        bad_timestamps = temp_df["timestamp"][temp_df["timestamp"].index.values[gap_indices]].unique()
+        filter_gaps = False # This is for further development if we want to filter traces that have large gaps
+        if filter_gaps:
+            try:
+                gap_indices = np.where(tx_sequence_diff > global_config.missed_packets_threshold)
+            except:
+                gap_indices = np.where(tx_sequence_diff > 40)
+                logger.warning("Missed packets Threshold not defined in global config. Using default of 40")
+            bad_timestamps = temp_df["timestamp"][temp_df["timestamp"].index.values[gap_indices]].unique()
         
 
         for component_id in global_config.components_to_process:
@@ -104,7 +104,8 @@ class RawTraceData(TraceData):
         output_df["packets"] = packets
 
         output_df.index = output_df['timestamp']
-        output_df = output_df[~output_df['timestamp'].isin(bad_timestamps)]
+        if filter_gaps:
+            output_df = output_df[~output_df['timestamp'].isin(bad_timestamps)]
         # pdb.set_trace()
         return output_df, global_config
 
