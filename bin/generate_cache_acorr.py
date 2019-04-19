@@ -89,7 +89,6 @@ if __name__ == '__main__':
         args = argparser.parse_args()
         mine_name = args.mine_name
         env_config_path = args.env_config_path
-        pdb.set_trace()
     else:
         mine_name = ''
 
