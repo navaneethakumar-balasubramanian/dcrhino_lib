@@ -133,9 +133,9 @@
                 "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|", 
                 "time_picks": {
                     "axial": {
-                        "multiple_3": "zero_crossing", 
+                        "multiple_3": "zero_crossing_positive_slope",
                         "multiple_2": "minimum", 
-                        "multiple_1": "zero_crossing", 
+                        "multiple_1": "zero_crossing_negative_slope",
                         "primary": "maximum"
                     }, 
                     "tangential": {
@@ -216,7 +216,7 @@
                             }, 
                             {
                                 "linewidth": 2, 
-                                "column_label": "J2-axial-multiple_1-zero_crossing_time", 
+                                "column_label": "J2-axial-multiple_1-zero_crossing_negative_slope_time",
                                 "label": "M1 Zx", 
                                 "color": "#FFFFFF", 
                                 "formula": "data*1000"
@@ -230,7 +230,7 @@
                             }, 
                             {
                                 "linewidth": 2, 
-                                "column_label": "J2-axial-multiple_3-zero_crossing_time", 
+                                "column_label": "J2-axial-multiple_3-zero_crossing_positive_slope_time" ,
                                 "label": "M3 Zx", 
                                 "color": "#FFFFFF", 
                                 "formula": "data*1000"
@@ -376,7 +376,7 @@
                             }, 
                             {
                                 "linewidth": 2, 
-                                "column_label": "J2-axial-multiple_1-zero_crossing_time", 
+                                "column_label": "J2-axial-multiple_1-zero_crossing_negative_slope_time",
                                 "label": "M1 Zx", 
                                 "color": "#FFFFFF", 
                                 "formula": "data*1000"
@@ -390,7 +390,7 @@
                             }, 
                             {
                                 "linewidth": 2, 
-                                "column_label": "J2-axial-multiple_3-zero_crossing_time", 
+                                "column_label": "J2-axial-multiple_3-zero_crossing_positive_slope_time",
                                 "label": "M3 Zx", 
                                 "color": "#FFFFFF", 
                                 "formula": "data*1000"
