@@ -25,9 +25,9 @@ logger = init_logging(__name__)
 
 
 
-def generate_cache_acorr(mine_name):
+def generate_cache_acorr(mine_name, env_config_path=False):
 
-    envConfig = EnvConfig()
+    envConfig = EnvConfig(env_config_path)
     holes_cached_folder = envConfig.get_hole_h5_interpolated_cache_folder(mine_name)
 
     conn = envConfig.get_rhino_db_connection_from_mine_name(mine_name)
@@ -84,11 +84,13 @@ if __name__ == '__main__':
     use_argparse = True
     if use_argparse:
         argparser = argparse.ArgumentParser(description="Copyright (c) 2018 DataCloud")
-        argparser.add_argument("mine_name", metavar="mine_name", type=str,
-        help="Mine Name" )
+        argparser.add_argument("mine_name", metavar="mine_name", type=str, help="Mine Name")
+        argparser.add_argument("-env", '--env_config_path', help="Path to optional env config file", default=False)
         args = argparser.parse_args()
         mine_name = args.mine_name
+        env_config_path = args.env_config_path
+        pdb.set_trace()
     else:
         mine_name = ''
 
-    generate_cache_acorr(mine_name)
+    generate_cache_acorr(mine_name, env_config_path)
