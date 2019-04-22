@@ -2,11 +2,15 @@
 Author kkappler
 .. todo:: The logic for amplitude picking is still dependant on some assumptions about time picking.  This should be changed.
 Will do after time-picking for polarity-aware zero-crossings is implemented.
-.. todo:: Add support for max, min as well as integrated absolute amplitude
+
+.. todo:: Add support for max, min as well as integrated absolute amplitude for ampltiude_picks
+
 .. todo:: Differentiate between integrated absolute amplitude and integrated average amplitude
+
 .. todo:: Add to doc the choices for the json and what is needed or not; Especially
 time_picks is one of {maxmium, minimum, zero_crossing, zero_crossing_positive_slope, zero_crossing_negative_slope,
 amplitude_picks  is one of {integrated_absolute_amplitude, maximum_value, minimum_value}
+
 .. todo:: Describe the logic for phase rotation and calculation of ampltiudes based on time_pick and wavelet_id;
 i.e. primary, integrated_absolute_amplitude, is centered on the time_pick,
 multiple_1, integrated_absolute_amplitude, is centered on the zero_crossing time_pick, with data -90deg rotated
@@ -161,6 +165,7 @@ class FeatureExtractorJ2(object):
         """
         .. todo:: lists of time_wavelets to pick should be taken from json, rather than explicitly hard coded here
         .. todo:: review rotation angles for mult1/3 zerocrossings
+        .. todo:: remove support for ambiguous zero_crossing pick type
         """
         extracted_features_dict = {}
         time_wavelets_to_pick = ['primary', 'multiple_1', 'multiple_2', 'multiple_3']
@@ -184,24 +189,16 @@ class FeatureExtractorJ2(object):
             amplitude_window = self.amplitude_windows.windows[wavelet_id]
             search_feature = self.manual_windows.get_search_feature(wavelet_id)
             reference_label = '{}_time'.format(search_feature)
-            if wavelet_id=='primary':
-                rotate_angle=False;
-            elif wavelet_id=='multiple_1':
-                if search_feature[0:4]=='zero':
-                    rotate_angle=-90.0;
-                else:
-                    rotate_angle = False
-            elif wavelet_id=='multiple_2':
-                rotate_angle=False;
-            elif wavelet_id=='multiple_3':
-                if search_feature[0:4]=='zero':
-                    rotate_angle=90.0;
-                else:
-                    rotate_angle = False
-
-            else:
-                reference_label = None
-                continue
+            rotate_angle = False
+            if search_feature == "zero_crossing_negative_slope":
+                rotate_angle = -90.0;
+            elif search_feature == "zero_crossing_positive_slope":
+                rotate_angle = 90.0;
+            elif search_feature == "zero_crossing":
+                if wavelet_id == 'multiple_1':
+                    rotate_angle = -90.0;
+                elif wavelet_id == 'multiple_3':
+                    rotate_angle = 90.0;
 
             window_center_time_label = '{}-{}-{}'.format(self.trace.component_id, wavelet_id, reference_label)
             window_center = extracted_features_dict[window_center_time_label]
