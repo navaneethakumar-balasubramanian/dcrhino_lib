@@ -78,7 +78,8 @@ class GUI():
         self.saved = True
         self.glob_str = None
         self.json = None
-        self.env_config = EnvConfig("env_config.json")
+        self.env_config_path = "env_config.json"
+        self.env_config = EnvConfig(self.env_config_path)
         self.acorr_path = self.env_config.get_hole_h5_interpolated_cache_folder(
             self.env_config.__dict__["mines"].keys()[0])
         self.acorr_path = os.path.abspath(os.path.join(self.acorr_path, "..", ".."))
@@ -90,11 +91,16 @@ class GUI():
         #create the file menu
         self.menubar = Menu(self.master)
         self.filemenu = Menu(self.menubar, tearoff=0)
+        self.config_menu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Project", menu=self.filemenu)
         self.filemenu.add_command(label="Open Data File", command=self.get_data_file)
         self.filemenu.add_command(label="Open Data Folder", command=self.get_data_path)
         self.filemenu.add_separator()
         self.filemenu.add_command(label="Exit", command=self.exit)
+        self.menubar.add_cascade(label="Env Config", menu=self.config_menu)
+        self.config_menu.add_command(label="Revert to Default", command=self.set_env_config_details)
+        self.config_menu.add_command(label="Open External Env Config File", command=self.get_env_config_file)
+
         self.master.config(menu=self.menubar)
 
         # create the text menu
@@ -142,6 +148,12 @@ class GUI():
         self.sv.trace("w", lambda name, index, mode, sv=self.sv: self.set_glob_str(sv))
         self.data_path = Entry(self.master, textvariable=self.sv)
         self.data_path.grid(row=row, column=column, sticky="news", columnspan=6, rowspan=4)
+        row+=4
+        column=0
+        Label(self.master, text="Env Config Path: ").grid(row=row, column=column, sticky="news", rowspan=4)
+        column += 1
+        self.env_config_lbl = Label(self.master, text=self.env_config_path)
+        self.env_config_lbl.grid(row=row, column=column, sticky="news", rowspan=4)
 
         column = 0
         # Label(self.master, text="JSON Tree Display").grid(row=row, column=column)
@@ -203,6 +215,22 @@ class GUI():
         for i in range(100):
             self.master.grid_columnconfigure(i, weight=1)
             self.master.grid_rowconfigure(i, weight=1)
+
+    def set_env_config_details(self, path="env_config.json"):
+        self.env_config_path = path
+        self.env_config_lbl["text"]=path
+        self.env_config = EnvConfig(path)
+        self.acorr_path = self.env_config.get_hole_h5_interpolated_cache_folder(
+            self.env_config.__dict__["mines"].keys()[0])
+        self.acorr_path = os.path.abspath(os.path.join(self.acorr_path, "..", ".."))
+
+    def get_env_config_file(self):
+        extension = [('JSON File', '*.json')]
+        path = tkFileDialog.askopenfilename(initialdir=self.json_dir_path, defaultextension=".json",
+                                            filetypes=extension)
+        if path is None:  # asksaveasfile return `None` if dialog closed with "cancel".
+            return
+        self.set_env_config_details(path)
 
     def set_glob_str(self, sv):
         self.glob_str = self.sv.get()
@@ -659,11 +687,12 @@ class GUI():
                 seconds_to_process = False
                 if str(self.seconds_to_process.get()) != "":
                     seconds_to_process = int(str(self.seconds_to_process.get()))
-                    cmd = "python {} -f {} -stp {} '{}'".format(os.path.abspath('process_flow.py'), self.json_path,
+                    cmd = "python {} -f {} -env {} -stp {} '{}'".format(os.path.abspath('process_flow.py'),
+                                                                      self.json_path,self.env_config_path,
                                                                 seconds_to_process, self.glob_str)
                 else:
-                    cmd = "python {} -f {} '{}'".format(os.path.abspath('process_flow.py'), self.json_path,
-                                                        self.glob_str)
+                    cmd = "python {} -f {} -env {} '{}'".format(os.path.abspath('process_flow.py'), self.json_path,
+                                                                self.env_config_path, self.glob_str)
                 print cmd
                 p = Popen(cmd, shell=True)
                 while p.poll() is None:

@@ -48,6 +48,8 @@ def get_zx_result_time(zero_cross_times, window_time, window_data, pick_type):
     logical and exception handling, this isn't really doing any calcuations, it's checking the validity of the
     calculations and the appropriateness of the methods applied to the data
 
+    .. todo:: make this support boolean column in dataframe
+
     :param zero_cross_times:
     :param window_time:
     :param window_data:
@@ -62,7 +64,6 @@ def get_zx_result_time(zero_cross_times, window_time, window_data, pick_type):
         return zero_crossing_time
     elif len(zero_cross_times) > 1:
         logger.warning("multiple {} zero crossings - unexpected".format(pick_type))
-        pdb.set_trace()
         zero_crossing_index = np.argmin(np.abs(window_data))
         zero_crossing_time = window_time[zero_crossing_index]
         return zero_crossing_time
