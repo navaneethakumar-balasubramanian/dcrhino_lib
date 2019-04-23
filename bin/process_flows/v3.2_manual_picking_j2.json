@@ -1,8 +1,7 @@
 {
     "output_to_file": true, 
     "components_to_process": [
-        "axial", 
-        "tangential"
+        "axial"
     ], 
     "modules": [
         {
@@ -335,18 +334,20 @@
                                 "scale": "current",
                                 "space": 0,
                                 "spine_side": "left",
-                                "column_label": "rop"
+                                "column_label": "wob",
+                                "color": "red"
                             },
                             {
                                 "color": "blue",
-                                "column_label": "wob",
+                                "column_label": "mse",
                                 "spine_side": "right",
                                 "scale": "new",
                                 "space": 0
                             },
                             {
                                 "color": "lime",
-                                "column_label": "mse",
+                                "label": "timestamp",
+                                "column_label": "timestamp",
                                 "spine_side": "right",
                                 "scale": "new",
                                 "space": 60
