@@ -329,143 +329,168 @@
                 "padding_right": 0.03, 
                 "panels": [
                     {
-                        "type": "curves", 
+                        "type": "curves",
                         "curves": [
                             {
-                                "scale": "current", 
-                                "space": 0, 
-                                "color": "red", 
-                                "spine_side": "left", 
-                                "label": "J2-ax-prim-int-abs-amp", 
-                                "column_label": "J2-axial-primary-integrated_absolute_amplitude"
-                            }, 
+                                "scale": "current",
+                                "space": 0,
+                                "spine_side": "left",
+                                "column_label": "rop"
+                            },
                             {
-                                "color": "blue", 
-                                "column_label": "J2-axial-reflection_coefficient_1", 
-                                "spine_side": "right", 
-                                "scale": "new", 
+                                "color": "blue",
+                                "column_label": "wob",
+                                "spine_side": "right",
+                                "scale": "new",
                                 "space": 0
-                            }, 
+                            },
                             {
-                                "color": "lime", 
-                                "column_label": "J2-axial-delay_1", 
-                                "spine_side": "right", 
-                                "scale": "new", 
+                                "color": "lime",
+                                "column_label": "mse",
+                                "spine_side": "right",
+                                "scale": "new",
                                 "space": 60
                             }
                         ]
-                    }, 
+                    },
                     {
-                        "component": "axial", 
+                        "type": "curves",
+                        "curves": [
+                            {
+                                "scale": "current",
+                                "space": 0,
+                                "color": "red",
+                                "spine_side": "left",
+                                "label": "J2-ax-prim-int-abs-amp",
+                                "column_label": "J2-axial-primary-integrated_absolute_amplitude"
+                            },
+                            {
+                                "color": "blue",
+                                "column_label": "J2-axial-reflection_coefficient_1",
+                                "spine_side": "right",
+                                "scale": "new",
+                                "space": 0
+                            },
+                            {
+                                "color": "lime",
+                                "column_label": "J2-axial-delay_1",
+                                "spine_side": "right",
+                                "scale": "new",
+                                "space": 60
+                            }
+                        ]
+                    },
+                    {
+                        "component": "axial",
                         "manual_time_windows": {
                             "axial": {
-                                "multiple_3": "|process_flow.axial_multiple_3|", 
-                                "multiple_2": "|process_flow.axial_multiple_2|", 
-                                "multiple_1": "|process_flow.axial_multiple_1|", 
+                                "multiple_3": "|process_flow.axial_multiple_3|",
+                                "multiple_2": "|process_flow.axial_multiple_2|",
+                                "multiple_1": "|process_flow.axial_multiple_1|",
                                 "primary": "|process_flow.axial_primary|"
                             }
-                        }, 
-                        "type": "heatmap", 
+                        },
+                        "type": "heatmap",
                         "curves": [
                             {
-                                "linewidth": 2, 
-                                "column_label": "J2-axial-primary-maximum_time", 
-                                "label": "primary Max", 
-                                "color": "#FFFFFF", 
+                                "linewidth": 2,
+                                "column_label": "J2-axial-primary-maximum_time",
+                                "label": "primary Max",
+                                "color": "#FFFFFF",
                                 "formula": "data*1000"
-                            }, 
+                            },
                             {
-                                "linewidth": 2, 
+                                "linewidth": 2,
                                 "column_label": "J2-axial-multiple_1-zero_crossing_negative_slope_time",
-                                "label": "M1 Zx", 
-                                "color": "#FFFFFF", 
+                                "label": "M1 Zx",
+                                "color": "#FFFFFF",
                                 "formula": "data*1000"
-                            }, 
+                            },
                             {
-                                "linewidth": 2, 
-                                "column_label": "J2-axial-multiple_2-minimum_time", 
-                                "label": "M2 Min", 
-                                "color": "#FFFFFF", 
+                                "linewidth": 2,
+                                "column_label": "J2-axial-multiple_2-minimum_time",
+                                "label": "M2 Min",
+                                "color": "#FFFFFF",
                                 "formula": "data*1000"
-                            }, 
+                            },
                             {
-                                "linewidth": 2, 
+                                "linewidth": 2,
                                 "column_label": "J2-axial-multiple_3-zero_crossing_positive_slope_time",
-                                "label": "M3 Zx", 
-                                "color": "#FFFFFF", 
+                                "label": "M3 Zx",
+                                "color": "#FFFFFF",
                                 "formula": "data*1000"
                             }
-                        ], 
+                        ],
                         "wavelet_windows_to_show": [
-                            "primary", 
-                            "multiple_1", 
-                            "multiple_2", 
+                            "primary",
+                            "multiple_1",
+                            "multiple_2",
                             "multiple_3"
                         ]
-                    }, 
+                    },
                     {
-                        "type": "curves", 
+                        "type": "curves",
                         "curves": [
                             {
-                                "scale": "current", 
-                                "space": 0, 
-                                "color": "red", 
-                                "spine_side": "left", 
-                                "label": "J2-tang-prim-int-abs-amp", 
+                                "scale": "current",
+                                "space": 0,
+                                "color": "red",
+                                "spine_side": "left",
+                                "label": "J2-tang-prim-int-abs-amp",
                                 "column_label": "J2-tangential-primary-integrated_absolute_amplitude"
-                            }, 
+                            },
                             {
-                                "color": "blue", 
-                                "column_label": "J2-tangential-reflection_coefficient_1", 
-                                "spine_side": "right", 
-                                "scale": "new", 
+                                "color": "blue",
+                                "column_label": "J2-tangential-reflection_coefficient_1",
+                                "spine_side": "right",
+                                "scale": "new",
                                 "space": 0
-                            }, 
+                            },
                             {
-                                "color": "lime", 
-                                "column_label": "J2-tangential-delay_1", 
-                                "spine_side": "right", 
-                                "scale": "new", 
+                                "color": "lime",
+                                "column_label": "J2-tangential-delay_1",
+                                "spine_side": "right",
+                                "scale": "new",
                                 "space": 60
                             }
                         ]
-                    }, 
+                    },
                     {
-                        "upper_num_ms": 60, 
+                        "upper_num_ms": 60,
                         "wavelet_windows_to_show": [
-                            "primary", 
-                            "multiple_1", 
-                            "multiple_2", 
+                            "primary",
+                            "multiple_1",
+                            "multiple_2",
                             "multiple_3"
-                        ], 
-                        "component": "tangential", 
+                        ],
+                        "component": "tangential",
                         "curves": [
                             {
-                                "linewidth": 2, 
-                                "column_label": "J2-tangential-primary-maximum_time", 
-                                "label": "primary Max", 
-                                "color": "#FFFFFF", 
+                                "linewidth": 2,
+                                "column_label": "J2-tangential-primary-maximum_time",
+                                "label": "primary Max",
+                                "color": "#FFFFFF",
                                 "formula": "data*1000"
-                            }, 
+                            },
                             {
-                                "linewidth": 2, 
-                                "column_label": "J2-tangential-multiple_1-zero_crossing_time", 
-                                "label": "M1 Zx", 
-                                "color": "#FFFFFF", 
+                                "linewidth": 2,
+                                "column_label": "J2-tangential-multiple_1-zero_crossing_time",
+                                "label": "M1 Zx",
+                                "color": "#FFFFFF",
                                 "formula": "data*1000"
-                            }, 
+                            },
                             {
-                                "linewidth": 2, 
-                                "column_label": "J2-tangential-multiple_2-minimum_time", 
-                                "label": "M2 Min", 
-                                "color": "#FFFFFF", 
+                                "linewidth": 2,
+                                "column_label": "J2-tangential-multiple_2-minimum_time",
+                                "label": "M2 Min",
+                                "color": "#FFFFFF",
                                 "formula": "data*1000"
-                            }, 
+                            },
                             {
-                                "linewidth": 2, 
-                                "column_label": "J2-tangential-multiple_3-zero_crossing_time", 
-                                "label": "M3 Zx", 
-                                "color": "#FFFFFF", 
+                                "linewidth": 2,
+                                "column_label": "J2-tangential-multiple_3-zero_crossing_time",
+                                "label": "M3 Zx",
+                                "color": "#FFFFFF",
                                 "formula": "data*1000"
                             }
                         ], 
