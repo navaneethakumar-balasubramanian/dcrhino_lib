@@ -48,7 +48,7 @@ while True:
         # latest_run = max(glob.glob(os.path.join(RAM_PATH,"*")), key=os.path.getmtime)
         system_health = os.path.join(RAM_PATH, "system_health.npy")
         if os.path.exists(system_health):
-            health = np.load(system_health)
+            health = np.load(system_health,allow_pickle=True)
 
         rows = 3
         columns = 2
