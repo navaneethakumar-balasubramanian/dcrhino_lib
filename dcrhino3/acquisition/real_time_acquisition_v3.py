@@ -647,9 +647,10 @@ class CollectionDaemonThread(threading.Thread):
                     # 12=packet.valid_trace
                     # TODO use a dictionary instead of a list so I can access the values by key and not by indices
 
-                    # TODO Uncomment the next three lines if we want to filter the traces by how many missed samples
+
+                    buffer_entry = self.bufferQ.get()
+                    # TODO Uncomment the next two lines if we want to filter the traces by how many missed samples
                     #  we have
-                    # buffer_entry = self.bufferQ.get()
                     # if not buffer_entry[12]:
                     #     valid_trace = False
                     row = np.asarray(buffer_entry[0:11], dtype=np.float64)
