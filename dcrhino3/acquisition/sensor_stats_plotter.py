@@ -183,7 +183,7 @@ while True:
     try:
         system_health = os.path.join(RAM_PATH, "system_health.npy")
         if os.path.exists(system_health):
-            health = np.load(system_health)
+            health = np.load(system_health, allow_pickle=True)
 
         plotter.create_plots()
 
