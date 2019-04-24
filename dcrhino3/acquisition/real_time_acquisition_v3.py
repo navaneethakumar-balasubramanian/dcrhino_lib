@@ -1066,6 +1066,7 @@ def main_run(run=True):
                       max_radial_acceleration, min_radial_acceleration, disk_usage]
             system_healthQ.put(health)
             np.save(os.path.join(RAM_PATH, 'system_health.npy'), np.asarray(health))
+            print("saved")
             display.update_system_health()
 
             plt.pause(0.05)
