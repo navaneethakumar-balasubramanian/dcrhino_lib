@@ -103,12 +103,46 @@ class TraceData(object):
         return self.first_global_config.mine_name
 
     @property
+    def sensor_accelerometer_type(self):
+        return self.first_global_config.sensor_accelerometer_type
+
+    @property
+    def sensor_saturation_g(self):
+        return str(self.first_global_config.sensor_saturation_g)
+
+
+    @property
     def sensor_id(self):
-        return self.first_global_config.sensor_serial_number
+        return str(self.first_global_config.sensor_serial_number)
+
+    @property
+    def hole_id(self):
+        line = self.dataframe.iloc[0]
+        return str(line.hole_id)
+
+    @property
+    def bench_name(self):
+        line = self.dataframe.iloc[0]
+        return str(line.bench_name)
+
+    @property
+    def pattern_name(self):
+        line = self.dataframe.iloc[0]
+        return str(line.pattern_name)
+
+    @property
+    def hole_name(self):
+        line = self.dataframe.iloc[0]
+        return str(line.hole_name)
+
+    @property
+    def rig_id(self):
+        line = self.dataframe.iloc[0]
+        return str(line.rig_id)
 
     @property
     def digitizer_id(self):
-        return self.first_global_config.digitizer_serial_number
+        return str(self.first_global_config.digitizer_serial_number)
 
     @property
     def component_columns(self):
@@ -177,6 +211,8 @@ class TraceData(object):
         df['digitizer_id'] = first_global_config.digitizer_serial_number
         df['rhino_sensor_uid'] = str(first_global_config.sensor_type) + "_" + str(first_global_config.sensor_serial_number) + "_" + str(first_global_config.digitizer_serial_number) + "_" + str(first_global_config.sensor_accelerometer_type) + "_" + str(first_global_config.sensor_saturation_g)
         df.to_csv(path,index=False)
+
+
 
     def save_to_h5(self, path):
         """

@@ -7,6 +7,8 @@ import pdb
 import time
 import os
 
+from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
+
 from dcrhino3.helpers.general_helper_functions import init_logging, create_folders_if_needed
 
 from dcrhino3.process_flow.modules.trace_processing.balance_trace import BalanceModule
@@ -47,6 +49,7 @@ from dcrhino3.process_flow.modules.hybrid.trim_trace import TrimTraceModuleHybri
 from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import UnfoldAutocorrelationModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.upsample_hybrid import UpsampleModuleHybrid
 
+from datetime import datetime
 
 logger = init_logging(__name__)
 
@@ -96,6 +99,7 @@ class ProcessFlow:
 
         self.components_to_process = ['axial','tangential']
         self.output_path = output_path
+        self.rhino_db_helper = False
 
 
     def set_process_flow(self,process_json):
@@ -126,7 +130,12 @@ class ProcessFlow:
         if 'components_to_process' in process_json.keys():
             self.components_to_process = process_json['components_to_process']
 
-        process_flow_output_path = os.path.join(self.output_path, self.id)
+        now = datetime.now()
+
+        datetime_str = now.strftime("%Y%m%d%H%M%S")
+        process_flow_output_path = os.path.join(self.output_path, str(datetime_str+ "_"+self.id))
+
+
         process_counter = 0
         if 'modules' in process_json.keys():
             modules_json = process_json['modules']
@@ -140,7 +149,12 @@ class ProcessFlow:
 
 
     def process(self, trace_data):
-        process_flow_output_path = os.path.join(self.output_path, self.id)
+
+        now = datetime.now()
+        datetime_str = now.strftime("%Y%m%d%H%M%S")
+        process_flow_output_path = os.path.join(self.output_path, str(datetime_str + "_" + self.id))
+
+
         logger.info("Processing files to :" + process_flow_output_path)
         create_folders_if_needed(process_flow_output_path)
         """
@@ -157,6 +171,7 @@ class ProcessFlow:
                 and folders will be created if needed)
         """
         output_trace = trace_data
+
         self.modules_to_process = len(self.modules_flow)
         self.actual_module = 0
         while self.actual_module != self.modules_to_process:
@@ -174,9 +189,9 @@ class ProcessFlow:
             output_trace.save_to_h5(os.path.join(process_flow_output_path, "processed.h5"))
             output_trace.save_to_csv(os.path.join(process_flow_output_path, "processed.csv"))
 
-
-        # if self.output_to_db:
-        #    output_trace.save_to_db(self.rhino_db_helper,self.id)
+        if self.output_to_db:
+            self.rhino_db_helper.save_processed_trace(trace_data, self.id, json.dumps(self.process_json),
+                                                      process_flow_output_path, int(now.strftime("%s")),99999)
 
         return output_trace
 
@@ -198,6 +213,8 @@ class ProcessFlow:
             self.output_path = os.path.join(self.output_path,filename_without_ext)
 
         self.set_process_flow(process_json)
+        conn = env_config.get_rhino_db_connection_from_mine_name(acorr_trace.mine_name)
+        self.rhino_db_helper = RhinoDBHelper(conn=conn)
 
         acorr_trace = self.process(acorr_trace)
         return_dict["acorr_trace"] = acorr_trace

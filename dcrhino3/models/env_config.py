@@ -142,6 +142,18 @@ class EnvConfig(object):
             return False
         if 'db' in mine_cfg['mwd']:
             return mine_cfg['mwd']['db']
-            
+
+    def get_mp_config(self, mine_name):
+        """
+        Get database configuration from mine_cfg dictionary.
+
+        Returns:
+            mine_cfg['mwd']['db'] or False if mwd missing from keys of mine_cfg
+        """
+        mine_cfg = self._get_mine_config(mine_name)
+        if not mine_cfg or 'mp_connection' not in mine_cfg.keys():
+            return False
+        return mine_cfg['mp_connection']
+
         
             
