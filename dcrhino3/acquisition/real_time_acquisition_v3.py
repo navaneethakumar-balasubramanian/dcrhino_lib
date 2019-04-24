@@ -72,7 +72,7 @@ battery_lower_limit = config.getfloat("INSTALLATION","battery_min_voltage")
 sampling_rate = config.getfloat("COLLECTION", "output_sampling_rate")
 delta_t = 1.0/sampling_rate
 remove_mean = config.getboolean("RUNTIME", "remove_mean")
-missed_packets_threshold = config.getint("RUNTIME", "missed packets_threshold")
+missed_packets_threshold = config.getint("RUNTIME", "missed_packets_threshold")
 
 
 local_folder = config.get("DATA_TRANSMISSION","local_folder", DATA_PATH)
@@ -646,9 +646,12 @@ class CollectionDaemonThread(threading.Thread):
                     # 11=self.rhino_serial_number)
                     # 12=packet.valid_trace
                     # TODO use a dictionary instead of a list so I can access the values by key and not by indices
-                    buffer_entry = self.bufferQ.get()
-                    if not buffer_entry[12]:
-                        valid_trace = False
+
+                    # TODO Uncomment the next three lines if we want to filter the traces by how many missed samples
+                    #  we have
+                    # buffer_entry = self.bufferQ.get()
+                    # if not buffer_entry[12]:
+                    #     valid_trace = False
                     row = np.asarray(buffer_entry[0:11], dtype=np.float64)
                     # entry is the rhino serial number and that is a string
 
