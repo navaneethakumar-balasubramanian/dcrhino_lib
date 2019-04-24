@@ -140,6 +140,10 @@ class FeatureExtractorJ2(object):
         self.amplitude_windows = AmplitudeWindows()
         self.amplitude_windows.populate_from_transformed_args(amplitude_half_widths,
                                                               amplitude_picks)
+        try:
+            self.additional_pick_based_amplitude_windows = getattr(transformed_args.additional_pick_based_amplitude_windows, component_id)
+        except:
+            self.additional_pick_based_amplitude_windows = None
         #</fix this up>
 
 
@@ -184,7 +188,38 @@ class FeatureExtractorJ2(object):
 
             output_label = '{}-{}-{}'.format(self.trace.component_id, wavelet_id, reference_label)
             extracted_features_dict[output_label] = result
+        #<HACK>
+        if self.additional_pick_based_amplitude_windows is not None:
+            wavelet_id = 'multiple_1'
+            bounds = getattr(self.additional_pick_based_amplitude_windows,wavelet_id)
+            search_feature = self.manual_windows.get_search_feature(wavelet_id)
+            wavelet_reference_label = '{}_time'.format(search_feature)
+            pick_time_key = '{}-{}-{}'.format(self.trace.component_id, wavelet_id, wavelet_reference_label)
+            pick_time = extracted_features_dict[pick_time_key]
 
+            left_window_lower_bound = pick_time + bounds.left_lower_bound_offset
+            left_window_upper_bound = pick_time + bounds.left_upper_bound_offset
+            left_window_half_width = (left_window_upper_bound - left_window_lower_bound)/2.0
+            left_window_center = left_window_lower_bound + left_window_half_width
+            #print('dogs')
+            result = self.extract_average_absolute_amplitude(left_window_center,
+                                                    left_window_half_width,
+                                                    rotate_angle=False)
+            output_label = '{}-{}-{}'.format(self.trace.component_id, wavelet_id, 'additional_pick_based_left_integrated_absolute_amplitude')
+            extracted_features_dict[output_label] = result
+
+            right_window_lower_bound = pick_time + bounds.right_lower_bound_offset
+            right_window_upper_bound = pick_time + bounds.right_upper_bound_offset
+            right_window_half_width = (right_window_upper_bound - right_window_lower_bound) / 2.0
+            right_window_center = right_window_lower_bound + right_window_half_width
+            #print('cats')
+            result = self.extract_average_absolute_amplitude(right_window_center,
+                                                             right_window_half_width,
+                                                             rotate_angle=False)
+            output_label = '{}-{}-{}'.format(self.trace.component_id, wavelet_id,
+                                             'additional_pick_based_right_integrated_absolute_amplitude')
+            extracted_features_dict[output_label] = result
+        #</HACK>
         for wavelet_id in amplitude_wavelets_to_pick:
             amplitude_window = self.amplitude_windows.windows[wavelet_id]
             search_feature = self.manual_windows.get_search_feature(wavelet_id)
