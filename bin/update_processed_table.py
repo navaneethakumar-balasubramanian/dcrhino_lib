@@ -17,7 +17,7 @@ logger = init_logging(__name__)
 
 
 def update_processed_table(mine_name,env_config_path):
-    file_to_look_for = "processed.h5"
+    file_to_look_for = "process_flow.json"
     envConfig = EnvConfig(env_config_path)
     conn_rhino = envConfig.get_rhino_db_connection_from_mine_name(mine_name)
     processed_folder_path = envConfig.get_hole_h5_processed_cache_folder(mine_name)
@@ -31,7 +31,7 @@ def update_processed_table(mine_name,env_config_path):
         processed_h5_path = os.path.join(complete_path_folder,"processed.h5")
         process_flow_path = os.path.join(complete_path_folder,"process_flow.json")
 
-        if os.path.isfile(processed_h5_path) and os.path.isfile(process_flow_path) and len(processed_holes) == 0 or relative_path_folder not in processed_holes.output_folder_name.values:
+        if os.path.exists(processed_h5_path) and os.path.exists(process_flow_path) and len(processed_holes) == 0 or relative_path_folder not in processed_holes.output_folder_name.values:
             logger.info("Processing " +str(i+1) + "/"+str(len(files)) + " : "+ complete_path_folder)
             trace_data = TraceData()
             trace_data.load_from_h5(processed_h5_path)
