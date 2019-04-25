@@ -78,11 +78,21 @@ def reduce_zero_crossing_list_to_type(zx_type, zero_crossing_times, zero_crossin
 
 def zero_crossing_handler_v01(time_vector, data, polynomial_order=None):
     """
-    finds zero crossings using polyfit.  Then restricts to real-valued and within the
+    Finds zero crossings using polyfit.  Then restricts to real-valued and within the
     time interval specified by time_vector.  These are then further classified as
     upgoing or downgoing zero crossings.
 
-    Output is an array and a list, maybe better to make a df, or zip them, or make a list of tuples?
+    Parameters:
+        time_vector (list): time series of data
+        data (list): data to be polyfitted
+        polynomial_order (int): order of polynoial to be fitted (default is None)
+
+    Returns
+        array: the zero crossing times
+        list of strings: the zero crossing types
+
+    .. todo:: Output is an array and a list, maybe better to make a df, or zip them, or make a list of tuples?
+
     """
     if polynomial_order is None:
         polynomial_order = get_polynomial_order(len(data))

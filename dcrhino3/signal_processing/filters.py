@@ -7,7 +7,7 @@ class FIRLSFilter(object):
     Basically you need the data_key to make the filter because you dont know 
     the sampling rate.
     
-    .. todo:: This needs to be funtion of nyq
+    .. todo:: This needs to be function of nyq
     .. todo:: length and desired_duration have to be self consistent... maybe
         add a unit test or check for this consistency
 

@@ -178,6 +178,7 @@ class Curve(object):
         self.scale = kwargs.get("scale","current")
         self.spine_side = kwargs.get('spine_side','left')
         self.space = kwargs.get('space' , 0)
+        self.number_of_wiggles = kwargs.get("number_of_wiggles", 50)
 
         if self.label == '':
             self.label = self.column_label
@@ -327,7 +328,7 @@ class Heatmap(RhinoDisplayPanel):
         """
 
         minor_locator = AutoMinorLocator(8)
-        #pdb.set_trace()
+
         if self.trace_downsample_factor > 1:
             #it has to be an integer!
             X = X[::self.trace_downsample_factor];
@@ -419,9 +420,117 @@ class Heatmap(RhinoDisplayPanel):
 
 
 class Wiggle(RhinoDisplayPanel):
-    def __init__(self):
-        RhinoDisplayPanel.__init__(self)
+    def __init__(self, **kwargs):
+        super(Wiggle, self).__init__(**kwargs)
         self.plot_style = "wiggle"
+        self.component = kwargs.get('component', '')
+        self.curves = kwargs.get('curves', [])
+        self.lower_num_ms = kwargs.get('lower_num_ms', -5.0)
+        self.upper_num_ms = kwargs.get('upper_num_ms', 35.0)
+
+
+        self.trace_data = kwargs.get('trace_data', None)
+        self.load_curve_data_from_dataframe()
+
+    def prepare_trace_array(self):
+        """
+        .. todo: deprecate commented references to n_samples
+
+        """
+        data = self.trace_data.component_as_array(self.component)
+        data = data.copy()
+        num_traces_in_blasthole, samples_per_trace = data.shape
+        # pdb.set_trace()
+
+        data = data.T
+
+        dt = 1. / self.sampling_rate
+        samples_back = (np.abs(self.lower_num_ms)) / 1000. / dt
+        samples_back = int(np.ceil(samples_back))
+        samples_fwd = self.upper_num_ms / 1000. / dt
+        samples_fwd = int(np.ceil(samples_fwd))
+        half_way = int(samples_per_trace / 2)
+        data = data[half_way - samples_back:half_way + samples_fwd, :]
+
+        try:
+            if math.isnan(data.min()) == True and math.isnan(data.min()) == True:
+                return data
+        except ValueError:
+            print("logger.error:  the last time I saw this error it was because the incorrect\
+                         sampling rate was being used")
+            raise Exception
+        if data.min() == 0 and data.max() == 0:
+            return data
+
+        return np.flipud(data)
+
+    def plot_wiggle_trace(self, ax, X, Y, Z, column_label, color, num_lines):
+        """
+        Makes the seismic wiggle plot for data = column_label, on grid the same as the heatmap. Might be less window-load
+        heavy than Heatmap for plotter picker.
+
+        Parameters:
+            ax (Axis Object): the axis to plot on
+            X (List): Depths
+            Y (List): Times from lowest tick to highest tick (set for now at -5 to 35)
+            Z (Value of your choosing)
+            column_label (str): Name of variable
+            color (str): color to be filled
+            num_lines (int): number of wiggle traces desired
+        """
+        ax.set_ylim(axis_lims_method_1(Y, 'simple'))
+        ax.invert_yaxis()
+        ax.set_title('Wiggle Trace for ' + column_label)
+        ax.set_ylabel('Time (ms)')
+        ax.set_xlabel('Depth (m)')
+
+        #Downsample to Number of Lines and Pick in even fashion
+        X_down = np.linspace(min(X), max(X), num_lines)
+
+        #Find Indices of Depth Closest to Equally Spaced Lines
+        X_idx_list = []
+        for depth in X_down:
+            X_idx = np.abs(X - depth).argmin()
+            X_idx_list.append(X_idx)
+        X = X[X_idx_list];
+        Z = Z[:,X_idx_list]
+
+        #Set the Wiggle Size to be just less than half the space between wiggles
+        wig_amp_coef = (0.7 * (abs(max(X) - min(X)) / num_lines)) / np.amax(abs(Z))
+
+        #For Each Depth, Find the Zero Crossings to Create A Fillable Shape
+        for i in range(len(X)):
+            crossing = np.where(np.diff(np.signbit(Z[:,i])))[0]
+            x1 = Z[:,i][crossing]
+            x2 = Z[:,i][crossing + 1]
+            y1 = Y[crossing]
+            y2 = Y[crossing + 1]
+            m = (y2-y1) / (x2-x1)
+            c = y1 - m*x1
+
+            X_wiggle = np.hstack([Z[:,i], np.zeros_like(c)])
+            Y_wiggle = np.hstack([Y,c])
+
+            order = np.argsort(Y_wiggle)
+
+            ax.plot(X_wiggle[order]*wig_amp_coef + X[i], Y_wiggle[order], 'k', linewidth = 0.5)
+            X_wiggle[X_wiggle<0] = np.nan
+            X_wiggle = X_wiggle[order]*wig_amp_coef + X[i]
+            ax.fill(X_wiggle, Y_wiggle[order], color, aa=True)
+
+    def plot(self, ax, **kwargs):
+        for curve in self.curves:
+            Z = self.prepare_trace_array()
+            X = self.x_from_depth()
+            Y = np.linspace(self.lower_num_ms, self.upper_num_ms, Z.shape[0])
+            Y = np.flipud(Y)
+
+            self.plot_wiggle_trace(ax, X, Y, Z, curve.column_label, curve.color, curve.number_of_wiggles)
+
+
+
+
+
 
 
 
