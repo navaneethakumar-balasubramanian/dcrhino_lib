@@ -361,10 +361,11 @@ class TraceData(object):
         for component_id in COMPONENT_IDS:
             try:
                 trace_label = '{}_trace'.format(component_id)
-                trace_data = h5f.get(trace_label)
-                trace_data = np.asarray(trace_data)
-                trace_data = list(trace_data)
-                dict_for_df[trace_label] = trace_data
+                if trace_label in h5f.keys():
+                    trace_data = h5f.get(trace_label)
+                    trace_data = np.asarray(trace_data)
+                    trace_data = list(trace_data)
+                    dict_for_df[trace_label] = trace_data
             except KeyError:
                 logger.info('Skipping loading {} as it DNE'.format(trace_label))
         #</load traces>
