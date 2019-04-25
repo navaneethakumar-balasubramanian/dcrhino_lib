@@ -45,7 +45,7 @@ def update_processed_table(mine_name,env_config_path):
                 date_of_process_seconds = int(date_of_process.strftime("%s"))
             else:
                 date_of_process_seconds = 0
-            db_helper.save_processed_trace(trace_data, id, json.dumps(process_json),relative_path_folder, date_of_process_seconds, 99999)
+            db_helper.save_processed_trace(trace_data, id, '',relative_path_folder, date_of_process_seconds, 99999)
 
         else:
             logger.info("Ignored " +str(i+1) +"/"+ str(len(files)) + " : " + complete_path_folder )
