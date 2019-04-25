@@ -53,9 +53,10 @@ def holes_to_mp(mine_name,env_config_path):
     mp_clickhouse_client = Client(ip, port=_port, user=_user, password=_pass, database=db, compression='lz4')
     mp_dataset_table = dataset_confs['table_name']
     processed_folder_path = envConfig.get_hole_h5_processed_cache_folder(mine_name)
-
+    logger.info("Getting api info")
     db_helper = RhinoDBHelper(conn=conn_rhino)
     processed_holes_obs = db_helper.get_processed_holes()
+    logger.info("Getting processed_holes info")
     df_list = list()
     processed_holes_obs.apply(lambda row,mp_dataset_table,mapping,mp_clickhouse_client,df_list,processed_folder_path: push_data_to_server(row,mp_dataset_table,mapping,mp_clickhouse_client,df_list,processed_folder_path), args=[mp_dataset_table,mapping,mp_clickhouse_client,df_list,processed_folder_path] ,axis=1)
     output_df = pd.concat(df_list)
