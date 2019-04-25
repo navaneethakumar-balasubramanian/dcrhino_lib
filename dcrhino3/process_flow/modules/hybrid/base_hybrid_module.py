@@ -44,7 +44,7 @@ class BaseHybridModule(BaseModule):
         df = pd.DataFrame()
         for splitted_trace_part in reversed(splitted_trace):
             df = pd.concat([df,splitted_trace_part.dataframe])
-        trace.dataframe = df
+        trace.dataframe = df.sort_values('depth')
         return trace
 
     def before_process_start(self,trace):

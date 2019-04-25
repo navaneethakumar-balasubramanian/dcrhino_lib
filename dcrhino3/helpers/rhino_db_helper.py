@@ -44,6 +44,10 @@ class RhinoDBHelper:
             q = self.client.execute('select * from ' + self.processed_holes_table_name, with_column_types=True)
             return self.query_results_with_columns_to_pd(q)
 
+        def get_processed_holes(self):
+            q = self.client.execute('select * from ' + self.processed_holes_table_name, with_column_types=True)
+            return self.query_results_with_columns_to_pd(q)
+
         def save_processed_trace(self,trace,process_flow_id,process_flow_json,processed_output_path,processed_at,seconds_processed):
             process_uuid= self.get_next_process_id()
 
