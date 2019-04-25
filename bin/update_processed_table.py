@@ -31,7 +31,7 @@ def update_processed_table(mine_name,env_config_path):
         processed_h5_path = os.path.join(complete_path_folder,"processed.h5")
         process_flow_path = os.path.join(complete_path_folder,"process_flow.json")
 
-        if os._exists(processed_h5_path) and os._exists(process_flow_path) and len(processed_holes) == 0 or relative_path_folder not in processed_holes.output_folder_name.values:
+        if os.path.exists(processed_h5_path) and os.path.exists(process_flow_path) and len(processed_holes) == 0 or relative_path_folder not in processed_holes.output_folder_name.values:
             logger.info("Processing " +str(i+1) + "/"+str(len(files)) + " : "+ complete_path_folder)
             trace_data = TraceData()
             trace_data.load_from_h5(processed_h5_path)
