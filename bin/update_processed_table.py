@@ -23,7 +23,6 @@ def update_processed_table(mine_name,env_config_path):
     processed_folder_path = envConfig.get_hole_h5_processed_cache_folder(mine_name)
     files = glob2.glob(processed_folder_path + "**/"+file_to_look_for)
     db_helper = RhinoDBHelper(conn=conn_rhino)
-
     processed_holes = db_helper.get_processed_holes()
 
     for i,file in enumerate(files):
@@ -32,19 +31,22 @@ def update_processed_table(mine_name,env_config_path):
 
         if len(processed_holes) == 0 or relative_path_folder not in processed_holes.output_folder_name.values:
             logger.info("Processing " +str(i+1) + "/"+str(len(files)) + " : "+ complete_path_folder)
-            trace_data = TraceData()
-            trace_data.load_from_h5(os.path.join(complete_path_folder,"processed.h5"))
-            with open(os.path.join(complete_path_folder,"process_flow.json"), 'r') as f:
-                process_json = json.load(f)
+            try:
+                trace_data = TraceData()
+                trace_data.load_from_h5(os.path.join(complete_path_folder,"processed.h5"))
+                with open(os.path.join(complete_path_folder,"process_flow.json"), 'r') as f:
+                    process_json = json.load(f)
 
-            id = process_json['id']
-            datetime_str = str(relative_path_folder.split('/')[1]).replace(str(id),'').replace('_','')
-            if len(datetime_str) == 14:
-                date_of_process = datetime.strptime(datetime_str, "%Y%m%d%H%M%S")
-                date_of_process_seconds = int(date_of_process.strftime("%s"))
-            else:
-                date_of_process_seconds = 0
-            db_helper.save_processed_trace(trace_data, id, json.dumps(process_json),relative_path_folder, date_of_process_seconds, 99999)
+                id = process_json['id']
+                datetime_str = str(relative_path_folder.split('/')[1]).replace(str(id),'').replace('_','')
+                if len(datetime_str) == 14:
+                    date_of_process = datetime.strptime(datetime_str, "%Y%m%d%H%M%S")
+                    date_of_process_seconds = int(date_of_process.strftime("%s"))
+                else:
+                    date_of_process_seconds = 0
+                db_helper.save_processed_trace(trace_data, id, json.dumps(process_json),relative_path_folder, date_of_process_seconds, 99999)
+            except:
+                logger.error("Failed")
         else:
             logger.info("Ignored " +str(i+1) +"/"+ str(len(files)) + " : " + complete_path_folder )
 
