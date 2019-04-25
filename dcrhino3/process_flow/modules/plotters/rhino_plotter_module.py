@@ -1,6 +1,6 @@
 from dcrhino3.process_flow.modules.base_module import BaseModule
 from dcrhino3.plotters.rhino_display_v3.rhino_display import RhinoDisplay
-from dcrhino3.plotters.rhino_display_v3.rhino_display_panel import Header, Heatmap, Curve
+from dcrhino3.plotters.rhino_display_v3.rhino_display_panel import Header, Heatmap, Curve, Wiggle
 from dcrhino3.models.drill_types import DrillTypes
 from dcrhino3.models.bit_types import BitTypes
 from dcrhino3.models.sensor_installation_locations import SensorInstallationLocations
@@ -96,6 +96,20 @@ class RhinoPlotterModule(BaseModule):
                     panels.append(panel)
                 else:
                     logger.warn("Ignored heatmap panel, this component is not on components_to_process " + str(panel.component))
+
+            elif panel.type == "wiggle":
+                have_curve_to_plot = False
+                curves = []
+                if "curves" in vars(panel):
+                    for curve in panel.curves:
+                        temp_curve = self.create_curve(curve)
+                        curves.append(temp_curve)
+                        if temp_curve.column_label in trace.dataframe.columns:
+                            have_curve_to_plot = True
+                if have_curve_to_plot:
+                    panel = Wiggle(trace_data=trace, curves=curves,
+                                   component =  panel.component)
+                    panels.append(panel)
 
         if len(panels) == 0:
             return trace

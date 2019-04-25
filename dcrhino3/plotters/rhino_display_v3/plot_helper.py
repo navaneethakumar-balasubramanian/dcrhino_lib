@@ -83,13 +83,18 @@ import numpy as np
 
 def axis_lims_method_1(data, lim_type):
     """
-    Requires numpy, 
-    
-    lim_type (str): define how you want the axis to accomodate data
-        
+    Returns limits on data according to the type of limit you select:
+
         + 'simple' plot all data
         + 'buffer' plot all data and allow a 5% buffer
         + 'main' plot the meat of the data (2-98 percentile) and allow 5% buffer for that
+
+    Parameters:
+        data (array): data to be bounded
+        lim_type (str): define how you want the axis to accomodate data
+
+    Returns:
+        array: array of size (2,1) that border the data in the manner chosen
     """
 
     if len(data) == 1:
