@@ -26,12 +26,12 @@ def update_processed_table(mine_name,env_config_path):
 
     processed_holes = db_helper.get_processed_holes()
 
-    for file in files:
+    for i,file in enumerate(files):
         complete_path_folder = file.replace(file_to_look_for, "")
         relative_path_folder = complete_path_folder.replace(processed_folder_path,"")
 
-        if relative_path_folder not in processed_holes.output_folder_name.values:
-            logger.info("Processing " + complete_path_folder)
+        if len(processed_holes) > 0 and relative_path_folder not in processed_holes.output_folder_name.values:
+            logger.info("Processing " +str(i+1) + "/"+str(len(files)) + " : "+ complete_path_folder)
             trace_data = TraceData()
             trace_data.load_from_h5(os.path.join(complete_path_folder,"processed.h5"))
             with open(os.path.join(complete_path_folder,"process_flow.json"), 'r') as f:
@@ -46,7 +46,7 @@ def update_processed_table(mine_name,env_config_path):
                 date_of_process_seconds = 0
             db_helper.save_processed_trace(trace_data, id, json.dumps(process_json),relative_path_folder, date_of_process_seconds, 99999)
         else:
-            logger.info("Ignored " + complete_path_folder )
+            logger.info("Ignored " +str(i+1) +"/"+ str(len(files)) + " : " + complete_path_folder )
 
 
     df_list = list()
