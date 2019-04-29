@@ -52,21 +52,23 @@ def holes_to_mp(mine_name,env_config_path):
     db = conn.split('/')[2].split('?')[1].split('&')[3].split('=')[1]
     mp_clickhouse_client = Client(ip, port=_port, user=_user, password=_pass, database=db, compression='lz4')
     mp_dataset_table = dataset_confs['table_name']
-
-
+    processed_folder_path = envConfig.get_hole_h5_processed_cache_folder(mine_name)
+    logger.info("Getting api info")
     db_helper = RhinoDBHelper(conn=conn_rhino)
-    processed_holes_obs = db_helper.read_processed_traces()
+    processed_holes_obs = db_helper.get_processed_holes()
+    logger.info("Getting processed_holes info")
     df_list = list()
-    processed_holes_obs.apply(lambda row,mp_dataset_table,mapping,mp_clickhouse_client,df_list: push_data_to_server(row,mp_dataset_table,mapping,mp_clickhouse_client,df_list), args=[mp_dataset_table,mapping,mp_clickhouse_client,df_list] ,axis=1)
+    processed_holes_obs.apply(lambda row,mp_dataset_table,mapping,mp_clickhouse_client,df_list,processed_folder_path: push_data_to_server(row,mp_dataset_table,mapping,mp_clickhouse_client,df_list,processed_folder_path), args=[mp_dataset_table,mapping,mp_clickhouse_client,df_list,processed_folder_path] ,axis=1)
     output_df = pd.concat(df_list)
     columns_string = ",".join(output_df.columns)
     mp_clickhouse_client.execute('truncate table ' + mp_dataset_table )
     mp_clickhouse_client.execute('insert into ' + mp_dataset_table + ' ('+columns_string+')'+' values', output_df.values.tolist(),types_check=True)
+    return True
 
-def push_data_to_server(row,mp_dataset_table,mapping,client,df_list):
+def push_data_to_server(row,mp_dataset_table,mapping,client,df_list,processed_folder_path):
     processed_csv = os.path.join(row.output_folder_name,'processed.csv')
     try:
-        df = pd.read_csv(processed_csv)
+        df = pd.read_csv(os.path.join(processed_folder_path,processed_csv))
         logger.info("Loading file :" + processed_csv)
     except:
         logger.error("ERROR Loading file :" + processed_csv)
