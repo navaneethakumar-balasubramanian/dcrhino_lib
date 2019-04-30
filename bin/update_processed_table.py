@@ -7,6 +7,7 @@ import argparse
 import pandas as pd
 from clickhouse_driver import Client
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
+from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
 from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.helpers.general_helper_functions import init_logging
 from datetime import datetime
@@ -22,8 +23,10 @@ def update_processed_table(mine_name,env_config_path):
     conn_rhino = envConfig.get_rhino_db_connection_from_mine_name(mine_name)
     processed_folder_path = envConfig.get_hole_h5_processed_cache_folder(mine_name)
     files = glob2.glob(processed_folder_path + "**/"+file_to_look_for)
-    db_helper = RhinoDBHelper(conn=conn_rhino)
-    processed_holes = db_helper.get_processed_holes()
+    #db_helper = RhinoDBHelper(conn=conn_rhino)
+    db_helper = RhinoSqlHelper('localhost','root','1122qwaszx','mont_wright')
+    processed_holes = db_helper.processed_holes.get_all()
+
 
     for i,file in enumerate(files):
         complete_path_folder = file.replace(file_to_look_for, "")
@@ -45,7 +48,8 @@ def update_processed_table(mine_name,env_config_path):
                 date_of_process_seconds = int(date_of_process.strftime("%s"))
             else:
                 date_of_process_seconds = 0
-            db_helper.save_processed_trace(trace_data, id, '',relative_path_folder, date_of_process_seconds, 99999)
+            #db_helper.save_processed_trace(trace_data, id, '',relative_path_folder, date_of_process_seconds, 99999)
+            db_helper.processed_holes.add(processed_at_ts=date_of_process_seconds, seconds_processed=99999, hole_id=trace_data.hole_id, sensor_id=trace_data.sensor_id, bench_name=trace_data.bench_name, pattern_name=trace_data.pattern_name, hole_name=trace_data.hole_name, rig_id=trace_data.rig_id, digitizer_id=trace_data.digitizer_id, sensor_accelerometer_type=trace_data.sensor_accelerometer_type, sensor_saturation_g=trace_data.sensor_saturation_g, flow_id=id, output_folder_name=relative_path_folder)
 
         else:
             logger.info("Ignored " +str(i+1) +"/"+ str(len(files)) + " : " + complete_path_folder )
