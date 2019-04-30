@@ -24,7 +24,9 @@ def update_processed_table(mine_name,env_config_path):
     processed_folder_path = envConfig.get_hole_h5_processed_cache_folder(mine_name)
     files = glob2.glob(processed_folder_path + "**/"+file_to_look_for)
     #db_helper = RhinoDBHelper(conn=conn_rhino)
-    db_helper = RhinoSqlHelper('localhost','root','1122qwaszx','mont_wright')
+    db_conn = envConfig.get_rhino_sql_connection_from_mine_name(mine_name)
+    db_helper = RhinoSqlHelper(db_conn['host'], db_conn['user'], db_conn['password'], mine_name)
+    #db_helper = RhinoSqlHelper('localhost','root','1122qwaszx','mont_wright')
     processed_holes = db_helper.processed_holes.get_all()
 
 
