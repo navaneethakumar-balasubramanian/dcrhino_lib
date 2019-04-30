@@ -51,7 +51,8 @@ def update_processed_table(mine_name,env_config_path):
             else:
                 date_of_process_seconds = 0
             #db_helper.save_processed_trace(trace_data, id, '',relative_path_folder, date_of_process_seconds, 99999)
-            db_helper.processed_holes.add(processed_at_ts=date_of_process_seconds, seconds_processed=99999, hole_id=trace_data.hole_id, sensor_id=trace_data.sensor_id, bench_name=trace_data.bench_name, pattern_name=trace_data.pattern_name, hole_name=trace_data.hole_name, rig_id=trace_data.rig_id, digitizer_id=trace_data.digitizer_id, sensor_accelerometer_type=trace_data.sensor_accelerometer_type, sensor_saturation_g=trace_data.sensor_saturation_g, flow_id=id, output_folder_name=relative_path_folder)
+            seconds_processed = int(trace_data.max_ts - trace_data.min_ts)
+            db_helper.processed_holes.add(processed_at_ts=date_of_process_seconds, seconds_processed=seconds_processed, hole_id=trace_data.hole_id, sensor_id=trace_data.sensor_id, bench_name=trace_data.bench_name, pattern_name=trace_data.pattern_name, hole_name=trace_data.hole_name, rig_id=trace_data.rig_id, digitizer_id=trace_data.digitizer_id, sensor_accelerometer_type=trace_data.sensor_accelerometer_type, sensor_saturation_g=trace_data.sensor_saturation_g, flow_id=id, output_folder_name=relative_path_folder)
 
         else:
             logger.info("Ignored " +str(i+1) +"/"+ str(len(files)) + " : " + complete_path_folder )
