@@ -97,6 +97,13 @@ class TraceData(object):
         self.applied_modules = []
         self._global_configs = dict()
 
+    @property
+    def min_ts(self):
+        return self.dataframe.timestamp.min()
+
+    @property
+    def max_ts(self):
+        return self.dataframe.timestamp.max()
 
     @property
     def mine_name(self):
@@ -350,11 +357,14 @@ class TraceData(object):
         return
 
 
-    def load_from_h5(self,path):
+    def load_from_h5(self,pathOrH5Py):
         """
         Inverse of save_to_h5; Handle traces, then other columns, then json cfg
         """
-        h5f = h5py.File(path, 'r')
+        if isinstance(pathOrH5Py,str) or isinstance(pathOrH5Py,unicode):
+            h5f = h5py.File(pathOrH5Py, 'r')
+        else:
+            h5f = pathOrH5Py
         dict_for_df = {}
 
         #<load traces>

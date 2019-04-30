@@ -8,7 +8,7 @@ import time
 import os
 
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
-
+from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
 from dcrhino3.helpers.general_helper_functions import init_logging, create_folders_if_needed
 
 from dcrhino3.process_flow.modules.trace_processing.balance_trace import BalanceModule
@@ -100,6 +100,7 @@ class ProcessFlow:
         self.components_to_process = ['axial','tangential']
         self.output_path = output_path
         self.rhino_db_helper = False
+        self.rhino_sql_helper = False
 
 
     def set_process_flow(self,process_json):
@@ -190,8 +191,10 @@ class ProcessFlow:
             output_trace.save_to_csv(os.path.join(process_flow_output_path, "processed.csv"))
 
         if self.output_to_db:
-            self.rhino_db_helper.save_processed_trace(trace_data, self.id, json.dumps(self.process_json),
-                                                      process_flow_output_path, int(now.strftime("%s")),99999)
+            seconds_processed = int(trace_data.max_ts - trace_data.min_ts)
+            relative_output_path = "/".join(process_flow_output_path.split('/')[-2:])+"/"
+            self.rhino_sql_helper.processed_holes.add(int(now.strftime("%s")),seconds_processed,trace_data.hole_id,trace_data.sensor_id,trace_data.bench_name,trace_data.pattern_name,trace_data.hole_name,trace_data.rig_id,trace_data.digitizer_id,trace_data.sensor_accelerometer_type,trace_data.sensor_saturation_g,self.id,relative_output_path)
+            #self.rhino_db_helper.save_processed_trace(trace_data, self.id, json.dumps(self.process_json),process_flow_output_path, int(now.strftime("%s")),99999)
 
         return output_trace
 
@@ -214,7 +217,9 @@ class ProcessFlow:
 
         self.set_process_flow(process_json)
         conn = env_config.get_rhino_db_connection_from_mine_name(acorr_trace.mine_name)
+        sql_conn = env_config.get_rhino_sql_connection_from_mine_name(acorr_trace.mine_name)
         self.rhino_db_helper = RhinoDBHelper(conn=conn)
+        self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'],sql_conn['user'],sql_conn['password'],str(acorr_trace.mine_name).lower())
 
         acorr_trace = self.process(acorr_trace)
         return_dict["acorr_trace"] = acorr_trace

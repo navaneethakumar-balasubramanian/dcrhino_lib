@@ -1,5 +1,6 @@
 {
-    "output_to_file": true, 
+    "output_to_file": true,
+    "output_to_db": true,
     "components_to_process": [
         "axial"
     ], 
@@ -544,7 +545,7 @@
             "type": "rhino_physics"
         }, 
         {
-            "output_to_file": true, 
+            "output_to_file": false,
             "args": {
                 "panels": [
                     {

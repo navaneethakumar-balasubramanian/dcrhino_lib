@@ -38,7 +38,10 @@ class RhinoDBHelper:
             self.acorr_files_table_name = 'acorr_files'
             self.acorr_configs_table_name = 'acorr_files_configs'
             self.processed_holes_table_name = 'processed_holes'
+            self.raw_data_files_table_name = 'raw_data_files'
             self.max_batch_to_query = 5000
+
+
 
         def read_processed_traces(self):
             q = self.client.execute('select * from ' + self.processed_holes_table_name, with_column_types=True)
@@ -100,6 +103,9 @@ class RhinoDBHelper:
 
         def get_next_process_id(self):
             return self.client.execute("SELECT max(process_uuid) + 1 FROM "+ self.processed_holes_table_name )[0][0]
+
+        def get_next_raw_file_id(self):
+            return self.client.execute("SELECT max(raw_file_id) + 1 FROM "+ self.raw_data_files_table_name )[0][0]
 
         def create_acorr_file(self,file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts):
             """
