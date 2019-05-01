@@ -61,6 +61,8 @@ class ProcessFlow:
     """
     def __init__(self, output_path=""):
         self.id = "process_flow"
+        self.now = datetime.now()
+        self.datetime_str = self.now.strftime("%Y%m%d-%H%M%S")
 
         self.modules = {
             "binning": BinningModule,
@@ -131,10 +133,8 @@ class ProcessFlow:
         if 'components_to_process' in process_json.keys():
             self.components_to_process = process_json['components_to_process']
 
-        now = datetime.now()
 
-        datetime_str = now.strftime("%Y%m%d%H%M%S")
-        process_flow_output_path = os.path.join(self.output_path, str(datetime_str+ "_"+self.id))
+        process_flow_output_path = os.path.join(self.output_path, str(self.datetime_str+ "_"+self.id))
 
 
         process_counter = 0
@@ -151,9 +151,8 @@ class ProcessFlow:
 
     def process(self, trace_data):
 
-        now = datetime.now()
-        datetime_str = now.strftime("%Y%m%d%H%M%S")
-        process_flow_output_path = os.path.join(self.output_path, str(datetime_str + "_" + self.id))
+
+        process_flow_output_path = os.path.join(self.output_path, str(self.datetime_str + "_" + self.id))
 
 
         logger.info("Processing files to :" + process_flow_output_path)
@@ -193,7 +192,7 @@ class ProcessFlow:
         if self.output_to_db and self.rhino_sql_helper:
             seconds_processed = int(trace_data.max_ts - trace_data.min_ts)
             relative_output_path = "/".join(process_flow_output_path.split('/')[-2:])+"/"
-            self.rhino_sql_helper.processed_holes.add(int(now.strftime("%s")),seconds_processed,trace_data.hole_id,trace_data.sensor_id,trace_data.bench_name,trace_data.pattern_name,trace_data.hole_name,trace_data.rig_id,trace_data.digitizer_id,trace_data.sensor_accelerometer_type,trace_data.sensor_saturation_g,self.id,relative_output_path)
+            self.rhino_sql_helper.processed_holes.add(int(self.now.strftime("%s")),seconds_processed,trace_data.hole_id,trace_data.sensor_id,trace_data.bench_name,trace_data.pattern_name,trace_data.hole_name,trace_data.rig_id,trace_data.digitizer_id,trace_data.sensor_accelerometer_type,trace_data.sensor_saturation_g,self.id,relative_output_path)
             #self.rhino_db_helper.save_processed_trace(trace_data, self.id, json.dumps(self.process_json),process_flow_output_path, int(now.strftime("%s")),99999)
 
         return output_trace
