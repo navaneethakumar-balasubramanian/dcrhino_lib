@@ -100,8 +100,14 @@ class EnvConfig(object):
             logger.warn("Missing rhino_db_connection on env.json for " + str(mine_name) + " mine." )
             return False
         return mine_cfg['rhino_db_connection']
-            
-    
+
+    def get_rhino_sql_connection_from_mine_name(self,mine_name):
+        mine_cfg = self._get_mine_config(mine_name)
+        if not mine_cfg or 'rhino_sql_connection' not in mine_cfg.keys():
+            logger.warn("Missing rhino_db_connection on env.json for " + str(mine_name) + " mine.")
+            return False
+        return mine_cfg['rhino_sql_connection']
+
     def get_mwd_type(self,mine_name):
         """
         Get data file type.
@@ -142,6 +148,18 @@ class EnvConfig(object):
             return False
         if 'db' in mine_cfg['mwd']:
             return mine_cfg['mwd']['db']
-            
+
+    def get_mp_config(self, mine_name):
+        """
+        Get database configuration from mine_cfg dictionary.
+
+        Returns:
+            mine_cfg['mwd']['db'] or False if mwd missing from keys of mine_cfg
+        """
+        mine_cfg = self._get_mine_config(mine_name)
+        if not mine_cfg or 'mp_connection' not in mine_cfg.keys():
+            return False
+        return mine_cfg['mp_connection']
+
         
             

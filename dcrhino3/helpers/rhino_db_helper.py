@@ -37,10 +37,47 @@ class RhinoDBHelper:
             self.acorr_traces_table_name = 'acorr_traces'
             self.acorr_files_table_name = 'acorr_files'
             self.acorr_configs_table_name = 'acorr_files_configs'
+            self.processed_holes_table_name = 'processed_holes'
+            self.raw_data_files_table_name = 'raw_data_files'
             self.max_batch_to_query = 5000
-            
-            
-            
+
+
+
+        def read_processed_traces(self):
+            q = self.client.execute('select * from ' + self.processed_holes_table_name, with_column_types=True)
+            return self.query_results_with_columns_to_pd(q)
+
+        def get_processed_holes(self):
+            q = self.client.execute('select * from ' + self.processed_holes_table_name, with_column_types=True)
+            return self.query_results_with_columns_to_pd(q)
+
+        def save_processed_trace(self,trace,process_flow_id,process_flow_json,processed_output_path,processed_at,seconds_processed):
+            process_uuid= self.get_next_process_id()
+
+            vars_to_save = {
+                'process_uuid': process_uuid,
+                'processed_at_ts': processed_at,
+                'seconds_processed': seconds_processed,
+                'hole_id': trace.hole_id,
+                'bench_name': trace.bench_name,
+                'pattern_name': trace.pattern_name,
+                'hole_name': trace.hole_name,
+                'rig_id': trace.rig_id,
+                'sensor_id': trace.sensor_id,
+                'digitizer_id': trace.digitizer_id,
+                'sensor_accelerometer_type': str(trace.sensor_accelerometer_type),
+                'sensor_saturation_g':str(trace.sensor_saturation_g),
+                'processed_data_mapping': str(''),
+                'flow_id': str(process_flow_id),
+                'flow_json': str(process_flow_json),
+                'output_folder_name': str(processed_output_path)
+            }
+            #print vars_to_save
+            logger.info(
+                'Saving to ' + str(self.processed_holes_table_name) + ' with id:' + str(process_uuid))
+            self.client.execute("insert into " + self.processed_holes_table_name + " values", [vars_to_save])
+            return
+
         def get_file_id_from_file_path(self,file_path):
             """
             Retrieves file id from path using clichouse driver execute function, 
@@ -63,6 +100,12 @@ class RhinoDBHelper:
 
         def get_next_file_id(self):
             return self.client.execute("SELECT max(id) + 1 FROM "+ self.acorr_files_table_name )[0][0]
+
+        def get_next_process_id(self):
+            return self.client.execute("SELECT max(process_uuid) + 1 FROM "+ self.processed_holes_table_name )[0][0]
+
+        def get_next_raw_file_id(self):
+            return self.client.execute("SELECT max(raw_file_id) + 1 FROM "+ self.raw_data_files_table_name )[0][0]
 
         def create_acorr_file(self,file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts):
             """
@@ -254,6 +297,7 @@ class RhinoDBHelper:
             Returns:
                 (DataFrame): All traces from a specific sensor
             """
+
             files_ids = self.get_files_id_from_sensor_id(sensor_id)
             df = self.get_autocor_traces_from_files_ids(files_ids, min_ts, max_ts)
             df['sensor_id'] = sensor_id
@@ -346,6 +390,12 @@ class RhinoDBHelper:
             """
             return pd.DataFrame(result,columns=columns)
 
+        def query_results_with_columns_to_pd(self,query):
+            data = query[0]
+            query_info_columns = np.asarray(query[1])
+            columns = list(query_info_columns.T[0].astype(str))
+            types = list(query_info_columns.T[1].astype(str))
+            return self.query_result_to_pd(data,columns)
 
 #a = RhinoDBHelper().save_autocorr_traces("1",'1','f7d468bb-19a2-4a95-aaf3-9c98ed5c5bdd',np.arange(1,3601),np.full([3600,3600],0),np.full([3600,3600],0),np.full([3600,3600],0))
 #a = RhinoDBHelper().get_autocor_traces_from_sensor_id('1',1,1000)

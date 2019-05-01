@@ -97,18 +97,59 @@ class TraceData(object):
         self.applied_modules = []
         self._global_configs = dict()
 
+    @property
+    def min_ts(self):
+        return self.dataframe.timestamp.min()
+
+    @property
+    def max_ts(self):
+        return self.dataframe.timestamp.max()
 
     @property
     def mine_name(self):
         return self.first_global_config.mine_name
 
     @property
+    def sensor_accelerometer_type(self):
+        return self.first_global_config.sensor_accelerometer_type
+
+    @property
+    def sensor_saturation_g(self):
+        return str(self.first_global_config.sensor_saturation_g)
+
+
+    @property
     def sensor_id(self):
-        return self.first_global_config.sensor_serial_number
+        return str(self.first_global_config.sensor_serial_number)
+
+    @property
+    def hole_id(self):
+        line = self.dataframe.iloc[0]
+        return str(line.hole_id)
+
+    @property
+    def bench_name(self):
+        line = self.dataframe.iloc[0]
+        return str(line.bench_name)
+
+    @property
+    def pattern_name(self):
+        line = self.dataframe.iloc[0]
+        return str(line.pattern_name)
+
+    @property
+    def hole_name(self):
+        line = self.dataframe.iloc[0]
+        return str(line.hole_name)
+
+    @property
+    def rig_id(self):
+        line = self.dataframe.iloc[0]
+        return str(line.rig_id)
 
     @property
     def digitizer_id(self):
-        return self.first_global_config.digitizer_serial_number
+        return str(self.first_global_config.digitizer_serial_number)
 
     @property
     def component_columns(self):
@@ -177,6 +218,8 @@ class TraceData(object):
         df['digitizer_id'] = first_global_config.digitizer_serial_number
         df['rhino_sensor_uid'] = str(first_global_config.sensor_type) + "_" + str(first_global_config.sensor_serial_number) + "_" + str(first_global_config.digitizer_serial_number) + "_" + str(first_global_config.sensor_accelerometer_type) + "_" + str(first_global_config.sensor_saturation_g)
         df.to_csv(path,index=False)
+
+
 
     def save_to_h5(self, path):
         """
@@ -314,21 +357,25 @@ class TraceData(object):
         return
 
 
-    def load_from_h5(self,path):
+    def load_from_h5(self,pathOrH5Py):
         """
         Inverse of save_to_h5; Handle traces, then other columns, then json cfg
         """
-        h5f = h5py.File(path, 'r')
+        if isinstance(pathOrH5Py,str) or isinstance(pathOrH5Py,unicode):
+            h5f = h5py.File(pathOrH5Py, 'r')
+        else:
+            h5f = pathOrH5Py
         dict_for_df = {}
 
         #<load traces>
         for component_id in COMPONENT_IDS:
             try:
                 trace_label = '{}_trace'.format(component_id)
-                trace_data = h5f.get(trace_label)
-                trace_data = np.asarray(trace_data)
-                trace_data = list(trace_data)
-                dict_for_df[trace_label] = trace_data
+                if trace_label in h5f.keys():
+                    trace_data = h5f.get(trace_label)
+                    trace_data = np.asarray(trace_data)
+                    trace_data = list(trace_data)
+                    dict_for_df[trace_label] = trace_data
             except KeyError:
                 logger.info('Skipping loading {} as it DNE'.format(trace_label))
         #</load traces>

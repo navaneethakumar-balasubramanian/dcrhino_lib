@@ -1,5 +1,6 @@
 {
-    "output_to_file": true, 
+    "output_to_file": true,
+    "output_to_db": true,
     "components_to_process": [
         "axial"
     ], 
@@ -108,7 +109,25 @@
                         "multiple_1": 0.00105, 
                         "primary": 0.00105
                     }
-                }, 
+                },
+                "additional_pick_based_amplitude_windows": {
+                    "axial": {
+                        "multiple_1": {
+                            "left_lower_bound_offset": -0.002,
+                            "left_upper_bound_offset": -0.001,
+                            "right_lower_bound_offset": 0.001,
+                            "right_upper_bound_offset": 0.002
+                            }
+                    },
+                    "tangential": {
+                        "multiple_1": {
+                            "left_lower_bound_offset": -0.002,
+                            "left_upper_bound_offset": -0.001,
+                            "right_lower_bound_offset": 0.001,
+                            "right_upper_bound_offset": 0.002
+                            }
+                    }
+                },
                 "sensor_saturation_g": "|global_config.sensor_saturation_g|", 
                 "manual_time_windows": {
                     "axial": {
@@ -526,7 +545,7 @@
             "type": "rhino_physics"
         }, 
         {
-            "output_to_file": true, 
+            "output_to_file": false,
             "args": {
                 "panels": [
                     {

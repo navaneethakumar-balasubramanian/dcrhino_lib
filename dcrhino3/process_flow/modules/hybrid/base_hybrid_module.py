@@ -42,9 +42,9 @@ class BaseHybridModule(BaseModule):
 
     def merge_splitted_trace(self,splitted_trace,trace):
         df = pd.DataFrame()
-        for splitted_trace_part in splitted_trace:
+        for splitted_trace_part in reversed(splitted_trace):
             df = pd.concat([df,splitted_trace_part.dataframe])
-        trace.dataframe = df
+        trace.dataframe = df.sort_values('depth')
         return trace
 
     def before_process_start(self,trace):
