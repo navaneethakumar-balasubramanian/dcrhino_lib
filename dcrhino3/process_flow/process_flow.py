@@ -190,7 +190,7 @@ class ProcessFlow:
             output_trace.save_to_h5(os.path.join(process_flow_output_path, "processed.h5"))
             output_trace.save_to_csv(os.path.join(process_flow_output_path, "processed.csv"))
 
-        if self.output_to_db:
+        if self.output_to_db and self.rhino_sql_helper:
             seconds_processed = int(trace_data.max_ts - trace_data.min_ts)
             relative_output_path = "/".join(process_flow_output_path.split('/')[-2:])+"/"
             self.rhino_sql_helper.processed_holes.add(int(now.strftime("%s")),seconds_processed,trace_data.hole_id,trace_data.sensor_id,trace_data.bench_name,trace_data.pattern_name,trace_data.hole_name,trace_data.rig_id,trace_data.digitizer_id,trace_data.sensor_accelerometer_type,trace_data.sensor_saturation_g,self.id,relative_output_path)
@@ -216,10 +216,13 @@ class ProcessFlow:
             self.output_path = os.path.join(self.output_path,filename_without_ext)
 
         self.set_process_flow(process_json)
+        self.env_config = env_config
         conn = env_config.get_rhino_db_connection_from_mine_name(acorr_trace.mine_name)
-        sql_conn = env_config.get_rhino_sql_connection_from_mine_name(acorr_trace.mine_name)
+
         self.rhino_db_helper = RhinoDBHelper(conn=conn)
-        self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'],sql_conn['user'],sql_conn['password'],str(acorr_trace.mine_name).lower())
+        sql_conn = env_config.get_rhino_sql_connection_from_mine_name(acorr_trace.mine_name)
+        if sql_conn:
+            self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'],sql_conn['user'],sql_conn['password'],str(acorr_trace.mine_name).lower())
 
         acorr_trace = self.process(acorr_trace)
         return_dict["acorr_trace"] = acorr_trace
