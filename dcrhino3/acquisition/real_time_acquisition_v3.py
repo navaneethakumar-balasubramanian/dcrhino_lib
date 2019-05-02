@@ -877,7 +877,8 @@ def main_run(run=True):
                 logQ.put(m)
                 displayQ.put(m)
                 subpids.append(sub_pid)
-        p = subprocess.Popen(['taskset', '-cp','{}'.format(multiprocessing.cpu_count()-1), str(pid)], stdout=subprocess.PIPE, stderr=subprocess.PIPE) # 6
+        p = subprocess.Popen(['taskset', '-cp','{}'.format(multiprocessing.cpu_count()-3), str(pid)],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE) # 6
         out, err = p.communicate()
         # p = subprocess.Popen(['taskset', '-cp','7', str(subpids[0])], stdout=subprocess.PIPE, stderr=subprocess.PIPE) #6
         # out, err = p.communicate()
@@ -888,7 +889,7 @@ def main_run(run=True):
         # p = subprocess.Popen(['taskset', '-cp','7', str(subpids[3])], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # out, err = p.communicate()
         for index in range(len(subpids)):
-            p = subprocess.Popen(['taskset', '-cp','{}'.format(multiprocessing.cpu_count()-1), str(subpids[index])],
+            p = subprocess.Popen(['taskset', '-cp','{}'.format(multiprocessing.cpu_count()-3), str(subpids[index])],
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
             out, err = p.communicate()
