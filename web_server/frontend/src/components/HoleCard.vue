@@ -1,20 +1,31 @@
 <template>
-    <v-dialog v-model="value"  fullscreen hide-overlay transition="dialog-bottom-transition">
+    <v-dialog v-model="value" fullscreen hide-overlay transition="dialog-bottom-transition">
       <v-card>
         <v-toolbar dark color="primary">
           <v-btn icon dark @click="close">
             <v-icon>close</v-icon>
           </v-btn>
-          <v-toolbar-title>Settings</v-toolbar-title>
+          <v-toolbar-title>Processed hole</v-toolbar-title>
           <v-spacer></v-spacer>
 
-          <v-btn v-if='processed.to_mp == 0' color="green">Add to mp</v-btn>
-          <v-btn v-else color="red">Remove from mp</v-btn>
+          <v-btn v-if='processed && processed.to_mp == 0' color="green" v-on:click="to_mp(true)">Add to mp</v-btn>
+          <v-btn v-if='processed && processed.to_mp == 1' color="red" v-on:click="to_mp(false)">Remove from mp</v-btn>
           
         </v-toolbar>
-        <v-container grid-list-md fluid text-xs-center v-if='processed'>
-            
-        <v-layout row wrap>
+        
+        <v-container grid-list-md fluid text-xs-center >
+          <v-layout row wrap align-center v-if='loading && !processed'>
+          <v-flex>
+            <v-progress-circular
+      :size="100"
+      color="primary"
+      indeterminate
+      
+    ></v-progress-circular>    
+          </v-flex>
+        </v-layout>
+        
+        <v-layout row wrap v-if='processed'>
             <v-flex xs12>
                 <v-img :src="get_image(processed.images[0])"></v-img>
             </v-flex >
@@ -153,15 +164,17 @@
         },
         get_image:function(image_file_name){
             return "http://localhost:5000/images/" + this.mine_name + "/" + this.processed.processed_hole_id + "/"+image_file_name
+        },
+        to_mp:function(to_mp){
+            this.$store.dispatch('UPDATE_HOLE_TO_MP',{mine_name:this.mine_name,processed_hole_id:this.processed.processed_hole_id,to_mp:to_mp})
         }
-    },
-    created(){
-        //console.log(this.value)
-        this.$store.dispatch('GET_PROCESSED_HOLE',[this.mine_name,this.clicked_processed_hole_id])
     },
     computed : {
       processed () {
-        return this.$store.state.processed_holes.selected_processed_hole
+        return this.$store.state.hole_info.hole_info
+      },
+      loading () {
+        return this.$store.state.hole_info.loading
       }
     },
     props:['value','mine_name','clicked_processed_hole_id']
