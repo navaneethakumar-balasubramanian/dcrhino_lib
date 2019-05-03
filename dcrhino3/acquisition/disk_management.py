@@ -9,8 +9,8 @@ import psutil
 from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
 
 
-def file_is_old(file_date):
-    age_threshold = 32
+def file_is_old(file_date, age_threshold=32):
+    age_threshold = age_threshold
     today = time.time()
     file_age = (today - file_date)/86400.
     if file_age > age_threshold:
@@ -18,9 +18,9 @@ def file_is_old(file_date):
     return False
 
 
-def get_rhino_files_for_archive(data_path):
+def get_rhino_files_for_archive(data_path, age=32):
     raw_file_list = glob.glob(os.path.join(data_path, "**", "*RT*.h5"))
-    old_files = [x for x in raw_file_list if file_is_old(os.path.getctime(x))]
+    old_files = [x for x in raw_file_list if file_is_old(os.path.getctime(x),age)]
     return old_files
 
 
@@ -33,21 +33,47 @@ def archive_files(files_for_archive):
         print("done")
 
 
+def low_space():
+    if psutil.disk_usage("/")[1] <= 25:
+        return True
+    return False
+
+
 def scan():
     cfg_fname = os.path.join(PATH, "collection_daemon.cfg")
     config = ConfigParser.SafeConfigParser()
     config.read(cfg_fname)
     data_path = config.get("DATA_TRANSMISSION", "local_folder")
     low_space = True
+    daily_archive = True
+    default_age = 32
     initial_disk_space = psutil.disk_usage("/")[1]
     while True:
-        if low_space:
+
+        if daily_archive:
             files_for_archive = get_rhino_files_for_archive(data_path)
             archive_files(files_for_archive)
-            final_diskspace = psutil.disk_usage("/")[1]
+            final_disk_space = psutil.disk_usage("/")[1]
             print("Initial diskspace: {}\nFinal diskspace: {}\nSaved Space: {}".format(initial_disk_space,
-                                                                                       final_diskspace,
-                                                                                       initial_diskspace-final_disk_space))
+                                                                                       final_disk_space,
+                                                                                       initial_disk_space
+                                                                                       - final_disk_space))
+        age = default_age
+        while low_space and age > 1:
+            print("Archiving files older than {} days".format(age))
+            files_for_archive = get_rhino_files_for_archive(data_path, age)
+            archive_files(files_for_archive)
+            final_disk_space = psutil.disk_usage("/")[1]
+            print("Initial diskspace: {}\nFinal diskspace: {}\nSaved Space: {}".format(initial_disk_space,
+                                                                                       final_disk_space,
+                                                                                       initial_disk_space
+                                                                                       - final_disk_space))
+            age -= 1
+
+        while
+
+
+
         time.sleep(2)
 
 
