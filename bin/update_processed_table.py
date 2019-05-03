@@ -43,7 +43,7 @@ def update_processed_table(mine_name,env_config_path):
                 process_json = json.load(f)
 
             id = process_json['id']
-            datetime_str = str(relative_path_folder.split('/')[1]).replace(str(id),'').replace('_','')
+            datetime_str = str(relative_path_folder.split('/')[1]).replace(str(id),'').replace('_','').replace('-','')
             if len(datetime_str) == 14:
                 date_of_process = datetime.strptime(datetime_str, "%Y%m%d%H%M%S")
                 date_of_process_seconds = int(date_of_process.strftime("%s"))
