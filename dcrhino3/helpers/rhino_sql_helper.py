@@ -1,5 +1,6 @@
 import mysql.connector
 from dcrhino3.helpers.db.processed_holes import ProcessedHoles
+from dcrhino3.helpers.db.acorr_files     import AcorrFiles
 
 class MyConverter(mysql.connector.conversion.MySQLConverter):
 
@@ -23,3 +24,4 @@ class RhinoSqlHelper:
           database=database
         )
         self.processed_holes = ProcessedHoles(self.conn)
+        self.acorr_files = AcorrFiles(self.conn)
