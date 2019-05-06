@@ -2,41 +2,39 @@ import Axios from 'axios'
 
 
 const state = {
-    processed : [],
-    selected_processed_hole: false
+    processed_list : [],
+    loading : false
 }
 const getters = {
-   PROCESSED : state => {
-     return state.processed;
+   PROCESSED_LIST : state => {
+     return state.processed_list;
    },
-   SELECTED_PROCESSED_HOLE :state => {
-    return state.selected_processed_hole;
+  LOADING :state => {
+    return state.loading;
   },
 }
 const mutations = {
-  SET_PROCESSED : (state,payload) => {
-     state.processed = payload
+  SET_PROCESSED_LIST : (state,payload) => {
+     state.processed_list = payload
   },
-  SET_SELECTED_PROCESSED_HOLE : (state,payload) => {
-    state.selected_processed_hole = payload
+  SET_LIST_PROCESS_TO_MP: (state,payload) => {
+
+    let processed_hole = state.processed_list.find(processed_hole => processed_hole.processed_hole_id === payload.processed_hole_id)
+    processed_hole.to_mp = payload.to_mp
+
  },
+ SET_LOADING : (state,payload) => {
+   state.loading = payload
+  }
 }
 const actions = {
-  GET_PROCESSED : async (context,mine_name) => {
-      context.commit('SET_PROCESSED',{})
-      let { data } = await Axios.post('http://localhost:5000/api/processed_holes',{
-        mine_name: mine_name})
-      context.commit('SET_PROCESSED',data)
-  },
-  GET_PROCESSED_HOLE : async (context,payload) => {
-    context.commit('SET_SELECTED_PROCESSED_HOLE',false)
-    let { data } = await Axios.post('http://localhost:5000/api/processed_hole',{
-      mine_name: payload[0],
-      processed_hole_id:payload[1]
-    })
-    console.log(data)
-    context.commit('SET_SELECTED_PROCESSED_HOLE',data)
-},
+  GET_PROCESSED : async (context,payload) => {
+      context.commit('SET_LOADING',true)
+      context.commit('SET_PROCESSED_LIST',[])
+      let { data } = await Axios.post('http://localhost:5000/api/processed_holes', payload)
+      context.commit('SET_PROCESSED_LIST',data)
+      context.commit('SET_LOADING',false)
+  }
 }
 
 export default {

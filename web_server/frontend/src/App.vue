@@ -76,7 +76,7 @@
           { title:"Acorr files"  , link:"/acorr_files/mont_wright" }
         ]},
         { icon: 'trending_up', title: 'Line Creek' , items:[
-          { title:"Processed files" },
+          { title:"Processed files" , link:"/processed/line_creek"},
         ]}
       ],
       items2: [

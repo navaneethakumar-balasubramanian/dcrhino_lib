@@ -628,7 +628,7 @@ class CollectionDaemonThread(threading.Thread):
         lastFileName = None
         look_for_time = True
         file_change_interval_in_min = config.getint("RUNTIME", "file_change_interval_in_min")
-        valid_trace = True
+        # valid_trace = True
         while True:
             try:
                 if not self.bufferQ.empty():
@@ -748,69 +748,68 @@ class CollectionDaemonThread(threading.Thread):
                             self.logQ.put(m)
                             self.displayQ.put(m)
 
+                            valid_trace = buffer_entry[12]
                             if valid_trace:
-
-                                #process the raw data the same way that it is being done in the processing Pipeline
-                                # accelerometer_max_voltage = config.getfloat("PLAYBACK","accelerometer_max_voltage")
-                                # is_ide_file=False
-                                raw_trace_data = RawTraceData()
-                                component_trace_dict = {}
-                                acceleration_dict = {}
-                                axial_index = int(axis[0])-1
-                                tangential_index = int(axis[1])-1
-                                radial_index = 3-axial_index-tangential_index
-
-                                # component_sensitivity = {"axial":sensitivity[axial_index],"tangential":sensitivity[tangential_index],"radial":sensitivity[radial_index]}
-                                component_labels = ["axial","tangential","radial"]
-                                channel_trace_raw_data = [x,y,z]
-
-                                component_trace_raw_data = {"axial":channel_trace_raw_data[axial_index],"tangential":channel_trace_raw_data[tangential_index],"radial":channel_trace_raw_data[radial_index]}
-                                # secondless_timestamps = ts - int(ts[0])
-
-                                initial_trace_timestamp = self.calculate_initial_tracetime_from_timestamp(ts[0])
-                                # print("T0", repr(initial_trace_timestamp))
-
-                                ideal_timestamps = 1./float(global_config.output_sampling_rate) * np.arange(0,int(global_config.output_sampling_rate)) + initial_trace_timestamp
-
-                                number_of_samples = int(global_config.auto_correlation_trace_duration *
-                                                        global_config.output_sampling_rate)
-
-                                for label in component_labels:
-                                    calibrated_data = raw_trace_data.calibrate_1d_component_array(
-                                        component_trace_raw_data[label], global_config,
-                                        global_config.sensor_sensitivity[label])
-                                    interp_data = raw_trace_data.interpolate_1d_component_array(ts, calibrated_data,
-                                                                                                ideal_timestamps)
-                                    acorr_data = raw_trace_data.autocorrelate_1d_component_array(interp_data,
-                                                                                                 number_of_samples)
-                                    component_trace_dict[label] = {"{}_calibrated".format(label): calibrated_data,
-                                                                   "{}_interpolated".format(label): interp_data,
-                                                                   "{}_auto_correlated".format(label): acorr_data}
-                                    if remove_mean:
-                                        acceleration_dict[label] = {"max": np.max(calibrated_data-np.mean(calibrated_data)),
-                                                                    "min": np.min(calibrated_data)-np.mean(calibrated_data)}
-                                    else:
-                                        acceleration_dict[label] = {"max": np.max(calibrated_data),
-                                                                    "min": np.min(calibrated_data)}
-                                #Send data to the Q so that it can be plotted
-                                self.tracesQ.put({"timestamp": np.asarray([temp_lastSecond, ], dtype=np.float64),
-                                                  "raw_timestamps": ts,
-                                                  "ideal_timestamps": ideal_timestamps,
-                                                  "raw_data": component_trace_raw_data,
-                                                  "trace_data": component_trace_dict,
-                                                  "rssi": rssi_avg, #np.asarray([rssi_avg, ], dtype=np.float32),
-                                                  "temp": temp[0],
-                                                  "batt": batt[0],
-                                                  "acceleration": acceleration_dict,
-                                                  "counter_changes": counterchanges,
-                                                  "disk_usage": disk_usage,
-                                                  "filename": filename})
+                                interp_kind = "quadratic"
                             else:
-                                m = "{}: TRACE WAS DISCARDED DUE TO LARGE GAP IN DATA\n".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-                                self.logQ.put(m)
-                                self.displayQ.put(m)
-                                print(m)
-                                valid_trace = True
+                                interp_kind = "linear"
+
+                            #process the raw data the same way that it is being done in the processing Pipeline
+                            # accelerometer_max_voltage = config.getfloat("PLAYBACK","accelerometer_max_voltage")
+                            # is_ide_file=False
+                            raw_trace_data = RawTraceData()
+                            component_trace_dict = {}
+                            acceleration_dict = {}
+                            axial_index = int(axis[0])-1
+                            tangential_index = int(axis[1])-1
+                            radial_index = 3-axial_index-tangential_index
+
+                            # component_sensitivity = {"axial":sensitivity[axial_index],"tangential":sensitivity[tangential_index],"radial":sensitivity[radial_index]}
+                            component_labels = ["axial","tangential","radial"]
+                            channel_trace_raw_data = [x,y,z]
+
+                            component_trace_raw_data = {"axial":channel_trace_raw_data[axial_index],"tangential":channel_trace_raw_data[tangential_index],"radial":channel_trace_raw_data[radial_index]}
+                            # secondless_timestamps = ts - int(ts[0])
+
+                            initial_trace_timestamp = self.calculate_initial_tracetime_from_timestamp(ts[0])
+                            # print("T0", repr(initial_trace_timestamp))
+
+                            ideal_timestamps = 1./float(global_config.output_sampling_rate) * np.arange(0,int(global_config.output_sampling_rate)) + initial_trace_timestamp
+
+                            number_of_samples = int(global_config.auto_correlation_trace_duration *
+                                                    global_config.output_sampling_rate)
+
+                            for label in component_labels:
+                                calibrated_data = raw_trace_data.calibrate_1d_component_array(
+                                    component_trace_raw_data[label], global_config,
+                                    global_config.sensor_sensitivity[label])
+                                interp_data = raw_trace_data.interpolate_1d_component_array(ts, calibrated_data,
+                                                                                            ideal_timestamps,
+                                                                                            kind=interp_kind)
+                                acorr_data = raw_trace_data.autocorrelate_1d_component_array(interp_data,
+                                                                                             number_of_samples)
+                                component_trace_dict[label] = {"{}_calibrated".format(label): calibrated_data,
+                                                               "{}_interpolated".format(label): interp_data,
+                                                               "{}_auto_correlated".format(label): acorr_data}
+                                if remove_mean:
+                                    acceleration_dict[label] = {"max": np.max(calibrated_data-np.mean(calibrated_data)),
+                                                                "min": np.min(calibrated_data)-np.mean(calibrated_data)}
+                                else:
+                                    acceleration_dict[label] = {"max": np.max(calibrated_data),
+                                                                "min": np.min(calibrated_data)}
+                            #Send data to the Q so that it can be plotted
+                            self.tracesQ.put({"timestamp": np.asarray([temp_lastSecond, ], dtype=np.float64),
+                                              "raw_timestamps": ts,
+                                              "ideal_timestamps": ideal_timestamps,
+                                              "raw_data": component_trace_raw_data,
+                                              "trace_data": component_trace_dict,
+                                              "rssi": rssi_avg, #np.asarray([rssi_avg, ], dtype=np.float32),
+                                              "temp": temp[0],
+                                              "batt": batt[0],
+                                              "acceleration": acceleration_dict,
+                                              "counter_changes": counterchanges,
+                                              "disk_usage": disk_usage,
+                                              "filename": filename})
                         self.bufferThisSecond = list()
                     self.bufferThisSecond.append(row)
                 else:
@@ -877,7 +876,8 @@ def main_run(run=True):
                 logQ.put(m)
                 displayQ.put(m)
                 subpids.append(sub_pid)
-        p = subprocess.Popen(['taskset', '-cp','{}'.format(multiprocessing.cpu_count()-1), str(pid)], stdout=subprocess.PIPE, stderr=subprocess.PIPE) # 6
+        p = subprocess.Popen(['taskset', '-cp','{}'.format(multiprocessing.cpu_count()-3), str(pid)],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE) # 6
         out, err = p.communicate()
         # p = subprocess.Popen(['taskset', '-cp','7', str(subpids[0])], stdout=subprocess.PIPE, stderr=subprocess.PIPE) #6
         # out, err = p.communicate()
@@ -888,7 +888,7 @@ def main_run(run=True):
         # p = subprocess.Popen(['taskset', '-cp','7', str(subpids[3])], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # out, err = p.communicate()
         for index in range(len(subpids)):
-            p = subprocess.Popen(['taskset', '-cp','{}'.format(multiprocessing.cpu_count()-1), str(subpids[index])],
+            p = subprocess.Popen(['taskset', '-cp','{}'.format(multiprocessing.cpu_count()-3), str(subpids[index])],
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
             out, err = p.communicate()

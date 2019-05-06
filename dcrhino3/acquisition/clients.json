@@ -24,6 +24,10 @@
       {
         "name": "DETOUR_GOLD",
         "mines":["DETOUR_LAKE"]
+      },
+      {
+        "name": "BHP",
+        "mines":["EASTERN_RIDGE", "BMA", "BMC"]
       }
     ]
 }

@@ -129,6 +129,7 @@ class GUI():
 
         if self.automatic_acquisition:
             self.acquisition_daemon()
+            self.rsync_daemon()
 
         logging.info("GUI Started")
 
