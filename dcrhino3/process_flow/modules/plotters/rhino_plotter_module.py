@@ -113,12 +113,23 @@ class RhinoPlotterModule(BaseModule):
 
         if len(panels) == 0:
             return trace
+
+        #Auto Set Right Hand Side Padding
+        max_spine_number = 1
+        for panel in panels:
+            if panel.plot_style == 'header':
+                spine_number = len(panel.curves) - 1
+                if max_spine_number < spine_number:
+                    max_spine_number = spine_number
+
+
         rhino_display.panels = panels
         output_path = False
         if self.output_to_file:
             output_path = self.output_file_basepath(extension=".png")
         plot_title = self.get_plot_title(transformed_args,trace)
         rhino_display.padding_bottom = 0.1
+        rhino_display.padding_right = max_spine_number * 0.025
         rhino_display.plot(output_path,title=plot_title,show=transformed_args.show, legend=transformed_args.legend)
         return trace
 

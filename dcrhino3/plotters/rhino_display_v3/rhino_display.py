@@ -52,7 +52,7 @@ class RhinoDisplay(object):
         fig, ax = plt.subplots(n_panels, sharex=False, figsize=self.dc_plot_lim())
 
         if legend:
-            self.padding_bottom = 0.2
+            self.padding_bottom = 0.15
 
         plt.subplots_adjust(left=0.05 + self.padding_left,right=0.95 - self.padding_right,bottom=self.padding_bottom,top=0.9 - self.padding_top ,hspace = 0.2)
         if title:
@@ -75,27 +75,31 @@ class RhinoDisplay(object):
 
         if legend:
             f_leg = fig.legend()
-            listed = []
-            new_leg_list = []
+            duplicate_list = []
+            name_list = []
+            leg_list = []
             for line in f_leg.get_lines():
-                if line._label not in listed:
-                    new_leg_list.append(line)
-                    listed.append(line._label)
+                line_color = str(line.get_color())
+                line_name  = str(line._label)
+
+                if [line_name + line_color] not in duplicate_list:
+                    leg_list.append(line)
+                    duplicate_list.append([line_name+line_color])
+                    name_list.append(line_name)
 
 
             f_leg.remove()
             transfig = fig.transFigure
 
-            s_leg = plt.legend(iter(new_leg_list), listed,
+            s_leg = plt.legend(iter(leg_list), name_list,
                         bbox_transform=transfig,
-                        bbox_to_anchor=(0.5, 0.1),  # Position of legend
+                        bbox_to_anchor=(0.5 + self.padding_left/2 - self.padding_right/2, self.padding_bottom/2),  # Position of legend
                         borderaxespad=0.1,  # Small spacing around legend box
                         title="Curve Legend",  # Title for the legend
                         facecolor="darkgrey",
                         loc='center',
-                        ncol=int(round(len(new_leg_list)/3))
+                        ncol=int(round(len(leg_list)/3))
                     )
-
 
 
 
