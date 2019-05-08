@@ -125,7 +125,7 @@ class RawTraceData(TraceData):
         return df
 
 
-    def resample_l1h5(self,df, global_config):
+    def resample_l1h5(self,df, global_config,kind="quadratic"):
 
         """
         @TODO: need to get the upsample factor from
@@ -149,7 +149,7 @@ class RawTraceData(TraceData):
                 ideal_timestamps = global_config.dt * np.arange(samples_per_trace) + df['timestamp'].iloc[i_trace]
                 interpolated = self.interpolate_1d_component_array(df['raw_timestamps'].iloc[i_trace],
                                                                                             df[component_id].iloc[i_trace],
-                                                                                            ideal_timestamps)
+                                                                                            ideal_timestamps, kind)
                 if interpolated is not False:
                     output_dict[component_id][i_trace, :] = interpolated
             output_dict[component_id] = list(output_dict[component_id])
