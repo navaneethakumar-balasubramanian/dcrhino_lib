@@ -73,7 +73,8 @@
       items: [
         { icon: 'trending_up', title: 'Mont Wright' , items:[
           { title:"Processed files"  , link:"/processed/mont_wright" },
-          { title:"Acorr files"  , link:"/acorr_files/mont_wright" }
+          { title:"Acorr files"  , link:"/acorr_files/mont_wright" },
+          { title:"Sensor files"  , link:"/sensor_files/mont_wright" },
         ]},
         { icon: 'trending_up', title: 'Line Creek' , items:[
           { title:"Processed files" , link:"/processed/line_creek"},

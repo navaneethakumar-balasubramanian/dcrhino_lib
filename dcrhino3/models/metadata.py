@@ -260,7 +260,7 @@ class Metadata(object):
     def __init__(self,cfg):
         excluded_sections = ["RUNTIME", "DATAUNIT", "DATA_TRANSMISSION", "PLAYBACK", "DB","SYSTEM_HEALTH_PLOTS"]
         sections_to_iterate = [x for x in cfg.sections() if x not in excluded_sections]
-        print(sections_to_iterate)
+    #    print(sections_to_iterate)
 
         shocksub_length = 0
         # for key,key_type in METADATA_HEADER_FORMAT_KEYS.items():
