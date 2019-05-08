@@ -48,7 +48,21 @@ class EnvConfig(object):
                 return mine
         logger.warn("Could not find a config on env.json for " + str(mine_name) + " mine." )
         return False
-    
+
+    def get_sensor_files_storage_folder(self, mine_name):
+        """
+        Parameters:
+            mine_name (str): mine name
+
+        Returns:
+            Path to h5 interpolated cache folder for the mine named, False if missing
+        """
+        mine_cfg = self._get_mine_config(mine_name)
+        if not mine_cfg or 'paths' not in mine_cfg.keys() or 'sensor_files_storage_folder' not in mine_cfg[
+            'paths']:
+            return False
+        return mine_cfg['paths']['sensor_files_storage_folder']
+
     def get_hole_h5_interpolated_cache_folder(self,mine_name):
         """
         Parameters:

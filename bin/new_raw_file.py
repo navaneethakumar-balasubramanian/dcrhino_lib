@@ -9,7 +9,7 @@ from clickhouse_driver import Client
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
 from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.helpers.general_helper_functions import init_logging
-from dcrhino3.helpers.raw_file_manager import RawFileManager
+from dcrhino3.helpers.sensor_file_manager import SensorFileManager
 import requests
 logger = init_logging(__name__)
 
@@ -17,7 +17,7 @@ logger = init_logging(__name__)
 def new_raw_file(file_path):
     env_config = EnvConfig("env_config.json")
 
-    raw_file_manager = RawFileManager(env_config)
+    raw_file_manager = SensorFileManager(env_config)
     props = raw_file_manager.file_props(file_path)
     if props:
         db_conn = env_config.get_rhino_db_connection_from_mine_name(props['mine_name'])

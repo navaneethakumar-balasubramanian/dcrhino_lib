@@ -1,4 +1,4 @@
-CREATE TABLE `raw_files` (
+CREATE TABLE IF NOT EXISTS `sensor_files` (
 	`raw_file_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 	`file_path` TEXT NOT NULL COLLATE 'utf8_bin',
 	`rig_id` VARCHAR(90) NOT NULL COLLATE 'utf8_bin',

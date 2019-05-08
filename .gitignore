@@ -5,6 +5,7 @@ dcrhino3/acquisition/logs/*.err
 *.json
 !dcrhino3/acquisition/clients.json
 bin/can_be_deleted
+bin/scratch
 
 \.idea/workspace\.xml
 
