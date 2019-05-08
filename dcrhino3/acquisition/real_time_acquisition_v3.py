@@ -1047,7 +1047,8 @@ def main_run(run=True):
             rssi.append(trace["rssi"])
             temp.append(trace["temp"])
             battery_current_voltage = trace["batt"]
-            batt.append(calculate_battery_percentage(battery_current_voltage, battery_max_voltage, battery_lower_limit))
+            # batt.append(calculate_battery_percentage(battery_current_voltage, battery_max_voltage, battery_lower_limit))
+            batt.append(trace["batt"])
             packets.append(len(trace["raw_data"][component_to_display]))
             delay.append(sec_delay)
             trace_time_array.append(tracetime)
@@ -1150,13 +1151,13 @@ def write_data_to_h5_files(h5f_path,trace_data,trace):
 #     return array/value
 
 
-def calculate_battery_percentage(current_voltage,battery_max_voltage,battery_lower_limit):
-    battery_plot_display_percentage = config.getboolean("SYSTEM_HEALTH_PLOTS","battery_plot_display_percentage")
-    if battery_plot_display_percentage:
-        value = 100 - (battery_max_voltage - current_voltage)/(battery_max_voltage - battery_lower_limit)*100
-    else:
-        value = current_voltage
-    return value
+# def calculate_battery_percentage(current_voltage,battery_max_voltage,battery_lower_limit):
+#     battery_plot_display_percentage = config.getboolean("SYSTEM_HEALTH_PLOTS","battery_plot_display_percentage")
+#     if battery_plot_display_percentage:
+#         value = 100 - (battery_max_voltage - current_voltage)/(battery_max_voltage - battery_lower_limit)*100
+#     else:
+#         value = current_voltage
+#     return value
 
 def add_empty_health_row_to_Q(rssi, temp, batt, packets, delay, trace_time_array, now_array, system_healthQ,
                               last_tracetime, last_counterchanges, corrupt_packets, tx_status,

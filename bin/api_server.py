@@ -1,5 +1,6 @@
-from flask import Flask,  request, jsonify, send_from_directory, render_template
+from flask import Flask,  request, jsonify, send_from_directory, render_template, make_response
 from flask_cors import CORS
+import pandas as pd
 from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
@@ -78,6 +79,35 @@ def acorr_files():
 @app.route('/images/<path:path>')
 def send_image(path):
     return send_from_directory(CACHE_IMAGE_FOLDER, path)
+
+@app.route('/get_processed_csv',methods=['GET', 'POST'])
+def get_processed_csv():
+    req_json = request.get_json()
+    if 'mine_name' not in req_json.keys():
+        return jsonify(False)
+    env_config = EnvConfig()
+    mine_name = req_json['mine_name']
+    db_conn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
+    processed_holes = req_json['processed_holes']
+    if processed_holes == False:
+        return jsonify(False)
+
+    processed_csv_list = []
+    for processed_hole in processed_holes:
+        processed_folder = os.path.join(env_config.get_hole_h5_processed_cache_folder(mine_name),  processed_hole['output_folder_name'])
+        processed_csv = pd.read_csv(os.path.join(processed_folder,'processed.csv'))
+        processed_csv_list.append(processed_csv)
+
+    df = pd.concat(processed_csv_list)
+    resp = make_response(df.to_csv())
+    resp.headers["Content-Disposition"] = "attachment; filename=processed.csv"
+    resp.headers["Content-Type"] = "application/octet-stream"
+    return resp
+
+
+
+
+
 
 @app.route('/api/processed_hole',methods=['GET', 'POST'])
 def processed_hole():

@@ -1,4 +1,4 @@
-CREATE TABLE `acorr_files` (
+CREATE TABLE IF NOT EXISTS `acorr_files` (
 	`acorr_file_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 	`bench_name` VARCHAR(90) NOT NULL COLLATE 'utf8_bin',
 	`pattern_name` VARCHAR(90) NOT NULL COLLATE 'utf8_bin',

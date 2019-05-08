@@ -46,7 +46,7 @@ def generate_cache_acorr(mine_name, env_config_path=False):
 
         #pdb.set_trace()
 
-        for line in matches.itertuples():
+n        for line in matches.itertuples():
 
             h5_filename = str(line.bench_name) + "_" + str(line.pattern_name) + "_" + str(line.hole_name) + "_" + str(line.hole_id)+"_"+str(line.sensor_id)+"_"+str(line.digitizer_id) + ".h5"
 

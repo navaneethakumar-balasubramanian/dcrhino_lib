@@ -1,4 +1,4 @@
-CREATE TABLE `processed_holes` (
+CREATE TABLE IF NOT EXISTS `processed_holes` (
 	`processed_hole_id` INT(11) NOT NULL AUTO_INCREMENT,
 	`processed_at_ts` INT(11) NULL DEFAULT NULL,
 	`seconds_processed` INT(11) NULL DEFAULT NULL,
