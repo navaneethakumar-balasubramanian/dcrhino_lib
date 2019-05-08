@@ -198,7 +198,7 @@ class GUI():
                 battery = round(health[4][-1],2)
                 #battery = 20
                 if self.battery_plot_display_percentage:
-                    self.battery_life.set("{} %".format(battery))
+                    self.battery_life.set("{} %".format(self.calculate_battery_percentage(battery)))
                 else:
                     self.battery_life.set("{} V".format(battery))
                 bgcolor,fgcolor = self.colors("battery",battery)
@@ -372,6 +372,12 @@ class GUI():
             bgcolor = "black"
             fgcolor = "green"
         return bgcolor,fgcolor
+
+    def calculate_battery_percentage(self, current_voltage):
+        battery_max_voltage = config.getfloat("INSTALLATION", "battery_max_voltage")
+        battery_lower_limit = config.getfloat("INSTALLATION", "battery_min_voltage")
+        value = 100 - (battery_max_voltage - current_voltage) / (battery_max_voltage - battery_lower_limit) * 100
+        return value
 
 
 def main():
