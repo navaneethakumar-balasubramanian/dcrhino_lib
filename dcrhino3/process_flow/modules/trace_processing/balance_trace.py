@@ -31,7 +31,7 @@ from dcrhino3.unstable.phase_algorithm_helpers import identify_primary_neighbour
 logger = init_logging(__name__)
 
 
-class BaseTraceModule(BalanceModule):
+class BaseTraceModule(BaseTraceModule):
     def __init__(self, json, output_path,process_flow,order):
         BaseTraceModule.__init__(self, json, output_path,process_flow,order)
         self.id = "balance"
