@@ -8,7 +8,17 @@ from matplotlib.widgets import Button
 logger = init_logging(__name__)
 
 class RhinoPlotterRepickerModule(RhinoPlotterModule):
+    """
+    Use Rhino Plotter Module to display data and allow users to repick window boundaries.
+    """
     def __init__(self, json, output_path,process_flow,order):
+        """
+        Args:
+            json (dict): data in process flow JSON
+            output_path (str): where to put the file
+            process_flow (obj): ProcessFlow instance
+            order (int): Where this falls in the process flow order
+        """
         RhinoPlotterModule.__init__(self, json, output_path, process_flow, order)
         self.id = "rhino_plotter_repicker"
         self.default_args.update({
@@ -18,7 +28,17 @@ class RhinoPlotterRepickerModule(RhinoPlotterModule):
         })
 
     def process_trace(self, trace):
+        """
+        Sort into header, heatmap, and wiggle and plot accordingly. Set the padding for the right hand side based on the
+        max number of spines for a header plot. Keep data in panels list, disregard if no curves to plot. Call rhino display
+        function for plotting the panels.
 
+        Args:
+            trace: contains transformed args from JSON and first global configs
+
+        Returns:
+            trace
+        """
         rhino_display = RhinoDisplay()
         transformed_args = self.get_transformed_args(trace.first_global_config)
         if transformed_args.ignore_picker is not None:
@@ -104,6 +124,9 @@ class RhinoPlotterRepickerModule(RhinoPlotterModule):
         return trace
 
     def repick(self,event):
+        """
+        Repick using picker module
+        """
         self.process_flow.actual_module = self.picker_module_idx-1
         plt.close()
 

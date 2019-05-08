@@ -12,13 +12,11 @@ logger = init_logging(__name__)
 
 def mergey_mc_mergealot(new_features_df, old_dataframe):
     """
-    special function for K0 features which redefine the traces.
-    Can be made much more general but for now...
+    Special function for K0 features which redefine the traces. Can be made much more general but for now...
     1. Find traces (array-type elements) in the new_features dataframe and
     and overwrite their corresponding old dataframe, then use pandas merge
     on the rest of the columns
     """
-    #pdb.set_trace()
     common_column_labels = list(set(new_features_df.columns).intersection(set(old_dataframe.columns)))
     old_dataframe.update(new_features_df, overwrite=True)
     new_features_df.drop(common_column_labels, axis=1, inplace=True)
@@ -31,6 +29,9 @@ def strip_k0_from_trace_column_labels(df):
     """
     hacky fix, can be made general by finding pattersn with
     {}_axial_trace, etc.
+
+    Parameters:
+        df (dataframe): dataframe to be feature extracted
     """
     mapper = {}
     if 'K0_axial_trace' in df.columns:
@@ -43,6 +44,9 @@ def strip_k0_from_trace_column_labels(df):
     return df
 
 class BaseFeatureModule(BaseModule):
+    """
+    Set up to use the feature extractor process flow module.
+    """
     def __init__(self, json, output_path,process_flow, order):
         """
         @ivar id: data_processing_stage_designator
@@ -56,8 +60,11 @@ class BaseFeatureModule(BaseModule):
 
     def extract_features(self,trace):
         """
-        works with a TraceData() class, typically an entire hole, or
+        Works with a TraceData() class, typically an entire hole, or
         dataframe spanning a time interval comprising many traces
+
+        Return:
+            trace: TraceData object
         """
         output_df = trace.dataframe.copy()
 
@@ -99,8 +106,11 @@ class BaseFeatureModule(BaseModule):
     def extract_feature_component(self, component_id, component_array,
                                   transformed_args, timestamp):
         """
-        this function is to be overwritten on each Module class.  It is basically
+        After setup, this function is to be overwritten on each Module class.  It is basically
         the "make" method for the data processing
+
+        Returns:
+             line_features_dict a dictionary with extracted features
         """
         line_features_dict = dict()
         return line_features_dict

@@ -31,24 +31,26 @@ class UpsampleModule(BaseTraceModule):
 
     def process_component(self,component_id, component_vector, global_config):
         """
-        @type component_array: numpy array
-        needed vars: input_sampling_rate (dt), min_lag, n_samples_trimmed_trace
+        Parameters:
+            component_array (numpy array): need min_lag, max_lag, sampling_rate,num_taps_in_decon_filter
 
-        @TODO: check time vectors are symmetric about zero; Better yet, add a
-        helper function to return symmetric time vector based on n_samples (odd)
-        and sampling rate;
-        @TAI: gates and fenceposts ... duration = n_samples*dt (no +/-1's involved)
-        i.e.: expect 200ms + input_dt as duration
+        .. todo:: check time vectors are symmetric about zero; Better yet, add a
+            helper function to return symmetric time vector based on n_samples (odd)
+            and sampling rate;
 
-        @var: interp_kind = quadratic', 'cubic', 'linear'
+        .. note:: gates and fenceposts ... duration = n_samples*dt (no +/-1's involved)
+            i.e.: expect 200ms + input_dt as duration
 
-        @WARNING: fill_value=(component_vector[0], component_vector[-1]) vs
-        fill_value='extrapolate' has not been evaluated ... it shouldn't matter
-        since the places this is applied are not used by feature extractor ..
-        but I don;t like the extrapolation because you can get very large values at
-        the end points which could muck up filtering, and I don't like
-        (component_vector[0], component_vector[-1]) because fourier methods will
-        inherit an artefact ... not sure how to test this exactly
+        Other Parameters:
+            interp_kind (str) : 'quadratic', 'cubic', 'linear'
+
+        .. warning:: fill_value=(component_vector[0], component_vector[-1]) vs
+            fill_value='extrapolate' has not been evaluated ... it shouldn't matter
+            since the places this is applied are not used by feature extractor ..
+            but I don;t like the extrapolation because you can get very large values at
+            the end points which could muck up filtering, and I don't like
+            (component_vector[0], component_vector[-1]) because fourier methods will
+            inherit an artefact ... not sure how to test this exactly
 
 
         The input vector is assumed to be sampled at global_config.output_sampling_rate,
@@ -61,15 +63,16 @@ class UpsampleModule(BaseTraceModule):
         want to study the variations in the deconvolution filter w.r.t. the phase
         rotation and time shift parameters
 
-        @TODO: modify to support  interp_kind == 'sinc' and merge the sinc interpolation
-        so all in the same module
+        .. todo:: modify to support  interp_kind == 'sinc' and merge the sinc interpolation
+            so all in the same module
 
 
-        @note: to modify sinc-interpolation to use an integer upsample_factor replace
+        .. note: to modify sinc-interpolation to use an integer upsample_factor replace
+
         #old_axis = np.arange(len(data))
         #new_axis = np.arange(upsample_factor * n_obs) / upsample_factor
+
         """
-        #pdb.set_trace()
         transformed_args = self.get_transformed_args(global_config)
         interp_kind = transformed_args.upsample_interpolation_kind
 

@@ -5,8 +5,8 @@ Created on Fri Jan 25 11:52:23 2019
 
 @author: karl
 
-@TODO: Check that the trimmed_trace number of samples and duration is kosher
-I think that the change to autocorrelation-based processing from simple resampled
+.. todo:: Check that the trimmed_trace number of samples and duration is kosher
+    I think that the change to autocorrelation-based processing from simple resampled
 
 """
 
@@ -24,15 +24,18 @@ from dcrhino3.process_flow.modules.trace_processing.base_trace_module import Bas
 logger = init_logging(__name__)
 
 class UpsampleSincModule(BaseTraceModule):
+    """
+    Interpolate to fit with new upsampling rate
+    """
     def __init__(self, json, output_path,process_flow,order):
         BaseTraceModule.__init__(self, json, output_path,process_flow,order)
         self.id = "upsample_sinc"
 
     def process_component(self,component_id, component_vector, global_config):
         """
-        @type component_array: numpy array
+        Parameters:
+            component_array (numpy array): need min_lag, max_lag, sampling_rate,num_taps_in_decon_filter
         """
-        #pdb.set_trace()
         transformed_args = self.get_transformed_args(global_config)
         trimmed_trace_duration = transformed_args.trimmed_trace_duration
         upsample_sampling_rate = transformed_args.upsample_sampling_rate
@@ -55,7 +58,6 @@ class UpsampleSincModule(BaseTraceModule):
         new_axis = np.arange(n_samples_output) / (1.0* n_samples_output)
         #<new way>
         upsampled_data = sinc_interp(data, old_axis, new_axis)
-        pdb.set_trace()
         #</new way>
 #        plt.figure(1)
 #        plt.clf()

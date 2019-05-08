@@ -11,6 +11,9 @@ import pdb
 from dcrhino3.process_flow.modules.base_module import BaseModule
 
 class BaseTraceModule(BaseModule):
+    """
+    Works to clean up trace data and store it in dataframe and h5 after process flow section is complete
+    """
     def __init__(self, json, output_path,process_flow,order):
         """
         @ivar id: data_processing_stage_designator

@@ -5,11 +5,11 @@ Created on Fri Jan 25 11:52:23 2019
 
 @author: karl
 
-@TODO: add a control here for "clipping" or "trimming" these
-traces down.  The way this was handled is with min_lag_trimmed_trace
-and max_lag_trimmed_trace; These were set to -0.1 (min) and +0.1 (max).
-We need to make sure that the traces have enough 'slop' on the
-edges that the filtering edge effects do not create artefacts in the data.
+.. todo:: add a control here for "clipping" or "trimming" these
+    traces down.  The way this was handled is with min_lag_trimmed_trace
+    and max_lag_trimmed_trace; These were set to -0.1 (min) and +0.1 (max).
+    We need to make sure that the traces have enough 'slop' on the
+    edges that the filtering edge effects do not create artefacts in the data.
 
 The code here is modified from the dev branch of dchrino_lib in
 dcrhino/analysis/unstable/v03/test_can_process_acorr_to_features.py
@@ -32,31 +32,35 @@ class LeadChannelDeconvolutionModule(BaseTraceModule):
 
     def process_component(self,component_id, component_vector, global_config):
         """
-        @type component_array: numpy array
-        @TODO: this should also return the filter as there is probably some
-        physical rock property info in the filter coefficients
-        This doesn't seem supported in v3; change for v3.1;
-        @TODO: Add trim to this methid so tht deconv trace gets trimmed here?
-        @note: 20180128: this is now expecting an 'unfolded' acorr, which will have
-        an odd number of samples;
-        @note: 20180204: added Trim to this method.  Note that I am removing
-        two extra samples ... this could be becuase t0_index is not dead center
-        after filtering, but one sample earlier than center ...
-        THe input trace in my tests was 3999 points, using a 500 point filter,
-        and the output trace was 3497 points (rather than 3499 as expected).
-        It could be that we should switch to an odd numbered decon filter for
-        these acorr traces ...
-        @TODO: try using odd-number-taps acorr filter to maintain 3999 points
-        (i.e. shift back by 1 the t0_index ... need to test to see its really true)
+        Parameters:
+            component_id (numpy array):
+
+        .. todo:: this should also return the filter as there is probably some
+            physical rock property info in the filter coefficients
+            This doesn't seem supported in v3; change for v3.1;
+
+        .. todo:: Add trim to this methid so tht deconv trace gets trimmed here?
+
+        .. note:: 20180128: this is now expecting an 'unfolded' acorr, which will have
+            an odd number of samples;
+
+        .. note:: 20180204: added Trim to this method.  Note that I am removing
+            two extra samples ... this could be becuase t0_index is not dead center
+            after filtering, but one sample earlier than center ...
+            THe input trace in my tests was 3999 points, using a 500 point filter,
+            and the output trace was 3497 points (rather than 3499 as expected).
+            It could be that we should switch to an odd numbered decon filter for
+            these acorr traces ...
+
+        .. todo:: try using odd-number-taps acorr filter to maintain 3999 points
+            (i.e. shift back by 1 the t0_index ... need to test to see its really true)
         """
-        #pdb.set_trace()
         transformed_args = self.get_transformed_args(global_config)
         trace_data = component_vector
         n_samples_in_input_trace = len(trace_data)
         zero_lag_index = (n_samples_in_input_trace -1) // 2
         #can sanity check this should be the argmax
         #samples_per_trace = 2*n_samples_in_input_traces - 1
-        #pdb.set_trace()
         n_taps_decon = transformed_args.num_taps_in_decon_filter
         acorr_for_filter = trace_data[zero_lag_index : zero_lag_index + n_taps_decon]
         ATA = scipy.linalg.toeplitz(acorr_for_filter)
@@ -77,7 +81,5 @@ class LeadChannelDeconvolutionModule(BaseTraceModule):
         n_valid_samples_rhs = len(deconv_trace) - t0_index
         n_valid_samples_lhs = n_valid_samples_rhs - 1
         output_trace = deconv_trace[t0_index-n_valid_samples_lhs:len(deconv_trace)]
-
-        #pdb.set_trace()
 
         return output_trace

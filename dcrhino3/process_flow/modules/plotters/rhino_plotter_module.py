@@ -12,7 +12,22 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 logger = init_logging(__name__)
 
 class RhinoPlotterModule(BaseModule):
+    """
+    Controls the Rhino Plotter Processes, plots based on JSON specs and trace data.
+
+    Parameters:
+        BaseModule (object): From the hybrid module
+    """
     def __init__(self, json, output_path,process_flow,order):
+        """
+        Takes values from global configs and JSON to use.
+
+        Parameters:
+            json (str): path to json
+            output_path (str): path to output files from env_config
+            process_flow (dict): identifier for process flows
+            order (str): for output file name
+        """
         BaseModule.__init__(self, json, output_path,process_flow,order)
         self.id = "rhino_plotter"
         self.default_args = {
@@ -35,6 +50,15 @@ class RhinoPlotterModule(BaseModule):
         }
 
     def get_plot_title(self,transformed_args, trace):
+        """
+        Creates the unique plot title from the metadata given (location, serial number, rig/drill type etc)
+        Args:
+            transformed_args (object): from general helper functions, metadata on the drilling
+            trace (TraceData object): includes dataframe and bench data
+
+        Returns:
+            plot_title (str): name of plot to be made
+        """
         process_flow_id = self.process_flow.id
         drill_type = DrillTypes(transformed_args.drill_type).name
         bit_type = BitTypes(transformed_args.bit_type).name
@@ -51,6 +75,17 @@ class RhinoPlotterModule(BaseModule):
 
 
     def process_trace(self, trace):
+        """
+        Sort into header, heatmap, and wiggle and plot accordingly. Set the padding for the right hand side based on the
+        max number of spines for a header plot. Keep data in panels list, disregard if no curves to plot. Call rhino display
+        function for plotting the panels.
+
+        Args:
+            trace: contains transformed args from JSON and first global configs
+
+        Returns:
+            trace
+        """
         rhino_display = RhinoDisplay()
         transformed_args = self.get_transformed_args(trace.first_global_config)
         rhino_display.padding_left = transformed_args.padding_left
@@ -136,6 +171,15 @@ class RhinoPlotterModule(BaseModule):
 
 
     def create_curve(self,_obj):
+        """
+        Create curve, with obj as the column label
+
+        Args:
+            _obj: column label
+
+        Returns:
+            Curve object
+        """
         if isinstance(_obj, basestring):
             return Curve(column_label=_obj, x_axis_label='depth')
         else:

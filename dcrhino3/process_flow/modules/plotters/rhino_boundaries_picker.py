@@ -23,6 +23,9 @@ import matplotlib as mpl
 
 
 class DraggableLine(object):
+    """
+    Create draggable line to set window boundary
+    """
     def __init__(self,ax,x,y,original_color,label,boundaries):
         self.ax = ax
         self.y = y
@@ -48,15 +51,28 @@ class DraggableLine(object):
         self.moveY(self.default_value)
 
     def hoverOn(self):
+        """
+        Highlight the line to show which is being moved
+        """
         self.line.set_color("#ffffff")
         self.line_label.set_color("#ffffff")
 
 
     def hoverOff(self):
+        """
+        Lowlight the background lines
+        """
         self.line.set_color(self.original_color)
         self.line_label.set_color("k")
 
     def moveY(self,y):
+        """
+        Shift Lines vertically and round to three decimals
+
+        Args:
+            y: y to be set
+        """
+
         #print (y)
         if y <= self.maxY and y >= self.minY:
             self.line.set_ydata(np.full(len(self.x_list), y))
@@ -67,6 +83,10 @@ class DraggableLine(object):
 
 
 class RhinoPlotterPickerModule(RhinoPlotterModule):
+    """
+    Use rhino plotter to display lines and allow user to choose visually the window boundaries they want to process with,
+    down the road they can repick or save these boundaries to use for a future processing job (saved with completed files)
+    """
     def __init__(self, json, output_path,process_flow,order):
         RhinoPlotterModule.__init__(self, json, output_path, process_flow, order)
         self.id = "rhino_plotter_picker"
@@ -90,6 +110,12 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
 
     def populate_lines_default_values(self, manual_time_windows,component):
         """
+        Start the lines off at the time we would expect to see them
+
+        Parameters:
+            manual_time_windows (dict): where we expect to see these window boundaries
+            component (str): which component is being picked
+
         .. :todo review if we really want to use units of ms here
         """
         using_ms = True
@@ -121,6 +147,17 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
 
 
     def process_trace(self, trace):
+        """
+        Sort into header, heatmap, and wiggle and plot accordingly. Set the padding for the right hand side based on the
+        max number of spines for a header plot. Keep data in panels list, disregard if no curves to plot. Call rhino display
+        function for plotting the panels.
+
+        Args:
+            trace: contains transformed args from JSON and first global configs
+
+        Returns:
+            trace
+        """
 
         transformed_args = self.get_transformed_args(trace.first_global_config)
         if transformed_args.component not in self.components_to_process:
@@ -192,6 +229,9 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
         return trace
 
     def save_vars(self):
+        """
+        Use set_prop_process to record to boundaries for each components primary-multiple3 windows
+        """
         self.set_prop_process(self.transformed_args.component + "_primary",
                               [self.lines[0].y / 1000, self.lines[1].y / 1000])
         self.set_prop_process(self.transformed_args.component + "_multiple_1",
@@ -242,12 +282,18 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
         #self.redraw()
 
     def onrelease(self,event):
+        """
+        Let go of the line moving
+        """
         print ("release")
         self.dragging_line = None
         self.c.mpl_disconnect(self.releaser)
         #plt.draw()
 
     def onclick(self,event):
+        """
+        Grab the line to begin moving it
+        """
         print('%s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
               ('double' if event.dblclick else 'single', event.button,
                event.x, event.y, event.xdata, event.ydata))

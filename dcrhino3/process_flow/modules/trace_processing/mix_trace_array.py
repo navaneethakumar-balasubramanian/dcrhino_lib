@@ -30,18 +30,21 @@ logger = init_logging(__name__)
 
 
 class TraceMixingArrayModule(BaseTraceArrayModule):
+    """
+    Try to use bobs trace mixing algorithm or something similar
+    """
     def __init__(self, json, output_path,process_flow,order):
         BaseTraceArrayModule.__init__(self, json, output_path,process_flow,order)
         self.id = "trace_mixing"
 
     def process_component(self,component_id, component_array, transformed_args):
         """
-        @type component_array: numpy array
-        need min_lag, max_lag, sampling_rate,num_taps_in_decon_filter
-        @note: Assumes n_mix is odd.  Clips n_clip_lr from either side of the
-        mix before stacking
+        Parameters:
+            component_array (numpy array): need min_lag, max_lag, sampling_rate,num_taps_in_decon_filter
+
+        .. note:: Assumes n_mix is odd.  Clips n_clip_lr from either side of the
+            mix before stacking
         """
-        #pdb.set_trace()
         n_mix = transformed_args.n_mix #5
         n_clip_lr = transformed_args.n_clip_lr #1
         #n_stack_mix = n_mix - (2 * n_clip_lr)
@@ -64,11 +67,9 @@ class TraceMixingArrayModule(BaseTraceArrayModule):
             else:
                 mix_input = component_array[left_index:right_index, :].copy()
                 #print(pre_mix_input.shape)
-                #pdb.set_trace()
                 mix_input.sort(axis=0)
                 mix_input = mix_input[n_clip_lr:n_mix-n_clip_lr]
                 #print(pre_mix_input.shape)
-                #pdb.set_trace()
                 mixxy_mcmix = mix_input.mean(axis=0)
                 mixed_array[i_trace] = mixxy_mcmix
 

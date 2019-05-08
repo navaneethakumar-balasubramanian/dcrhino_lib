@@ -33,16 +33,24 @@ logger = init_logging(__name__)
 
 
 class RotateModule(BaseTraceModule):
+    """
+    Rotate according to phi spec'd in JSON
+    """
     def __init__(self, json, output_path,process_flow,order):
         BaseTraceModule.__init__(self, json, output_path,process_flow,order)
         self.id = "rotate"
 
     def process_component(self,component_id, component_vector, global_config):
         """
-        @type component_array: numpy array
+        Give phi and data to rotate module and rotate according to phi specified
+        in transformed args
+
+        Parameters:
+            component_array (numpy array): need min_lag, max_lag, sampling_rate,num_taps_in_decon_filter
+
         .. todo:: in the updated version we want to add phi to the trace_dataframe;
-        this also means that it needs to be formalized as a name which means
-        take the labeling from K0 for phi and apply it here;
+            this also means that it needs to be formalized as a name which means
+            take the labeling from K0 for phi and apply it here;
 
         """
 

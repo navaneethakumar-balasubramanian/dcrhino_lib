@@ -8,6 +8,7 @@ from dcrhino3.signal_processing.filters import FIRLSFilter
 
 def get_band_pass_filter_taps(transformed_args):
     """
+    Get number of coeffs for the band pass filter
     """
     corners = [transformed_args.trapezoidal_bpf_corner_1,
                transformed_args.trapezoidal_bpf_corner_2,
@@ -16,23 +17,30 @@ def get_band_pass_filter_taps(transformed_args):
     fir_duration = transformed_args.trapezoidal_bpf_duration# = 0.02
 
     firls = FIRLSFilter(corners, fir_duration)
-    #pdb.set_trace()
     fir_taps = firls.make(transformed_args.sampling_rate)
     return fir_taps
 
 class BandPassFilterModule(BaseTraceModule):
+    """
+    Control the bandpass filter module
+    """
     def __init__(self, json, output_path,process_flow,order):
         BaseTraceModule.__init__(self, json, output_path,process_flow,order)
         self.id = "band_pass_filter"
 
     def process_component(self,component_id, component_vector, global_config):
         """
-        @type component_vector: numpy array
-        @TODO: get the filter taps and pass them in;
-        @NOTE: Why are we using transformed args rather than the global config
-        itself??
+        Convert transformed args to usable values for the balance trace module to get even data
+
+        Parameters:
+            component_array (numpy array): need min_lag, max_lag, sampling_rate,num_taps_in_decon_filter
+
+        .. todo:: get the filter taps and pass them in;
+
+        .. note:: Why are we using transformed args rather than the global config
+            itself??
+
         """
-        #pdb.set_trace()
         transformed_args = self.get_transformed_args(global_config)
 
 #        output_dict = {}

@@ -25,6 +25,9 @@ define_obspy_trace_header()
 
 
 class ExportSEGYModule(BaseTraceModule):
+    """
+    Exports segment as segy standardized format: https://www.gdal.org/drv_segy.html
+    """
     def __init__(self, json, output_path,process_flow,order):
         BaseTraceModule.__init__(self, json, output_path,process_flow,order)
         self.id = "export_segy"
@@ -32,8 +35,10 @@ class ExportSEGYModule(BaseTraceModule):
         self.stream = Stream()
 
     def process_trace_data(self, trace):
-        # This function does not perform any operation on the trace data, it just generates a segy output
-        # output_df = trace.dataframe.copy()
+        """
+        This function does not perform any operation on the trace data, it just generates a segy output
+        output_df = trace.dataframe.copy()
+        """
 
         if len(np.unique(trace.dataframe['acorr_file_id'])) > 1:
             m = "More than one config file identified while generating SEGY.  Using first config file"
@@ -56,18 +61,39 @@ class ExportSEGYModule(BaseTraceModule):
         return trace
 
     def generate_output_name(self, applied_modules_list):
+        """
+        Returns:
+            list of module names joined with hyphen -
+        """
         module_names = []
         for module in applied_modules_list:
             module_names.append(json.loads(module)["module_id"])
         return "-".join(module_names)
 
     def get_sampling_rate(self, applied_modules_list):
+        """
+        Retrieve the sampling rate, especially important when upsampling
+
+        Args:
+            applied_modules_list: list of modules that have acted on the data
+
+        Returns:
+            (float): the output sampling rate
+
+        """
         for module in applied_modules_list:
             if json.loads(module)["module_id"] == "upsample":
                 return float(self.global_config.upsample_sampling_rate)
         return float(self.global_config.output_sampling_rate)
 
     def save_as_segy(self, row):
+        """
+        Saves data to segy format
+
+        Args:
+            row (dict): row of data, where trace time is pulled from for each sample
+
+        """
         components = ["axial", "radial", "tangential"]
         trace_time = row["timestamp"]
         for t in range(3):
@@ -134,7 +160,10 @@ class ExportSEGYModule(BaseTraceModule):
             self.stream.append(trace)
 
     def generate_textual_header(self):
-        # THIS IS SO THAT THE TEXTUAL HEADER CAN BE PROPERLY READ IN THIRD PARTY PROGRAMS.EACH LINE HAS 80 CHARACTERS
+        """
+        THIS IS SO THAT THE TEXTUAL HEADER CAN BE PROPERLY READ IN THIRD PARTY PROGRAMS.EACH LINE HAS 80 CHARACTERS
+
+        """
         row = 1
 
         header = "C%s RECORDING_DATE: %s" % (row, self.global_config.sensor_installation_date)

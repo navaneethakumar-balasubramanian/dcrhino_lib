@@ -440,7 +440,6 @@ class Wiggle(RhinoDisplayPanel):
         data = self.trace_data.component_as_array(self.component)
         data = data.copy()
         num_traces_in_blasthole, samples_per_trace = data.shape
-        # pdb.set_trace()
 
         data = data.T
 
