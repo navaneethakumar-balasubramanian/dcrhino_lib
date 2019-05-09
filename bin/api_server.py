@@ -24,6 +24,11 @@ CORS(app)
 def index(path):
     return render_template("index.html")
 
+@app.route('/mines')
+def get_mines():
+    env_config = EnvConfig()
+    return jsonify(env_config.mines.keys())
+
 @app.route('/css/<path:path>')
 def send_css(path):
     return send_from_directory('../web_server/frontend/dist/css/', path)

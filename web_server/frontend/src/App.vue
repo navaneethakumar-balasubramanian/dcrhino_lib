@@ -67,18 +67,25 @@
 </template>
 
 <script>
+import Axios from 'axios'
   export default {
+    mounted(){
+      const temp = this
+      Axios.get('http://localhost:5000/mines').then((response) => {
+            response.data.forEach(element => {
+              temp.items.push({title:element,items:[
+                { title:"Processed files"  , link:"/processed/" + element },
+                { title:"Acorr files"  , link:"/acorr_files/" + element },
+                { title:"Sensor files"  , link:"/sensor_files/" + element },      
+              ]})
+            });
+            })
+    
+    },
     data: () => ({
       drawer: null,
       items: [
-        { icon: 'trending_up', title: 'Mont Wright' , items:[
-          { title:"Processed files"  , link:"/processed/mont_wright" },
-          { title:"Acorr files"  , link:"/acorr_files/mont_wright" },
-          { title:"Sensor files"  , link:"/sensor_files/mont_wright" },
-        ]},
-        { icon: 'trending_up', title: 'Line Creek' , items:[
-          { title:"Processed files" , link:"/processed/line_creek"},
-        ]}
+       
       ],
       items2: [
         { picture: 28, text: 'Joseph' },
