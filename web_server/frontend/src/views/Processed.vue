@@ -105,7 +105,7 @@
         show_dialog:false,
         show_dialog_comparison:false,
         selected : [],
-        pagination: {rowsPerPage:-1},
+        pagination: {rowsPerPage:100},
         warning: null,
         warning_text: null,
         headers : [
