@@ -19,7 +19,7 @@ class ProcessedHoles(BaseDbModel):
         sql = 'Select * from ' + self.table_name + " where processed_hole_id IN ( " + ",".join(processed_hole_ids) + ")"
         return self.query_to_df(sql)
 
-    def get_latests(self,limit=5000):
+    def get_latests(self,limit=1000):
         return self.query_to_df("select * from " + self.table_name + " order by processed_at_ts DESC limit " + str(limit))
 
     def hole_to_mp(self,processed_hole_id,to_mp):
@@ -34,7 +34,7 @@ class ProcessedHoles(BaseDbModel):
             print("Something went wrong: {}".format(err))
         return False
 
-    def get_search_string(self,search,limit=5000):
+    def get_search_string(self,search,limit=1000):
         words = str(search).split(" ")
         query = "select * from " + self.table_name +" where "
         for word in words:
