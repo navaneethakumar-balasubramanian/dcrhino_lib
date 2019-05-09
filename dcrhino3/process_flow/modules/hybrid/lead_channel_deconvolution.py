@@ -87,7 +87,6 @@ class LeadChannelDeconvolutionModuleHybrid(BaseHybridModule):
             zero_lag_index = (n_samples_per_trace -1) // 2
 
             for i_trace in range(n_traces):
-                #pdb.set_trace()
                 #print(i_trace)
                 trace_data = data_array[i_trace,:]
                 acorr_for_filter = trace_data[zero_lag_index : zero_lag_index + n_taps]
@@ -95,6 +94,10 @@ class LeadChannelDeconvolutionModuleHybrid(BaseHybridModule):
                 try:
                     ATAinv = scipy.linalg.inv(ATA)
                 except scipy.linalg.LinAlgError:
+                    ATAinv = np.zeros(ATA.shape)
+                except ValueError:
+                    #pdb.set_trace()
+                    logger.warning("Nan or Inf detected in ATA")
                     ATAinv = np.zeros(ATA.shape)
                 x_filter = ATAinv[0,:]
                 deconv_trace = np.correlate(trace_data, x_filter,'same')#YES
