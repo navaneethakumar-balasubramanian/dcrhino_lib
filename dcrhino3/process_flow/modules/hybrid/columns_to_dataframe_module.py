@@ -21,6 +21,6 @@ class ColumnsToDataframeModule(BaseHybridModule):
 
     def process_splitted_trace(self, splitted_trace):
         transformed_args = splitted_trace.transformed_args
-        for col in transformed_args.__dict__.keys():
+        for col in transformed_args._fields:
             splitted_trace.dataframe[col] = transformed_args.__getattribute__(col)
         return splitted_trace

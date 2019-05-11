@@ -40,15 +40,15 @@ def createDefaultSensors(doc, sensors=default_sensors):
         more sensors, instantiate those sensors and add them to the dataset
         document.
     """
-    for sensorId, sensorInfo in sensors.iteritems():
+    for sensorId, sensorInfo in sensors.items():
         doc.addSensor(sensorId, sensorInfo.get("name", None))
-        for chId, chInfo in sensorInfo['channels'].iteritems():
+        for chId, chInfo in sensorInfo['channels'].items():
             channel = doc.addChannel(chId, chInfo['parser'],
                                         name=chInfo.get('name',None),
                                         channelClass=dataset.Channel)
             if 'subchannels' not in chInfo:
                 continue
-            for subChId, subChInfo in chInfo['subchannels'].iteritems():
+            for subChId, subChInfo in chInfo['subchannels'].items():
                 channel.addSubChannel(subChId, channelClass=dataset.SubChannel,
                                       sensorId=sensorId,
                                       **subChInfo)

@@ -127,7 +127,7 @@ def getFieldOffsets(fields=CONFIG_FIELDS):
     """
     offset = 0
     result = OrderedDict()
-    for k,v in fields.iteritems():
+    for k,v in fields.items():
         result[k] = offset
         offset += struct.calcsize(v)
     return result
@@ -244,7 +244,7 @@ def decodeConfig(data):
         after reading a config file.
     """ 
     result = data.copy()
-    for name, decoder in CONFIG_DECODERS.iteritems():
+    for name, decoder in CONFIG_DECODERS.items():
         if name in result:
             result[name] = decoder(result[name])
     return result
@@ -255,7 +255,7 @@ def encodeConfig(data):
         before writing a config file.
     """ 
     result = data.copy()
-    for name, dtype in CONFIG_FIELDS.iteritems():
+    for name, dtype in CONFIG_FIELDS.items():
         val = result[name]
         if name in CONFIG_ENCODERS:
             # Use special case encoder for the data

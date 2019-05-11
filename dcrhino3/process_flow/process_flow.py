@@ -7,6 +7,9 @@ import pdb
 import time
 import os
 
+import copy
+
+
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
 from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
 from dcrhino3.helpers.general_helper_functions import init_logging, create_folders_if_needed
@@ -105,7 +108,7 @@ class ProcessFlow:
         self.rhino_sql_helper = False
 
 
-    def set_process_flow(self,process_json):
+    def set_process_flow(self,process_json,subset_index=False):
         self.modules_flow = []
 
 
@@ -114,9 +117,9 @@ class ProcessFlow:
         self.output_to_db = False
         self.process_json = process_json
 
-        self.parse_json(process_json)
+        self.parse_json(process_json,subset_index)
 
-    def parse_json(self, process_json):
+    def parse_json(self, process_json,subset_index):
         """
         Parse env_config.json for info on mine/how to run the process. Use dictionary
         "process_json" for what to parse in the json. Only get info on necessary
@@ -144,12 +147,14 @@ class ProcessFlow:
                 process_counter += 1
                 module_output_path = os.path.join(process_flow_output_path)
                 module = self.modules[module['type']](module, module_output_path,self,process_counter)
+                if subset_index is not False:
+                    module.subset_id = subset_index
                 module._components_to_process = self.components_to_process
                 self.modules_flow.append(module)
 
 
 
-    def process(self, trace_data):
+    def process(self, trace_data,subset_index=False):
 
 
         process_flow_output_path = os.path.join(self.output_path, str(self.datetime_str + "_" + self.id))
@@ -184,10 +189,17 @@ class ProcessFlow:
             self.actual_module += 1
 
         if self.output_to_file:
-            with open(os.path.join(process_flow_output_path, "process_flow.json"), 'w') as outfile:
+            process_flow_json_output_path = os.path.join(process_flow_output_path, "process_flow.json")
+            processed_h5_output_path = os.path.join(process_flow_output_path, "processed.h5")
+            processed_csv_output_path = os.path.join(process_flow_output_path, "processed.csv")
+            if subset_index is not False:
+                process_flow_json_output_path = os.path.join(process_flow_output_path, "process_flow_"+str(subset_index)+".json")
+                processed_h5_output_path = os.path.join(process_flow_output_path, "processed_"+str(subset_index)+".h5")
+                processed_csv_output_path = os.path.join(process_flow_output_path, "processed_"+str(subset_index)+".csv")
+            with open(process_flow_json_output_path, 'w') as outfile:
                 json.dump(self.process_json, outfile)
-            output_trace.save_to_h5(os.path.join(process_flow_output_path, "processed.h5"))
-            output_trace.save_to_csv(os.path.join(process_flow_output_path, "processed.csv"))
+            output_trace.save_to_h5(processed_h5_output_path)
+            output_trace.save_to_csv(processed_csv_output_path)
 
         if self.output_to_db and self.rhino_sql_helper:
             seconds_processed = int(trace_data.max_ts - trace_data.min_ts)
@@ -203,28 +215,85 @@ class ProcessFlow:
         logger.info("PROCESSING FILE:" + str(acorr_h5_file_path))
 
 
+
+
         acorr_trace = TraceData()
         acorr_trace.load_from_h5(acorr_h5_file_path)
         if seconds_to_process is not False:
             acorr_trace.dataframe = acorr_trace.dataframe[:seconds_to_process]
-        #filename = os.path.basename(acorr_h5_file_path)
-        filename = acorr_trace.hole_h5_filename
-        filename_without_ext = filename.replace(".h5","")
 
-        if env_config is not False:
-            self.output_path = env_config.get_hole_h5_processed_cache_folder(acorr_trace.mine_name)
-            self.output_path = os.path.join(self.output_path,filename_without_ext)
+        if "subsets" in process_json.keys() and len(process_json['subsets']) > 0:
+            splitted_subsets = self.split_subsets(process_json,process_json['subsets'],acorr_trace)
+            for i,subset in enumerate(splitted_subsets):
+                filename = subset['acorr_trace'].hole_h5_filename
+                filename_without_ext = filename.replace(".h5", "")
 
-        self.set_process_flow(process_json)
-        self.env_config = env_config
-        conn = env_config.get_rhino_db_connection_from_mine_name(acorr_trace.mine_name)
+                if env_config is not False:
+                    self.output_path = env_config.get_hole_h5_processed_cache_folder(subset['acorr_trace'].mine_name)
+                    self.output_path = os.path.join(self.output_path, filename_without_ext)
 
-        self.rhino_db_helper = RhinoDBHelper(conn=conn)
-        sql_conn = env_config.get_rhino_sql_connection_from_mine_name(acorr_trace.mine_name)
-        if sql_conn:
-            self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'],sql_conn['user'],sql_conn['password'],str(acorr_trace.mine_name).lower())
+                self.set_process_flow(subset['process_json'],subset_index=i)
+                self.env_config = env_config
+                conn = env_config.get_rhino_db_connection_from_mine_name(subset['acorr_trace'].mine_name)
 
-        acorr_trace = self.process(acorr_trace)
-        return_dict["acorr_trace"] = acorr_trace
-        return_dict["process_json"] = process_json
-        return acorr_trace, self.process_json
+                self.rhino_db_helper = RhinoDBHelper(conn=conn)
+                sql_conn = env_config.get_rhino_sql_connection_from_mine_name(subset['acorr_trace'].mine_name)
+                if sql_conn:
+                    self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'], sql_conn['user'], sql_conn['password'],
+                                                           str(subset['acorr_trace'].mine_name).lower())
+
+                subset['acorr_trace'] = self.process(subset['acorr_trace'],subset_index=i)
+
+        else:
+            #filename = os.path.basename(acorr_h5_file_path)
+            filename = acorr_trace.hole_h5_filename
+            filename_without_ext = filename.replace(".h5","")
+
+            if env_config is not False:
+                self.output_path = env_config.get_hole_h5_processed_cache_folder(acorr_trace.mine_name)
+                self.output_path = os.path.join(self.output_path,filename_without_ext)
+
+            self.set_process_flow(process_json)
+            self.env_config = env_config
+            conn = env_config.get_rhino_db_connection_from_mine_name(acorr_trace.mine_name)
+
+            self.rhino_db_helper = RhinoDBHelper(conn=conn)
+            sql_conn = env_config.get_rhino_sql_connection_from_mine_name(acorr_trace.mine_name)
+            if sql_conn:
+                self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'],sql_conn['user'],sql_conn['password'],str(acorr_trace.mine_name).lower())
+
+            acorr_trace = self.process(acorr_trace)
+            return_dict["acorr_trace"] = acorr_trace
+            return_dict["process_json"] = process_json
+            return acorr_trace, self.process_json
+
+
+    def split_subsets(self,process_json,subsets,trace_data):
+        subsets_objs = []
+        start_depth = 0
+        max_depth = trace_data.dataframe.depth.max()
+        for i,subset in enumerate(subsets):
+            subset_obj = {}
+            subset_obj['acorr_trace'] = copy.deepcopy(trace_data)
+            subset_obj['acorr_trace'].dataframe = subset_obj['acorr_trace'].dataframe[(subset_obj['acorr_trace'].dataframe.depth > start_depth) & (subset_obj['acorr_trace'].dataframe.depth <= subset)].reset_index(drop=True)
+            subset_obj['process_json'] = copy.deepcopy(process_json)
+
+            if 'vars' in subset_obj['process_json'].keys() and isinstance(subset_obj['process_json']['vars'],list) :
+                try:
+                    subset_obj['process_json']['vars'] = subset_obj['process_json']['vars'][i + 1]
+                except:
+                    subset_obj['process_json']['vars'] = {}
+            subsets_objs.append(subset_obj)
+            start_depth = subset
+
+        subset_obj = {}
+        subset_obj['acorr_trace'] = copy.deepcopy(trace_data)
+        subset_obj['acorr_trace'].dataframe = subset_obj['acorr_trace'].dataframe[(subset_obj['acorr_trace'].dataframe.depth > start_depth)].reset_index(drop=True)
+        subset_obj['process_json'] = copy.deepcopy(process_json)
+        if 'vars' in subset_obj['process_json'].keys() and isinstance(subset_obj['process_json']['vars'], list):
+            try:
+                subset_obj['process_json']['vars'] = subset_obj['process_json']['vars'][i+1]
+            except:
+                subset_obj['process_json']['vars'] = {}
+        subsets_objs.append(subset_obj)
+        return subsets_objs

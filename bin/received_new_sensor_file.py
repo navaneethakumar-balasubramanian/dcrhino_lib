@@ -9,7 +9,7 @@ from clickhouse_driver import Client
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
 from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
 from dcrhino3.models.env_config import EnvConfig
-from dcrhino3.helpers.raw_file_manager import RawFileManager
+from dcrhino3.helpers.sensor_file_manager import SensorFileManager
 from dcrhino3.helpers.general_helper_functions import init_logging
 from datetime import datetime
 import json
@@ -18,10 +18,18 @@ import glob2
 logger = init_logging(__name__)
 
 
-def update_sensor_files_table(mine_name,env_config_path):
-    envConfig = EnvConfig(env_config_path)
-    conn_rhino = envConfig.get_rhino_db_connection_from_mine_name(mine_name)
+def process_sensor_file(envConfig,props):
+    conn_rhino = envConfig.get_rhino_db_connection_from_mine_name(props['mine_name'])
+    db_conn = envConfig.get_rhino_sql_connection_from_mine_name(props['mine_name'])
     db_helper = RhinoDBHelper(conn=conn_rhino)
+    sql_helper = RhinoSqlHelper(db_conn['host'], db_conn['user'], db_conn['password'], db_conn['database'])
+
+    files_on_sql = sql_helper.sensor_files.get_all()
+
+
+    return
+    envConfig = EnvConfig(env_config_path)
+
     files = db_helper.get_files_list()
 
 
@@ -60,7 +68,7 @@ if __name__ == '__main__':
 
     env_config = EnvConfig(args.env_config_path)
     files = glob2.glob(args.src_path)
-    raw_file_manager = RawFileManager(env_config)
+    raw_file_manager = SensorFileManager(env_config)
 
     logger.info("Found " + str(len(files)) + " files")
 
@@ -70,6 +78,7 @@ if __name__ == '__main__':
         if '.h5' in os.path.splitext(file)[1]:
             logger.info("PROCESSING FILE:" + str(file))
             if env_config.is_file_blacklisted(file) is False:
-                print(raw_file_manager.file_props(str(file)))
+                props = raw_file_manager.file_props(str(file))
+                process_sensor_file(env_config,props)
 
     #update_sensor_files_table(mine_name, env_config_path)

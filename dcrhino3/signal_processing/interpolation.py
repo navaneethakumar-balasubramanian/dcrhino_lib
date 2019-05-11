@@ -24,7 +24,7 @@ def sinc_interp(x, s, u):
     """
 
     if len(x) != len(s):
-        raise Exception, 'x and s must be the same length'
+        raise Exception ( 'x and s must be the same length' )
 
     # Find the period
     T = s[1] - s[0]

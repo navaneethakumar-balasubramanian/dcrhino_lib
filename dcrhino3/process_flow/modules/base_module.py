@@ -6,7 +6,7 @@ import json
 import copy
 
 from collections import namedtuple
-from dcrhino3.helpers.general_helper_functions import json_string_to_object,dict_to_object
+from dcrhino3.helpers.general_helper_functions import json_string_to_object,dict_to_object,is_string
 
 class BaseModule(object):
     def __init__(self, json, output_path,process_flow,order):
@@ -29,6 +29,7 @@ class BaseModule(object):
         self.process_flow = process_flow
         self.order = order
         self._components_to_process = ['axial','tangential']
+        self.subset_id = False
 
     def set_prop_process(self,var_name,var_value):
         if "vars" not in self.process_flow.process_json.keys():
@@ -42,7 +43,10 @@ class BaseModule(object):
 
 
     def output_file_basepath(self,append="",extension=".csv"):
-        output_file_name = str(self.order) + "_" + str(self.id) + str(append) + extension
+        if self.subset_id is not False:
+            output_file_name = str(self.order) + "_" + str(self.id) + str(append) + "_" + str(self.subset_id) + extension
+        else:
+            output_file_name = str(self.order) + "_" + str(self.id) + str(append) + extension
         return os.path.join(self.output_path,output_file_name)
 
 
@@ -64,7 +68,7 @@ class BaseModule(object):
             elif type(val) == list:
 
                 ## USE GLOBAL_CONFIG OR DEFAULT
-                if (type(val[0]) == unicode or type(val[0]) == str) and "|global_config." in str(val[0]):
+                if is_string(val[0]) and "|global_config." in str(val[0]):
                     gc_var_name = val[0].replace("|", "").replace("global_config.", "")
                     if gc_var_name in vars(global_config):
                         transformed[key] = getattr(global_config, gc_var_name)
@@ -78,10 +82,10 @@ class BaseModule(object):
                             val[i] = val[i]
                     transformed[key] = val
                 ################################
-            elif (type(val) == unicode or type(val) == str) and "|global_config." in str(val):
+            elif is_string(val) and "|global_config." in str(val):
                 gc_var_name = val.replace("|","").replace("global_config.","")
                 transformed[key] = getattr(global_config, gc_var_name)
-            elif (type(val) == unicode or type(val) == str) and "|process_flow." in str(val):
+            elif is_string(val) and "|process_flow." in str(val):
                 gc_var_name = val.replace("|","").replace("process_flow.","")
                 if "vars" in self.process_flow.process_json.keys() and gc_var_name in self.process_flow.process_json["vars"].keys():
                     transformed[key] = self.process_flow.process_json["vars"][gc_var_name]
@@ -94,6 +98,8 @@ class BaseModule(object):
         transformed = dict_to_object(transformed)
 
         return transformed
+
+
 
 
     def set_data_from_json(self,json):

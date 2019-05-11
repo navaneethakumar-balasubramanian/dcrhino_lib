@@ -94,8 +94,8 @@ import numpy as np
 import pdb
 
 #from feature_windowing import TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION
-from feature_windowing import AmplitudeWindows
-from feature_windowing import ManualTimeWindows
+from dcrhino3.feature_extraction.feature_windowing import AmplitudeWindows
+from dcrhino3.feature_extraction.feature_windowing import ManualTimeWindows
 from dcrhino3.feature_extraction.intermediate_derived_features_j2 import IntermediateFeatureDeriver
 #from dcrhino3.helpers.general_helper_functions import flatten
 from dcrhino3.helpers.general_helper_functions import init_logging
@@ -248,10 +248,10 @@ class FeatureExtractorJ2(object):
         feature_deriver = IntermediateFeatureDeriver(self.trace.component_id, self.manual_windows,
                                                      df_dict=extracted_features_dict)
         extracted_features_dict = feature_deriver.derive_features(self.trace.component_id)
-
+        output_dict = {}
         for key in extracted_features_dict.keys():
-            extracted_features_dict['J2-{}'.format(key)] = extracted_features_dict.pop('{}'.format(key))
-        return extracted_features_dict
+            output_dict['J2-{}'.format(key)] = extracted_features_dict[('{}'.format(key))]
+        return output_dict
 
 
 

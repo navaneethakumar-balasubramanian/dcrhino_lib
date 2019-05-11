@@ -152,7 +152,7 @@ class H5Helper:
     def _extract_metadata_from_h5_file(self):
         try:
             config = ConfigParser.ConfigParser()
-            for key, value in self.h5f.attrs.iteritems():
+            for key, value in self.h5f.attrs.items():
                 # print(key,value)
                 section = key.split("/")[0]
                 param_name = key.split("/")[1]
