@@ -201,7 +201,7 @@ class ProcessFlow:
             output_trace.save_to_h5(processed_h5_output_path)
             output_trace.save_to_csv(processed_csv_output_path)
 
-        if self.output_to_db and self.rhino_sql_helper and subset_index == False:
+        if self.output_to_db and self.rhino_sql_helper and subset_index is False:
             seconds_processed = int(trace_data.max_ts - trace_data.min_ts)
             relative_output_path = "/".join(process_flow_output_path.split('/')[-2:])+"/"
             process_id = int(self.now.strftime("%s"))
@@ -227,12 +227,7 @@ class ProcessFlow:
         acorr_trace = TraceData()
         acorr_trace.load_from_h5(acorr_h5_file_path)
 
-
-
-
         self.output_path = self.output_folder(acorr_trace,process_json,env_config)
-
-
 
         if seconds_to_process is not False:
             acorr_trace.dataframe = acorr_trace.dataframe[:seconds_to_process]
@@ -263,6 +258,20 @@ class ProcessFlow:
             acorr_trace.save_to_csv(os.path.join(self.output_path,'processed.csv'))
             with open(os.path.join(self.output_path,'process_flow.json'), 'w') as outfile:
                 json.dump(process_json, outfile)
+
+            if self.output_to_db and self.rhino_sql_helper:
+                seconds_processed = int(acorr_trace.max_ts - acorr_trace.min_ts)
+                relative_output_path = "/".join(self.output_path.split('/')[-2:]) + "/"
+                process_id = int(self.now.strftime("%s"))
+                self.rhino_sql_helper.processed_holes.add(int(self.now.strftime("%s")), seconds_processed,
+                                                          acorr_trace.hole_id, acorr_trace.sensor_id,
+                                                          acorr_trace.bench_name, acorr_trace.pattern_name,
+                                                          acorr_trace.hole_name, acorr_trace.rig_id,
+                                                          acorr_trace.digitizer_id, acorr_trace.sensor_accelerometer_type,
+                                                          acorr_trace.sensor_saturation_g, self.id, relative_output_path,
+                                                          process_id=process_id)
+                # self.rhino_db_helper.save_processed_trace(trace_data, self.id, json.dumps(self.process_json),process_flow_output_path, int(now.strftime("%s")),99999)
+
             return acorr_trace, process_json
 
 
