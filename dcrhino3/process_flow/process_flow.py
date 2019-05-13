@@ -8,7 +8,7 @@ import time
 import os
 
 import copy
-
+import pandas as pd
 
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
 from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
@@ -137,7 +137,9 @@ class ProcessFlow:
             self.components_to_process = process_json['components_to_process']
 
 
-        process_flow_output_path = os.path.join(self.output_path, str(self.datetime_str+ "_"+self.id))
+        #process_flow_output_path = os.path.join(self.output_path, str(self.datetime_str+ "_"+self.id))
+        process_flow_output_path = self.output_path
+
 
 
         process_counter = 0
@@ -156,9 +158,7 @@ class ProcessFlow:
 
     def process(self, trace_data,subset_index=False):
 
-
-        process_flow_output_path = os.path.join(self.output_path, str(self.datetime_str + "_" + self.id))
-
+        process_flow_output_path = self.output_path
 
         logger.info("Processing files to :" + process_flow_output_path)
         create_folders_if_needed(process_flow_output_path)
@@ -211,28 +211,39 @@ class ProcessFlow:
         return output_trace
 
 
+    def output_folder(self,acorr_trace,process_flow_json,env_config):
+
+        filename = acorr_trace.hole_h5_filename
+        filename_without_ext = filename.replace(".h5", "")
+
+        temp_output_path = env_config.get_hole_h5_processed_cache_folder(acorr_trace.mine_name)
+        temp_output_path = os.path.join(temp_output_path, filename_without_ext)
+
+        return os.path.join(temp_output_path, str(self.datetime_str + "_" + process_flow_json['id']))
+
+
     def process_file(self,process_json, acorr_h5_file_path, env_config = False, seconds_to_process = False,return_dict = dict()):
         logger.info("PROCESSING FILE:" + str(acorr_h5_file_path))
-
-
-
-
         acorr_trace = TraceData()
         acorr_trace.load_from_h5(acorr_h5_file_path)
+
+
+
+
+        self.output_path = self.output_folder(acorr_trace,process_json,env_config)
+
+
+
         if seconds_to_process is not False:
             acorr_trace.dataframe = acorr_trace.dataframe[:seconds_to_process]
 
         if "subsets" in process_json.keys() and len(process_json['subsets']) > 0:
             splitted_subsets = self.split_subsets(process_json,process_json['subsets'],acorr_trace)
             for i,subset in enumerate(splitted_subsets):
-                filename = subset['acorr_trace'].hole_h5_filename
-                filename_without_ext = filename.replace(".h5", "")
 
-                if env_config is not False:
-                    self.output_path = env_config.get_hole_h5_processed_cache_folder(subset['acorr_trace'].mine_name)
-                    self.output_path = os.path.join(self.output_path, filename_without_ext)
 
                 self.set_process_flow(subset['process_json'],subset_index=i)
+
                 self.env_config = env_config
                 conn = env_config.get_rhino_db_connection_from_mine_name(subset['acorr_trace'].mine_name)
 
@@ -244,14 +255,21 @@ class ProcessFlow:
 
                 subset['acorr_trace'] = self.process(subset['acorr_trace'],subset_index=i)
 
+            acorr_trace , process_json =  self.merge_results(splitted_subsets)
+            return_dict["acorr_trace"] = acorr_trace
+            return_dict["process_json"] = process_json
+
+            acorr_trace.save_to_h5(os.path.join(self.output_path,'processed.h5'))
+            acorr_trace.save_to_csv(os.path.join(self.output_path,'processed.csv'))
+            with open(os.path.join(self.output_path,'process_flow.json'), 'w') as outfile:
+                json.dump(process_json, outfile)
+            return acorr_trace, process_json
+
+
+
         else:
             #filename = os.path.basename(acorr_h5_file_path)
-            filename = acorr_trace.hole_h5_filename
-            filename_without_ext = filename.replace(".h5","")
 
-            if env_config is not False:
-                self.output_path = env_config.get_hole_h5_processed_cache_folder(acorr_trace.mine_name)
-                self.output_path = os.path.join(self.output_path,filename_without_ext)
 
             self.set_process_flow(process_json)
             self.env_config = env_config
@@ -267,6 +285,20 @@ class ProcessFlow:
             return_dict["process_json"] = process_json
             return acorr_trace, self.process_json
 
+    def merge_results(self,subsets):
+        process_json = copy.deepcopy(subsets[0]['process_json'])
+        process_json['vars'] = []
+        trace_data = copy.deepcopy(subsets[0]['acorr_trace'])
+        df = pd.DataFrame()
+
+        for subset in subsets:
+            process_json['vars'].append(subset['process_json']['vars'])
+            df = pd.concat([df,subset['acorr_trace'].dataframe])
+
+        trace_data.dataframe = df.sort_values('depth')
+
+        return trace_data , process_json
+
 
     def split_subsets(self,process_json,subsets,trace_data):
         subsets_objs = []
@@ -280,7 +312,7 @@ class ProcessFlow:
 
             if 'vars' in subset_obj['process_json'].keys() and isinstance(subset_obj['process_json']['vars'],list) :
                 try:
-                    subset_obj['process_json']['vars'] = subset_obj['process_json']['vars'][i + 1]
+                    subset_obj['process_json']['vars'] = subset_obj['process_json']['vars'][i]
                 except:
                     subset_obj['process_json']['vars'] = {}
             subsets_objs.append(subset_obj)
