@@ -201,7 +201,7 @@ class ProcessFlow:
             output_trace.save_to_h5(processed_h5_output_path)
             output_trace.save_to_csv(processed_csv_output_path)
 
-        if self.output_to_db and self.rhino_sql_helper:
+        if self.output_to_db and self.rhino_sql_helper and subset_index == False:
             seconds_processed = int(trace_data.max_ts - trace_data.min_ts)
             relative_output_path = "/".join(process_flow_output_path.split('/')[-2:])+"/"
             process_id = int(self.now.strftime("%s"))

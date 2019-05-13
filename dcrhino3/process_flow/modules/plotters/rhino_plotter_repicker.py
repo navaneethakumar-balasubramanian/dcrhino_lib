@@ -21,7 +21,7 @@ class RhinoPlotterRepickerModule(RhinoPlotterModule):
 
         rhino_display = RhinoDisplay()
         transformed_args = self.get_transformed_args(trace.first_global_config)
-        if transformed_args.ignore_picker is not None:
+        if transformed_args.ignore_picker is True:
             return trace
         self.picker_module_idx = transformed_args.picker_module_idx
         rhino_display.padding_left = transformed_args.padding_left

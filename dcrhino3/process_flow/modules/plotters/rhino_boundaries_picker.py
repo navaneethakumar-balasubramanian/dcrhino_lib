@@ -125,7 +125,7 @@ class RhinoPlotterPickerModule(RhinoPlotterModule):
         transformed_args = self.get_transformed_args(trace.first_global_config)
         if transformed_args.component not in self.components_to_process:
             return trace
-        if transformed_args.ignore_picker is not None:
+        if transformed_args.ignore_picker is True:
             return trace
 
         rhino_display = RhinoDisplay()
