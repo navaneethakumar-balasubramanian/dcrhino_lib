@@ -146,7 +146,7 @@ class DatasetTestCase(unittest.TestCase):
         
         # Copied from importer.py:181
         self.channels = DEFAULTS['channels'].copy()
-        for chId, chInfo in self.channels.iteritems():
+        for chId, chInfo in self.channels.items():
             chArgs = chInfo.copy()
             subchannels = chArgs.pop('subchannels', None)
             self.channelCheck[chId] = Channel(self.dataset, chId, **chArgs.copy())
@@ -154,7 +154,7 @@ class DatasetTestCase(unittest.TestCase):
             self.assertEqual(channel, self.dataset.channels[chId])
             if subchannels is None:
                 continue
-            for subChId, subChInfo in subchannels.iteritems():
+            for subChId, subChInfo in subchannels.items():
                 channel.addSubChannel(subChId, **subChInfo)
                 self.channelCheck[chId].addSubChannel(subChId, **subChInfo)
     

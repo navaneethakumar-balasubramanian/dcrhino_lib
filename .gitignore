@@ -10,3 +10,5 @@ bin/scratch
 \.idea/workspace\.xml
 
 \.idea/
+
+*.csv#

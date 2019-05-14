@@ -171,17 +171,17 @@ def createDefaultSensors(doc, defaults=DEFAULTS):
             for i in range(3):
                 ch0['subchannels'][i]['displayRange'] = rrange
 
-    for sensorId, sensorInfo in sensors.iteritems():
+    for sensorId, sensorInfo in sensors.items():
         doc.addSensor(sensorId, sensorInfo.get("name", None))
         
-    for chId, chInfo in channels.iteritems():
+    for chId, chInfo in channels.items():
         chArgs = chInfo.copy()
 #         chArgs['sensor'] = sensor
         subchannels = chArgs.pop('subchannels', None)
         channel = doc.addChannel(chId, **chArgs)
         if subchannels is None:
             continue
-        for subChId, subChInfo in subchannels.iteritems():
+        for subChId, subChInfo in subchannels.items():
             channel.addSubChannel(subChId, **subChInfo)
     
     for warn in warnings:

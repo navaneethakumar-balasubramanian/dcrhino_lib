@@ -13,15 +13,25 @@ import fnmatch
 import glob
 import numpy as np
 import os
-from string import zfill
+#from string import zfill
 import subprocess
 import pdb
+import sys
 
 from collections import namedtuple
 from scipy.interpolate import interp1d
 
 #<temporary logging>
 import logging
+
+
+def is_string(val):
+    if (sys.version_info > (3, 0)):
+        return isinstance(val, str)
+
+    else:
+        # Python 2 code in this block
+        return isinstance(val, basestring)
 
 
 def df_component_as_array(component_id,dataframe):

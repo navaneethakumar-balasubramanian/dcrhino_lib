@@ -18,6 +18,12 @@ export default new Router({
       name: 'processed',
       props: true,
       component: () => import('./views/Processed.vue')
-    }
+    },
+    {
+      path: '/acorr_files/:mine_name',
+      name: 'acorr_files',
+      props: true,
+      component: () => import('./views/AcorrFiles.vue')
+    },
   ]
 })

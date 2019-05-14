@@ -136,7 +136,7 @@ def _getSchemaItems(schema=DEFAULT_SCHEMA, itemType=schema_specs.Element):
     """
     result = []
     schemaMod = getSchemaModule(schema)
-    for k,v in schemaMod.__dict__.iteritems():
+    for k,v in schemaMod.__dict__.items():
         if k.startswith('_'): 
             continue
         try:
@@ -201,7 +201,7 @@ def getElementTypes(schema=DEFAULT_SCHEMA):
     """
     """
     els = getSchemaElements(schema)
-    for name,el in els.iteritems():
+    for name,el in els.items():
         els[name] = PYTHONTYPES.get(el.type, None)
     return els
     

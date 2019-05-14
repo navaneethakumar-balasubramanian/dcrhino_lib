@@ -7,7 +7,7 @@ from dcrhino3.models.sensor_installation_locations import SensorInstallationLoca
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from dcrhino3.helpers.general_helper_functions import init_logging
+from dcrhino3.helpers.general_helper_functions import init_logging, is_string
 
 logger = init_logging(__name__)
 
@@ -60,7 +60,7 @@ class RhinoPlotterModule(BaseModule):
             if panel.type == "curves":
                 have_curve_to_plot = False
                 curves = []
-                if "curves" in vars(panel):
+                if "curves" in panel._fields:
                     for curve in panel.curves:
                         temp_curve = self.create_curve(curve)
                         curves.append(temp_curve)
@@ -71,21 +71,21 @@ class RhinoPlotterModule(BaseModule):
                     panels.append(panel)
             elif panel.type == "heatmap":
                 curves = []
-                if "curves" in vars(panel):
+                if "curves" in panel._fields:
                     for curve in panel.curves:
                         curves.append(self.create_curve(curve))
 
-                if "wavelet_windows_to_show" not in vars(panel):
+                if "wavelet_windows_to_show" not in panel._fields:
                     wavelet_windows_to_show = []
                 else:
                     wavelet_windows_to_show = panel.wavelet_windows_to_show
 
-                if "manual_time_windows" not in vars(panel):
+                if "manual_time_windows" not in panel._fields:
                     manual_time_windows = None
                 else:
                     manual_time_windows = panel.manual_time_windows
 
-                if "upper_num_ms" not in vars(panel):
+                if "upper_num_ms" not in panel._fields:
                     upper_num_ms = 35
                 else:
                     upper_num_ms = panel.upper_num_ms
@@ -136,7 +136,7 @@ class RhinoPlotterModule(BaseModule):
 
 
     def create_curve(self,_obj):
-        if isinstance(_obj, basestring):
+        if is_string(_obj):
             return Curve(column_label=_obj, x_axis_label='depth')
         else:
-            return Curve(**vars(_obj))
+            return Curve(**_obj._asdict())

@@ -21,7 +21,7 @@ from dcrhino3.models.trace_dataframe import TraceData
 #from dcrhino3.physics.util import get_expected_multiple_times
 from dcrhino3.physics.util import get_resonance_period
 from dcrhino3.plotters.rhino_display_v3.plot_helper import axis_lims_method_1
-from dcrhino3.helpers.general_helper_functions import init_logging
+from dcrhino3.helpers.general_helper_functions import init_logging , is_string
 from dcrhino3.plotters.window_picker import WindowPicker
 logger = init_logging(__name__)
 
@@ -90,7 +90,7 @@ class RhinoDisplayPanel(object):
         quantity ...
         """
         window_widths = self.trace_data.first_global_config.window_widths
-        if isinstance(window_widths, unicode):
+        if is_string(window_widths) : ## isinstance(window_widths, unicode):
             window_widths = json.loads(window_widths)
         return window_widths
 
@@ -381,7 +381,7 @@ class Heatmap(RhinoDisplayPanel):
                     ax.hlines(1000*y_values, X[0], X[-1], color=colours[wavelet_id],linestyle = '-',linewidth = 1.05)
             else:
                 for wavelet_id in self.wavelet_windows_to_show:
-                    y_values = np.array(vars(vars(self.manual_time_windows)[self.component])[wavelet_id])*1000
+                    y_values = np.array(self.manual_time_windows._asdict()[self.component]._asdict()[wavelet_id])*1000
                     ax.hlines(y_values, X[0], X[-1], color=colours[wavelet_id],linestyle = '-',linewidth = 1.05)
 
         ax.set_xlim(X[0], X[-1])

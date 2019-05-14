@@ -51,7 +51,7 @@ def process_glob(process_json,glob_str,env_config_path="env_config.json", second
     output_path = False
 
     if not h5_files_list:
-        print  'File does not exist: ' + h5_path
+        print  ('File does not exist: ' + h5_path)
     for ffile in h5_files_list:
 
         if ".txt" in os.path.splitext(ffile)[1]:
@@ -76,7 +76,6 @@ def process_glob(process_json,glob_str,env_config_path="env_config.json", second
                             args=(process_json, ffile, env_config, seconds_to_process,return_dict))
                 p.start()
                 p.join()
-                # process_flow.process_file(process_json,file,env_config)
                 process_json = return_dict["process_json"]
 
 
