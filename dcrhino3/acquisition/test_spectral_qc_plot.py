@@ -37,7 +37,7 @@ def make_spectral_qc_plot(h5_helper, components_to_plot=['x', 'y'],
 
 
     """
-    pdb.set_trace()
+    # pdb.set_trace()
     header_color_scheme = {}
     header_color_scheme['x'] = 'blue'
     header_color_scheme['y'] = 'red'
@@ -101,6 +101,7 @@ def make_spectral_qc_plot(h5_helper, components_to_plot=['x', 'y'],
 
 
     fig, ax = plt.subplots(num_pcolor_plot_panels+1, dpi=300, sharex=True)
+    fig.canvas.set_window_title('FFT Spectrum')
     #fig = plt.figure(22, figsize = (8.5, 11), dpi=300)
     #plt.subplot(num_pcolor_plot_panels+1, 1, 1)
     #<plot header>
@@ -163,10 +164,10 @@ def make_spectral_qc_plot(h5_helper, components_to_plot=['x', 'y'],
     output_path = ''
     output_file_basename = 'spectra_{}.png'.format(h5_basename[:-3])
     full_output_file = os.path.join(output_path, output_file_basename)
-    plt.savefig(full_output_file)
+    # plt.savefig(full_output_file)
     #<save figure>
-    plt.show()
-
+    # plt.show()
+    return fig
 
 
 

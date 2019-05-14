@@ -11,6 +11,9 @@ from datetime import datetime
 from dcrhino3.models.config import Config
 from dcrhino3.acquisition.config_file_utilities import extract_metadata_from_h5_file
 from dcrhino3.helpers.general_helper_functions import init_logging, interpolate_data, calibrate_data
+from dcrhino3.models.traces.raw_trace import RawTraceData
+from test_spectral_qc_plot import make_spectral_qc_plot
+from dcrhino3.helpers.h5_helper import H5Helper
 
 def main(args):
     debug = False
@@ -20,8 +23,10 @@ def main(args):
         save_numpy = False
     else:
         save_raw = False
-        save_csv = True
+        save_csv = False
         save_numpy = False
+
+    raw = False
 
     t0 = datetime.now()
     if args.sampling_rate is None:
@@ -47,6 +52,7 @@ def main(args):
 
     print("Reading File")
     hf = h5py.File(fname, 'r')
+    h5_helper = H5Helper(h5py.File(fname))
 
     print("Extracting Metadata")
     metadata = extract_metadata_from_h5_file(hf)
@@ -161,6 +167,24 @@ def main(args):
 
     hf.close()
 
+    print("Generating FFT")
+    # raw_trace = RawTraceData()
+    # raw_trace.load_from_h5(fname)
+    # fft_dict = raw_trace.raw_trace_fft(global_config, sensitivity[0])
+    # fft_fig = plt.figure("FFT")
+    # traces = list()
+    # for index, key in enumerate(fft_dict["axial"].keys()):
+    #     x = fft_dict["axial"][key]["frequency"]
+    #     y = fft_dict["axial"][key]["content"]
+    #     cal = fft_dict["axial"][key]["calibrated"]
+    #     # plt.specgram(traces, NFFT=1024, Fs=global_config.output_sampling_rate, noverlap=900)
+    #     #plt.plot(x, y)
+    #     plt.specgram(cal, Fs=global_config.output_sampling_rate)
+    # plt.show()
+    spectrum = make_spectral_qc_plot(h5_helper, ide_file=is_ide_file)
+
+
+
     total_seconds = end_time - int(start_time)
 
     ideal_timestamps = (np.arange(total_seconds*output_sampling_rate)*1.0/output_sampling_rate)+start_time
@@ -212,9 +236,11 @@ def main(args):
     #time_filtered_interp_y_data = interpolate_data(ideal_timestamps,digitizer_timestamps,time_filtered_y_raw_data)
     #time_filtered_interp_z_data = interpolate_data(ideal_timestamps,digitizer_timestamps,time_filtered_z_raw_data)
     print("interpolating")
-    interp_data.append(interpolate_data(digitizer_timestamps, time_filtered_data[0], ideal_timestamps))#X data
-    interp_data.append(interpolate_data(digitizer_timestamps, time_filtered_data[1], ideal_timestamps))#Y data
-    interp_data.append(interpolate_data(digitizer_timestamps, time_filtered_data[2], ideal_timestamps))#Z data
+    kind = "linear"
+    interp_data.append(interpolate_data(digitizer_timestamps, time_filtered_data[0], ideal_timestamps, kind=kind))#X
+    # data
+    interp_data.append(interpolate_data(digitizer_timestamps, time_filtered_data[1], ideal_timestamps, kind=kind))#Y data
+    interp_data.append(interpolate_data(digitizer_timestamps, time_filtered_data[2], ideal_timestamps, kind=kind))#Z data
 
     if save_numpy:
         print("Saving Files")
@@ -239,7 +265,7 @@ def main(args):
              cols[3]: interp_data[tangential_axis_index], cols[4]: interp_data[radial_axis_index]}
         output_data = pd.DataFrame(data=d)
         output_data = output_data[cols]
-        csv_path = os.path.join(output_path, original_name+"_quadratic_interpolated_{}.csv".format(
+        csv_path = os.path.join(output_path, original_name+"_{}_interpolated_{}.csv".format(kind,
             output_sampling_rate))
         output_data.to_csv(csv_path, index=False)
 
@@ -276,35 +302,53 @@ def main(args):
                            top=False,         # ticks along the top edge are off
                            labelbottom=False)
 
-    tangential_plot = plt.subplot2grid((3, 1), (1, 0), colspan=1, sharex=axial_plot)
-    # tangential_plot.ticklabel_format(useOffset=False, style='plain')
-    tangential_plot.set_title("Tangential Component", **axis_font)
-    # tangential_plot.set_xlabel("Time (UTC)", **axis_font)
-    tangential_plot.set_ylabel("g", **axis_font)
-    tangential_plot.tick_params(axis='x',          # changes apply to the x-axis
-                                which='both',      # both major and minor ticks are affected
-                                top=False,         # ticks along the top edge are off
-                                labelbottom=False)
-
-    radial_plot = plt.subplot2grid((3, 1), (2, 0), colspan=1, sharex=axial_plot)
-    radial_plot.set_title("Radial Component", **axis_font)
-    radial_plot.set_xlabel("Time (UTC)", **axis_font)
-    radial_plot.set_ylabel("g", **axis_font)
-
     # plt.plot([datetime.utcfromtimestamp(x) for x in digitizer_timestamps],time_filtered_data[file_axis[0]-1],'k')
     # plt.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps],interp_data[file_axis[0]-1],'r')
 
-    axial_plot.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps], interp_data[axial_axis_index], 'r')
-    # axial_plot.plot([datetime.utcfromtimestamp(x) for x in digitizer_timestamps],time_filtered_data[
-    #     axial_axis_index],'b',marker=".")
-    tangential_plot.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps], interp_data[
-        tangential_axis_index], 'b')
-    radial_plot.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps], interp_data[radial_axis_index], 'g')
+    if raw:
+        axial_plot.plot([datetime.utcfromtimestamp(x) for x in digitizer_timestamps],time_filtered_data[
+            axial_axis_index], 'b')
+    else:
+        axial_plot.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps], interp_data[axial_axis_index], 'r')
 
-    plt.suptitle("Raw Data Playback of File {} at {} Hz".format(os.path.basename(fname), output_sampling_rate))
+
+    if not debug:
+        tangential_plot = plt.subplot2grid((3, 1), (1, 0), colspan=1, sharex=axial_plot)
+        # tangential_plot.ticklabel_format(useOffset=False, style='plain')
+        tangential_plot.set_title("Tangential Component", **axis_font)
+        # tangential_plot.set_xlabel("Time (UTC)", **axis_font)
+        tangential_plot.set_ylabel("g", **axis_font)
+        tangential_plot.tick_params(axis='x',  # changes apply to the x-axis
+                                    which='both',  # both major and minor ticks are affected
+                                    top=False,  # ticks along the top edge are off
+                                    labelbottom=False)
+
+        radial_plot = plt.subplot2grid((3, 1), (2, 0), colspan=1, sharex=axial_plot)
+        radial_plot.set_title("Radial Component", **axis_font)
+        radial_plot.set_xlabel("Time (UTC)", **axis_font)
+        radial_plot.set_ylabel("g", **axis_font)
+        tangential_plot.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps], interp_data[
+            tangential_axis_index], 'b')
+        radial_plot.plot([datetime.utcfromtimestamp(x) for x in ideal_timestamps], interp_data[radial_axis_index], 'g')
+    else:
+        axial_plot.set_xlabel("Time (UTC)", **axis_font)
+        axial_plot.tick_params(axis='x',  # changes apply to the x-axis
+                               which='both',  # both major and minor ticks are affected
+                               top=False,  # ticks along the top edge are off
+                               labelbottom=True)
+
+    if raw:
+        plt.suptitle("Raw Data Playback of File {} at {} Hz Raw Data".format(os.path.basename(fname),
+                                                                                     output_sampling_rate))
+    else:
+        plt.suptitle("Raw Data Playback of File {} at {} Hz {} interpolation".format(os.path.basename(fname),
+                                                                                     output_sampling_rate, kind))
 
     # plt.tight_layout()
-    fig.savefig(fname.replace(".h5", ".png"))
+    basename = os.path.basename(fname)
+    working_dir = os.path.dirname(fname)
+    fig.savefig(os.path.join(working_dir, basename.replace(".h5", ".png")))
+    spectrum.savefig(os.path.join(working_dir, "spectrum_{}".format(basename.replace(".h5", ".png"))))
     if args.plot:
         plt.show()
 
