@@ -33,7 +33,7 @@ class GUI():
 
         self.merge_process = None
 
-        master.title("Update Headers")
+        master.title("Merge Files")
         master.geometry("700x190+30+30")
         master.columnconfigure(1, weight=3)
         master.columnconfigure(2, weight=3)
