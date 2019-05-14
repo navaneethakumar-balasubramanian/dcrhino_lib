@@ -11,7 +11,7 @@ import sys
 from dcrhino3.models.config import Config
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.helpers.h5_helper import H5Helper
-from dcrhino3.helpers.general_helper_functions import init_logging, interpolate_data, calibrate_data
+from dcrhino3.helpers.general_helper_functions import init_logging, interpolate_data, calibrate_data, fft_data
 from dcrhino3.process_flow.modules.trace_processing.autocorrelate import autocorrelate_trace
 
 
@@ -177,6 +177,26 @@ class RawTraceData(TraceData):
 
     def autocorrelate_1d_component_array(self,input_trace, samples_per_trace):
         return autocorrelate_trace(input_trace, samples_per_trace)
+
+    def raw_trace_fft(self, global_config, sensitivity):
+
+        sampling_rate = global_config.output_sampling_rate
+        t0 = time.time()
+        output_dict = {}
+        num_traces = len(self.dataframe['timestamp'])
+        # pdb.set_trace()
+        for component_id in global_config.components_to_process:
+            output_dict[component_id] = {}
+            for i_trace in range(len(self.dataframe['timestamp'])):
+                data_array = self.calibrate_1d_component_array(self.dataframe[component_id].iloc[i_trace],
+                                                               global_config,
+                                                               sensitivity)
+                if len(data_array) <= global_config.output_sampling_rate * 1.01 and len(data_array) >= global_config.output_sampling_rate * 0.9: # This is to ignore traces that are too long or too short
+                    tmp = fft_data(data_array, sampling_rate)
+                    output_dict[component_id][self.dataframe.timestamp.iloc[i_trace]] = tmp
+        time_interval = time.time() - t0
+        logger.info("Took %s seconds to create FFT of %s traces" % (time_interval, num_traces))
+        return output_dict
 
     def autocorrelate_l1h5(self,df, global_config):
         """

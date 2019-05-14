@@ -251,7 +251,7 @@ class GUI():
                     self.tx_status_label.config(bg="red",fg="black")
 
                 tracetime = health[6]
-                line = [tracetime.strftime("%Y-%m-%d %H:%M:%S"), battery, temp, rssi, delay, counter_changes,
+                line = [tracetime.strftime("%Y-%m-%d %H:%M:%S"), samples, battery, temp, rssi, delay, counter_changes,
                         self.corrupt_packets,tx_status]
                 self.system_health_logger.log(line)
 
@@ -377,7 +377,7 @@ class GUI():
         battery_max_voltage = config.getfloat("INSTALLATION", "battery_max_voltage")
         battery_lower_limit = config.getfloat("INSTALLATION", "battery_min_voltage")
         value = 100 - (battery_max_voltage - current_voltage) / (battery_max_voltage - battery_lower_limit) * 100
-        return value
+        return round(value, 2)
 
 
 def main():
