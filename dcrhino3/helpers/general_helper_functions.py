@@ -24,7 +24,7 @@ from scipy.interpolate import interp1d
 import logging
 
 
-def df_component_as_array(component_id,dataframe):
+def df_component_as_array(component_id, dataframe):
     """
     Returns the data form component as a 2d numpy array with trace index
     running along rows (zero-index).  Useful for slicing data and linalg.
@@ -238,6 +238,7 @@ def execute_subprocess(cmd,**kwargs):
             raise Exception("Failed to successfully execute \n {}".format(cmd))
     return
 
+
 def expound(someObj):
     """
     This function prints the contents of an object so a user can see values.
@@ -256,7 +257,6 @@ def expound(someObj):
             print(msg.format(field))
 
 
-
 def find_files(directory, pattern, **kwargs):
     """
     Recursively search for files matching pattern in directory:
@@ -273,6 +273,7 @@ def find_files(directory, pattern, **kwargs):
 
     return matches
 
+
 def interpolate_data(raw_timestamps,data,ideal_timestamps, kind="quadratic"):
     try:
         interp_function = interp1d(raw_timestamps, data, kind=kind, bounds_error=False, fill_value="extrapolate")
@@ -281,6 +282,7 @@ def interpolate_data(raw_timestamps,data,ideal_timestamps, kind="quadratic"):
         logger.error("Failed to interpolate this trace " + str(int(raw_timestamps[0])))
         return False
     return interp_data
+
 
 def calibrate_data(data,sensitivity, accelerometer_max_voltage=3.0, rhino_version=1.0, is_ide_file=False):
     output = data
@@ -306,6 +308,18 @@ def calibrate_data(data,sensitivity, accelerometer_max_voltage=3.0, rhino_versio
             raise ValueError("Calibration Error: The Rhino Hardware version should be 1.0 or 1.1")
         output = output / (sensitivity/1000.0) #Convert to G's
     return output
+
+
+def fft_data(data_array, sampling_rate):
+    # pdb.set_trace()
+    sp = np.fft.fft(data_array-np.mean(data_array))
+    N = len(data_array)
+    Fs = sampling_rate
+    T = 1.0 / Fs
+    freq = np.linspace(0.0, 1.0 / (2.0 * T), N / 2)
+    return {"content": np.abs(sp.real[0:np.int(N / 2)]),
+            "frequency": freq,
+            "calibrated": data_array}
 
 
 
