@@ -30,11 +30,12 @@ from dcrhino3.process_flow.process_flow import ProcessFlow
 from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.helpers.general_helper_functions import init_logging
 import multiprocessing
+import pdb
 
 
 logger = init_logging(__name__)
 
-def process_glob(process_json,glob_str,env_config_path="env_config.json", seconds_to_process=False):
+def process_glob(default_process_json,glob_str,env_config_path="env_config.json", seconds_to_process=False):
     env_config = EnvConfig(env_config_path)
     logger.info("Using env_config : {}".format(env_config_path))
 
@@ -43,25 +44,40 @@ def process_glob(process_json,glob_str,env_config_path="env_config.json", second
     process_flow = ProcessFlow()
     manager = multiprocessing.Manager()
     return_dict = manager.dict()
-    h5_files_list = glob2.glob(glob_str)
+    files_list = glob2.glob(glob_str)
+
 
     seconds_to_process = seconds_to_process
     #seconds_to_process = 100
 
     output_path = False
 
-    if not h5_files_list:
+    if not files_list:
         print  ('File does not exist: ' + h5_path)
-    for ffile in h5_files_list:
+    for ffile in files_list:
 
         if ".txt" in os.path.splitext(ffile)[1]:
             txt_folder_path = os.path.dirname(ffile)
             f = open(ffile, "r")
             file_text = f.read()
-            files_in_file = file_text.split("\n")
-            for file_in_file in files_in_file:
-                file_path = os.path.join(txt_folder_path, file_in_file)
-                if env_config.is_file_blacklisted(ffile) is False and file_in_file != '':
+            processes_in_file = file_text.split("\n")
+
+            for process_in_file in processes_in_file:
+                try:
+                    hole, process_flow_json_filehandle = process_in_file.split(' ')
+                except ValueError:
+                    hole = process_in_file
+                    process_json = default_process_json
+                else:
+                    process_flow_path = os.path.join(process_flow_dir, process_flow_json_filehandle)
+                    with open(process_flow_path) as f:
+                        process_json = json.load(f)
+
+                file_path = os.path.join(txt_folder_path, hole)
+                #file_path = os.path.abspath(os.path.join(txt_folder_path, '..', hole)) #Using separate txt file folder
+
+                if env_config.is_file_blacklisted(ffile) is False and hole != '':
+                    print('Processing ' + hole + ' using ' + process_json['id'])
                     p = Process(target=process_flow.process_file,
                                 args=(process_json, file_path,
                                       env_config, seconds_to_process,return_dict))
@@ -79,7 +95,6 @@ def process_glob(process_json,glob_str,env_config_path="env_config.json", second
                 process_json = return_dict["process_json"]
 
 
-
 if __name__ == '__main__':
     use_argparse = True#False
     if use_argparse:
@@ -89,11 +104,17 @@ if __name__ == '__main__':
         argparser.add_argument('-tid', '--task-id', help="Task ID", default=False)
         argparser.add_argument('-stp', '--seconds-to-process', help="Seconds to process", default=False)
 
-        argparser.add_argument("h5_path", metavar="path", type=str,
+        argparser.add_argument('-h5', '--h5_path', metavar="path", type=str,
         help="Path to files to be processed; enclose in quotes, accepts * as wildcard for directories or filenames" )
+
+        argparser.add_argument('-txt','--txt_path', metavar="path", type=str,
+        help=".txt file with rows like this (leave process_flow blank for default spec'd in cmd line):   <hole_to_be_processed.h5> <process_flow_to_use.json>")
+
         args = argparser.parse_args()
         process_flow_path = args.flow_path
+        process_flow_dir  = os.path.abspath(os.path.join(process_flow_path, '..')) #Works as long as process flows in same loc
         h5_path = args.h5_path
+        txt_path = args.txt_path
         env_path = args.env_path
         if args.seconds_to_process is not False:
             seconds_to_process = int(args.seconds_to_process)
@@ -101,14 +122,15 @@ if __name__ == '__main__':
             seconds_to_process = args.seconds_to_process
     else:
         home = os.path.expanduser('~/')
-        process_flow_dir = os.path.join(home, 'software/datacloud/dcrhino_lib/bin/process_flows')
+        process_flow_dir = os.path.join(home, 'anaconda2/dc_hybrid/dcrhino_lib/bin/process_flows')
         process_flow_json_filehandle = 'v3.1_processing_flow.json'
         process_flow_path = os.path.join(process_flow_dir, process_flow_json_filehandle)
-        h5_path = os.path.join(home, '.cache/datacloud/line_creek/acorr/23831_5208_5208.h5')
+        #h5_path = os.path.join(home, '.cache/datacloud/line_creek/acorr/23831_5208_5208.h5')
+        txt_path = os.path.join(home, '.cache/datacloud/mont_wright/tjw_hole_selection.txt')
         env_path = "env_config.json"
-        seconds_to_process = False
+        seconds_to_process = 100
 
     with open(process_flow_path) as f:
         process_json = json.load(f)
 
-    process_glob(process_json,h5_path,env_path,seconds_to_process)
+    process_glob(process_json,txt_path,env_path,seconds_to_process)
