@@ -684,8 +684,8 @@ class CollectionDaemonThread(threading.Thread):
 
                             if first:
                                 disk_usage = psutil.disk_usage('/')[3]
-                                print()
                                 m = "Disk Usage Percentage: {}".format(disk_usage)
+                                print(m)
                                 self.displayQ.put(m)
                                 self.logQ.put(m)
                                 first = False
