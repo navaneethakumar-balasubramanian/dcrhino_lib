@@ -8,8 +8,8 @@ import argparse
 
 
 def main(date=None):
-    # path = "/home/natal/Documents/datacloud/software/rhino/v3/dcrhino_lib/dcrhino3/acquisition/logs/*health.log"
-    path = "/home/field/Documents/dcrhino_lib/dcrhino3/acquisition/logs/*health.log"
+    path = "/home/natal/Documents/datacloud/software/rhino/v3/dcrhino_lib/dcrhino3/acquisition/logs/*health.log"
+    # path = "/home/field/Documents/dcrhino_lib/dcrhino3/acquisition/logs/*health.log"
 
     files = glob.glob(path)
 
@@ -22,7 +22,8 @@ def main(date=None):
 
     daily_files = [x for x in files if date_prefix in x]
     columns = ["date", "samples", "battery", "temperature", "rssi", "delay", "counter_changes", "corrupt", "tx_status",
-               "drift", "real_delay"]
+               "drift", "real_delay", "disk_usage", "ram_usage", "tablet_temperature", "tablet_battery_status",
+               "tablet_battery_percentage", "tablet_battery_life", "tablet_cpu_usage"]
     df = pd.DataFrame(columns=columns)
 
     for daily_file in daily_files:
@@ -32,8 +33,8 @@ def main(date=None):
     df["timestamps"] = pd.to_datetime(df.date).astype(int) / 10**9
     df.sort_values(by=["timestamps"], inplace=True)
 
-
-    plt.figure("Time Series")
+    time_axis = [datetime.utcfromtimestamp(x) for x in df.timestamps]
+    plt.figure("Rhino Time Series")
 
     plt.subplots_adjust(hspace=1.0, wspace=0.5)
     rssi_plot = plt.subplot2grid((6, 1), (0, 0), colspan=1)
@@ -42,19 +43,21 @@ def main(date=None):
     battery_plot = plt.subplot2grid((6, 1), (3, 0), colspan=1, sharex=rssi_plot)
     temperature_plot = plt.subplot2grid((6, 1), (4, 0), colspan=1, sharex=rssi_plot)
 
-    rssi_plot.plot([datetime.utcfromtimestamp(x) for x in df.timestamps], df.rssi)
+
+
+    rssi_plot.plot(time_axis, df.rssi)
     rssi_plot.set_title("RSSI")
-    packets_plot.plot([datetime.utcfromtimestamp(x) for x in df.timestamps], df.samples)
+    packets_plot.plot(time_axis, df.samples)
     packets_plot.set_title("Packets")
-    corrupt_plot.plot([datetime.utcfromtimestamp(x) for x in df.timestamps], df.corrupt)
+    corrupt_plot.plot(time_axis, df.corrupt)
     corrupt_plot.set_title("Corrupt Packets")
-    battery_plot.plot([datetime.utcfromtimestamp(x) for x in df.timestamps], df.battery)
+    battery_plot.plot(time_axis, df.battery)
     battery_plot.set_title("Battery Voltage")
     battery_plot.set_ylim(10, 11)
-    temperature_plot.plot([datetime.utcfromtimestamp(x) for x in df.timestamps], df.temperature)
+    temperature_plot.plot(time_axis, df.temperature)
     temperature_plot.set_title("Board Temperature")
     temperature_plot.set_ylim(0, 50)
-    plt.suptitle("System Health Time Series from {} to {}".format(df.date.min(), df.date.max()))
+    plt.suptitle("Rhino System Health Time Series from {} to {}".format(df.date.min(), df.date.max()))
 
     plt.figure("Histogram")
     signal_loss_plot = plt.subplot2grid((6, 1), (0, 0), colspan=1)
@@ -66,6 +69,24 @@ def main(date=None):
     signal_loss_plot.hist(signal_loss, bins=bins, histtype="step", weights=np.ones(len(signal_loss)) / len(signal_loss))
     signal_loss_plot.set_title("Signal Loss")
     plt.suptitle("System Health Histograms from {} to {}".format(df.date.min(), df.date.max()))
+
+    plt.figure("Tablet Time Series")
+    plt.subplots_adjust(hspace=1.0, wspace=0.5)
+    ssd_plot = plt.subplot2grid((6, 1), (0, 0), colspan=1, sharex=rssi_plot)
+    ram_plot = plt.subplot2grid((6, 1), (1, 0), colspan=1, sharex=rssi_plot)
+    tablet_battery_plot = plt.subplot2grid((6, 1), (2, 0), colspan=1, sharex=rssi_plot)
+    tablet_battery_status_plot = plt.subplot2grid((6, 1), (3, 0), colspan=1, sharex=rssi_plot)
+
+
+    ssd_plot.plot(df.disk_usage)
+    ssd_plot.set_title("Disk Usage")
+    ram_plot.plot(df.ram_usage)
+    ram_plot.set_title("RAM Usage")
+    tablet_battery_plot.plot(df.tablet_battery_percentage)
+    tablet_battery_plot.set_title("Tablet Battery Percentage")
+    tablet_battery_status_plot.plot(df.tablet_battery_status)
+    tablet_battery_status_plot.set_title("Tablet Battery Status")
+    plt.suptitle("Tablet System Health Time Series from {} to {}".format(df.date.min(), df.date.max()))
 
     plt.show()
     print("Done")
