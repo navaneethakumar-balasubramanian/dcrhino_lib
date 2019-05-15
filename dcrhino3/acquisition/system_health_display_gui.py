@@ -1,25 +1,21 @@
 import ConfigParser
 from Tkinter import *
-#import ttk
-import tkFont
 from datetime import datetime
-import pdb
-import os,sys
-import Queue
+import os, sys
 import time
 from math import ceil
 import numpy as np
+import psutil
 from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
-from dcrhino3.acquisition.constants import DATA_PATH, LOGS_PATH
-cfg_fname = os.path.join(PATH,"collection_daemon.cfg")
+from dcrhino3.acquisition.constants import LOGS_PATH
+cfg_fname = os.path.join(PATH, "collection_daemon.cfg")
 import math
 
 
 config = ConfigParser.SafeConfigParser()
 config.read(cfg_fname)
 
-rhino_version = config.getfloat("COLLECTION","rhino_version")
-
+rhino_version = config.getfloat("COLLECTION", "rhino_version")
 
 
 class SystemHealthLogger():
@@ -27,15 +23,14 @@ class SystemHealthLogger():
         self.filename = ""
         self.output_file = None
 
-    def change_files(self,filename):
-        if self.output_file != None:
+    def change_files(self, filename):
+        if self.output_file is not None:
             self.output_file.close()
         self.output_file = open(filename, 'ar', buffering=0)
 
-
-    def log(self,message):
+    def log(self, message):
         #  pdb.set_trace()
-        filename = os.path.join(LOGS_PATH,datetime.now().strftime('%Y_%m_%d_%H')+'_health.log')
+        filename = os.path.join(LOGS_PATH, datetime.now().strftime('%Y_%m_%d_%H')+'_health.log')
         # print(self.filename,filename)
         if self.filename != filename:
             self.change_files(filename)
@@ -45,7 +40,7 @@ class SystemHealthLogger():
         self.output_file.flush()
 
 class GUI():
-    def __init__(self,displayQ,system_healthQ):
+    def __init__(self, displayQ, system_healthQ):
         self.master = Tk()
         self.master.title("DataCloud Rhino System Health")
         self.master.option_add("*Font", "TkDefaultFont 16")
@@ -61,37 +56,36 @@ class GUI():
 
         row = 0
         Label(self.master, text="Realtime Log Display").grid(row=row)
-        self.display = Text(self.master,width=60,height=60)
-        self.display.grid(row=row,columnspan=6,rowspan=30, column=1)
+        self.display = Text(self.master, width=60, height=60)
+        self.display.grid(row=row, columnspan=6, rowspan=30, column=1)
 
-
-        Label(self.master, text="Current UTC Time").grid(row=row,column=7, columnspan=column_span)
-        row+=1
+        Label(self.master, text="Current UTC Time").grid(row=row, column=7, columnspan=column_span)
+        row += 1
         self.utc_time = StringVar(self.master)
-        self.time_label=Label(self.master, textvariable=self.utc_time)
+        self.time_label = Label(self.master, textvariable=self.utc_time)
         self.time_label.config(bg="#deebf7")
-        self.time_label.grid(row=row,column=7,sticky="news", columnspan=column_span)
-        row+=1
+        self.time_label.grid(row=row, column=7, sticky="news", columnspan=column_span)
+        row += 1
 
-        Label(self.master, text="Rhino Version").grid(row=row,column=7, columnspan=column_span)
-        row+=1
+        Label(self.master, text="Rhino Version").grid(row=row, column=7, columnspan=column_span)
+        row += 1
         self.rhino_version = StringVar(self.master)
-        self.rhino_version.set(config.get("COLLECTION","rhino_version"))
-        self.rhino_version_label=Label(self.master, textvariable=self.rhino_version)
+        self.rhino_version.set(config.get("COLLECTION", "rhino_version"))
+        self.rhino_version_label = Label(self.master, textvariable=self.rhino_version)
         self.rhino_version_label.config(bg="#deebf7")
-        self.rhino_version_label.grid(row=row,column=7,sticky="news", columnspan=column_span)
-        row+=1
+        self.rhino_version_label.grid(row=row, column=7, sticky="news", columnspan=column_span)
+        row += 1
 
-        Label(self.master, text="Transmitter Status").grid(row=row,column=7, columnspan=column_span)
-        row+=1
+        Label(self.master, text="Transmitter Status").grid(row=row, column=7, columnspan=column_span)
+        row += 1
         self.tx_status = StringVar(self.master)
         self.tx_status_label = Label(self.master, textvariable=self.tx_status)
-        self.tx_status_label.grid(row=row,column=7,sticky="news", columnspan=column_span)
-        row+=1
+        self.tx_status_label.grid(row=row, column=7, sticky="news", columnspan=column_span)
+        row += 1
 
         Label(self.master, text="Acceleration Status").grid(row=row, column=7, columnspan=column_span)
         row += 1
-        Label(self.master, text="A").grid(row=row, column=7,sticky="news")
+        Label(self.master, text="A").grid(row=row, column=7, sticky="news")
         Label(self.master, text="T").grid(row=row, column=8, sticky="news")
         Label(self.master, text="R").grid(row=row, column=9, sticky="news")
         row += 1
@@ -107,36 +101,37 @@ class GUI():
 
         row += 1
 
-        self.battery_plot_display_percentage = config.getboolean("SYSTEM_HEALTH_PLOTS","battery_plot_display_percentage")
+        self.battery_plot_display_percentage = config.getboolean("SYSTEM_HEALTH_PLOTS",
+                                                                 "battery_plot_display_percentage")
         if self.battery_plot_display_percentage:
-            Label(self.master, text="Battery Percentage").grid(row=row,column=7, columnspan=column_span)
+            Label(self.master, text="Battery Percentage").grid(row=row, column=7, columnspan=column_span)
         else:
-            Label(self.master, text="Battery Voltage").grid(row=row,column=7, columnspan=column_span)
-        row+=1
+            Label(self.master, text="Battery Voltage").grid(row=row, column=7, columnspan=column_span)
+        row += 1
         self.battery_life = StringVar(self.master)
         self.battery_label = Label(self.master, textvariable=self.battery_life)
-        self.battery_label.grid(row=row,column=7,sticky="news", columnspan=column_span)
-        row+=1
-
-        Label(self.master, text="Board Temperature").grid(row=row,column=7, columnspan=column_span)
-        row+=1
-        self.board_temperature = StringVar(self.master)
-        self.temperature_label = Label(self.master, textvariable=self.board_temperature)
-        self.temperature_label.grid(row=row,column=7,sticky="news", columnspan=column_span)
+        self.battery_label.grid(row=row, column=7, sticky="news", columnspan=column_span)
         row += 1
 
-        Label(self.master, text="RSSI").grid(row=row,column=7, columnspan=column_span)
+        Label(self.master, text="Board Temperature").grid(row=row,column=7, columnspan=column_span)
+        row += 1
+        self.board_temperature = StringVar(self.master)
+        self.temperature_label = Label(self.master, textvariable=self.board_temperature)
+        self.temperature_label.grid(row=row, column=7, sticky="news", columnspan=column_span)
+        row += 1
+
+        Label(self.master, text="RSSI").grid(row=row, column=7, columnspan=column_span)
         row+=1
         self.rssi = StringVar(self.master)
         self.rssi_label = Label(self.master, textvariable=self.rssi)
-        self.rssi_label.grid(row=row,column=7,sticky="news",columnspan=column_span)
+        self.rssi_label.grid(row=row, column=7, sticky="news", columnspan=column_span)
         row+=1
 
-        Label(self.master, text="Sample Count").grid(row=row,column=7, columnspan=column_span)
+        Label(self.master, text="Sample Count").grid(row=row, column=7, columnspan=column_span)
         row+=1
         self.sample_count = StringVar(self.master)
         self.samples_label = Label(self.master, textvariable=self.sample_count)
-        self.samples_label.grid(row=row,column=7,sticky="news", columnspan=column_span)
+        self.samples_label.grid(row=row, column=7, sticky="news", columnspan=column_span)
         row+=1
 
         Label(self.master, text="Plotting Delay").grid(row=row,column=7, columnspan=column_span)
@@ -260,8 +255,23 @@ class GUI():
                     self.tx_status_label.config(bg="red",fg="black")
 
                 tracetime = health[6]
+
+                disk_usage = psutil.disk_usage("/")[3]
+                ram_usage = psutil.virtual_memory()[2]
+                tablet_temperature = ":".join(str(x.current) for x in psutil.sensors_temperatures()["coretemp"])
+                if psutil.sensors_battery()[2]:
+                    tablet_battery_status = 1
+                else:
+                    tablet_battery_status = 0
+                tablet_battery_percentage = round(psutil.sensors_battery()[0], 2)
+                tablet_battery_life = psutil.sensors_battery()[1]
+                tablet_cpu_usage = ":".join([str(x) for x in psutil.cpu_percent(percpu=True)])
+
                 line = [tracetime.strftime("%Y-%m-%d %H:%M:%S"), samples, battery, temp, rssi, delay, counter_changes,
-                        self.corrupt_packets, tx_status, self.drift, calculated_delay]
+                        self.corrupt_packets, tx_status, self.drift, calculated_delay, disk_usage, ram_usage,
+                        tablet_temperature, tablet_battery_status, tablet_battery_percentage, tablet_battery_life,
+                        tablet_cpu_usage]
+
                 self.system_health_logger.log(line)
 
                 if rhino_version == 1.0:
