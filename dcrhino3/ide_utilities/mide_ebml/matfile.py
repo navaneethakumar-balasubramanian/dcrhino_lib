@@ -539,7 +539,7 @@ class MatStream(object):
             strings.
         """
         if info:
-            s = ['%s:\t%s' % i for i in info.iteritems()]
+            s = ['%s:\t%s' % i for i in info.items()]
             self.writeStringArray('recorder_info', s)
 
 
@@ -558,7 +558,7 @@ class MatStream(object):
         """ Write a dictionary of Transform objects (keyed by ID) to the file.
         """
 #         print "writeCalibration %s" % self.stream.name
-        for calId, cal in cals.iteritems():
+        for calId, cal in cals.items():
             self._writeCalData("calibration%d" % calId, cal)
     
     

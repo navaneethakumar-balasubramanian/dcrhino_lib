@@ -576,6 +576,7 @@
     ],
     "id": "v3.2b_manual_picking",
     "vars": {
+        "ignore_picker": true,
         "tangential_primary": [
             -0.0003941852603110192,
             0.002

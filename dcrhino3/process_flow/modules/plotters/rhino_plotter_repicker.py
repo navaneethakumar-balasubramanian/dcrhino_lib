@@ -21,7 +21,7 @@ class RhinoPlotterRepickerModule(RhinoPlotterModule):
 
         rhino_display = RhinoDisplay()
         transformed_args = self.get_transformed_args(trace.first_global_config)
-        if transformed_args.ignore_picker is not None:
+        if transformed_args.ignore_picker is True:
             return trace
         self.picker_module_idx = transformed_args.picker_module_idx
         rhino_display.padding_left = transformed_args.padding_left
@@ -31,7 +31,7 @@ class RhinoPlotterRepickerModule(RhinoPlotterModule):
             if panel.type == "curves":
                 have_curve_to_plot = False
                 curves = []
-                if "curves" in vars(panel):
+                if "curves" in panel._fields:
                     for curve in panel.curves:
                         temp_curve = self.create_curve(curve)
                         curves.append(temp_curve)
@@ -42,21 +42,21 @@ class RhinoPlotterRepickerModule(RhinoPlotterModule):
                     panels.append(panel)
             elif panel.type == "heatmap":
                 curves = []
-                if "curves" in vars(panel):
+                if "curves" in panel._fields:
                     for curve in panel.curves:
                         curves.append(self.create_curve(curve))
 
-                if "wavelet_windows_to_show" not in vars(panel):
+                if "wavelet_windows_to_show" not in panel._fields:
                     wavelet_windows_to_show = []
                 else:
                     wavelet_windows_to_show = panel.wavelet_windows_to_show
 
-                if "manual_time_windows" not in vars(panel):
+                if "manual_time_windows" not in panel._fields:
                     manual_time_windows = None
                 else:
                     manual_time_windows = panel.manual_time_windows
 
-                if "upper_num_ms" not in vars(panel):
+                if "upper_num_ms" not in panel._fields:
                     upper_num_ms = 35
                 else:
                     upper_num_ms = panel.upper_num_ms

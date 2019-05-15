@@ -117,8 +117,8 @@ class RHINO(object):
         self.current_channel_id = current_channel_id
         
     def GetSensorWithFile(self,filename):
-        for r_id,drill in self.Mine.Drills.iteritems():
-            for s_id,sensor in drill.Sensors.iteritems():
+        for r_id,drill in self.Mine.Drills.items():
+            for s_id,sensor in drill.Sensors.items():
                 if sensor.HasFile(filename):
                     return r_id,sensor
         return 0, Sensor()
@@ -140,8 +140,8 @@ class RHINO(object):
 #        self.surrent_session
 #        
 #    def get_sensor_with_file(self,filename):
-#        for r_id,drill in self.Mine.Drills.iteritems():
-#            for s_id,sensor in drill.Sensors.iteritems():
+#        for r_id,drill in self.Mine.Drills.items():
+#            for s_id,sensor in drill.Sensors.items():
 #                if sensor.HasFile(filename):
 #                    return r_id,sensor
 #        return 0, Sensor()

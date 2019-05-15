@@ -60,7 +60,7 @@ def update_options(old,reference):
 
 def extract_config_file_from_h5_file(h5f):
     config = ConfigParser.ConfigParser()
-    for key,value in h5f.attrs.iteritems():
+    for key,value in h5f.attrs.items():
         #print(key,value)
         section = key.split("/")[0]
         param_name = key.split("/")[1]
@@ -74,7 +74,7 @@ def extract_config_file_from_h5_file(h5f):
 
 def extract_metadata_from_h5_file(h5f):
     config = ConfigParser.ConfigParser()
-    for key,value in h5f.attrs.iteritems():
+    for key,value in h5f.attrs.items():
         #print(key,value)
         section = key.split("/")[0]
         param_name = key.split("/")[1]

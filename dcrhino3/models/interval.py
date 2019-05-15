@@ -50,6 +50,8 @@ True
 
 import copy
 import datetime
+import math
+import sys
 start_time_format = "%Y%m%d_%H%M%S"
 
 class Smallest:
@@ -220,7 +222,7 @@ class Interval(object):
     -inf.  IntervalSets are composed of zero to many Intervals.
     """
 
-    def __init__(self, lower_bound=-Inf, upper_bound=Inf, **kwargs):
+    def __init__(self, lower_bound=None, upper_bound=None, **kwargs):
         """Initializes an interval
 
         Parameters
@@ -280,6 +282,17 @@ class Interval(object):
         ...
         TypeError: upper_bound is not hashable.
         """
+        if lower_bound == None:
+            if (sys.version_info > (3, 0)):
+                lower_bound = -math.inf
+            else:
+                lower_bound = -Inf
+
+        if upper_bound == None:
+            if (sys.version_info > (3, 0)):
+                upper_bound = math.inf
+            else:
+                upper_bound = Inf
         try:
             h = hash(lower_bound)
         except TypeError:

@@ -40,7 +40,7 @@ class ProcessedHoles(BaseDbModel):
         for word in words:
             query += 'LOWER(CONCAT(bench_name,pattern_name,hole_name,hole_id,rig_id,sensor_id,digitizer_id,flow_id)) LIKE LOWER("%'+str(word)+'%") and '
         query += "1 = 1 order by processed_at_ts DESC limit " + str(limit)
-        print query
+        #print query
         return self.query_to_df(query)
 
     def add(self,processed_at_ts,seconds_processed,hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,sensor_accelerometer_type,sensor_saturation_g,flow_id,output_folder_name,process_id=-1):

@@ -96,7 +96,7 @@ def renameKeys(d, renamed, exclude=True, recurse=True, ordered=False,
     else:
         result = {}
         
-    for oldname,v in d.iteritems():
+    for oldname,v in d.items():
         if oldname == "Attribute":
             if mergeAttributes:
                 result.update(decode_attributes(v))

@@ -13,9 +13,10 @@ import fnmatch
 import glob
 import numpy as np
 import os
-from string import zfill
+#from string import zfill
 import subprocess
 import pdb
+import sys
 
 from collections import namedtuple
 from scipy.interpolate import interp1d
@@ -24,7 +25,16 @@ from scipy.interpolate import interp1d
 import logging
 
 
-def df_component_as_array(component_id, dataframe):
+def is_string(val):
+    if (sys.version_info > (3, 0)):
+        return isinstance(val, str)
+
+    else:
+        # Python 2 code in this block
+        return isinstance(val, basestring)
+
+
+def df_component_as_array(component_id,dataframe):
     """
     Returns the data form component as a 2d numpy array with trace index
     running along rows (zero-index).  Useful for slicing data and linalg.

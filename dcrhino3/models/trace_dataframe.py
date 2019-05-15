@@ -32,8 +32,9 @@ import numpy as np
 import os
 import pandas as pd
 import pdb
+import sys
 
-from dcrhino3.helpers.general_helper_functions import init_logging,create_folders_if_needed, df_component_as_array
+from dcrhino3.helpers.general_helper_functions import init_logging,create_folders_if_needed, df_component_as_array, is_string
 from dcrhino3.models.config import Config
 
 logger = init_logging(__name__)
@@ -279,8 +280,11 @@ class TraceData(object):
             dtype = type(self.dataframe[column_label].iloc[0])
             #print (column_label, dtype)
             column_data = np.asarray(self.dataframe[column_label])
-            if dtype == str or dtype == unicode:
-                dt = h5py.special_dtype(vlen=unicode)
+            if is_string(self.dataframe[column_label].iloc[0]):
+                if (sys.version_info > (3, 0)):
+                    dt = h5py.special_dtype(vlen=str)
+                else:
+                    dt = h5py.special_dtype(vlen=unicode)
                 h5f.create_dataset(column_label, data=column_data, dtype=dt)#, compression="gzip", compression_opts=9)
             elif dtype == np.int64:
                 h5f.create_dataset(column_label, data=column_data, dtype='i8')#, compression="gzip", compression_opts=9)
@@ -394,7 +398,7 @@ class TraceData(object):
         #<config>
         unicode_string = h5f.attrs['global_config_jsons']
         global_config_jsons = json.loads(unicode_string)
-        for file_id, file_config in global_config_jsons.iteritems():
+        for file_id, file_config in global_config_jsons.items():
             global_config = Config()
             global_config.set_data_from_json(json.loads(file_config))
             self.add_global_config(global_config, str(file_id))

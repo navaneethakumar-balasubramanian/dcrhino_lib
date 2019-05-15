@@ -1,6 +1,7 @@
 import numpy as np
 import pdb
-from Tkinter import *
+# from Tkinter import *
+from tkinter import *
 import matplotlib
 #matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
