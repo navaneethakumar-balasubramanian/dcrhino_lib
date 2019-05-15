@@ -8,8 +8,8 @@ import argparse
 
 
 def main(date=None):
-    path = "/home/natal/Documents/datacloud/software/rhino/v3/dcrhino_lib/dcrhino3/acquisition/logs/*health.log"
-    # path = "/home/field/Documents/dcrhino_lib/dcrhino3/acquisition/logs/*health.log"
+    # path = "/home/natal/Documents/datacloud/software/rhino/v3/dcrhino_lib/dcrhino3/acquisition/logs/*health.log"
+    path = "/home/field/Documents/dcrhino_lib/dcrhino3/acquisition/logs/*health.log"
 
     files = glob.glob(path)
 
