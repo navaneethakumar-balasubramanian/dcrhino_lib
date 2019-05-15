@@ -258,7 +258,7 @@ class FileFlusher(threading.Thread):
         self.sequence = packet.tx_sequence
 
         if self.packet_index_in_trace >= sampling_rate:
-            diff = round(abs(self.current_timestamp - reference), 2)
+            diff = round(self.current_timestamp - reference, 2)
             if diff >= self.allowed_clock_difference:
                 m = "Last update was {} sec ago\n".format(reference-self.last_sync)
                 self.logQ.put(m)

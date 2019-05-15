@@ -55,6 +55,7 @@ class GUI():
         self.initialization_time = int(time.time())
         self.system_health_logger = SystemHealthLogger()
         self.corrupt_packets = 0
+        self.drift = 0
 
         column_span = 3
 
@@ -176,7 +177,11 @@ class GUI():
     def print_line(self):
         while not self.displayQ.empty():
             line = self.displayQ.get_nowait()
-            self.display.insert(END,line)
+            line_components = line.split(",")
+            if len(line_components) == 5 and 'Changed' in line_components[0]:
+                self.drift = float(line_components[3])
+                # print("Drift", self.drift)
+            self.display.insert(END, line)
             self.display.see("end")
         lines = int(self.display.index('end-1c').split('.')[0])
         #TODO:select the number of lines to display from config file
@@ -199,9 +204,10 @@ class GUI():
                 #battery = 20
                 if self.battery_plot_display_percentage:
                     self.battery_life.set("{} %".format(self.calculate_battery_percentage(battery)))
+                    bgcolor, fgcolor = self.colors("battery", self.calculate_battery_percentage(battery))
                 else:
                     self.battery_life.set("{} V".format(battery))
-                bgcolor,fgcolor = self.colors("battery",battery)
+                    bgcolor,fgcolor = self.colors("battery", battery)
                 self.battery_label.config(bg=bgcolor,fg=fgcolor)
 
                 temp = round(health[3][-1],2)
@@ -223,9 +229,12 @@ class GUI():
                 self.samples_label.config(bg=bgcolor,fg=fgcolor)
 
                 delay = round(health[2][-1],2)
+                # print ("Delay", delay)
+                calculated_delay = delay + self.drift
+                # print ("Delay + Drift", delay)
                 #delay = 3
-                bgcolor,fgcolor = self.colors("delay",delay)
-                self.delay.set("{} sec".format(delay))
+                bgcolor,fgcolor = self.colors("delay", calculated_delay)
+                self.delay.set("{} sec".format(calculated_delay))
                 self.delay_label.config(bg=bgcolor,fg=fgcolor)
 
                 counter_changes = health[5]
@@ -252,7 +261,7 @@ class GUI():
 
                 tracetime = health[6]
                 line = [tracetime.strftime("%Y-%m-%d %H:%M:%S"), samples, battery, temp, rssi, delay, counter_changes,
-                        self.corrupt_packets,tx_status]
+                        self.corrupt_packets, tx_status, self.drift, calculated_delay]
                 self.system_health_logger.log(line)
 
                 if rhino_version == 1.0:
