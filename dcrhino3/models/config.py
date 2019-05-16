@@ -19,7 +19,7 @@ class Config( object ):
         """
         Configuration file for rhino software. Assigns default constants, calculates
         other constants, and assigns a json file to be parsed for mine data.
-        
+
         .. todo:: change output_sampling_rate to sampling_rate or all resampled data
         """
         # DEFAULT VALUES
@@ -109,7 +109,7 @@ class Config( object ):
     def get_component_index(self, component_id):
         """
         Returns integer, representing the index of that component in component_id.
-        
+
         Parameters:
             component_id (str): 'axial', 'tangentia', or 'radial'
 
@@ -132,7 +132,7 @@ class Config( object ):
 
     @property
     def components_to_process(self):
-        """ 
+        """
         D
 
         Returns:
@@ -154,7 +154,7 @@ class Config( object ):
         """
         Save number of coefficients in the deconvolution filter, calculated with
         :func:`_get_num_decon_taps`
-        
+
         .. todo:: confirm type is int returned by get_num_decon_taps()
         """
         deconvolution_filter_duration = float(self.deconvolution_filter_duration)
@@ -165,7 +165,7 @@ class Config( object ):
     def samples_per_trace(self):
         """
         D
-        
+
         Returns:
             (int): number of samples per trace
         """
@@ -179,7 +179,7 @@ class Config( object ):
     def n_spiking_decon_filter_taps(self):
         """
         D
-        
+
         Returns:
             (int): number of *spiking* decon filter coefficients (a.k.a. the order)
         """
@@ -199,7 +199,7 @@ class Config( object ):
     def json_string(self):
         """
         Store current variables in json string.
-        
+
         Returns:
             (json): JSON string of module variables
         """
@@ -209,7 +209,7 @@ class Config( object ):
     def _get_num_decon_taps(self,deconvolution_filter_duration,sampling_rate):
         """
         Get number of coefficients needed for the filter.
-        
+
         Returns:
             (int): decon filter length taps
         """
@@ -222,11 +222,11 @@ class Config( object ):
     def set_metadata(self, metadata):
         """
         Convert datetime objects (in metadata) to strings to facilitate :func:`json_str`
-        
+
         Parameters:
             metadata (dataframe): metadata on the hole/mine/process
-        
-        .. note:: 20181212: json.dump does not seem to like datetime objects, 
+
+        .. note:: 20181212: json.dump does not seem to like datetime objects,
             so we cast as strings
             #key_list = [key for key, data_type in METADATA_HEADER_FORMAT_KEYS.items()]
         """
@@ -257,7 +257,7 @@ class Config( object ):
     def trimmed_trace_duration(self):
         """
         Re-assign duration to reflect trimmed trace.
-        
+
         Returns:
             (float): duration of trimmed trace
         """
@@ -266,7 +266,7 @@ class Config( object ):
         return duration
 
 
-    def set_config_parser( self, config_parser ):
+    def set_config_parser(self, config_parser):
         """
         Can be the env_config_parser here ...
         """
@@ -284,3 +284,9 @@ class Config( object ):
                     setattr(self,option,config_parser.getfloat(section,option))
                 if isinstance( var, str ):
                     setattr(self,option,config_parser.get(section,option))
+
+    @property
+    def installed_resonant_length(self):
+        """
+        """
+        return self.sensor_distance_to_shocksub + self.sensor_distance_to_source

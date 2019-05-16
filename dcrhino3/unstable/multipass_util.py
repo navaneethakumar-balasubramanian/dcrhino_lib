@@ -138,12 +138,13 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
 
     """
     global_config = acorr_trace.first_global_config
-    installed_steels_length = get_installed_steels_length(global_config)
+    #installed_steels_length = get_installed_steels_length(global_config)
+    installed_resonant_length = global_config.installed_resonant_length
     variable_steels_lengths = get_variable_steels_lengths(global_config)
 
     df = acorr_trace.dataframe
-    df['drill_string_resonant_length'] = installed_steels_length
-    transition_depth = installed_steels_length + transition_depth_offset_m
+    df['drill_string_resonant_length'] = installed_resonant_length
+    transition_depth = installed_resonant_length + transition_depth_offset_m
     for i_variable_steel in range(len(variable_steels_lengths)):
         rows_to_update = df['depth'] > transition_depth
         transition_depth += variable_steels_lengths[i_variable_steel]
