@@ -57,11 +57,12 @@ class GUI():
         self.display_daemon_process = None
         self.system_health_process = None
 
-        if config.getboolean("RUNTIME","field_deployment"):
-            self.prepare_acq_usb_port()
-            #self.gps_daemon()
+        # if config.getboolean("RUNTIME","field_deployment"):
+        #     self.prepare_acq_usb_port()
+        #     #self.gps_daemon()
 
-        self.automatic_acquisition = config.getboolean("RUNTIME","automatic_acquisition")
+        self.automatic_acquisition = config.getboolean("RUNTIME", "automatic_acquisition")
+        self.automatic_upload = config.getboolean("RUNTIME", "automatic_upload")
 
 
         default_font = tkFont.nametofont("TkDefaultFont")
@@ -129,6 +130,7 @@ class GUI():
 
         if self.automatic_acquisition:
             self.acquisition_daemon()
+        if self.automatic_upload:
             self.rsync_daemon()
 
         logging.info("GUI Started")
@@ -222,10 +224,10 @@ class GUI():
             self.rsync_daemon_process = None
             logging.info("Rsync Stopped")
 
-    def prepare_acq_usb_port(self):
-        cmd = os.path.join(PATH,"prepare_acq_port.sh")
-        self.prepare_acq_usb_port_process=Popen(cmd,shell=True)
-        logging.info("USB Port Permissions Changed")
+    # def prepare_acq_usb_port(self):
+    #     cmd = os.path.join(PATH,"prepare_acq_port.sh")
+    #     self.prepare_acq_usb_port_process=Popen(cmd,shell=True)
+    #     logging.info("USB Port Permissions Changed")
 
     def playback_daemon(self):
         load_config_file()
