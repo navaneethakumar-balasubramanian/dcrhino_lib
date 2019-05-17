@@ -75,18 +75,18 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
                                            axial=autcorrelated_dataframe['axial_trace'],
                                            radial=autcorrelated_dataframe['radial_trace'],
                                            tangential=autcorrelated_dataframe['tangential_trace'],
-                                           max_axial_acceleration=calibrated_dataframe['max_axial_acceleration'],
-                                           min_axial_acceleration=calibrated_dataframe['min_axial_acceleration'],
-                                           max_tangential_acceleration=calibrated_dataframe[
+                                           max_axial_acceleration=autcorrelated_dataframe['max_axial_acceleration'],
+                                           min_axial_acceleration=autcorrelated_dataframe['min_axial_acceleration'],
+                                           max_tangential_acceleration=autcorrelated_dataframe[
                                                'max_tangential_acceleration'],
-                                           min_tangential_acceleration=calibrated_dataframe[
+                                           min_tangential_acceleration=autcorrelated_dataframe[
                                                'min_tangential_acceleration'],
-                                           max_radial_acceleration=calibrated_dataframe['max_radial_acceleration'],
-                                           min_radial_acceleration=calibrated_dataframe['min_radial_acceleration'],
-                                           rssi=calibrated_dataframe["rssi"],
-                                           temp=calibrated_dataframe["temp"],
-                                           batt=calibrated_dataframe["batt"],
-                                           packets=calibrated_dataframe["packets"]
+                                           max_radial_acceleration=autcorrelated_dataframe['max_radial_acceleration'],
+                                           min_radial_acceleration=autcorrelated_dataframe['min_radial_acceleration'],
+                                           rssi=autcorrelated_dataframe["rssi"],
+                                           temp=autcorrelated_dataframe["temp"],
+                                           batt=autcorrelated_dataframe["batt"],
+                                           packets=autcorrelated_dataframe["packets"]
                                            )
 
 
