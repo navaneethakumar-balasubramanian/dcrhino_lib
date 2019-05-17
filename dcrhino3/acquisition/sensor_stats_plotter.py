@@ -223,9 +223,8 @@ while True:
             sec_delay = delay[-1]
 
             plotter.set_title(tracetime.strftime('%H:%M:%S') + " plotted at " + datetime.utcfromtimestamp(
-                now).strftime('%H:%M:%S') + " delay of " + str(sec_delay) + "\n" + "Data From: {} to {} {} {}".format(
-                initial_tracetime.strftime('%H:%M:%S'), tracetime.strftime('%H:%M:%S'), len(rssi),
-                (tracetime - initial_tracetime).total_seconds()))
+                now).strftime('%H:%M:%S') + " delay of " + str(sec_delay) + "\n" + "Data From: {} to {}".format(
+                initial_tracetime.strftime('%H:%M:%S'), tracetime.strftime('%H:%M:%S')))
 
             plotter.plot(packets, temp, rssi, max_axial_accel, min_axial_accel, max_tangential_accel,
                          min_tangential_accel, max_radial_accel, min_radial_accel)
