@@ -163,7 +163,8 @@ while True:
         min_component_accel = health[accel_index+1]
 
 
-        plt.suptitle(tracetime.strftime('%H:%M:%S' ) + " plotted at " + datetime.utcfromtimestamp(now).strftime('%H:%M:%S') +  " delay of " + str(sec_delay) )
+        plt.suptitle(tracetime.strftime('%Y-%m-%d %H:%M:%S' ) + " plotted at " + datetime.utcfromtimestamp(
+            now).strftime('%Y-%m-%d %H:%M:%S') + " delay of " + str(sec_delay) )
 
         # pdb.set_trace()
         packets_plot.plot(np.flipud(packets), "black", label="packets")
