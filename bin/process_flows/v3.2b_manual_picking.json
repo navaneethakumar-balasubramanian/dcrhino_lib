@@ -4,6 +4,7 @@
     "components_to_process": [
         "axial", "tangential"
     ],
+
     "modules": [
         {
             "output_to_file": false,
@@ -576,7 +577,7 @@
     ],
     "id": "v3.2b_manual_picking",
     "vars": {
-        "ignore_picker": true,
+        "ignore_picker": false,
         "tangential_primary": [
             -0.0003941852603110192,
             0.002
