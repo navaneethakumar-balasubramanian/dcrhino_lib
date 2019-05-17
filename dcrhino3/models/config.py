@@ -288,5 +288,6 @@ class Config( object ):
     @property
     def installed_resonant_length(self):
         """
+        this is the distance from the bottom of the shocksub to the bottom of the bit
         """
         return self.sensor_distance_to_shocksub + self.sensor_distance_to_source
