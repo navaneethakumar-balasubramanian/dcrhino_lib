@@ -137,16 +137,19 @@ class H5Helper:
         Returns:
             (list): sensitivity values [x,y,z] (may not be axis-specific)
         """
-        self._sensitivity = self.h5f.get('sensitivity')
-        if len(self._sensitivity) > 1:
-            self.x_sensitivity = self._sensitivity[0]
-            self.y_sensitivity = self._sensitivity[1]
-            self.z_sensitivity = self._sensitivity[2]
+        if "sensitivity" in self.h5f.keys():
+            self._sensitivity = self.h5f.get('sensitivity')
+            if len(self._sensitivity) > 1:
+                self.x_sensitivity = self._sensitivity[0]
+                self.y_sensitivity = self._sensitivity[1]
+                self.z_sensitivity = self._sensitivity[2]
+            else:
+                self.x_sensitivity = self._sensitivity[0]
+                self.y_sensitivity = self._sensitivity[0]
+                self.z_sensitivity = self._sensitivity[0]
+            return [self.x_sensitivity, self.y_sensitivity, self.z_sensitivity]
         else:
-            self.x_sensitivity = self._sensitivity[0]
-            self.y_sensitivity = self._sensitivity[0]
-            self.z_sensitivity = self._sensitivity[0]
-        return [self.x_sensitivity, self.y_sensitivity, self.z_sensitivity]
+            return [1,1,1]
 
 
 
