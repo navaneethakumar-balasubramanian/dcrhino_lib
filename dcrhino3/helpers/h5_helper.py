@@ -12,7 +12,8 @@ from datetime import datetime
 from dcrhino3.models.metadata import Metadata
 import pandas as pd
 import pdb
-
+import json
+from dcrhino3.models.config import Config
 class H5Helper:
     """
     Facilitates extraction of data from .h5 files.
@@ -150,9 +151,14 @@ class H5Helper:
             return [self.x_sensitivity, self.y_sensitivity, self.z_sensitivity]
         else:
             self._sensitivity = [1,1,1]
-            return self._sensitivity
+            return [1,1,1]
 
-
+    def _extract_global_config_from_h5_file(self):
+        global_config_json = json.loads(self.h5f.attrs["global_config_jsons"])
+        first_config = json.loads(global_config_json["0"])
+        c = Config()
+        c.set_data_from_json(first_config)
+        return c
 
 
     def _extract_metadata_from_h5_file(self):
