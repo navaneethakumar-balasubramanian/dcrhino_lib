@@ -149,7 +149,8 @@ class H5Helper:
                 self.z_sensitivity = self._sensitivity[0]
             return [self.x_sensitivity, self.y_sensitivity, self.z_sensitivity]
         else:
-            return [1,1,1]
+            self._sensitivity = [1,1,1]
+            return self._sensitivity
 
 
 
