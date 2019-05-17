@@ -51,6 +51,7 @@ from dcrhino3.process_flow.modules.hybrid.template_hybrid import TemplateModuleH
 from dcrhino3.process_flow.modules.hybrid.trim_trace import TrimTraceModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import UnfoldAutocorrelationModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.upsample_hybrid import UpsampleModuleHybrid
+from dcrhino3.process_flow.modules.hybrid.phase_balance_trace_hybrid import PhaseBalanceHybridModule
 
 from datetime import datetime
 
@@ -77,6 +78,7 @@ class ProcessFlow:
             "b0": B0FeaturesModule,
             "qc_log_v1": QCPlotterModule,
             "balance": BalanceModule,
+            "phase_balance_hybrid": PhaseBalanceHybridModule,
             "band_pass_filter": BandPassFilterModule,
             "band_pass_filter_hybrid": BandPassFilterModuleHybrid,
             "add_one": AddOneModule,
