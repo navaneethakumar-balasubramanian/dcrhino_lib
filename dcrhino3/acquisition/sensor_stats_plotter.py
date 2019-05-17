@@ -203,6 +203,7 @@ while True:
                 min_axial_accel.pop(0)
                 min_tangential_accel.pop(0)
                 min_radial_accel.pop(0)
+                tracetime_list.pop(0)
                 initial_tracetime = tracetime_list[0]
 
             tracetime_list.append(tracetime)
