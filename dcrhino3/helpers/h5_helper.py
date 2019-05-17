@@ -27,9 +27,9 @@ class H5Helper:
     def __init__(self, h5f,load_xyz=True):
         self.h5f = h5f
         self.metadata = self._extract_metadata_from_h5_file()
-        try:
+        if "ts" in self.h5f.keys():
             self._ts = np.asarray(self.h5f.get('ts'), dtype=np.float64)
-        except:
+        else:
             self._ts = np.asarray(self.h5f.get('timestamp'), dtype=np.float64)
 
         if load_xyz:
