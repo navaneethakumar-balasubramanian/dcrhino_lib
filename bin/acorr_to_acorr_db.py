@@ -8,7 +8,7 @@ import os
 import logging
 import json
 import numpy as np
-
+import h5py
 from dcrhino3.models.traces.raw_trace import RawTraceData
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.models.config import Config
@@ -30,9 +30,11 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
 
 
     ##############
-    h5_helper = H5Helper(h5_file_path)
+    h5f = h5py.File(h5_file_path,"r")
+    h5_helper = H5Helper(h5f)
     global_config = Config(h5_helper.metadata)
     raw_trace_data._global_configs["0"] = global_config
+    h5f.close()
     ### FIX THIS HACK
     #global_config = raw_trace_data.global_config_by_index("0")
 
@@ -68,17 +70,23 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
     for chunk in list_df:
         if len(chunk) > 0:
             autcorrelated_dataframe = chunk
-            
+
             db_helper.save_autocorr_traces(file_id, autcorrelated_dataframe['timestamp'],
-                                           axial=autcorrelated_dataframe['axial_trace'],
-                                           radial=autcorrelated_dataframe['radial_trace'],
-                                           tangential=autcorrelated_dataframe['tangential_trace'],
-                                           max_axial_acceleration=autcorrelated_dataframe['max_axial_acceleration'],
-                                           min_axial_acceleration=autcorrelated_dataframe['min_axial_acceleration'],
-                                           max_tangential_acceleration=autcorrelated_dataframe['max_tangential_acceleration'],
-                                           min_tangential_acceleration=autcorrelated_dataframe['min_tangential_acceleration'],
-                                           max_radial_acceleration=autcorrelated_dataframe['max_radial_acceleration'],
-                                           min_radial_acceleration=autcorrelated_dataframe['min_radial_acceleration']
+                                           axial=autcorrelated_dataframe['axial'],
+                                           radial=autcorrelated_dataframe['radial'],
+                                           tangential=autcorrelated_dataframe['tangential'],
+                                           max_axial_acceleration=calibrated_dataframe['max_axial_acceleration'],
+                                           min_axial_acceleration=calibrated_dataframe['min_axial_acceleration'],
+                                           max_tangential_acceleration=calibrated_dataframe[
+                                               'max_tangential_acceleration'],
+                                           min_tangential_acceleration=calibrated_dataframe[
+                                               'min_tangential_acceleration'],
+                                           max_radial_acceleration=calibrated_dataframe['max_radial_acceleration'],
+                                           min_radial_acceleration=calibrated_dataframe['min_radial_acceleration'],
+                                           rssi=calibrated_dataframe["rssi"],
+                                           temp=calibrated_dataframe["temp"],
+                                           batt=calibrated_dataframe["batt"],
+                                           packets=calibrated_dataframe["packets"]
                                            )
 
 
