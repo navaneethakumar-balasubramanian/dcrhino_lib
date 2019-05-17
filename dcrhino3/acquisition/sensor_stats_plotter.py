@@ -191,7 +191,7 @@ while True:
         if previous_tracetime != tracetime:
             # print("list",len(rssi),len(packets),len(temp))
             previous_tracetime = tracetime
-            if len(rssi) >= length:
+            if (tracetime - initial_tracetime).total_seconds() >= length:
                 rssi.pop(0)
                 packets.pop(0)
                 delay.pop(0)
