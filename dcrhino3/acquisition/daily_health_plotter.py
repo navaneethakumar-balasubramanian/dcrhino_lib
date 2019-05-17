@@ -61,12 +61,13 @@ def main(date=None):
 
     plt.figure("Histogram")
     signal_loss_plot = plt.subplot2grid((6, 1), (0, 0), colspan=1)
-    signal_loss = (1-(df.samples/2000))*100
+    signal_loss = (1-(df.samples.dropna()/2000))*100
     bins = np.arange(0, 7, 1)
     signal_loss_plot.set_xticks(bins)
     signal_loss_plot.set_xticklabels(["0", "1", "2", "3", "4", "5", "6+"])
     signal_loss = np.asarray(signal_loss, dtype=np.float32)
-    signal_loss_plot.hist(signal_loss, bins=bins, histtype="step", weights=np.ones(len(signal_loss)) / len(signal_loss))
+    signal_loss_plot.hist(signal_loss, bins=bins, histtype="step", weights=np.ones(len(signal_loss)) / len(
+        signal_loss))
     signal_loss_plot.set_title("Signal Loss")
     plt.suptitle("System Health Histograms from {} to {}".format(df.date.min(), df.date.max()))
 
