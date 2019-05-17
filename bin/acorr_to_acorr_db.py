@@ -32,7 +32,7 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
     ##############
     h5f = h5py.File(h5_file_path,"r")
     h5_helper = H5Helper(h5f)
-    global_config = Config(h5_helper.metadata)
+    global_config = h5_helper._extract_global_config_from_h5_file()
     raw_trace_data._global_configs["0"] = global_config
     h5f.close()
     ### FIX THIS HACK
