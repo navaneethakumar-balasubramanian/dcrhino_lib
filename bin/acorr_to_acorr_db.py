@@ -72,9 +72,9 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
             autcorrelated_dataframe = chunk
 
             db_helper.save_autocorr_traces(file_id, autcorrelated_dataframe['timestamp'],
-                                           axial=autcorrelated_dataframe['axial'],
-                                           radial=autcorrelated_dataframe['radial'],
-                                           tangential=autcorrelated_dataframe['tangential'],
+                                           axial=autcorrelated_dataframe['axial_trace'],
+                                           radial=autcorrelated_dataframe['radial_trace'],
+                                           tangential=autcorrelated_dataframe['tangential_trace'],
                                            max_axial_acceleration=calibrated_dataframe['max_axial_acceleration'],
                                            min_axial_acceleration=calibrated_dataframe['min_axial_acceleration'],
                                            max_tangential_acceleration=calibrated_dataframe[
