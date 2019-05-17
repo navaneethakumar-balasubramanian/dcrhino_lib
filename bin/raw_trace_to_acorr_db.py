@@ -111,6 +111,38 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
                 for i in range(num_lines):
                     temp[i] = [0] * len_line
                 autcorrelated_dataframe['tangential'] = temp
+
+            if 'rssi' not in autcorrelated_dataframe.columns:
+                num_lines = autcorrelated_dataframe.shape[0]
+                len_line = len(autcorrelated_dataframe['axial'].values[0])
+                temp = [None] * num_lines
+                for i in range(num_lines):
+                    temp[i] = [0] * len_line
+                autcorrelated_dataframe['tangential'] = temp
+
+            if 'temp' not in autcorrelated_dataframe.columns:
+                num_lines = autcorrelated_dataframe.shape[0]
+                len_line = len(autcorrelated_dataframe['axial'].values[0])
+                temp = [None] * num_lines
+                for i in range(num_lines):
+                    temp[i] = [0] * len_line
+                autcorrelated_dataframe['tangential'] = temp
+
+            if 'batt' not in autcorrelated_dataframe.columns:
+                num_lines = autcorrelated_dataframe.shape[0]
+                len_line = len(autcorrelated_dataframe['axial'].values[0])
+                temp = [None] * num_lines
+                for i in range(num_lines):
+                    temp[i] = [0] * len_line
+                autcorrelated_dataframe['tangential'] = temp
+
+            if 'packets' not in autcorrelated_dataframe.columns:
+                num_lines = autcorrelated_dataframe.shape[0]
+                len_line = len(autcorrelated_dataframe['axial'].values[0])
+                temp = [None] * num_lines
+                for i in range(num_lines):
+                    temp[i] = [0] * len_line
+                autcorrelated_dataframe['tangential'] = temp
             
             db_helper.save_autocorr_traces(file_id, autcorrelated_dataframe['timestamp'],
                                            axial=autcorrelated_dataframe['axial'],
