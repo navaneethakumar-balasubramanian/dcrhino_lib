@@ -20,12 +20,13 @@ https://datacloudintl.atlassian.net/wiki/spaces/RHINO/pages/139526154/Configurat
 
 
 from __future__ import absolute_import, division, print_function
-
 import datetime
-#import numpy as np
+import matplotlib.pyplot as plt #for debugging
+import numpy as np
 import os
 import pdb
 
+from dcrhino3.models.interval import Interval
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.models.metadata import Measurement
@@ -131,24 +132,146 @@ def get_variable_steels_lengths(global_config):
     #</HACK FOR LINE CREEK>
     return variable_steels_lengths
 
+def drill_stops(df, minimum_stop_duration=60.0, basically_zero_m=0.0007):
+    """
+    units of minimum_stop_duration are seconds.  Anything of shorter duration than
+    this will not be interpretted as a potential steels-change
+    """
+    qualifying_time_intervals = []
+    dzdt = np.diff(df.depth)
+    stopped_indices = np.where(dzdt <= basically_zero_m)[0]
+    d_indices = np.diff(stopped_indices)
+    discontinuity_indices = np.where(np.abs(d_indices) > 1)[0]
+    reference_array = np.split(np.arange(len(stopped_indices)), discontinuity_indices+1)
+    for i_stopped_region in range(len(reference_array)):
+        lower_bound_index = stopped_indices[reference_array[i_stopped_region][0]]
+        upper_bound_index = stopped_indices[reference_array[i_stopped_region][-1]]
+        lower_bound_time = df.timestamp.iloc[lower_bound_index]
+        upper_bound_time = df.timestamp.iloc[upper_bound_index]
+        unix_time_interval = Interval(lower_bound=lower_bound_time,
+                                      upper_bound=upper_bound_time)
+        #pin the depth to the interval
+        approximate_depth = np.mean(df.depth.iloc[lower_bound_index:upper_bound_index])
+        unix_time_interval.depth = approximate_depth
+        if unix_time_interval.duration > minimum_stop_duration:
+            print("this could be a steels change")
+            qualifying_time_intervals.append(unix_time_interval)
+    return qualifying_time_intervals
+
+def get_approximate_transitions(df, installed_steels_length, variable_steels_lengths, install_offset_correction):
+    """
+    returns a list of depths and times which correspond to an approximate steels
+    transition
+    if variable_steels_lengths is empty then this should return an empty list
+
+    """
+    effective_installed_length = installed_steels_length + install_offset_correction
+    n_variable_steels = len(variable_steels_lengths)
+    if n_variable_steels == 0:
+        return [], []
+    else:
+        transition_depths = [effective_installed_length]
+        for i_steel in range(n_variable_steels):
+            transition_depths.append(transition_depths[-1] + variable_steels_lengths[i_steel])
+        transition_times = []
+        for depth in transition_depths:
+            loc = np.argmin(np.abs(df.depth-depth))
+            transition_times.append(df.timestamp.iloc[loc])
+
+            print(loc)
+        #you now have the depth and times, but there maybe degenerate values
+        #as you mave have more steels in reserve than you used, so clip those:
+        clip_degenerates = True
+
+        while clip_degenerates:
+            if transition_times[-1] == transition_times[-2]:
+                print("found a degenerate value")
+                transition_times = transition_times[:-1]
+                transition_depths = transition_depths[:-1]
+            else:
+                clip_degenerates = False
+
+#    print(transition_depths)
+#    print(transition_times)
+    return transition_times, transition_depths
+
+
+def reject_transitions_far_from_drill_stops(transition_times,
+                                            transition_depths,
+                                            potential_steels_change_time_intervals,
+                                            all_steels_lengths):
+    """
+    if there is no drill stop within a quarter steel of the transition depth
+    then its a bogus transition
+    """
+    transition_times_out = []
+    transition_depths_out = []
+    for i in range(len(transition_depths)):
+        legit = False
+        transition_depth = transition_depths[i]
+        quarter_steel = all_steels_lengths[i]/4.0
+        for ivl in potential_steels_change_time_intervals:
+            distance_to_drill_stop = np.abs(transition_depth - ivl.depth)
+            if distance_to_drill_stop < quarter_steel:
+                legit = True
+        if legit:
+            transition_times_out.append(transition_times[i])
+            transition_depths_out.append(transition_depth)
+    return transition_times_out, transition_depths_out
+
 
 def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0):
     """
     acorr_trace is of type dcrhino3.models.trace_dataframe.TraceData()
 
     """
+#    effective_trace_duration = np.median(np.diff(acorr_trace.dataframe.timestamp))
+#    transition_neighborhood_search_above = 1.0
+#    transition_neighborhood_search_below = 2.0
     global_config = acorr_trace.first_global_config
-    #installed_steels_length = get_installed_steels_length(global_config)
-    installed_resonant_length = global_config.installed_resonant_length
+    installed_steels_length = get_installed_steels_length(global_config)
     variable_steels_lengths = get_variable_steels_lengths(global_config)
+    all_steels_lengths = [installed_steels_length] + variable_steels_lengths
+    installed_resonant_length = global_config.installed_resonant_length
 
     df = acorr_trace.dataframe
+
+    potential_steels_change_time_intervals = drill_stops(acorr_trace.dataframe,
+                                                         minimum_stop_duration=60.0,
+                                                         basically_zero_m=0.0007)
+
+    transition_times, transition_depths = get_approximate_transitions(acorr_trace.dataframe,
+                                                         installed_steels_length,
+                                                         variable_steels_lengths,
+                                                         transition_depth_offset_m)
+
+    transition_times, transition_depths = reject_transitions_far_from_drill_stops(transition_times,
+                                                    transition_depths,
+                                                    potential_steels_change_time_intervals,
+                                                    all_steels_lengths)
+
+#    plt.figure(1)
+#    color_cyc = 'rgbcmk'
+#    plt.plot(acorr_trace.dataframe.timestamp, acorr_trace.dataframe.depth)
+#    for i, ivl in enumerate(potential_steels_change_time_intervals):
+#        plt.vlines(ivl.lower_bound, 0, 34, color=color_cyc[i])
+#        plt.vlines(ivl.upper_bound, 0, 34, color=color_cyc[i])
+#    for i, td in enumerate(transition_depths):
+#        plt.plot(transition_times[i], td, 'o',  color=color_cyc[i])
+#    plt.show()
+
     df['drill_string_resonant_length'] = installed_resonant_length
-    transition_depth = installed_resonant_length + transition_depth_offset_m
-    for i_variable_steel in range(len(variable_steels_lengths)):
+    resonant_length = installed_resonant_length
+    for i,transition_depth in enumerate(transition_depths):
+        resonant_length += variable_steels_lengths[i]
         rows_to_update = df['depth'] > transition_depth
-        transition_depth += variable_steels_lengths[i_variable_steel]
-        df.loc[rows_to_update, 'drill_string_resonant_length'] = transition_depth
+        df.loc[rows_to_update, 'drill_string_resonant_length'] = resonant_length
+
+#    for i_variable_steel in range(len(variable_steels_lengths)):
+#        rows_to_update = df['depth'] > transition_depth
+#        transition_depth += variable_steels_lengths[i_variable_steel]
+#        df.loc[rows_to_update, 'drill_string_resonant_length'] = transition_depth
+
     return acorr_trace
 
 def test(acorr_filename=None):
