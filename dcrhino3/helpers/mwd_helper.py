@@ -295,7 +295,10 @@ class MWDHelper():
         Returns:
             (DataFrame): DataFrame *df* with values rows sorted by start_time.
         """
-        df['start_time'] = pd.to_datetime(df['start_time'])
+        if df.start_time.dtype == 'int64':
+            df['start_time'] = pd.to_datetime(df['start_time'],unit='s')
+        else:
+            df['start_time'] = pd.to_datetime(df['start_time'])
         df['bench_name'] = df['bench_name'].astype(str)
         df['pattern_name'] = df['pattern_name'].astype(str)
         df['hole_name'] = df['hole_name'].astype(str)
