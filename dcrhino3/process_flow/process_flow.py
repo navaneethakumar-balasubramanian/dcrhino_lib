@@ -289,7 +289,7 @@ class ProcessFlow:
             self.rhino_db_helper = RhinoDBHelper(conn=conn)
             sql_conn = env_config.get_rhino_sql_connection_from_mine_name(acorr_trace.mine_name)
             if sql_conn:
-                self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'],sql_conn['user'],sql_conn['password'],str(acorr_trace.mine_name).lower())
+                self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'],sql_conn['user'],sql_conn['password'],str(sql_conn['database']).lower())
 
             acorr_trace = self.process(acorr_trace)
             return_dict["acorr_trace"] = acorr_trace
