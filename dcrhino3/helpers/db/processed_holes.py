@@ -19,6 +19,10 @@ class ProcessedHoles(BaseDbModel):
         sql = 'Select * from ' + self.table_name + " where processed_hole_id IN ( " + ",".join(processed_hole_ids) + ")"
         return self.query_to_df(sql)
 
+    def get_holes_to_mp(self):
+        query = 'SELECT * FROM processed_holes WHERE processed_hole_id IN( SELECT MAX(processed_hole_id) FROM processed_holes GROUP BY bench_name, pattern_name, hole_name )'
+        return self.query_to_df(query)
+
     def get_latests(self,limit=1000):
         return self.query_to_df("select * from " + self.table_name + " order by processed_at_ts DESC limit " + str(limit))
 
