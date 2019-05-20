@@ -220,10 +220,37 @@ def reject_transitions_far_from_drill_stops(transition_times,
     return transition_times_out, transition_depths_out
 
 
+def reject_transitions_near_bottom_of_hole(max_depth, transition_times, transition_depths,
+                                       significant_excess=2.0):
+    """
+    if the bit does not penetrate more than say a meter below the transtion
+    depth the steel may not have changed.
+    """
+    transition_times_out = []
+    transition_depths_out = []
+    for i in range(len(transition_depths)):
+        legit = False
+        transition_depth = transition_depths[i]
+        if max_depth - transition_depth > significant_excess:
+            legit = True
+        if legit:
+            transition_times_out.append(transition_times[i])
+            transition_depths_out.append(transition_depth)
+    return transition_times_out, transition_depths_out
+
+
 def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0):
     """
     acorr_trace is of type dcrhino3.models.trace_dataframe.TraceData()
 
+    Conceptual flow:
+        1. find the approximate depths at which we would expect a new steel to
+        be attached (transition_depths)
+        2. Determine which transition depths are surpassed significantly.
+        i.e. does the bit go significantly deeper than the transition depth (>~2m)
+        -- Now you have a list of relevant transition depths for the given blasthole-acorr
+        3. Place the 'actual' transition depth at the center of the drill stop
+        nearest to the theoretical transition depth
     """
 #    effective_trace_duration = np.median(np.diff(acorr_trace.dataframe.timestamp))
 #    transition_neighborhood_search_above = 1.0
@@ -244,6 +271,11 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
                                                          installed_steels_length,
                                                          variable_steels_lengths,
                                                          transition_depth_offset_m)
+
+    transition_times, transition_depths = reject_transitions_near_bottom_of_hole(df.depth.max(),
+                                                                                 transition_times,
+                                                                                 transition_depths,
+                                                                                 significant_excess=2.0)
 
     transition_times, transition_depths = reject_transitions_far_from_drill_stops(transition_times,
                                                     transition_depths,
@@ -267,11 +299,6 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
         rows_to_update = df['depth'] > transition_depth
         df.loc[rows_to_update, 'drill_string_resonant_length'] = resonant_length
 
-#    for i_variable_steel in range(len(variable_steels_lengths)):
-#        rows_to_update = df['depth'] > transition_depth
-#        transition_depth += variable_steels_lengths[i_variable_steel]
-#        df.loc[rows_to_update, 'drill_string_resonant_length'] = transition_depth
-
     return acorr_trace
 
 def test(acorr_filename=None):
@@ -287,10 +314,17 @@ def test(acorr_filename=None):
         h5_basename = '2380_NS92_82_9518B_9518B_6172_6172.h5'
         h5_basename = '2380_NS92_82_9607T_9607T_6172_6172.h5'
         acorr_filename = os.path.join(line_creek_acorr_folder, h5_basename)
+#        acorr_filename = os.path.join('/home/kkappler', 'tmp', '20190518_RTA72000_PR004.h5')
 
     acorr_trace = TraceData()
     acorr_trace.load_from_h5(acorr_filename)
     acorr_trace = update_acorr_with_resonance_info(acorr_trace)
+#    pdb.set_trace()
+#    from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import unfold_trace_2d
+#    data_array = acorr_trace.component_as_array('axial')
+#    data_array = unfold_trace_2d(data_array)
+#    qqq =np.fft.fft(data_array);
+    print('hi')
 
 
 def main():
