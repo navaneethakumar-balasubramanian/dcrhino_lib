@@ -68,7 +68,13 @@ def generate_cache_acorr(mine_name, env_config_path=False):
                 min_ts = int((hole_mwd['start_time'].astype(int)/1000000000).min())
                 max_ts = int((hole_mwd['start_time'].astype(int)/1000000000).max())
 
-                acor_trace.load_from_db(db_helper, files_ids, min_ts, max_ts)
+                try:
+                    acor_trace.load_from_db(db_helper, files_ids, min_ts, max_ts)
+                except:
+                    logger.warn("ERROR LOADING FILES IDS: " + ','.join(files_ids.astype(str)))
+                    continue;
+
+
                 #pdb.set_trace()
                 acor_trace.dataframe = merger.merge_mwd_with_trace(hole_mwd,acor_trace)
                 acor_trace.save_to_h5(temp_h5_path)

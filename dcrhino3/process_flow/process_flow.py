@@ -248,7 +248,7 @@ class ProcessFlow:
                 sql_conn = env_config.get_rhino_sql_connection_from_mine_name(subset['acorr_trace'].mine_name)
                 if sql_conn:
                     self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'], sql_conn['user'], sql_conn['password'],
-                                                           str(subset['acorr_trace'].mine_name).lower())
+                                                           str(sql_conn['database']).lower())
 
                 subset['acorr_trace'] = self.process(subset['acorr_trace'],subset_index=i)
 
