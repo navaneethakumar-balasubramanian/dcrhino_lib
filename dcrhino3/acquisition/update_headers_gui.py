@@ -84,7 +84,7 @@ class GUI():
         files = list()
         if os.path.isdir(path):
             files = os.listdir(path)
-            files = [os.path.join(path,x) for x in files if "RTR" in x and ".h5" in x]
+            files = [os.path.join(path, x) for x in files if "RTR" in x and ".h5" in x or "SSX" in x and ".h5" in x]
         else:
             files.append(path)
         replace_config = ConfigParser.ConfigParser()
