@@ -25,7 +25,7 @@ logger = init_logging(__name__)
 
 
 
-def generate_cache_acorr(mine_name, env_config_path=False):
+def generate_cache_acorr(mine_name, env_config_path=False,output_matches_csv=False):
 
     envConfig = EnvConfig(env_config_path)
     holes_cached_folder = envConfig.get_hole_h5_interpolated_cache_folder(mine_name)
@@ -43,6 +43,10 @@ def generate_cache_acorr(mine_name, env_config_path=False):
         files = db_helper.get_files_list()
         merger = MWDRhinoMerger(files,mwd_df)
         matches = merger.observed_blasthole_catalog
+
+        if output_matches_csv:
+            matches.to_csv(output_matches_csv)
+
 
         #pdb.set_trace()
 
@@ -92,10 +96,11 @@ if __name__ == '__main__':
         argparser = argparse.ArgumentParser(description="Copyright (c) 2018 DataCloud")
         argparser.add_argument("mine_name", metavar="mine_name", type=str, help="Mine Name")
         argparser.add_argument("-env", '--env_config_path', help="Path to optional env config file", default=False)
+        argparser.add_argument("-m", '--matches_output_path', help="Path to optional matches file", default=False)
         args = argparser.parse_args()
         mine_name = args.mine_name
         env_config_path = args.env_config_path
     else:
         mine_name = ''
 
-    generate_cache_acorr(mine_name, env_config_path)
+    generate_cache_acorr(mine_name, env_config_path,args.matches_output_path)
