@@ -43,7 +43,7 @@ class ProcessedHoles(BaseDbModel):
         query = "select * from " + self.table_name +" where "
         for word in words:
             query += 'LOWER(CONCAT(bench_name,pattern_name,hole_name,hole_id,rig_id,sensor_id,digitizer_id,flow_id)) LIKE LOWER("%'+str(word)+'%") and '
-        query += "1 = 1 order by processed_at_ts DESC limit " + str(limit)
+        query += "1 = 1 order by processed_hole_id DESC limit " + str(limit)
         #print query
         return self.query_to_df(query)
 
