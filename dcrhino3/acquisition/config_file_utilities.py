@@ -121,7 +121,7 @@ def update_h5f_headers(h5f,updated_cfg):
 
     sensor_type = config.getint('INSTALLATION', 'sensor_type')
 
-    if sensor_type == 1:
+    if sensor_type == 1 or sensor_type == 3:
         sensitivity = np.array([config.getfloat('PLAYBACK', 'ide_multiplier')],dtype=np.float32)
     else:
         sensitivity = np.array([config.getfloat('PLAYBACK', 'x_sensitivity'),config.getfloat('PLAYBACK', 'y_sensitivity'),config.getfloat('PLAYBACK', 'z_sensitivity')],dtype=np.float32)
