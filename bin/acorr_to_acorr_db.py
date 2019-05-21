@@ -108,6 +108,11 @@ if __name__ == '__main__':
         print  'File does not exist: ' + args.src_path
     for file in files:
         if '.h5' in os.path.splitext(file)[1]:
-            logger.info("PROCESSING FILE:" + str( file))
+
             if env_config.is_file_blacklisted(file) is False:
-                raw_trace_h5_to_acorr_db(file,env_config)
+                try:
+                    logger.info("PROCESSING FILE:" + str(file))
+                    raw_trace_h5_to_acorr_db(file,env_config)
+
+                except:
+                    logger.warn("FAILED TO PROCESS FILE:" + str(file))
