@@ -247,11 +247,6 @@ class ProcessFlow:
         if seconds_to_process is not False:
             acorr_trace.dataframe = acorr_trace.dataframe[:seconds_to_process]
 
-        #<NEW>
-        #if "subsets" in process_json.keys():
-        #if "subsets" in process_json.keys() and len(process_json['subsets']) > 0:
-        #</NEW>
-        pdb.set_trace()
         splitted_subsets = self.split_subsets(process_json,process_json['subsets'],acorr_trace)
         for i,subset in enumerate(splitted_subsets):
 
@@ -292,27 +287,7 @@ class ProcessFlow:
 
         return acorr_trace, process_json
 
-    #<NEW>
-#
-#
-#        else:
-#            #filename = os.path.basename(acorr_h5_file_path)
-#
-#
-#            self.set_process_flow(process_json)
-#            self.env_config = env_config
-#            conn = env_config.get_rhino_db_connection_from_mine_name(acorr_trace.mine_name)
-#
-#            self.rhino_db_helper = RhinoDBHelper(conn=conn)
-#            sql_conn = env_config.get_rhino_sql_connection_from_mine_name(acorr_trace.mine_name)
-#            if sql_conn:
-#                self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'],sql_conn['user'],sql_conn['password'],str(sql_conn['database']).lower())
-#
-#            acorr_trace = self.process(acorr_trace)
-#            return_dict["acorr_trace"] = acorr_trace
-#            return_dict["process_json"] = process_json
-#            return acorr_trace, self.process_json
-    #</NEW>
+
     def merge_results(self,subsets):
         process_json = copy.deepcopy(subsets[0]['process_json'])
         process_json['vars'] = []
