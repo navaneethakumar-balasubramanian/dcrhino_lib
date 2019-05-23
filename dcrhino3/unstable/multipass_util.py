@@ -132,14 +132,22 @@ def get_variable_steels_lengths(global_config):
     #</HACK FOR LINE CREEK>
     return variable_steels_lengths
 
-def drill_stops(df, minimum_stop_duration=60.0, basically_zero_m=0.0007):
+def drill_stops(df, minimum_stop_duration=60.0, basically_zero_m=0.0017):
     """
     units of minimum_stop_duration are seconds.  Anything of shorter duration than
     this will not be interpretted as a potential steels-change
+
+    .. Note:: This should actually be calculated from MWD... there is no RHINO
+    data being used in this algorithm.
     """
     qualifying_time_intervals = []
-    dzdt = np.diff(df.depth)
+    dzdt = np.diff(df.depth) #assumption of 1s trace again! :(
+    #d2zdt2 = np.diff(dzdt)
     stopped_indices = np.where(dzdt <= basically_zero_m)[0]
+
+
+    if len(stopped_indices) == 0:
+        return qualifying_time_intervals
     d_indices = np.diff(stopped_indices)
     discontinuity_indices = np.where(np.abs(d_indices) > 1)[0]
     reference_array = np.split(np.arange(len(stopped_indices)), discontinuity_indices+1)
@@ -155,6 +163,7 @@ def drill_stops(df, minimum_stop_duration=60.0, basically_zero_m=0.0007):
         unix_time_interval.depth = approximate_depth
         if unix_time_interval.duration > minimum_stop_duration:
             print("this could be a steels change")
+            print('check that the diff(dzdt)==0')
             qualifying_time_intervals.append(unix_time_interval)
     return qualifying_time_intervals
 
@@ -177,22 +186,23 @@ def get_approximate_transitions(df, installed_steels_length, variable_steels_len
         for depth in transition_depths:
             loc = np.argmin(np.abs(df.depth-depth))
             transition_times.append(df.timestamp.iloc[loc])
+            #print("transition index ={}".format(loc))
 
-            print(loc)
         #you now have the depth and times, but there maybe degenerate values
         #as you mave have more steels in reserve than you used, so clip those:
         clip_degenerates = True
-
+        if len(transition_times) < 2:
+            clip_degenerates = False
         while clip_degenerates:
             if transition_times[-1] == transition_times[-2]:
                 print("found a degenerate value")
                 transition_times = transition_times[:-1]
                 transition_depths = transition_depths[:-1]
+                if len(transition_times) < 2:
+                    clip_degenerates = False
             else:
                 clip_degenerates = False
 
-#    print(transition_depths)
-#    print(transition_times)
     return transition_times, transition_depths
 
 
@@ -309,10 +319,10 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
                                                     potential_steels_change_time_intervals,
                                                     all_steels_lengths)
 
-    transition_times, transition_depths = nearest_time_to_transition_depth(df,
-                                                                           transition_times,
-                                                                           transition_depths,
-                                                                           potential_steels_change_time_intervals)
+    #transition_times, transition_depths = nearest_time_to_transition_depth(df,
+    #                                                                       transition_times,
+    #                                                                       transition_depths,
+    #                                                                       potential_steels_change_time_intervals)
 
 #    plt.figure(1)
 #    color_cyc = 'rgbcmk'
@@ -344,8 +354,7 @@ def test(acorr_filename=None):
             raise Exception
         h5_basename = '2380_NS92_82_9409_9409_6172_6172.h5'
         h5_basename = '2380_NS92_82_9518B_9518B_6172_6172.h5'
-        line_creek_acorr_folder = '/home/kkappler/.cache/datacloud/line_creek'
-        h5_basename = '885_NS92_82_9607T_9607T_6172_6172.h5'
+        h5_basename = '2380_NS92_82_9607T_9607T_6172_6172.h5'
         acorr_filename = os.path.join(line_creek_acorr_folder, h5_basename)
 #        acorr_filename = os.path.join('/home/kkappler', 'tmp', '20190518_RTA72000_PR004.h5')
 
