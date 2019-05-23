@@ -19,12 +19,17 @@ class ProcessedHoles(BaseDbModel):
         sql = 'Select * from ' + self.table_name + " where processed_hole_id IN ( " + ",".join(processed_hole_ids) + ")"
         return self.query_to_df(sql)
 
-    def get_holes_to_mp(self):
+    def get_latests_process_for_each_hole(self):
         query = 'SELECT * FROM processed_holes WHERE processed_hole_id IN( SELECT MAX(processed_hole_id) FROM processed_holes GROUP BY bench_name, pattern_name, hole_name )'
         return self.query_to_df(query)
 
+    def get_holes_to_mp(self):
+        return self.get_latests_process_for_each_hole()
+
     def get_latests(self,limit=1000):
         return self.query_to_df("select * from " + self.table_name + " order by processed_hole_id DESC limit " + str(limit))
+
+
 
     def hole_to_mp(self,processed_hole_id,to_mp):
         sql = "UPDATE " + self.table_name + " set to_mp = %s where processed_hole_id = %s"
