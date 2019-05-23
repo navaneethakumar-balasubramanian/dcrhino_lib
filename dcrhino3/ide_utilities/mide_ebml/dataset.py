@@ -2887,7 +2887,7 @@ class EventList(Transformable):
         h5f = h5py.File(output_path, 'a')
         h5f = config_file_to_attrs(config, h5f)
         self.saveNumpyToFile(h5f, "sensitivity",
-                             numpy.asarray([config.getfloat("PLAYBACK", "ide_multiplier")], dtype=numpy.float64))
+                             numpy.asarray([config.getfloat("PLAYBACK", "ide_multiplier")], dtype=numpy.float32))
         axis = numpy.asarray([config.getint("INSTALLATION", "sensor_axial_axis"),
                               config.getint("INSTALLATION", "sensor_tangential_axis")], dtype=numpy.int32)
         self.saveNumpyToFile(h5f, "axis", axis)
