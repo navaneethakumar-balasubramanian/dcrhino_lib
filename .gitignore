@@ -12,3 +12,5 @@ bin/scratch
 \.idea/
 
 *.csv#
+
+bin/test\.py

@@ -132,14 +132,22 @@ def get_variable_steels_lengths(global_config):
     #</HACK FOR LINE CREEK>
     return variable_steels_lengths
 
-def drill_stops(df, minimum_stop_duration=60.0, basically_zero_m=0.0007):
+def drill_stops(df, minimum_stop_duration=60.0, basically_zero_m=0.0017):
     """
     units of minimum_stop_duration are seconds.  Anything of shorter duration than
     this will not be interpretted as a potential steels-change
+
+    .. Note:: This should actually be calculated from MWD... there is no RHINO
+    data being used in this algorithm.
     """
     qualifying_time_intervals = []
-    dzdt = np.diff(df.depth)
+    dzdt = np.diff(df.depth) #assumption of 1s trace again! :(
+    #d2zdt2 = np.diff(dzdt)
     stopped_indices = np.where(dzdt <= basically_zero_m)[0]
+
+
+    if len(stopped_indices) == 0:
+        return qualifying_time_intervals
     d_indices = np.diff(stopped_indices)
     discontinuity_indices = np.where(np.abs(d_indices) > 1)[0]
     reference_array = np.split(np.arange(len(stopped_indices)), discontinuity_indices+1)
@@ -155,6 +163,7 @@ def drill_stops(df, minimum_stop_duration=60.0, basically_zero_m=0.0007):
         unix_time_interval.depth = approximate_depth
         if unix_time_interval.duration > minimum_stop_duration:
             print("this could be a steels change")
+            print('check that the diff(dzdt)==0')
             qualifying_time_intervals.append(unix_time_interval)
     return qualifying_time_intervals
 
@@ -177,22 +186,23 @@ def get_approximate_transitions(df, installed_steels_length, variable_steels_len
         for depth in transition_depths:
             loc = np.argmin(np.abs(df.depth-depth))
             transition_times.append(df.timestamp.iloc[loc])
+            #print("transition index ={}".format(loc))
 
-            print(loc)
         #you now have the depth and times, but there maybe degenerate values
         #as you mave have more steels in reserve than you used, so clip those:
         clip_degenerates = True
-
+        if len(transition_times) < 2:
+            clip_degenerates = False
         while clip_degenerates:
             if transition_times[-1] == transition_times[-2]:
                 print("found a degenerate value")
                 transition_times = transition_times[:-1]
                 transition_depths = transition_depths[:-1]
+                if len(transition_times) < 2:
+                    clip_degenerates = False
             else:
                 clip_degenerates = False
 
-#    print(transition_depths)
-#    print(transition_times)
     return transition_times, transition_depths
 
 
@@ -223,7 +233,7 @@ def reject_transitions_far_from_drill_stops(transition_times,
 def reject_transitions_near_bottom_of_hole(max_depth, transition_times, transition_depths,
                                        significant_excess=2.0):
     """
-    if the bit does not penetrate more than say a meter below the transtion
+    if the bit does not penetrate more than say a meter below the transition
     depth the steel may not have changed.
     """
     transition_times_out = []
@@ -237,6 +247,33 @@ def reject_transitions_near_bottom_of_hole(max_depth, transition_times, transiti
             transition_times_out.append(transition_times[i])
             transition_depths_out.append(transition_depth)
     return transition_times_out, transition_depths_out
+
+
+def nearest_time_to_transition_depth(dataframe,
+                                     transition_times,
+                                     transition_depths,
+                                     potential_steels_change_time_intervals,
+                                     significant_excess=2.0):
+    """
+    if the bit does not penetrate more than say a meter below the transition
+    depth the steel may not have changed.
+    """
+
+    # Make a List of Middle Drill Stoppage Intervals
+    steel_change_time= []
+    for interval in potential_steels_change_time_intervals:
+        steel_change_time.append((interval.upper_bound + interval.lower_bound) / 2)
+
+    # for t_depth in transition_depths:
+    #     n_array = np.array(dataframe)
+    #     transition_depth_row = [np.argmin(np.abs(t_depth - dataframe.depth))]
+    #     transition_depth_time = dataframe.timestamp[transition_depth_row]
+    #     closest_drill_stoppage_time = np.argmin(np.abs(steel_time_change_middle - transition_depth_time))
+
+    for t_depth in transition_depths:
+        transition_depth_time = dataframe.timestamp[np.argmin(np.abs(t_depth - dataframe.depth))]
+        np.argmin(np.abs(steel_change_time-transition_depth_time)) #index of steep change time to use (or any sequence of times
+
 
 
 def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0):
@@ -281,6 +318,11 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
                                                     transition_depths,
                                                     potential_steels_change_time_intervals,
                                                     all_steels_lengths)
+
+    #transition_times, transition_depths = nearest_time_to_transition_depth(df,
+    #                                                                       transition_times,
+    #                                                                       transition_depths,
+    #                                                                       potential_steels_change_time_intervals)
 
 #    plt.figure(1)
 #    color_cyc = 'rgbcmk'
