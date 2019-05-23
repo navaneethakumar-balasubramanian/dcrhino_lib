@@ -319,10 +319,10 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
                                                     potential_steels_change_time_intervals,
                                                     all_steels_lengths)
 
-    transition_times, transition_depths = nearest_time_to_transition_depth(df,
-                                                                           transition_times,
-                                                                           transition_depths,
-                                                                           potential_steels_change_time_intervals)
+    #transition_times, transition_depths = nearest_time_to_transition_depth(df,
+    #                                                                       transition_times,
+    #                                                                       transition_depths,
+    #                                                                       potential_steels_change_time_intervals)
 
 #    plt.figure(1)
 #    color_cyc = 'rgbcmk'
@@ -354,8 +354,7 @@ def test(acorr_filename=None):
             raise Exception
         h5_basename = '2380_NS92_82_9409_9409_6172_6172.h5'
         h5_basename = '2380_NS92_82_9518B_9518B_6172_6172.h5'
-        line_creek_acorr_folder = '/home/kkappler/.cache/datacloud/line_creek'
-        h5_basename = '885_NS92_82_9607T_9607T_6172_6172.h5'
+        h5_basename = '2380_NS92_82_9607T_9607T_6172_6172.h5'
         acorr_filename = os.path.join(line_creek_acorr_folder, h5_basename)
 #        acorr_filename = os.path.join('/home/kkappler', 'tmp', '20190518_RTA72000_PR004.h5')
 
