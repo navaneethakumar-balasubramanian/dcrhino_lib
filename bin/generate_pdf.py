@@ -6,6 +6,7 @@ from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.helpers.process_flow_helper import ProcessFlowHelper
 from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
 import argparse
+import pdb
 
 def generate_pdf(mine_name, env_config_path, process_flow_path):
     t0 = time.time()
@@ -27,11 +28,11 @@ def generate_pdf(mine_name, env_config_path, process_flow_path):
 
     latest_hole_folder_list = [x for x in df.output_folder_name if pf_id in x]
 
-    latest_pf_id_run = latest_hole_folder_list[0].split("/")[-1]
+    latest_pf_id_run = [x for x in latest_hole_folder_list[0].split("/") if pf_id in x][0]
 
     glob_path = os.path.join(process_path, "**", latest_pf_id_run, "*.png")
 
-
+    pdb.set_trace()
 
     imagelist = sorted(glob.glob(glob_path))
 
