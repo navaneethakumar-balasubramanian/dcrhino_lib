@@ -293,7 +293,7 @@ class ProcessFlow:
 
             acorr_trace = self.process(acorr_trace)
             return_dict["acorr_trace"] = acorr_trace
-            return_dict["process_json"] = process_json
+            return_dict["process_json"] = self.process_json
             return acorr_trace, self.process_json
 
     def merge_results(self,subsets):

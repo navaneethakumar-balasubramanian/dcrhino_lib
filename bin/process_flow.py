@@ -42,6 +42,7 @@ def process_glob(default_process_json,glob_str,env_config_path="env_config.json"
 
 
     process_flow = ProcessFlow()
+    process_json = default_process_json
     manager = multiprocessing.Manager()
     return_dict = manager.dict()
     files_list = glob2.glob(glob_str)
@@ -88,7 +89,7 @@ def process_glob(default_process_json,glob_str,env_config_path="env_config.json"
 
 
         elif '.h5' in os.path.splitext(ffile)[1]:
-            process_json = default_process_json
+
             if env_config.is_file_blacklisted(ffile) is False:
                 p = Process(target=process_flow.process_file,
                             args=(process_json, ffile, env_config, seconds_to_process,return_dict))
