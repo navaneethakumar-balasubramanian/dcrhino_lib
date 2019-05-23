@@ -14,11 +14,6 @@ def generate_pdf(mine_name, env_config_path, process_flow_path):
     pf_helper = ProcessFlowHelper(process_flow_path)
     process_path = envConfig.get_hole_h5_processed_cache_folder('bma')
     pf_id = pf_helper.id
-    pdf_path = os.path.join(process_path, "pdf", pf_id)
-    if not os.path.exists(pdf_path):
-        os.makedirs(pdf_path)
-
-
 
     env_config = EnvConfig()
     sqlconn = env_config.get_rhino_sql_connection_from_mine_name('bma')
@@ -30,9 +25,11 @@ def generate_pdf(mine_name, env_config_path, process_flow_path):
 
     latest_pf_id_run = [x for x in latest_hole_folder_list[0].split("/") if pf_id in x][0]
 
-    glob_path = os.path.join(process_path, "**", latest_pf_id_run, "*.png")
+    pdf_path = os.path.join(process_path, "pdf", latest_pf_id_run)
+    if not os.path.exists(pdf_path):
+        os.makedirs(pdf_path)
 
-    pdb.set_trace()
+    glob_path = os.path.join(process_path, "**", latest_pf_id_run, "*.png")
 
     imagelist = sorted(glob.glob(glob_path))
 
@@ -58,7 +55,7 @@ def generate_pdf(mine_name, env_config_path, process_flow_path):
         pdf.output(name, "F")
         part += 1
 
-    print("Done in {} seconds".format(round(time.time()-t0,2)))
+    print("Done in {} seconds".format(round(time.time()-t0, 2)))
 
 if __name__ == '__main__':
     use_argparse = True
