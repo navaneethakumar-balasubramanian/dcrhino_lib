@@ -362,10 +362,13 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
     installed_resonant_length = global_config.installed_resonant_length
 
     df = acorr_trace.dataframe
-
-    potential_steels_change_time_intervals = drill_stops(acorr_trace.dataframe,
-                                                         minimum_stop_duration=60.0,
-                                                         basically_zero_m=0.0007)
+    try:
+        mwd_granularity = acorr_trace.first_global_config.mwd_granularity
+        potential_steels_change_time_intervals = drill_stops_2(df, mwd_granularity)
+    except AttributeError:
+        print("No mwd spacing info!! -- ACORR MUST BE REGENERATED")
+        potential_steels_change_time_intervals = drill_stops(acorr_trace.dataframe,
+                                                         basically_zero_m=0.0017)
 
     transition_times, transition_depths = get_approximate_transitions(acorr_trace.dataframe,
                                                          installed_steels_length,
