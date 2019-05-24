@@ -54,7 +54,7 @@ def raw_trace_h5_to_db(h5_file_path,env_config,min_ts,max_ts,chunk_size=500):
         logger.warning("IGNORED THIS FILE: DUPLICATED")
         return
     else:
-        file_id = sql_db_helper.sensor_files.add(h5_file_path,global_config.rig_id,str(global_config.sensor_serial_number),str(global_config.digitizer_serial_number),int(min),int(max),json.dumps(vars(global_config), indent=4),1,status='valid')
+        file_id = sql_db_helper.sensor_files.add(h5_file_path,global_config.rig_id,str(global_config.sensor_serial_number),str(global_config.digitizer_serial_number),min_ts,max_ts,json.dumps(vars(global_config), indent=4),1,status='valid')
 
     return
     list_df = splitDataFrameIntoSmaller(l1h5_dataframe.reset_index(drop=True),chunk_size)
