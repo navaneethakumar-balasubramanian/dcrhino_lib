@@ -171,6 +171,8 @@ class RawTraceData(TraceData):
         output = component_array
         is_ide_file = not int(global_config.sensor_type) == 2 or global_config.rhino_version is None
 
+        if global_config.rhino_version == None:
+            global_config.rhino_version = 0
         return calibrate_data(component_array, sensitivity, float(global_config.accelerometer_max_voltage),
                               float(global_config.rhino_version), is_ide_file)
 

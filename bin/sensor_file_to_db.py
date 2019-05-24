@@ -254,5 +254,6 @@ if __name__ == '__main__':
                         h5f.close()
                         acorr_to_acorr_db(file, env_config, args.cpus)
 
-                except:
+                except Exception,e:
                     logger.warn("FAILED TO PROCESS FILE:" + str(file))
+                    print (e)
