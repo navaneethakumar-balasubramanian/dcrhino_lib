@@ -85,6 +85,7 @@ class Config( object ):
         self.tangential_reflection_coefficient=True
         self.tang_vel_del=True
         self.radial_amp=False
+        self.rhino_version = None
         # SET DEFAULT WINDOW WIDTHS
         #self.window_widths = "{\"axial\": {\"multiple_3\": 0.004, \"multiple_2\": 0.004, \"multiple_1\": 0.004, \"primary\": 0.004}, \"tangential\": {\"multiple_3\": 0.004, \"multiple_2\": 0.004, \"multiple_1\": 0.004, \"primary\": 0.004}}"
 

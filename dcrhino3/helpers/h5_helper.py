@@ -25,35 +25,36 @@ class H5Helper:
         load_xyz (boolean): true to load xyz data
     """
 
-    def __init__(self, h5f,load_xyz=True):
+    def __init__(self, h5f,load_xyz=True,load_ts=True):
         self.h5f = h5f
         self.metadata = self._extract_metadata_from_h5_file()
-        if "ts" in self.h5f.keys():
-            self._ts = np.asarray(self.h5f.get('ts'), dtype=np.float64)
-        else:
-            self._ts = np.asarray(self.h5f.get('timestamp'), dtype=np.float64)
+        if load_ts:
+            if "ts" in self.h5f.keys():
+                self._ts = np.asarray(self.h5f.get('ts'), dtype=np.float64)
+            else:
+                self._ts = np.asarray(self.h5f.get('timestamp'), dtype=np.float64)
 
-        if load_xyz:
-            self.data_xyz = self.load_xyz()
+            if load_xyz:
+                self.data_xyz = self.load_xyz()
 
-        # laptop_ts = self.h5f.get('laptop_ts')
-        # if laptop_ts is not None:
-        #     self.clock_ts = np.asarray(self.h5f.get('laptop_ts'))
-        #     self.min_ts = self.clock_ts.min()
-        #     self.max_ts = self.clock_ts.max()
-        # else:
-        #     self.clock_ts = None
-        #     self.min_ts = self._ts.min()
-        #     self.max_ts = self._ts.max()
-        self.clock_ts = None
-        self.min_ts = self._ts.min()
-        self.max_ts = self._ts.max()
+            # laptop_ts = self.h5f.get('laptop_ts')
+            # if laptop_ts is not None:
+            #     self.clock_ts = np.asarray(self.h5f.get('laptop_ts'))
+            #     self.min_ts = self.clock_ts.min()
+            #     self.max_ts = self.clock_ts.max()
+            # else:
+            #     self.clock_ts = None
+            #     self.min_ts = self._ts.min()
+            #     self.max_ts = self._ts.max()
+            self.clock_ts = None
+            self.min_ts = self._ts.min()
+            self.max_ts = self._ts.max()
 
-        self.max_dtime = datetime.utcfromtimestamp(int(self.max_ts))
-        self.min_dtime = datetime.utcfromtimestamp(int(self.min_ts))
+            self.max_dtime = datetime.utcfromtimestamp(int(self.max_ts))
+            self.min_dtime = datetime.utcfromtimestamp(int(self.min_ts))
 
-        self.sensitivity_xyz = self._get_sensitivity_xyz()
-        self.is_ide_file = self._is_ide_file()
+            self.sensitivity_xyz = self._get_sensitivity_xyz()
+            self.is_ide_file = self._is_ide_file()
         #pdb.set_trace()
 
 

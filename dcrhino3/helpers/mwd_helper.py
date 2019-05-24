@@ -83,6 +83,7 @@ class MWDHelper():
         
         """
         conn_dict = self.get_db_conn(mine_domain)
+
         client = Client(conn_dict['host'],user=conn_dict['username'],password=conn_dict['password'],database=conn_dict['database'],compression='lz4')
 
         datasets = self.get_dc_datasets_configs(mine_domain)

@@ -20,6 +20,12 @@ logger = init_logging(__name__)
 
 
 class RawTraceData(TraceData):
+    def load_config(self,path):
+        f1 = h5py.File(path, 'r+')
+        h5_helper = H5Helper(f1,False,False)
+        global_config = Config(h5_helper.metadata)
+        return global_config
+
     def load_from_h5(self,path):
         self.dataframe , global_config = self._cast_h5_to_dataframe(path)
         self._global_configs["0"] = global_config
@@ -68,7 +74,9 @@ class RawTraceData(TraceData):
         for component_id in global_config.components_to_process:
             component_index = global_config.component_index(component_id)
             temp_df[component_id] = data[component_index]
+
         ts_groups = temp_df.groupby('timestamp')
+
         groups_list = list(ts_groups.groups)
         num_traces = len(groups_list)
         output_dict = dict()
@@ -106,7 +114,7 @@ class RawTraceData(TraceData):
         output_df.index = output_df['timestamp']
         if filter_gaps:
             output_df = output_df[~output_df['timestamp'].isin(bad_timestamps)]
-        # pdb.set_trace()
+        # pdb.set_trace()yes
         return output_df, global_config
 
     def calibrate_l1h5(self,df,global_config):
@@ -171,6 +179,8 @@ class RawTraceData(TraceData):
         output = component_array
         is_ide_file = not int(global_config.sensor_type) == 2 or global_config.rhino_version is None
 
+        if global_config.rhino_version == None:
+            global_config.rhino_version = 0
         return calibrate_data(component_array, sensitivity, float(global_config.accelerometer_max_voltage),
                               float(global_config.rhino_version), is_ide_file)
 
