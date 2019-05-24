@@ -25,6 +25,7 @@ class RawTraceData(TraceData):
         h5_helper = H5Helper(f1,False,False)
         global_config = Config(h5_helper.metadata)
         return global_config
+
     def load_from_h5(self,path):
         self.dataframe , global_config = self._cast_h5_to_dataframe(path)
         self._global_configs["0"] = global_config

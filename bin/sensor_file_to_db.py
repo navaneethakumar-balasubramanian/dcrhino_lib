@@ -23,9 +23,10 @@ from multiprocessing import Process
 
 logger = init_logging(__name__)
 
-def raw_trace_h5_to_acorr_db(h5_file_path,env_config,cpus,chunk_size=500):
+def raw_trace_h5_to_db(h5_file_path,env_config,min_ts,max_ts,chunk_size=500):
     raw_trace_data = RawTraceData()
-    global_config,min , max = raw_trace_data.load_config(h5_file_path)
+    global_config = raw_trace_data.load_config(h5_file_path)
+
 
     #raw_trace_data.load_from_h5(h5_file_path)
     #l1h5_dataframe = raw_trace_data.dataframe
@@ -52,8 +53,8 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,cpus,chunk_size=500):
     if file_exists:
         logger.warning("IGNORED THIS FILE: DUPLICATED")
         return
-    else:
-        file_id = sql_db_helper.sensor_files.add(h5_file_path,global_config.rig_id,str(global_config.sensor_serial_number),str(global_config.digitizer_serial_number),int(min),int(max),json.dumps(vars(global_config), indent=4),1,status='valid')
+    #else:
+    #    file_id = sql_db_helper.sensor_files.add(h5_file_path,global_config.rig_id,str(global_config.sensor_serial_number),str(global_config.digitizer_serial_number),int(min),int(max),json.dumps(vars(global_config), indent=4),1,status='valid')
 
     return
     list_df = splitDataFrameIntoSmaller(l1h5_dataframe.reset_index(drop=True),chunk_size)
@@ -250,9 +251,13 @@ if __name__ == '__main__':
                 try:
                     logger.info("PROCESSING FILE:" + str(file))
                     h5f = h5py.File(file, 'r+')
+                    min_ts = sensor_file_manager.min_ts(h5f)
+                    max_ts = sensor_file_manager.max_ts(h5f)
+
+
                     if sensor_file_manager.is_h5_level0(h5f):
                         h5f.close()
-                        raw_trace_h5_to_acorr_db(file, env_config,args.cpus)
+                        raw_trace_h5_to_db(file, env_config,min_ts,max_ts)
                     else :
                         h5f.close()
                         acorr_to_acorr_db(file, env_config, args.cpus)
