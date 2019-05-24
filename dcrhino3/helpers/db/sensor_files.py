@@ -14,17 +14,39 @@ class SensorFiles(BaseDbModel):
         sql = f.read()
         return sql
 
-
-
-    def add(self,file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type):
-        sql = "INSERT INTO "+self.table_name+" (file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-        val = (file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type)
+    def set_status(self,sensor_file_id,status):
+        sql = "UPDATE " + self.table_name + " set status = (%s) where sensor_file_id = (%s)"
+        val = (status,sensor_file_id)
         try:
             cursor = self.conn.cursor()
-            cursor.execute(sql, val)
+            cursor.execute(sql,val)
             self.conn.commit()
             return cursor
         except mysql.connector.Error as err:
             print("Something went wrong: {}".format(err))
+        return False
+
+
+    def add(self,file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status):
+        sql = "INSERT INTO "+self.table_name+" (file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        val = (file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status)
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(sql, val)
+            self.conn.commit()
+            return cursor.lastrowid
+        except mysql.connector.Error as err:
+            print("Something went wrong: {}".format(err))
         return True
 
+
+    def relative_path_exists(self,path,status='valid'):
+        sql= "SELECT count(*) from " + self.table_name + " where file_path = '" + str(path) + "' and status = '" + status + "'"
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(sql)
+            result = cursor.fetchone()
+            return result != ['0']
+        except mysql.connector.Error as err:
+            print("Something went wrong: {}".format(err))
+        return False
