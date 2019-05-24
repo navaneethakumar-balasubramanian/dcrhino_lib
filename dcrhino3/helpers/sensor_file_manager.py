@@ -86,3 +86,18 @@ class SensorFileManager:
         if 'cticks' in h5f.keys():
             return True
         return False
+
+
+    def min_ts(self,h5f):
+        if 'ts' in h5f.keys():
+            return int(h5f['ts'][0])
+        elif 'timestamp' in h5f.keys():
+            return int(h5f['timestamp'][0])
+        return False
+
+    def max_ts(self,h5f):
+        if 'ts' in h5f.keys():
+            return int(h5f['ts'][-1])
+        elif 'timestamp' in h5f.keys():
+            return int(h5f['timestamp'][-1])
+        return False

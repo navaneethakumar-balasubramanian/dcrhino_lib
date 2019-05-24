@@ -22,10 +22,9 @@ logger = init_logging(__name__)
 class RawTraceData(TraceData):
     def load_config(self,path):
         f1 = h5py.File(path, 'r+')
-        h5_helper = H5Helper(f1)
+        h5_helper = H5Helper(f1,False,False)
         global_config = Config(h5_helper.metadata)
-        ts = h5_helper.ts.astype(np.int64)
-        return global_config, ts.min(),ts.max()
+        return global_config
     def load_from_h5(self,path):
         self.dataframe , global_config = self._cast_h5_to_dataframe(path)
         self._global_configs["0"] = global_config
