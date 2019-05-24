@@ -25,17 +25,19 @@ logger = init_logging(__name__)
 
 def raw_trace_h5_to_acorr_db(h5_file_path,env_config,cpus,chunk_size=500):
     raw_trace_data = RawTraceData()
-    raw_trace_data.load_from_h5(h5_file_path)
-    l1h5_dataframe = raw_trace_data.dataframe
+    global_config,min , max = raw_trace_data.load_config(h5_file_path)
 
-    global_config = raw_trace_data.global_config_by_index("0")
+    #raw_trace_data.load_from_h5(h5_file_path)
+    #l1h5_dataframe = raw_trace_data.dataframe
 
-    upsample_factor = 1.25
-    try:
-        print(global_config.upsample_factor)
-    except AttributeError:
-        logger.warning("this warning will be removed once the upsample factor is coming from the global cfg")
-        global_config.output_sampling_rate *= upsample_factor
+    #global_config = raw_trace_data.global_config_by_index("0")
+
+    #upsample_factor = 1.25
+    #try:
+    #    print(global_config.upsample_factor)
+    #except AttributeError:
+    #    logger.warning("this warning will be removed once the upsample factor is coming from the global cfg")
+    #    global_config.output_sampling_rate *= upsample_factor
 
     #db_helper = RhinoDBHelper('13.66.189.94',database='mont_wright')
     logger.info("Mine name on file:" + str(global_config.mine_name))
@@ -51,8 +53,9 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,cpus,chunk_size=500):
         logger.warning("IGNORED THIS FILE: DUPLICATED")
         return
     else:
-        file_id = sql_db_helper.sensor_files.add(h5_file_path,global_config.rig_id,str(global_config.sensor_serial_number),str(global_config.digitizer_serial_number),int(l1h5_dataframe['timestamp'].min()),int(l1h5_dataframe['timestamp'].max()),json.dumps(vars(global_config), indent=4),1,status='processing')
+        file_id = sql_db_helper.sensor_files.add(h5_file_path,global_config.rig_id,str(global_config.sensor_serial_number),str(global_config.digitizer_serial_number),int(min),int(max),json.dumps(vars(global_config), indent=4),1,status='valid')
 
+    return
     list_df = splitDataFrameIntoSmaller(l1h5_dataframe.reset_index(drop=True),chunk_size)
     p = False
     process_count = 0
