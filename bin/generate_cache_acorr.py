@@ -81,6 +81,8 @@ def generate_cache_acorr(mine_name, env_config_path=False,output_matches_csv=Fal
 
                 #pdb.set_trace()
                 acor_trace.dataframe = merger.merge_mwd_with_trace(hole_mwd,acor_trace)
+                #for key in acor_trace._global_configs
+                #acor_trace.first_global_config.mwd_granularity = np.median(np.diff(hole_mwd.depth))
                 acor_trace.save_to_h5(temp_h5_path)
                 try:
                     os.rename(temp_h5_path,h5_path)

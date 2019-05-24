@@ -128,7 +128,7 @@ def get_variable_steels_lengths(global_config):
     logger.critical("HACK ALERT!!! If you are seeing this message it means\
                     this is NOT production code")
     print("HACK LINE CREEK CREEK CREEK")
-    variable_steels_lengths = [15.24, 15.24]
+    #variable_steels_lengths = [15.24, 15.24]
     #</HACK FOR LINE CREEK>
     return variable_steels_lengths
 
@@ -392,6 +392,7 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
                                                                           transition_depths,
                                                                           potential_steels_change_time_intervals)
 
+
 #    plt.figure(1)
 #    color_cyc = 'rgbcmk'
 #    plt.plot(acorr_trace.dataframe.timestamp, acorr_trace.dataframe.depth)
@@ -418,6 +419,7 @@ def test(acorr_filename=None):
     if acorr_filename is None:
         try:
             from dcrhino3.unstable.karl_dev_util import line_creek_acorr_folder
+            from dcrhino3.unstable.karl_dev_util import bma_acorr_folder
         except ImportError:
             logger.error("you need to specify the path to an acorr file on your machine")
             raise Exception
@@ -425,10 +427,13 @@ def test(acorr_filename=None):
         h5_basename = '2380_NS92_82_9518B_9518B_6172_6172.h5'
         h5_basename = '2380_NS92_82_9607T_9607T_6172_6172.h5'
         acorr_filename = os.path.join(line_creek_acorr_folder, h5_basename)
+        h5_basename = 'GUS_DR:R06N:30:GUS:P04:B:T_285784_285784_6674_6674.h5'
+        acorr_filename = os.path.join(bma_acorr_folder, h5_basename)
 #        acorr_filename = os.path.join('/home/kkappler', 'tmp', '20190518_RTA72000_PR004.h5')
 
     acorr_trace = TraceData()
     acorr_trace.load_from_h5(acorr_filename)
+    pdb.set_trace()
     try:
         mwd_granularity = acorr_trace.first_global_config.mwd_granularity
     except AttributeError:
