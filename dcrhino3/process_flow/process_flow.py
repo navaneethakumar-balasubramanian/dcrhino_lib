@@ -239,7 +239,9 @@ class ProcessFlow:
         sub_dfs = [df[df.drill_string_resonant_length==x] for x in resonant_lengths]
         splits = [x.depth.max() for x in sub_dfs]
         splits.sort()
-        process_json['subsets'] = splits
+        if 'subsets' not in process_json.keys():
+            process_json['subsets'] = splits
+
         #</NEW>
 
         self.output_path = self.output_folder(acorr_trace,process_json,env_config)
@@ -248,6 +250,7 @@ class ProcessFlow:
             acorr_trace.dataframe = acorr_trace.dataframe[:seconds_to_process]
 
         splitted_subsets = self.split_subsets(process_json,process_json['subsets'],acorr_trace)
+        logger.info("Found " + str(len(splitted_subsets)) + " subsets")
         for i,subset in enumerate(splitted_subsets):
 
             self.set_process_flow(subset['process_json'],subset_index=i)
