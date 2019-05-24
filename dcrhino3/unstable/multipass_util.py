@@ -311,32 +311,35 @@ def reject_transitions_near_bottom_of_hole(max_depth, transition_times, transiti
             transition_depths_out.append(transition_depth)
     return transition_times_out, transition_depths_out
 
-
 def nearest_time_to_transition_depth(dataframe,
-                                     transition_times,
                                      transition_depths,
                                      potential_steels_change_time_intervals):
     """
-    this overwrites the theoretical transition time and depth with the
+    This overwrites the theoretical transition time and depth with the
     time-depth at the center of the nearest actual observed drill_stop
     status: in progress 23 May, 2019
     """
 
     # Make a List of Middle Drill Stoppage Intervals
-    steel_change_time= []
+    drill_stop_intervals= []
     for interval in potential_steels_change_time_intervals:
-        steel_change_time.append((interval.upper_bound + interval.lower_bound) / 2)
+        drill_stop_intervals.append((interval.upper_bound + interval.lower_bound) / 2)
 
-    # for t_depth in transition_depths:
-    #     n_array = np.array(dataframe)
-    #     transition_depth_row = [np.argmin(np.abs(t_depth - dataframe.depth))]
-    #     transition_depth_time = dataframe.timestamp[transition_depth_row]
-    #     closest_drill_stoppage_time = np.argmin(np.abs(steel_time_change_middle - transition_depth_time))
-
+    closest_drill_stop_times  = []
+    closest_drill_stop_depths = []
     for t_depth in transition_depths:
-        transition_depth_time = dataframe.timestamp[np.argmin(np.abs(t_depth - dataframe.depth))]
-        np.argmin(np.abs(steel_change_time-transition_depth_time)) #index of steep change time to use (or any sequence of times
+        transition_depth_row = dataframe.loc[np.argmin(np.abs(t_depth - dataframe.depth))]
+        # index of steel change time to use
+        closest_drill_stop_time = drill_stop_intervals[np.argmin(np.abs(drill_stop_intervals-transition_depth_row.timestamp))]
 
+        # Gather Depth Data from Time + Dataframe
+        closest_drill_stop_depth = dataframe.depth[np.argmin(np.abs(closest_drill_stop_time - dataframe.timestamp))]
+
+        closest_drill_stop_times.append(closest_drill_stop_time)
+        closest_drill_stop_depths.append(closest_drill_stop_depth)
+
+
+    return closest_drill_stop_times, closest_drill_stop_depths
 
 
 def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0):
@@ -385,10 +388,9 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
                                                     potential_steels_change_time_intervals,
                                                     all_steels_lengths)
 
-    #transition_times, transition_depths = nearest_time_to_transition_depth(df,
-    #                                                                       transition_times,
-    #                                                                       transition_depths,
-    #                                                                       potential_steels_change_time_intervals)
+    transition_times, transition_depths = nearest_time_to_transition_depth(df,
+                                                                          transition_depths,
+                                                                          potential_steels_change_time_intervals)
 
 #    plt.figure(1)
 #    color_cyc = 'rgbcmk'
@@ -408,6 +410,7 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
         df.loc[rows_to_update, 'drill_string_resonant_length'] = resonant_length
 
     return acorr_trace
+
 
 def test(acorr_filename=None):
     """
