@@ -2,7 +2,7 @@
 
 import argparse
 import pdb
-
+import sys
 import glob2
 import os
 import logging
@@ -114,4 +114,5 @@ if __name__ == '__main__':
                         print ("TYPE 2 " + str(file))
                         acorr_h5_to_db(file, env_config, min_ts, max_ts)
                 except:
+                    print("Unexpected error:", sys.exc_info()[0])
                     print ("Failed to open : " + str(file))
