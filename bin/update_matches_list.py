@@ -192,7 +192,7 @@ def get_matches_list(mine_name,env_config):
     merger = MWDRhinoMerger(files, mwd_df)
     matches = merger.observed_blasthole_catalog
     logger.info("Getting Matches List Conflicts")
-    matches['solution'], matches['solution_label'] = get_solution_arrays(matches, files)
+    #matches['solution'], matches['solution_label'] = get_solution_arrays(matches, files)
 
     return matches
 
@@ -207,6 +207,7 @@ def update_matches_list(mine_name,env_config):
     logger.info("Saving data to db")
     counter = 0
     for line in matches_list.iterrows():
+        counter +=1
         logger.info("Saving matches " + str(counter) + " of " + str(len(matches_list)))
         line = line[1]
         row_id = line.bench_name + line.pattern_name + line.hole_name + line.hole_id + line.rig_id+ line.sensor_id + line.digitizer_id
