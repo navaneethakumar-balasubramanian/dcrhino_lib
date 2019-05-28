@@ -122,7 +122,103 @@ class MWDRhinoMerger():
             dict_list[idx] = line
 
         files_holes_df = pd.DataFrame(dict_list)
+
+        files_holes_df['solution'], files_holes_df['solution_label'] = self.get_solution_arrays(files_holes_df, file_list)
         return files_holes_df
+
+    def _detect_conflicts(self,files_in_match):
+            conflict = False
+            for file_in_match in files_in_match.iterrows():
+                for file_in_match2 in files_in_match.iterrows():
+                    if (file_in_match[1]['min_ts'] > file_in_match2[1]['min_ts'] and file_in_match[1]['min_ts'] <
+                        file_in_match2[1]['max_ts']) or (
+                            file_in_match[1]['max_ts'] > file_in_match2[1]['min_ts'] and file_in_match[1]['max_ts'] <
+                            file_in_match2[1]['max_ts']):
+                        conflict = True
+            return conflict
+
+    def _detect_missing_ts(self,line,files_in_match):
+        ts_in_hole = np.arange(int(line[1]['start_time_min']),int(line[1]['start_time_max']),1)
+        ts_in_files = []
+        for file in files_in_match.iterrows():
+            ts_in_files.append( np.arange(int(file[1]['min_ts']),int(file[1]['max_ts']),1) )
+        ts_in_files = np.unique(np.concatenate(ts_in_files))
+        return np.setdiff1d(ts_in_hole,ts_in_files)
+
+    def _get_all_in_one_file(self,line, solution):
+        filtered_solution = []
+        for file_in_match in solution.iterrows():
+            if (file_in_match[1]['min_ts'] <= line[1]['start_time_min']) and (
+                    file_in_match[1]['max_ts'] >= line[1]['start_time_max']):
+                filtered_solution.append(file_in_match)
+        return filtered_solution
+
+    def _get_bigger(self,line, solution):
+        bigger = solution[0]
+        for file_in_match in solution:
+            bigger_ts = bigger[1]['max_ts'] - bigger[1]['min_ts']
+            file_in_match_ts = file_in_match[1]['max_ts'] - file_in_match[1]['min_ts']
+            if file_in_match_ts > bigger_ts:
+                bigger = file_in_match
+
+        return [bigger]
+
+    def _solve_conflict(self,line,files_in_match):
+        solution = files_in_match
+        solution = self._get_all_in_one_file(line,solution)
+        if len(solution) > 1:
+            solution = self._get_bigger(line,solution)
+        return solution
+
+    def get_solution_arrays(self,matches,files):
+        solution_array = []
+        solution_label_array = []
+        for line in matches.iterrows():
+            files_ids =  line[1]['files_ids']
+            splitted = np.asarray(files_ids.split(',')).astype(int)
+            files_in_match = files[files['sensor_file_id'].isin(splitted)]
+
+            solution = []
+            conflict = self._detect_conflicts(files_in_match)
+            missing_data = self._detect_missing_ts(line,files_in_match)
+
+            ts_in_file = int(line[1]['start_time_max']) - int(line[1]['start_time_min'])
+            missing_data_percentage = float(len(missing_data)/float(ts_in_file))*100
+            if missing_data_percentage > 10:
+                #print line[1]['hole_id'] + " MISSING DATA " +str(int(missing_data_percentage)) + "%"
+                solution_label_array.append("Missing data")
+                solution_array.append('')
+                #plot(files_in_match,line,solution)
+            elif conflict:
+                solution = self._solve_conflict(line,files_in_match)
+                solution_str = ''
+                for sol in solution:
+                    solution_str += str(sol[1].sensor_file_id) + ","
+                if len(solution_str)>1:
+                    solution_str = solution_str[:-1]
+
+                if len(solution) == 0 :
+                    #print line[1]['hole_id'] +" Unsolved Conflict"
+                    solution_label_array.append("Unsolved Conflict")
+                    solution_array.append(solution_str)
+                    #plot(files_in_match,line,solution)
+                elif len(solution) > 1:
+                    #solution = get_less_missings(line,solution)
+                    #print line[1]['hole_id'] +" Unsolved Conflict - Multiple Solutions"
+                    solution_label_array.append("Unsolved Conflict - Multiple Solutions")
+                    solution_array.append('')
+                    #plot(files_in_match,line,solution)
+                else:
+                    #print line[1]['hole_id'] +" Conflict Solved"
+                    solution_label_array.append("Conflict Solved")
+                    solution_array.append(solution_str)
+                    #plot(files_in_match,line,solution)
+            else :
+                #print line[1]['hole_id'] + ' Non Conflict'
+                solution_label_array.append("Non Conflict")
+                solution_array.append(files_ids)
+        return solution_array,solution_label_array
+
 
     def merge_mwd_with_trace(self,hole_mwd,trace_data):
         """

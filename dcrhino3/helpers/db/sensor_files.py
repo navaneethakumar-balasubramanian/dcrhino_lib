@@ -27,9 +27,9 @@ class SensorFiles(BaseDbModel):
         return False
 
 
-    def add(self,file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status):
-        sql = "INSERT INTO "+self.table_name+" (file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
-        val = (file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status)
+    def add(self,file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name):
+        sql = "INSERT INTO "+self.table_name+" (file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,%s)"
+        val = (file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name)
         try:
             cursor = self.conn.cursor()
             cursor.execute(sql, val)
@@ -39,9 +39,25 @@ class SensorFiles(BaseDbModel):
             print("Something went wrong: {}".format(err))
         return True
 
+    def file_name_exists(self,file_name,status=False):
+        if status:
+            sql= "SELECT count(*) from " + self.table_name + " where file_name = '" + str(file_name) + "' and status = '" + status + "'"
+        else:
+            sql = "SELECT count(*) from " + self.table_name + " where file_name = '" + str(file_name) + "'"
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(sql)
+            result = cursor.fetchone()
+            return result != ['0']
+        except mysql.connector.Error as err:
+            print("Something went wrong: {}".format(err))
+        return False
 
-    def relative_path_exists(self,path,status='valid'):
-        sql= "SELECT count(*) from " + self.table_name + " where file_path = '" + str(path) + "' and status = '" + status + "'"
+    def relative_path_exists(self,path,status=False):
+        if status:
+            sql= "SELECT count(*) from " + self.table_name + " where file_path = '" + str(path) + "' and status = '" + status + "'"
+        else:
+            sql = "SELECT count(*) from " + self.table_name + " where file_path = '" + str(path) + "'"
         try:
             cursor = self.conn.cursor()
             cursor.execute(sql)
