@@ -141,9 +141,11 @@ class MWDRhinoMerger():
 
     def _detect_missing_ts(self,line,files_in_match):
         ts_in_hole = np.arange(int(line[1]['start_time_min']),int(line[1]['start_time_max']),1)
-        ts_in_files = []
+        ts_in_files = [None]*len(files_in_match)
+        counter = 0
         for file in files_in_match.iterrows():
-            ts_in_files.append( np.arange(int(file[1]['min_ts']),int(file[1]['max_ts']),1) )
+            ts_in_files[counter] = np.arange(int(file[1]['min_ts']),int(file[1]['max_ts']),1)
+            counter +=1
         ts_in_files = np.unique(np.concatenate(ts_in_files))
         return np.setdiff1d(ts_in_hole,ts_in_files)
 
