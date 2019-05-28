@@ -188,8 +188,10 @@ def get_matches_list(mine_name,env_config):
     files.sensor_file_id = files.sensor_file_id.astype(int)
     files['id'] = files.sensor_file_id
 
+    logger.info("Getting Matches List")
     merger = MWDRhinoMerger(files, mwd_df)
     matches = merger.observed_blasthole_catalog
+    logger.info("Getting Matches List Conflicts")
     matches['solution'], matches['solution_label'] = get_solution_arrays(matches, files)
 
     return matches
@@ -202,9 +204,10 @@ def update_matches_list(mine_name,env_config):
 
 
     matches_list = get_matches_list(mine_name,env_config)
+    logger.info("Saving data to db")
     counter = 0
     for line in matches_list.iterrows():
-        print ("Saving matches " + str(counter) + " of " + str(len(matches_list)))
+        logger.info("Saving matches " + str(counter) + " of " + str(len(matches_list)))
         line = line[1]
         row_id = line.bench_name + line.pattern_name + line.hole_name + line.hole_id + line.rig_id+ line.sensor_id + line.digitizer_id
         hash_object = hashlib.md5(row_id)
