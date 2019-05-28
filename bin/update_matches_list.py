@@ -211,7 +211,7 @@ def update_matches_list(mine_name,env_config):
         logger.info("Saving matches " + str(counter) + " of " + str(len(matches_list)))
         line = line[1]
         row_id = line.bench_name + line.pattern_name + line.hole_name + line.hole_id + line.rig_id+ line.sensor_id + line.digitizer_id
-        hash_object = hashlib.md5(row_id)
+        hash_object = hashlib.md5(row_id.encode())
         hex_dig = hash_object.hexdigest()
         sql_db_helper.matches.add(hex_dig,line.files_ids,line.bench_name,line.pattern_name,line.hole_id,line.hole_name,line.rig_id,line.sensor_id,line.digitizer_id,line.start_time_max,line.start_time_min,line.solution,line.solution_label)
     return

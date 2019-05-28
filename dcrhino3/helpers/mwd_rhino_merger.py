@@ -175,7 +175,10 @@ class MWDRhinoMerger():
     def get_solution_arrays(self,matches,files):
         solution_array = []
         solution_label_array = []
+        counter = 0
         for line in matches.iterrows():
+            counter += 1
+            logger.info("Solving conflict " + str(counter) + " of " + str(len(matches)) )
             files_ids =  line[1]['files_ids']
             splitted = np.asarray(files_ids.split(',')).astype(int)
             files_in_match = files[files['sensor_file_id'].isin(splitted)]
