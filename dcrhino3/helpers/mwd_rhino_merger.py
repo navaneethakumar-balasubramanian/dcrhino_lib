@@ -20,17 +20,19 @@ class MWDRhinoMerger():
     """
     Merges MWD with trace data by demarcating timestamps, retrieving data, matching and merging.
     """
-    def __init__(self, file_list, mwd_dc_df):
+    def __init__(self, file_list, mwd_dc_df,generate=True):
         self.file_list = file_list
         self.mwd_dc_df = mwd_dc_df
 
-        self.pre_filtered_mwd = self._pre_filter_mwd()
+        if generate:
+            self.pre_filtered_mwd = self._pre_filter_mwd()
 
-        if len(self.pre_filtered_mwd) == 0:
-            logger.warn("Couldnt find any combination on this file_list and mwd, please check rig_ids and start_time")
-            return False
+            if len(self.pre_filtered_mwd) == 0:
+                logger.warn("Couldnt find any combination on this file_list and mwd, please check rig_ids and start_time")
+                return False
 
-        self.observed_blasthole_catalog = self._generate_matches_list()
+
+            self.observed_blasthole_catalog = self._generate_matches_list()
 
 
     def get_min_max_time(self,hole_id):
@@ -122,7 +124,7 @@ class MWDRhinoMerger():
             dict_list[idx] = line
 
         files_holes_df = pd.DataFrame(dict_list)
-
+        logger.info("Solving conflicts")
         files_holes_df['solution'], files_holes_df['solution_label'] = self.get_solution_arrays(files_holes_df, file_list)
         return files_holes_df
 
