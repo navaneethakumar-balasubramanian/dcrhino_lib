@@ -190,7 +190,12 @@ class MWDRhinoMerger():
             missing_data = self._detect_missing_ts(line,files_in_match)
 
             ts_in_file = int(line[1]['start_time_max']) - int(line[1]['start_time_min'])
-            missing_data_percentage = float(len(missing_data)/float(ts_in_file))*100
+
+            if ts_in_file > 0:
+                missing_data_percentage = float(len(missing_data) / float(ts_in_file)) * 100
+            else:
+                missing_data_percentage = 100
+
             if missing_data_percentage > 10:
                 #print line[1]['hole_id'] + " MISSING DATA " +str(int(missing_data_percentage)) + "%"
                 solution_label_array.append("Missing data")
