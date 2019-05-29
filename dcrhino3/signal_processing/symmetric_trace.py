@@ -21,6 +21,9 @@ logger = init_logging(__name__)
 
 class SymmetricTrace(object):
     """
+    .. :NOTE: 20190528: this would actually make a note bad base class for a TimeSeries, 
+    SymmetricTrace could then extend TimeSeries. to do this I would need:
+    - the t0 method to be overwritten 
     """
     def __init__(self, data, sampling_rate, **kwargs):
         #BaseTraceModule.__init__(self, json, output_path)
