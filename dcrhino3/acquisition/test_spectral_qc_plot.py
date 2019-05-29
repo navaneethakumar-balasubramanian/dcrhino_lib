@@ -25,7 +25,8 @@ home = os.path.expanduser("~/")
 
 def make_spectral_qc_plot(h5_helper, components_to_plot=['x', 'y'],
                           vmin=-5.0, vmax=0.0, header_frequency_band=[100.0,300.0],
-                          frequency_high_cut=1000.0, show_global_max=True, rhino_version=1.1, ide_file=False):
+                          frequency_high_cut=1000.0, show_global_max=True, rhino_version=1.1, ide_file=False,
+                          mask=None):
     """
     @TODO: @Natal: can we make trace_duration_in_seconds depend on
     h5_helper.metadata.trace_length; currently returns None
@@ -43,7 +44,7 @@ def make_spectral_qc_plot(h5_helper, components_to_plot=['x', 'y'],
     header_color_scheme['y'] = 'red'
     header_color_scheme['z'] = 'green'
     h5h = h5_helper
-    h5_basename = os.path.basename(h5_helper.h5f.filename)
+    h5_basename = os.path.basename(h5h.h5f.filename)
     meta_dict = h5_helper.metadata.metadata_to_dictionary()
     header_frequency_band_str = '{}-{}Hz'.format(header_frequency_band[0], header_frequency_band[1])
 
@@ -51,7 +52,12 @@ def make_spectral_qc_plot(h5_helper, components_to_plot=['x', 'y'],
     samples_per_second = float(h5h.metadata.output_sampling_rate)
     trace_duration_in_seconds = 1.0
     samples_per_trace = int(trace_duration_in_seconds * samples_per_second)
-    x_data, y_data, z_data = h5h.load_xyz()
+    if mask is None:
+        x_data, y_data, z_data = h5h.load_xyz()
+    else:
+        x_data = h5h.load_axis_mask("x", mask)
+        y_data = h5h.load_axis_mask("y", mask)
+        z_data = h5h.load_axis_mask("z", mask)
     x_data = calibrate_data(x_data, h5_helper._get_sensitivity_xyz()[0],
                             h5_helper.metadata.accelerometer_max_voltage,
                             rhino_version=rhino_version,
@@ -149,6 +155,7 @@ def make_spectral_qc_plot(h5_helper, components_to_plot=['x', 'y'],
         #plt.clim(vmin=vmin, vmax=vmax)
         ax[i_panel_index].set_title('component {}'.format(component_to_plot))
         ax[i_panel_index].set_ylabel('Frequecny [Hx]')
+        ax[i_panel_index].set_ylim(0,400)
         i_panel_index+=1
     ax[i_panel_index-1].set_xlabel('Trace index ({}[s])'.format(trace_duration_in_seconds))
 

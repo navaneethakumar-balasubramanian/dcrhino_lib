@@ -67,6 +67,12 @@ class H5Helper:
         """
         return [self.load_axis('x'), self.load_axis('y'), self.load_axis('z')]
 
+    def shift_time(self, time_offset=0):
+        self._ts += time_offset
+        del self.h5f["ts"]
+        self.h5f["ts"] = self._ts
+
+
     def load_axis(self,axis):
         """
         Load single axis as a Numpy array.
