@@ -429,6 +429,9 @@ def test(acorr_filename=None):
         h5_basename = '2380_NS92_82_9607T_9607T_6172_6172.h5'
         acorr_filename = os.path.join(line_creek_acorr_folder, h5_basename)
         h5_basename = 'GUS_DR:R06N:30:GUS:P04:B:T_285784_285784_6674_6674.h5'
+        h5_basename = 'P10_DR:R06N:29:GMS:P10:L:T_N366_286303_6674_6674.h5'
+        h5_basename = 'OB_DR:R14N:41:GMS:OB:A:T_B218_286780_6332_6332.h5'#OK
+        #h5_basename = 'P04_DR:R06N:30:GUS:P04:B:T_F185_285755_6674_6674.h5'
         acorr_filename = os.path.join(bma_acorr_folder, h5_basename)
 #        acorr_filename = os.path.join('/home/kkappler', 'tmp', '20190518_RTA72000_PR004.h5')
 
@@ -436,12 +439,12 @@ def test(acorr_filename=None):
     acorr_trace.load_from_h5(acorr_filename)
     pdb.set_trace()
     try:
-        mwd_granularity = acorr_trace.first_global_config.mwd_granularity
+        mwd_depth_spacing = acorr_trace.first_global_config.mwd_depth_spacing
     except AttributeError:
         print("HACK !!! -- ACORR MUST BE REGENERATED")
-        mwd_granularity = 0.2#m
+        mwd_depth_spacing = 0.2#m
     tmp1 = drill_stops(acorr_trace.dataframe, minimum_stop_duration=60.0, basically_zero_m=0.0017)
-    tmp2 = drill_stops_2(acorr_trace.dataframe, mwd_granularity)
+    tmp2 = drill_stops_2(acorr_trace.dataframe, mwd_depth_spacing)
     #pdb.set_trace()
     acorr_trace = update_acorr_with_resonance_info(acorr_trace)
 

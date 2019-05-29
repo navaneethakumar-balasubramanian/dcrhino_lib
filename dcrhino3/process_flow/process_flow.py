@@ -248,7 +248,7 @@ class ProcessFlow:
             acorr_trace.dataframe = acorr_trace.dataframe[:seconds_to_process]
         print("splits = {}".format(splits))
         splitted_subsets = self.split_subsets(process_json,process_json['subsets'],acorr_trace)
-        print("FOund {} subsets".format(len(splitted_subsets))
+        print("FOund {} subsets".format(len(splitted_subsets)))
         for i,subset in enumerate(splitted_subsets):
 
             self.set_process_flow(subset['process_json'],subset_index=i)
