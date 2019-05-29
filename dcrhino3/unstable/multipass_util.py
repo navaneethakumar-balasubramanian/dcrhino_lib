@@ -40,6 +40,7 @@ DRILL_STRING_COMPONENT_TYPES[3] = 'steel'
 DRILL_STRING_COMPONENT_TYPES[4] = 'saver sub'
 DRILL_STRING_COMPONENT_TYPES[5] = 'shock sub'
 DRILL_STRING_COMPONENT_TYPES[6] = 'other'
+DRILL_STRING_COMPONENT_TYPES[7] = 'rotary bit sub'
 
 DRILL_STRING_COMPONENT_INSTALLATIONS = {}
 DRILL_STRING_COMPONENT_INSTALLATIONS[-1] = 'not installed'
@@ -100,6 +101,7 @@ def get_installed_steels_length(global_config):
     """
     total_steels_length = 0.0
     for i_drill_string_component in range(1, NUM_DRILL_STRING_COMPONENTS_SUPPORTED+1):
+        print(i_drill_string_component)
         attribute_label = 'drill_string_component{}'.format(i_drill_string_component)
         attribute = global_config.__getattribute__(attribute_label)
         attributes_list = attribute.split(',')
@@ -356,6 +358,8 @@ def test(acorr_filename=None):
         h5_basename = '2380_NS92_82_9518B_9518B_6172_6172.h5'
         h5_basename = '2380_NS92_82_9607T_9607T_6172_6172.h5'
         acorr_filename = os.path.join(line_creek_acorr_folder, h5_basename)
+        #h5_basename = '544_E3-544-059_100_100_1558358269_PR006_S1025.h5'
+        #acorr_filename = os.path.join('/home/kkappler/.cache/datacloud/eastern_ridge/acorr/', h5_basename)
 #        acorr_filename = os.path.join('/home/kkappler', 'tmp', '20190518_RTA72000_PR004.h5')
 
     acorr_trace = TraceData()

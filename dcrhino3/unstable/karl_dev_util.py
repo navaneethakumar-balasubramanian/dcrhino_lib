@@ -30,6 +30,10 @@ mont_wright_processed_folder = os.path.join(dc_cache_path, 'mont_wright/processe
 line_creek_data_cache_path = os.path.join(dc_cache_path, 'line_creek')
 line_creek_acorr_folder = os.path.join(line_creek_data_cache_path, 'acorr')
 
+eastern_ridge_folder = os.path.join(dc_cache_path, 'eastern_ridge')
+eastern_ridge_acorr_folder = os.path.join(eastern_ridge_folder, 'acorr')
+eastern_processed_folder = os.path.join(eastern_ridge_folder, 'processed')
+
 
 
 def my_function():
