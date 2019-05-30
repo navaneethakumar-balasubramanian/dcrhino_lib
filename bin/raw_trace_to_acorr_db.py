@@ -11,13 +11,14 @@ import numpy as np
 
 from dcrhino3.models.traces.raw_trace import RawTraceData
 from dcrhino3.models.env_config import EnvConfig
-from dcrhino3.helpers.general_helper_functions import init_logging,splitDataFrameIntoSmaller
+from dcrhino3.helpers.general_helper_functions import init_logging, splitDataFrameIntoSmaller
 
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
 
 logger = init_logging(__name__)
 
-def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
+
+def raw_trace_h5_to_acorr_db(h5_file_path, env_config, filter, chunk_size=5000):
     raw_trace_data = RawTraceData()
     raw_trace_data.load_from_h5(h5_file_path)
     l1h5_dataframe = raw_trace_data.dataframe
@@ -55,7 +56,7 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
 
     json_str = json.dumps(vars(global_config), indent=4)
 
-    config = db_helper.create_new_acorr_file_conf(file_id,json_str)
+    config = db_helper.create_new_acorr_file_conf(file_id, json_str)
 
 
     list_df = splitDataFrameIntoSmaller(l1h5_dataframe.reset_index(drop=True),chunk_size)
@@ -63,9 +64,13 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
     for chunk in list_df:
         if len(chunk) > 0:
             calibrated_dataframe = raw_trace_data.calibrate_l1h5(chunk, global_config)
-	   
             resampled_dataframe = raw_trace_data.resample_l1h5(calibrated_dataframe, global_config)
-            autcorrelated_dataframe = raw_trace_data.autocorrelate_l1h5(resampled_dataframe, global_config)
+            if filter:
+                logger.info("Filtering Data")
+                filtered_dataframe = raw_trace_data.filter_l1h5(resampled_dataframe, global_config)
+                autcorrelated_dataframe = raw_trace_data.autocorrelate_l1h5(filtered_dataframe, global_config)
+            else:
+                autcorrelated_dataframe = raw_trace_data.autocorrelate_l1h5(resampled_dataframe, global_config)
             #pdb.set_trace()
             if 'axial' in calibrated_dataframe.columns:
                 calibrated_dataframe["max_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
@@ -166,23 +171,24 @@ if __name__ == '__main__':
     clickhouse_logger.setLevel(50)
     argparser = argparse.ArgumentParser(description="Copyright (c) 2018 DataCloud")
     argparser.add_argument('-env', '--env-file', help="ENV File Path", default=False)
+    argparser.add_argument('-filter', '--filter', help="Filter data before Acorr", default=False)
     argparser.add_argument("src_path", metavar="path", type=str,
     help="Path to files to be merged; enclose in quotes, accepts * as wildcard for directories or filenames")
     args = argparser.parse_args()
 
     env_config = EnvConfig(args.env_file)
     files = glob2.glob(args.src_path)
+    filter = args.filter == "True"
     
-    logger.info("Found " + str(len(files)) + " files" )
+    logger.info("Found " + str(len(files)) + " files")
 
     if not files:
-        print  'File does not exist: ' + args.src_path
+        print 'File does not exist: ' + args.src_path
     for file in files:
         if '.h5' in os.path.splitext(file)[1]:
             if env_config.is_file_blacklisted(file) is False:
                 try:
                     logger.info("PROCESSING FILE:" + str(file))
-                    raw_trace_h5_to_acorr_db(file, env_config)
-
+                    raw_trace_h5_to_acorr_db(file, env_config, filter)
                 except:
                     logger.warn("FAILED TO PROCESS FILE:" + str(file))
