@@ -16,6 +16,7 @@ from test_spectral_qc_plot import make_spectral_qc_plot
 from dcrhino3.helpers.h5_helper import H5Helper
 import shutil
 
+
 def main(args):
     debug = args.debug == "True"
     repeat = args.repeat_file
@@ -50,11 +51,7 @@ def main(args):
     time_offset = float(args.time_offset)
 
     t0 = datetime.now()
-    if args.sampling_rate is None:
-        print("NEED A RESAMPLE RATE")
-        return
-    else:
-        output_sampling_rate = int(args.sampling_rate)
+
     fname = args.source_path
     original_name = fname.split(".")[0]
 
@@ -128,6 +125,12 @@ def main(args):
         file_axis = [1, 2]
     else:
         file_axis = np.asarray(hf.get('axis'), dtype=np.int32)
+
+    if args.sampling_rate is None:
+        output_sampling_rate = metadata.output_sampling_rate
+        print ("Using metadata sampling rate of {}".format(output_sampling_rate))
+    else:
+        output_sampling_rate = int(args.sampling_rate)
 
     print(sensitivity)
     print(file_axis)
