@@ -25,34 +25,36 @@ define_obspy_trace_header()
 
 
 class ExportSEGYModule(BaseTraceModule):
-    def __init__(self, json, output_path,process_flow,order):
-        BaseTraceModule.__init__(self, json, output_path,process_flow,order)
+    def __init__(self, json, output_path, process_flow, order):
+        BaseTraceModule.__init__(self, json, output_path, process_flow, order)
         self.id = "export_segy"
-        self.output_to_file = False
+        # self.output_to_file = False
         self.stream = Stream()
 
     def process_trace_data(self, trace):
         # This function does not perform any operation on the trace data, it just generates a segy output
         # output_df = trace.dataframe.copy()
-
-        if len(np.unique(trace.dataframe['acorr_file_id'])) > 1:
-            m = "More than one config file identified while generating SEGY.  Using first config file"
-            logger.warning(m)
-            print(m)
+        if self.output_to_file:
+            if len(np.unique(trace.dataframe['acorr_file_id'])) > 1:
+                m = "More than one config file identified while generating SEGY.  Using first config file"
+                logger.warning(m)
+                print(m)
+            else:
+                m = "Only one config file identified while generating SEGY"
+                logger.info(m)
+            basename = os.path.basename(self.output_file_basepath(extension=""))
+            output_path = os.path.join(os.path.dirname(self.output_file_basepath(extension=".h5")),
+                                       "{}_{}.sgy".format(basename, self.generate_output_name(trace.applied_modules)))
+            self.global_config = trace.global_config_by_index(trace.dataframe['acorr_file_id'].values[0])
+            self.sampling_rate = self.get_sampling_rate(trace.applied_modules)
+            self.stream.stats = AttribDict()
+            self.stream.stats.textual_file_header = self.generate_textual_header()
+            self.stream.stats.binary_file_header = SEGYBinaryFileHeader()
+            trace.dataframe.apply(self.save_as_segy, axis=1)
+            self.stream.write(output_path, format="SEGY", data_encoding=1, byteorder=">",
+                              textual_header_encoding="ASCII")
         else:
-            m = "Only one config file identified while generating SEGY"
-            logger.info(m)
-        basename = os.path.basename(self.output_file_basepath(extension=""))
-        output_path = os.path.join(os.path.dirname(self.output_file_basepath(extension=".h5")),
-                                   "{}_{}.sgy".format(basename, self.generate_output_name(trace.applied_modules)))
-        self.global_config = trace.global_config_by_index(trace.dataframe['acorr_file_id'].values[0])
-        self.sampling_rate = self.get_sampling_rate(trace.applied_modules)
-        self.stream.stats = AttribDict()
-        self.stream.stats.textual_file_header = self.generate_textual_header()
-        self.stream.stats.binary_file_header = SEGYBinaryFileHeader()
-        trace.dataframe.apply(self.save_as_segy, axis=1)
-        self.stream.write(output_path, format="SEGY", data_encoding=1, byteorder=">",
-                          textual_header_encoding="ASCII")
+            logger.info("Skipping SEGY Generation")
         return trace
 
     def generate_output_name(self, applied_modules_list):
