@@ -59,6 +59,21 @@ from dcrhino3.unstable.multipass_util import update_acorr_with_resonance_info
 
 logger = init_logging(__name__)
 
+def get_depths_at_which_steels_change(df):
+    """
+    helper function to do with multipass stuff
+    """
+    resonant_lengths_array = df.drill_string_resonant_length.unique()
+    resonant_lengths = [x for x in resonant_lengths_array]
+    sub_dfs = [df[df.drill_string_resonant_length==x] for x in resonant_lengths]
+    splits = [x.depth.max() +0.0001 for x in sub_dfs]
+    #add a titch so that last split is after hole ... there should be N-1 splits where N is the number of sub_dfs
+    splits = splits[:-1]
+    splits.sort()
+    if len(splits) == 0:
+        splits = [1000,]
+    return splits
+
 
 class ProcessFlow:
     """
@@ -233,14 +248,7 @@ class ProcessFlow:
 
         #<NEW>
         acorr_trace = update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0)
-        resonant_lengths_array = acorr_trace.dataframe.drill_string_resonant_length.unique()
-        resonant_lengths = [x for x in resonant_lengths_array]
-        df = acorr_trace.dataframe
-        sub_dfs = [df[df.drill_string_resonant_length==x] for x in resonant_lengths]
-        splits = [x.depth.max() +0.0001 for x in sub_dfs]
-        #add a titch so that last split is after hole ... there should be N-1 splits where N is the number of sub_dfs
-        splits = splits[:-1]
-        splits.sort()
+        splits = get_depths_at_which_steels_change(acorr_trace.dataframe)
         process_json['subsets'] = splits
         #</NEW>
 
