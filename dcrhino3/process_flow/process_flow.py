@@ -237,7 +237,9 @@ class ProcessFlow:
         resonant_lengths = [x for x in resonant_lengths_array]
         df = acorr_trace.dataframe
         sub_dfs = [df[df.drill_string_resonant_length==x] for x in resonant_lengths]
-        splits = [x.depth.max() for x in sub_dfs]
+        splits = [x.depth.max() +0.0001 for x in sub_dfs]
+        #add a titch so that last split is after hole ... there should be N-1 splits where N is the number of sub_dfs
+        splits = splits[:-1]
         splits.sort()
         process_json['subsets'] = splits
         #</NEW>
@@ -254,19 +256,29 @@ class ProcessFlow:
             self.set_process_flow(subset['process_json'],subset_index=i)
 
             self.env_config = env_config
-            conn = env_config.get_rhino_db_connection_from_mine_name(subset['acorr_trace'].mine_name)
+            #<WHY IS THIS HERE?>
+            print("@Thiago: we need to change this for local processing" )
+            import socket
+            machine_id = socket.gethostname()
+            if machine_id=='thales4':
+                pass
+            else:
+                conn = env_config.get_rhino_db_connection_from_mine_name(subset['acorr_trace'].mine_name)
 
-            self.rhino_db_helper = RhinoDBHelper(conn=conn)
-            sql_conn = env_config.get_rhino_sql_connection_from_mine_name(subset['acorr_trace'].mine_name)
-            if sql_conn:
-                self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'], sql_conn['user'], sql_conn['password'],
-                                                       str(sql_conn['database']).lower())
-
+                self.rhino_db_helper = RhinoDBHelper(conn=conn)
+                sql_conn = env_config.get_rhino_sql_connection_from_mine_name(subset['acorr_trace'].mine_name)
+                if sql_conn:
+                    self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'], sql_conn['user'], sql_conn['password'],
+                                                           str(sql_conn['database']).lower())
+            #</WHY IS THIS HERE?>
+            #pdb.set_trace()
             subset['acorr_trace'] = self.process(subset['acorr_trace'],subset_index=i)
 
         acorr_trace , process_json =  self.merge_results(splitted_subsets)
         return_dict["acorr_trace"] = acorr_trace
         return_dict["process_json"] = process_json
+        print("HEY!!! are we using return_dict or are we returning the multiple acorr and json??")
+        print("lets make a decision on it and remove this cruft!!!!")
 
         acorr_trace.save_to_h5(os.path.join(self.output_path,'processed.h5'))
         acorr_trace.save_to_csv(os.path.join(self.output_path,'processed.csv'))

@@ -39,9 +39,13 @@ class DrillRig(object):
     DrillRig and DeployedRhinoOnDrillRig as separate entitites.  In the meantime
     we can think of this class as an InstrumentedDrillRig()
 
+    TODO: add drill_rig id ... is it available in the global config?? it shoudl be
+    -the installer should klnow hte drill id when installing
+
 
     """
     def __init__(self, field_config=None):
+        self.id = None
         self.drill_string_components = []
         self.field_config = field_config
         self.installed_steels = []

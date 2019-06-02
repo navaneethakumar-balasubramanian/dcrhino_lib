@@ -261,9 +261,7 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
         3. Place the 'actual' transition depth at the center of the drill stop
         nearest to the theoretical transition depth
     """
-    global_config = acorr_trace.first_global_config
     drill_rig = DrillRig(field_config=acorr_trace.first_global_config)
-    pdb.set_trace()
     installed_steels_length = drill_rig.installed_steels_length
     variable_steels_lengths = drill_rig.variable_steels_lengths
     all_steels_lengths = [installed_steels_length] + variable_steels_lengths
@@ -277,6 +275,8 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
         print("No mwd spacing info!! -- ACORR MUST BE REGENERATED")
         print("We need a way to handle this in the process_flow.json")
         print("@Thiago can you help with this?")
+        logger.warning("HELP, we need to write the mwd spacing on the json")
+
         potential_steels_change_time_intervals = drill_stops(acorr_trace.dataframe,
                                                              basically_zero_m=0.0017)
 
