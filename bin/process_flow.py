@@ -45,15 +45,11 @@ def process_glob(default_process_json,glob_str,env_config_path="env_config.json"
     env_config = EnvConfig(env_config_path)
     logger.info("Using env_config : {}".format(env_config_path))
 
-
-
     process_flow = ProcessFlow()
     manager = multiprocessing.Manager()
     return_dict = manager.dict()
     files_list = glob2.glob(glob_str)
 
-
-    seconds_to_process = seconds_to_process
     #seconds_to_process = 100
 
     if not files_list:
@@ -90,6 +86,7 @@ def process_glob(default_process_json,glob_str,env_config_path="env_config.json"
                     #p = Process(target=process_flow.process_file,
                     #            args=(process_json, file_path,
                     #                  env_config, seconds_to_process,return_dict))
+                    #pdb.set_trace()
                     qq, ww = process_flow.process_file(process_json, file_path, env_config=env_config,
                                               seconds_to_process = seconds_to_process,return_dict = dict())
                     #pdb.set_trace()

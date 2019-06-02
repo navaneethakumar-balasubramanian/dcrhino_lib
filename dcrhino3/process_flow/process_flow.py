@@ -202,6 +202,8 @@ class ProcessFlow:
             module = self.modules_flow[self.actual_module]
             t0 = time.time()
             logger.info("Applying " + str(module.id) + " with: " + str(module.args))
+            #if module.id == 'rhino_plotter':
+            #    pdb.set_trace()
             output_trace = module.process_trace(output_trace)
             delta_t = time.time() - t0
             logger.info("{} ran in {}s ".format(module.id, delta_t))
@@ -247,7 +249,12 @@ class ProcessFlow:
         acorr_trace.load_from_h5(acorr_h5_file_path)
 
         #<NEW>
-        acorr_trace = update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0)
+        #pdb.set_trace()
+        print("BAD BAD BAD!!! FIX THIS EMERGENCY HACK FOR BMA. FIELD CONFIG NEEDS VARAIBLE STEELS CORRECT ON DB" )
+        hack = qq=process_json['vars'][0]['hack_multipass_bma']
+        acorr_trace = update_acorr_with_resonance_info(acorr_trace,
+                                                       transition_depth_offset_m=-1.0,
+                                                       hack=hack)
         splits = get_depths_at_which_steels_change(acorr_trace.dataframe)
         process_json['subsets'] = splits
         #</NEW>
