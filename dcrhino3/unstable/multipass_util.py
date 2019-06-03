@@ -315,6 +315,7 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
 
     transition_times, transition_depths = nearest_time_to_transition_depth(df,
                                                                           transition_depths,
+                                                                          transition_times,
                                                                           potential_steels_change_time_intervals)
 
 
