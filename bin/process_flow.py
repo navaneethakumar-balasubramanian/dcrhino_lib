@@ -50,15 +50,12 @@ def process_glob(default_process_json, glob_str,
     return_dict = manager.dict()
     files_list = glob2.glob(glob_str)
 
-    #<WHAT ARE THE POSSIBLE FORMS OF files_list??>
-    #h5 and .txt or empty
     if not files_list:
         logger.warning('File does not exist: {}'.format(glob_str))
         return
     files_list = [x for x in files_list if not env_config.is_file_blacklisted(x)]
     for ffile in files_list:
         if ".txt" in ffile:
-            #pdb.set_trace()
             json_path = os.path.join(os.path.abspath('.'), 'process_flows')
             txt_folder_path = os.path.dirname(ffile)#see questionfor thiago in comments
             el_listo = handle_supplied_txt_file(ffile, json_path,
