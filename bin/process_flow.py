@@ -4,6 +4,13 @@
 Created on Fri Jan 25 11:44:16 2019
 
 @author: thiago
+
+Quesiton for TM:
+    1. Are we currently using .txt files with h5-file, json per row? i.e. is it OK if I leave it to fail with json for now
+    2. Is it ok If I assume the json files and the h5 files have full paths?
+    does that conflict with anything going on right now?
+    3. WHat is up with return dict, I cant get it to work with multiprocessing
+    4. Sheldon hack: Maybe add
 """
 
 ## HACK TO WORK ON SERVERS NON INTERACTIVE MODE
@@ -31,6 +38,7 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 import multiprocessing
 import pdb
 
+USE_MULTIPROCESSING = False
 
 logger = init_logging(__name__)
 def read_in_text_filelist(filename):
@@ -41,7 +49,32 @@ def read_in_text_filelist(filename):
     processes_in_file = [x for x in processes_in_file if len(x)>0]
     return processes_in_file
 
-def process_glob(default_process_json,glob_str,env_config_path="env_config.json", seconds_to_process=False):
+def parse_txt_list_of_h5_and_json(process_in_file, default_process_json):
+    """
+    The .txt file can be either a list of h5 files to process, OR it can
+    also be a list of files and process_json separated by a space.
+    This is the parser for those txt files after they have been read and
+    are a list of one line per element.
+    20190603: modified so that json is requires full path if given in .txt
+    """
+    #process_flow_dir = os.path.abspath(os.path.join(process_flow_path, '..'))
+    #logger.info("need to clean up the .txt option in process flow")
+    try:
+        process_in_file = process_in_file.strip()
+        hole, process_flow_json_filehandle = process_in_file.split(' ')
+    except ValueError:
+        hole = process_in_file
+        process_json = default_process_json
+    else:
+        #process_flow_path = os.path.join(process_flow_dir, process_flow_json_filehandle)
+        with open(process_flow_json_filehandle) as f:
+        #with open(process_flow_path) as f:
+            process_json = json.load(f)
+    return hole, process_json
+
+def process_glob(default_process_json, glob_str,
+                 env_config_path="env_config.json", seconds_to_process=False):
+
     env_config = EnvConfig(env_config_path)
     logger.info("Using env_config : {}".format(env_config_path))
 
@@ -50,50 +83,37 @@ def process_glob(default_process_json,glob_str,env_config_path="env_config.json"
     return_dict = manager.dict()
     files_list = glob2.glob(glob_str)
 
-    #seconds_to_process = 100
-
+    #<WHAT ARE THE POSSIBLE FORMS OF files_list??>
+    #h5 and .txt or empty
     if not files_list:
-        print  ('File does not exist: ' + glob_str)
+        logger.warning('File does not exist: {}'.format(glob_str))
+        return
+
     for ffile in files_list:
-
-        if ".txt" in os.path.splitext(ffile)[1]:
+        if env_config.is_file_blacklisted(ffile):
+            continue
+        if ".txt" in ffile:
             processes_in_file = read_in_text_filelist(ffile)
-            txt_folder_path = os.path.dirname(ffile)
+            txt_folder_path = os.path.dirname(ffile)#see questionfor thiago in comments
             for process_in_file in processes_in_file:
-                #<WHAT is going on in this logic?  Can we factor this out to a helper function>
-                #we need a hole, a file_path and a process_json
-                #also I'm not sure that we want to putting txt_folder_path on filepath!
-                logger.info("need to clean up the .txt option in process flow")
-                try:
-                    process_in_file = process_in_file.strip()
-                    hole, process_flow_json_filehandle = process_in_file.split(' ')
-                except ValueError:
-                    hole = process_in_file
-                    process_json = default_process_json
+                hole, process_json = parse_txt_list_of_h5_and_json(process_in_file,
+                                                                   default_process_json)
+                file_path = os.path.join(txt_folder_path, hole)#see questionfor thiago in comments
+                print('Processing ' + hole + ' using ' + process_json['id'])
+                if USE_MULTIPROCESSING:
+                    p = Process(target=process_flow.process_file,
+                                args=(process_json, file_path,
+                                     env_config, seconds_to_process,{}))
+                    p.start()
+                    p.join()
+                    #pdb.set_trace()
+                    process_json = return_dict["process_json"]
                 else:
-                    process_flow_path = os.path.join(process_flow_dir, process_flow_json_filehandle)
-                    with open(process_flow_path) as f:
-                        process_json = json.load(f)
-
-                file_path = os.path.join(txt_folder_path, hole)
-                #file_path = os.path.abspath(os.path.join(txt_folder_path, '..', hole)) #Using separate txt file folder
-                #</WHAT is going on in this logic?  Can we factor this out to a helper function>
-
-                #Lets clean up this logic!  hole !='', these are removed now ... so lets take the handler out of the code
-                #and make is so if its blacklist then continue! so we dont need another layer of indentation. sheesh!
-                if env_config.is_file_blacklisted(ffile) is False and hole != '':
-                    print('Processing ' + hole + ' using ' + process_json['id'])
-                    #p = Process(target=process_flow.process_file,
-                    #            args=(process_json, file_path,
-                    #                  env_config, seconds_to_process,return_dict))
-                    #pdb.set_trace()
-                    qq, ww = process_flow.process_file(process_json, file_path, env_config=env_config,
-                                              seconds_to_process = seconds_to_process,return_dict = dict())
-                    #pdb.set_trace()
-                    #p.start()
-                    #p.join()
-                    process_json = ww#return_dict["process_json"]
-
+                    qq, ww = process_flow.process_file(process_json, file_path,
+                                                       env_config=env_config,
+                                                       seconds_to_process=seconds_to_process,
+                                                       return_dict = dict())
+                    process_json = ww
 
         elif '.h5' in os.path.splitext(ffile)[1]:
             process_json = default_process_json
@@ -144,4 +164,4 @@ if __name__ == '__main__':
     with open(process_flow_path) as f:
         process_json = json.load(f)
 
-    process_glob(process_json,data_path,env_path,seconds_to_process)
+    process_glob(process_json, data_path, env_path, seconds_to_process)
