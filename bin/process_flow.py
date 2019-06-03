@@ -15,62 +15,29 @@ Quesiton for TM:
 
 ## HACK TO WORK ON SERVERS NON INTERACTIVE MODE
 import matplotlib
-#matplotlib.use('Agg')
-import matplotlib.rcsetup as rcsetup
-#print(rcsetup.all_backends)
-#matplotlib.use('TkCairo')
+import matplotlib.rcsetup as rcsetup # do we need this?
 matplotlib.use('TkAgg')
 
 import argparse
-import os
-
 import glob2
 import json
+import multiprocessing
+import os
 import pdb
 
 from multiprocessing import Process
 
+from dcrhino3.helpers.general_helper_functions import init_logging
+from dcrhino3.helpers.process_flow_helper_functions import handle_supplied_txt_file
+from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.process_flow.process_flow import ProcessFlow
 #from dcrhino3.process_flow.hole_selector import HoleSelector
 #from dcrhino3.models.trace_dataframe import TraceData
-from dcrhino3.models.env_config import EnvConfig
-from dcrhino3.helpers.general_helper_functions import init_logging
-import multiprocessing
-import pdb
 
-USE_MULTIPROCESSING = False
+USE_MULTIPROCESSING = True
 
 logger = init_logging(__name__)
-def read_in_text_filelist(filename):
-    f = open(filename, "r")
-    file_text = f.read()
-    f.close()
-    processes_in_file = file_text.split("\n")
-    processes_in_file = [x for x in processes_in_file if len(x)>0]
-    return processes_in_file
 
-def parse_txt_list_of_h5_and_json(process_in_file, default_process_json):
-    """
-    The .txt file can be either a list of h5 files to process, OR it can
-    also be a list of files and process_json separated by a space.
-    This is the parser for those txt files after they have been read and
-    are a list of one line per element.
-    20190603: modified so that json is requires full path if given in .txt
-    """
-    #process_flow_dir = os.path.abspath(os.path.join(process_flow_path, '..'))
-    #logger.info("need to clean up the .txt option in process flow")
-    try:
-        process_in_file = process_in_file.strip()
-        hole, process_flow_json_filehandle = process_in_file.split(' ')
-    except ValueError:
-        hole = process_in_file
-        process_json = default_process_json
-    else:
-        #process_flow_path = os.path.join(process_flow_dir, process_flow_json_filehandle)
-        with open(process_flow_json_filehandle) as f:
-        #with open(process_flow_path) as f:
-            process_json = json.load(f)
-    return hole, process_json
 
 def process_glob(default_process_json, glob_str,
                  env_config_path="env_config.json", seconds_to_process=False):
@@ -88,30 +55,31 @@ def process_glob(default_process_json, glob_str,
     if not files_list:
         logger.warning('File does not exist: {}'.format(glob_str))
         return
-
+    files_list = [x for x in files_list if not env_config.is_file_blacklisted(x)]
     for ffile in files_list:
-        if env_config.is_file_blacklisted(ffile):
-            continue
         if ".txt" in ffile:
-            #lets generate a list of h5 and json pairs
-            processes_in_file = read_in_text_filelist(ffile)
+            #pdb.set_trace()
+            json_path = os.path.join(os.path.abspath('.'), 'process_flows')
             txt_folder_path = os.path.dirname(ffile)#see questionfor thiago in comments
-            for process_in_file in processes_in_file:
-                hole, process_json = parse_txt_list_of_h5_and_json(process_in_file,
-                                                                   default_process_json)
-                file_path = os.path.join(txt_folder_path, hole)#see questionfor thiago in comments
-                print('Processing ' + hole + ' using ' + process_json['id'])
+            el_listo = handle_supplied_txt_file(ffile, json_path,
+                                                txt_folder_path,
+                                                default_process_json)
+
+            #lets generate a list of h5 and json pairs
+            for h5_json_pair in el_listo:
+                h5_file_path = h5_json_pair[0]
+                process_json = h5_json_pair[1]
+                print('Processing ' + h5_file_path + ' using ' + process_json['id'])
                 if USE_MULTIPROCESSING:
                     p = Process(target=process_flow.process_file,
-                                args=(process_json, file_path,
-                                     env_config, seconds_to_process,{}))
+                                args=(process_json, h5_file_path,
+                                     env_config, seconds_to_process,return_dict))
                     p.start()
                     p.join()
                     #pdb.set_trace()
                     process_json = return_dict["process_json"]
                 else:
-                    qq, ww = process_flow.process_file(process_json, file_path,
-                                                       env_config=env_config,
+                    qq, ww = process_flow.process_file(process_json, h5_file_path, env_config=env_config,
                                                        seconds_to_process=seconds_to_process,
                                                        return_dict = dict())
                     process_json = ww
