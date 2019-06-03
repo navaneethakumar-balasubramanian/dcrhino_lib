@@ -10,7 +10,7 @@ Quesiton for TM:
     2. Is it ok If I assume the json files and the h5 files have full paths?
     does that conflict with anything going on right now?
     3. WHat is up with return dict, I cant get it to work with multiprocessing
-    4. Sheldon hack: Maybe add
+
 """
 
 ## HACK TO WORK ON SERVERS NON INTERACTIVE MODE
@@ -93,6 +93,7 @@ def process_glob(default_process_json, glob_str,
         if env_config.is_file_blacklisted(ffile):
             continue
         if ".txt" in ffile:
+            #lets generate a list of h5 and json pairs
             processes_in_file = read_in_text_filelist(ffile)
             txt_folder_path = os.path.dirname(ffile)#see questionfor thiago in comments
             for process_in_file in processes_in_file:
@@ -117,12 +118,20 @@ def process_glob(default_process_json, glob_str,
 
         elif '.h5' in os.path.splitext(ffile)[1]:
             process_json = default_process_json
-            if env_config.is_file_blacklisted(ffile) is False:
+            if env_config.is_file_blacklisted(ffile):
+                continue
+            if USE_MULTIPROCESSING:
                 p = Process(target=process_flow.process_file,
                             args=(process_json, ffile, env_config, seconds_to_process,return_dict))
                 p.start()
                 p.join()
                 process_json = return_dict["process_json"]
+            else:
+                qq, ww = process_flow.process_file(process_json, ffile,
+                                                   env_config=env_config,
+                                                   seconds_to_process=seconds_to_process,
+                                                   return_dict = {})
+                process_json = ww
 
 
 if __name__ == '__main__':
