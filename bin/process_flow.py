@@ -18,6 +18,9 @@ import matplotlib
 import matplotlib.rcsetup as rcsetup # do we need this?
 matplotlib.use('TkAgg')
 
+
+
+from multiprocessing import Pool
 import argparse
 import glob2
 import json
@@ -34,13 +37,22 @@ from dcrhino3.process_flow.process_flow import ProcessFlow
 #from dcrhino3.process_flow.hole_selector import HoleSelector
 #from dcrhino3.models.trace_dataframe import TraceData
 
-USE_MULTIPROCESSING = True
+
+
 
 logger = init_logging(__name__)
 
 
+def process(list_of_args):
+    process_flow = list_of_args[0]
+    qq, ww = process_flow.process_file(list_of_args[1], list_of_args[2], env_config=list_of_args[3],
+                                       seconds_to_process=list_of_args[4],
+                                       return_dict=dict())
+
+
+
 def process_glob(default_process_json, glob_str,
-                 env_config_path="env_config.json", seconds_to_process=False):
+                 env_config_path="env_config.json", seconds_to_process=False,processes=4):
 
     env_config = EnvConfig(env_config_path)
     logger.info("Using env_config : {}".format(env_config_path))
@@ -49,6 +61,8 @@ def process_glob(default_process_json, glob_str,
     manager = multiprocessing.Manager()
     return_dict = manager.dict()
     files_list = glob2.glob(glob_str)
+
+    process_queue = []
 
     if not files_list:
         logger.warning('File does not exist: {}'.format(glob_str))
@@ -62,19 +76,23 @@ def process_glob(default_process_json, glob_str,
                                                 txt_folder_path,
                                                 default_process_json)
 
+
             #lets generate a list of h5 and json pairs
             for h5_json_pair in el_listo:
                 h5_file_path = h5_json_pair[0]
                 process_json = h5_json_pair[1]
                 print('Processing ' + h5_file_path + ' using ' + process_json['id'])
-                if USE_MULTIPROCESSING:
-                    p = Process(target=process_flow.process_file,
-                                args=(process_json, h5_file_path,
-                                     env_config, seconds_to_process,return_dict))
-                    p.start()
-                    p.join()
+
+                if processes is not False:
+                    temp = [process_flow,process_json, h5_file_path, env_config, seconds_to_process,return_dict]
+                    process_queue.append(temp)
+                    #p = Process(target=process_flow.process_file,
+                    #            args=(process_json, h5_file_path,
+                    #                 env_config, seconds_to_process,return_dict))
+                    #p.start()
+                    #p.join()
                     #pdb.set_trace()
-                    process_json = return_dict["process_json"]
+                    #process_json = return_dict["process_json"]
                 else:
                     qq, ww = process_flow.process_file(process_json, h5_file_path, env_config=env_config,
                                                        seconds_to_process=seconds_to_process,
@@ -85,18 +103,25 @@ def process_glob(default_process_json, glob_str,
             process_json = default_process_json
             if env_config.is_file_blacklisted(ffile):
                 continue
-            if USE_MULTIPROCESSING:
-                p = Process(target=process_flow.process_file,
-                            args=(process_json, ffile, env_config, seconds_to_process,return_dict))
-                p.start()
-                p.join()
-                process_json = return_dict["process_json"]
+            if processes is not False:
+                temp = [process_flow,process_json, ffile, env_config, seconds_to_process, return_dict]
+                process_queue.append(temp)
+                #p = Process(target=process_flow.process_file,
+                #            args=(process_json, ffile, env_config, seconds_to_process,return_dict))
+                #p.start()
+                #p.join()
+                #process_json = return_dict["process_json"]
             else:
                 qq, ww = process_flow.process_file(process_json, ffile,
                                                    env_config=env_config,
                                                    seconds_to_process=seconds_to_process,
                                                    return_dict = {})
                 process_json = ww
+
+    if processes is not False:
+        p = Pool(processes)
+        p.map(process, process_queue)
+
 
 
 if __name__ == '__main__':
@@ -106,6 +131,7 @@ if __name__ == '__main__':
         #argparser.add_argument('-f', '--flow-path', help="JSON File Path", required=True)
         argparser.add_argument('-f',   '--flow-path',  help="JSON File Path",             default = "./process_flows/v3.1_processing_flow.json")
         argparser.add_argument('-env', '--env-path',   help="ENV CONFIG File Path",       default="env_config.json")
+        argparser.add_argument('-mp', '--mp-processes', help="MULTIPROCESSING PROCESSES", default=False)
         argparser.add_argument('-tid', '--task-id',    help="Task ID",                    default=False)
         argparser.add_argument('-stp', '--seconds-to-process', help="Seconds to process", default=False)
 
@@ -117,6 +143,8 @@ if __name__ == '__main__':
         process_flow_dir = os.path.abspath(os.path.join(process_flow_path, '..'))  # Works as long as process flows in same loc
         data_path = args.data_path
         env_path = args.env_path
+        processes = args.mp_processes
+
 
         if args.seconds_to_process is not False:
             seconds_to_process = int(args.seconds_to_process)
@@ -129,6 +157,7 @@ if __name__ == '__main__':
         process_flow_path = os.path.join(process_flow_dir, process_flow_json_filehandle)
         #data_path = os.path.join(home, '.cache/datacloud/mont_wright/6585_5451_5451.h5')
         data_path = os.path.join(home, '.cache/datacloud/line_creek/885_NS92_82_9607T_9607T_6172_6172.h5')
+        processes = 4 ## SET IT TO FALSE TO PREVENT MULTIPROCESS OR SET TO ANOTHER NUMBER TO USE LESS OR MORE PROCESSES
 
         #txt_path = os.path.join(home, '.cache/datacloud/mont_wright/tjw_hole_selection.txt')
 
@@ -138,4 +167,4 @@ if __name__ == '__main__':
     with open(process_flow_path) as f:
         process_json = json.load(f)
 
-    process_glob(process_json, data_path, env_path, seconds_to_process)
+    process_glob(process_json, data_path, env_path, seconds_to_process,processes)
