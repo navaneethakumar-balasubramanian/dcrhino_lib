@@ -12,10 +12,7 @@ Quesiton for TM:
     3. WHat is up with return dict, I cant get it to work with multiprocessing
 
 """
-import os
-os.environ['MKL_NUM_THREADS'] = '1'
-os.environ['OPENBLAS_NUM_THREADS'] = '1'
-os.environ['OMP_NUM_THREADS'] = '1'
+
 
 ## HACK TO WORK ON SERVERS NON INTERACTIVE MODE
 import matplotlib
@@ -48,10 +45,13 @@ logger = init_logging(__name__)
 
 
 def process(list_of_args):
-    process_flow = list_of_args[0]
-    qq, ww = process_flow.process_file(list_of_args[1], list_of_args[2], env_config=list_of_args[3],
-                                       seconds_to_process=list_of_args[4],
-                                       return_dict=dict())
+    try:
+        process_flow = list_of_args[0]
+        qq, ww = process_flow.process_file(list_of_args[1], list_of_args[2], env_config=list_of_args[3],
+                                           seconds_to_process=list_of_args[4],
+                                           return_dict=dict())
+    except:
+        logger.warn("FAILED TO PROCESS THIS " + str(list_of_args[2]))
 
 
 
