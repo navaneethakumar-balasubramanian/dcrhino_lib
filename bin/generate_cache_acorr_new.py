@@ -53,24 +53,27 @@ def merge_mwd_with_trace(hole_mwd, trace_data, merger):
     return merged
 
 
-def load_raw_file(h5_file_path, timestamp_min, timestamp_max):
-    logger.info ("Loading raw file:" + h5_file_path + " from " + str(timestamp_min) + " to " + str(timestamp_max) + " total of " + str((int(timestamp_max) - int(timestamp_min))) + " traces")
+def load_raw_file(h5_file_path, timestamp_min, timestamp_max,config_str):
+    logger.info("Loading raw file:" + h5_file_path + " from " + str(timestamp_min) + " to " + str(
+        timestamp_max) + " total of " + str((int(timestamp_max) - int(timestamp_min))) + " traces")
     rtd = RawTraceData()
-    h5_file_path = "/home/thiago/Documents/Projects/deploy_mnt/" + h5_file_path
     f1 = h5py.File(h5_file_path, 'r+')
     h5_helper = H5Helper(f1, False, False)
-    global_config = Config(h5_helper.metadata)
+    #global_config = Config(h5_helper.metadata)
+    global_config = Config()
+    global_config.set_data_from_json(json.loads(config_str))
 
     raw_timestamp = np.asarray(h5_helper.h5f.get('ts'), dtype=np.float64)
-    mask = (raw_timestamp >= timestamp_min) & (raw_timestamp <= timestamp_max)
-
+    logger.info("LOADED TS")
+    mask = (raw_timestamp >= int(timestamp_min)) & (raw_timestamp <= int(timestamp_max))
+    logger.info("GENERATED MASK")
     first_true_idx = np.argmax(mask == True)
     inverted_mask = mask[::-1]
     last_true_idx = len(inverted_mask) - np.argmax(inverted_mask)
-
+    logger.info("LOADING DATA")
     data = [h5_helper.h5f.get('x')[first_true_idx:last_true_idx], h5_helper.h5f.get('y')[first_true_idx:last_true_idx],
             h5_helper.h5f.get('z')[first_true_idx:last_true_idx]]
-
+    logger.info("LOADED DATA")
     temp_df = pd.DataFrame()
     temp_df['timestamp'] = raw_timestamp[mask].astype(int)
     temp_df['raw_timestamp'] = raw_timestamp[mask]
@@ -99,16 +102,23 @@ def load_raw_file(h5_file_path, timestamp_min, timestamp_max):
         output_dict["rssi"][i_trace] = np.mean(group["rssi"])
         packets = len(group["rssi"])
         for component_id in global_config.components_to_process:
-            output_dict[component_id + "_trace"][i_trace] = np.array(group[component_id])
-
+            output_dict[component_id ][i_trace] = np.array(group[component_id])
+    f1.close()
     output_df = pd.DataFrame(output_dict)
     output_df["batt"] = np.nan
     output_df["temp"] = np.nan
     output_df["packets"] = packets
 
+
+    logger.info("CALIBRATING")
     calibrated_dataframe = rtd.calibrate_l1h5(output_df, global_config)
+    logger.info("CALIBRATED")
+    logger.info("RESAMPLING")
     resampled_dataframe = rtd.resample_l1h5(calibrated_dataframe, global_config)
+    logger.info("RESAMPLED")
+    logger.info("AUTOCORRELATING")
     autcorrelated_dataframe = rtd.autocorrelate_l1h5(resampled_dataframe, global_config)
+    logger.info("AUTOCORRELATED")
 
     if 'axial' in calibrated_dataframe.columns:
         calibrated_dataframe["max_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
@@ -190,11 +200,11 @@ def load_raw_file(h5_file_path, timestamp_min, timestamp_max):
     return autcorrelated_dataframe, global_config
 
 
-def load_acorr_file(h5_file_path, timestamp_min, timestamp_max):
+def load_acorr_file(h5_file_path, timestamp_min, timestamp_max,config_str):
     f1 = h5py.File(h5_file_path, 'r+')
     global_config_jsons = json.loads(f1.attrs['global_config_jsons'])
     global_config = Config()
-    global_config.set_data_from_json(json.loads(global_config_jsons['0']))
+    global_config.set_data_from_json(json.loads(config_str))
     timestamp_min = timestamp_min
     timestamp_max = timestamp_max
     timestamps = np.asarray(f1.get('timestamp'), dtype=np.float64)
@@ -235,13 +245,12 @@ def generate_cache_acorr(matches_line,files,mwd_df,mwd_helper):
     files_to_load = files[files['sensor_file_id'].astype(int).isin(files_ids_to_load)]
     td = TraceData()
     for file in files_to_load.iterrows():
-        print (file[1].min_ts, file[1].max_ts)
         if int(file[1].type) == 1:
             output_df, global_config = load_raw_file(file[1].file_path, matches_line.start_time_min,
-                                                     matches_line.start_time_max)
+                                                     matches_line.start_time_max,file[1].config_str)
         elif int(file[1].type) == 2:
             output_df, global_config = load_acorr_file(file[1].file_path, matches_line.start_time_min,
-                                                       matches_line.start_time_max)
+                                                       matches_line.start_time_max,file[1].config_str)
             # pdb.set_trace()
         file_id = file[1].sensor_file_id
         output_df['acorr_file_id'] = file_id
