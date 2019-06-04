@@ -22,72 +22,244 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 
 logger = init_logging(__name__)
 
+from dcrhino3.models.traces.raw_trace import RawTraceData
+from dcrhino3.models.config import Config
+from dcrhino3.helpers.h5_helper import H5Helper
+from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
+import h5py
+import json
+import os
+from dcrhino3.models.traces.raw_trace import RawTraceData
 
 
+def merge_mwd_with_trace(hole_mwd, trace_data, merger):
+    """
+    Concatenate (along columns) rhino traces and interpolated hole mwd data from
+    :func:`get_mwd_interpolated_by_second`
 
-def generate_cache_acorr(mine_name, env_config_path=False,output_matches_csv=False):
+    Parameters:
+        hole_mwd (Dataframe): hole mwd data
+        trace_data (Dataframe): trace data
 
-    envConfig = EnvConfig(env_config_path)
-    holes_cached_folder = envConfig.get_hole_h5_interpolated_cache_folder(mine_name)
+    Returns:
+        (DataFrame): dataframe combining the two dataframes' columns
+    """
+    rhino_traces_df = trace_data.dataframe
+    time_vector = pd.to_datetime(rhino_traces_df['timestamp'], unit='s')
+    # time_vector = *(rhino_traces_df['timestamp'].values).astype(np.int64)
 
-    conn = envConfig.get_rhino_db_connection_from_mine_name(mine_name)
-    mwd_helper = MWDHelper(envConfig)
-    logger.info("Generating cache for mine: " + str(mine_name))
-
-
-    #CFG_VERSION = 1 #we need to discuss cases when this could be different from 1
-
-    if conn is not False:
-        db_helper = RhinoDBHelper(conn=conn)
-        mwd_df = mwd_helper.get_rhino_mwd_from_mine_name(mine_name)
-        files = db_helper.get_files_list()
-        merger = MWDRhinoMerger(files,mwd_df)
-        matches = merger.observed_blasthole_catalog
-
-        if output_matches_csv:
-            matches.to_csv(output_matches_csv)
+    interpolated_hole_mwd = merger.get_mwd_interpolated_by_second(hole_mwd, time_vector)
+    merged = pd.concat([rhino_traces_df, interpolated_hole_mwd], axis=1)
+    return merged
 
 
-        #pdb.set_trace()
+def load_raw_file(h5_file_path, timestamp_min, timestamp_max):
+    logger.info ("Loading raw file:" + h5_file_path + " from " + str(timestamp_min) + " to " + str(timestamp_max) + " total of " + str((int(timestamp_max) - int(timestamp_min))) + " traces")
+    rtd = RawTraceData()
+    h5_file_path = "/home/thiago/Documents/Projects/deploy_mnt/" + h5_file_path
+    f1 = h5py.File(h5_file_path, 'r+')
+    h5_helper = H5Helper(f1, False, False)
+    global_config = Config(h5_helper.metadata)
 
-        for line in matches.itertuples():
+    raw_timestamp = np.asarray(h5_helper.h5f.get('ts'), dtype=np.float64)
+    mask = (raw_timestamp >= timestamp_min) & (raw_timestamp <= timestamp_max)
 
-            h5_filename = str(line.bench_name) + "_" + str(line.pattern_name) + "_" + str(line.hole_name) + "_" + str(line.hole_id)+"_"+str(line.sensor_id)+"_"+str(line.digitizer_id) + ".h5"
+    first_true_idx = np.argmax(mask == True)
+    inverted_mask = mask[::-1]
+    last_true_idx = len(inverted_mask) - np.argmax(inverted_mask)
+
+    data = [h5_helper.h5f.get('x')[first_true_idx:last_true_idx], h5_helper.h5f.get('y')[first_true_idx:last_true_idx],
+            h5_helper.h5f.get('z')[first_true_idx:last_true_idx]]
+
+    temp_df = pd.DataFrame()
+    temp_df['timestamp'] = raw_timestamp[mask].astype(int)
+    temp_df['raw_timestamp'] = raw_timestamp[mask]
+    temp_df["rssi"] = np.nan
+
+    for component_id in global_config.components_to_process:
+        component_index = global_config.component_index(component_id)
+        temp_df[component_id] = data[component_index]
+
+    ts_groups = temp_df.groupby('timestamp')
+
+    groups_list = list(ts_groups.groups)
+    num_traces = len(groups_list)
+
+    output_dict = dict()
+    output_dict['timestamp'] = np.asarray(groups_list)
+    output_dict['raw_timestamps'] = num_traces * [None]
+    output_dict['rssi'] = num_traces * [None]
+    output_dict['packets'] = num_traces * [None]
+    for component_id in global_config.components_to_process:
+        output_dict[component_id] = num_traces * [None]
+    for i_trace in range(num_traces):
+        group_id = groups_list[i_trace]
+        group = ts_groups.get_group(group_id)
+        output_dict['raw_timestamps'][i_trace] = np.array(group['raw_timestamp'])
+        output_dict["rssi"][i_trace] = np.mean(group["rssi"])
+        packets = len(group["rssi"])
+        for component_id in global_config.components_to_process:
+            output_dict[component_id + "_trace"][i_trace] = np.array(group[component_id])
+
+    output_df = pd.DataFrame(output_dict)
+    output_df["batt"] = np.nan
+    output_df["temp"] = np.nan
+    output_df["packets"] = packets
+
+    calibrated_dataframe = rtd.calibrate_l1h5(output_df, global_config)
+    resampled_dataframe = rtd.resample_l1h5(calibrated_dataframe, global_config)
+    autcorrelated_dataframe = rtd.autocorrelate_l1h5(resampled_dataframe, global_config)
+
+    if 'axial' in calibrated_dataframe.columns:
+        calibrated_dataframe["max_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
+            lambda x: np.max(x)))
+        calibrated_dataframe["min_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
+            lambda x: np.min(x)))
+    else:
+        calibrated_dataframe["max_axial_acceleration"] = 0
+        calibrated_dataframe["min_axial_acceleration"] = 0
+
+    if 'tangential' in calibrated_dataframe.columns:
+        calibrated_dataframe["max_tangential_acceleration"] = np.asarray(calibrated_dataframe[
+            "tangential"].apply(
+            lambda x: np.max(x)))
+        calibrated_dataframe["min_tangential_acceleration"] = np.asarray(calibrated_dataframe[
+            "tangential"].apply(
+            lambda x: np.min(x)))
+    else:
+        calibrated_dataframe["max_tangential_acceleration"] = 0
+        calibrated_dataframe["min_tangential_acceleration"] = 0
+
+    if 'radial' in calibrated_dataframe.columns:
+        calibrated_dataframe["max_radial_acceleration"] = np.asarray(calibrated_dataframe["radial"].apply(
+            lambda x: np.max(x)))
+        calibrated_dataframe["min_radial_acceleration"] = np.asarray(calibrated_dataframe["radial"].apply(
+            lambda x: np.min(x)))
+    else:
+        calibrated_dataframe["max_radial_acceleration"] = 0
+        calibrated_dataframe["min_radial_acceleration"] = 0
+
+    if 'radial' not in autcorrelated_dataframe.columns:
+        num_lines = autcorrelated_dataframe.shape[0]
+        len_line = len(autcorrelated_dataframe['axial'].values[0])
+        temp = [None] * num_lines
+        for i in range(num_lines):
+            temp[i] = [0] * len_line
+        autcorrelated_dataframe['radial'] = temp
+
+    if 'tangential' not in autcorrelated_dataframe.columns:
+        num_lines = autcorrelated_dataframe.shape[0]
+        len_line = len(autcorrelated_dataframe['axial'].values[0])
+        temp = [None] * num_lines
+        for i in range(num_lines):
+            temp[i] = [0] * len_line
+        autcorrelated_dataframe['tangential'] = temp
+
+    if 'rssi' not in autcorrelated_dataframe.columns:
+        num_lines = autcorrelated_dataframe.shape[0]
+        len_line = len(autcorrelated_dataframe['axial'].values[0])
+        temp = [None] * num_lines
+        for i in range(num_lines):
+            temp[i] = [0] * len_line
+        autcorrelated_dataframe['rssi'] = temp
+
+    if 'temp' not in autcorrelated_dataframe.columns:
+        num_lines = autcorrelated_dataframe.shape[0]
+        len_line = len(autcorrelated_dataframe['axial'].values[0])
+        temp = [None] * num_lines
+        for i in range(num_lines):
+            temp[i] = [0] * len_line
+        autcorrelated_dataframe['temp'] = temp
+
+    if 'batt' not in autcorrelated_dataframe.columns:
+        num_lines = autcorrelated_dataframe.shape[0]
+        len_line = len(autcorrelated_dataframe['axial'].values[0])
+        temp = [None] * num_lines
+        for i in range(num_lines):
+            temp[i] = [0] * len_line
+        autcorrelated_dataframe['batt'] = temp
+
+    if 'packets' not in autcorrelated_dataframe.columns:
+        num_lines = autcorrelated_dataframe.shape[0]
+        len_line = len(autcorrelated_dataframe['axial'].values[0])
+        temp = [None] * num_lines
+        for i in range(num_lines):
+            temp[i] = [0] * len_line
+        autcorrelated_dataframe['packets'] = temp
+
+    return autcorrelated_dataframe, global_config
 
 
-            h5_path = os.path.join(holes_cached_folder, h5_filename)
-            temp_h5_path = h5_path.replace(".h5","temp.h5")
-            acor_trace = TraceData()
+def load_acorr_file(h5_file_path, timestamp_min, timestamp_max):
+    f1 = h5py.File(h5_file_path, 'r+')
+    global_config_jsons = json.loads(f1.attrs['global_config_jsons'])
+    global_config = Config()
+    global_config.set_data_from_json(json.loads(global_config_jsons['0']))
+    timestamp_min = timestamp_min
+    timestamp_max = timestamp_max
+    timestamps = np.asarray(f1.get('timestamp'), dtype=np.float64)
+    mask = (timestamps >= timestamp_min) & (timestamps <= timestamp_max)
+    first_true_idx = np.argmax(mask == True)
+    inverted_mask = mask[::-1]
+    last_true_idx = len(inverted_mask) - np.argmax(inverted_mask)
+    h5f = f1
+    COMPONENT_IDS = ['axial', 'tangential', 'radial']
+    dict_for_df = {}
+    for component_id in COMPONENT_IDS:
+        try:
+            trace_label = '{}_trace'.format(component_id)
+            if trace_label in h5f.keys():
+                trace_data = h5f.get(trace_label)[first_true_idx:last_true_idx]
+                trace_data = np.asarray(trace_data)
+                trace_data = list(trace_data)
+                dict_for_df[trace_label] = trace_data
+        except KeyError:
+            logger.info('Skipping loading {} as it DNE'.format(trace_label))
+    # </load traces>
 
-            if os.path.exists(h5_path) and os.path.isfile(h5_path):
-                #acor_trace.load_from_h5(h5_path)
-                #pdb.set_trace()
-                logger.info("Already have this file :" + h5_path)
-            else:
-                print (line.bench_name,line.pattern_name,line.hole_name,line.hole_id)
-                hole_mwd = mwd_helper.get_hole_mwd_from_mine_mwd(mwd_df, line.bench_name,
-                                                                 line.pattern_name,line.hole_name,
-                                                                 line.hole_id)
-                files_ids = np.array(str(line.files_ids).split(','))
-                min_ts = int((hole_mwd['start_time'].astype(int)/1000000000).min())
-                max_ts = int((hole_mwd['start_time'].astype(int)/1000000000).max())
+    for key in h5f.keys():
+        if key[-9:] == 'ial_trace':  # skip traces
+            continue
+        data = h5f.get(key)[first_true_idx:last_true_idx]
+        dict_for_df[key] = np.asarray(data)
+    df = pd.DataFrame(dict_for_df)
 
-                try:
-                    acor_trace.load_from_db(db_helper, files_ids, min_ts, max_ts)
-                except:
-                    logger.warn("ERROR LOADING FILES IDS: " + ','.join(files_ids.astype(str)))
-                    continue;
+    return df, global_config
 
 
-                #pdb.set_trace()
-                acor_trace.dataframe = merger.merge_mwd_with_trace(hole_mwd,acor_trace)
-                acor_trace.save_to_h5(temp_h5_path)
-                try:
-                    os.rename(temp_h5_path,h5_path)
-                except:
-                    logger.error("Failed to rename " + str(temp_h5_path) + " to " + str(h5_path))
-                #reloaded_traces = TraceData()
-                #reloaded_traces.load_from_h5(temp)
+import pdb
+
+
+def generate_cache_acorr(matches_line,files,mwd_df,mwd_helper):
+    files_ids_to_load = np.array(matches_line.files_ids.split(',')).astype(int)
+    files_to_load = files[files['sensor_file_id'].astype(int).isin(files_ids_to_load)]
+    td = TraceData()
+    for file in files_to_load.iterrows():
+        print (file[1].min_ts, file[1].max_ts)
+        if int(file[1].type) == 1:
+            output_df, global_config = load_raw_file(file[1].file_path, matches_line.start_time_min,
+                                                     matches_line.start_time_max)
+        elif int(file[1].type) == 2:
+            output_df, global_config = load_acorr_file(file[1].file_path, matches_line.start_time_min,
+                                                       matches_line.start_time_max)
+            # pdb.set_trace()
+        file_id = file[1].sensor_file_id
+        output_df['acorr_file_id'] = file_id
+        td.dataframe = pd.concat([td.dataframe, output_df])
+
+        td._global_configs[str(file_id)] = global_config
+
+    td.dataframe = td.dataframe.sort_values('timestamp').reset_index().drop('index', 1)
+    hole_mwd = mwd_helper.get_hole_mwd_from_mine_mwd(mwd_df, matches_line.bench_name,
+                                                     matches_line.pattern_name, matches_line.hole_name,
+                                                     matches_line.hole_id)
+    td.dataframe = merge_mwd_with_trace(hole_mwd, td, merger)
+    return td
+
+def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper):
+    if line.solution_label == 'Non Conflict':
+        td = generate_cache_acorr(line,files_df,mwd_df,mwd_helper)
+        holes_cached_folder = env_config.get_hole_h5_interpolated_cache_folder(mine_name)
 
 
 if __name__ == '__main__':
@@ -103,4 +275,13 @@ if __name__ == '__main__':
     else:
         mine_name = ''
 
-    generate_cache_acorr(mine_name, env_config_path,args.matches_output_path)
+    env_config = EnvConfig()
+    mwd_helper = MWDHelper(env_config)
+    mwd_df = mwd_helper.get_rhino_mwd_from_mine_name(args.mine_name)
+    merger = MWDRhinoMerger(None,None,False)
+    sqlconn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
+    sql_db_helper = RhinoSqlHelper(host=sqlconn['host'], user=sqlconn['user'], passwd=sqlconn['password'],database=sqlconn['database'])
+    matches_df = sql_db_helper.matches.get_all()
+    files_df = sql_db_helper.sensor_files.get_all()
+    #generate_cache_acorr(mine_name, env_config_path,args.matches_output_path)
+    matches_df.apply(process_match_line, axis=1,args=(env_config,args.mine_name,files_df,mwd_df,mwd_helper))
