@@ -90,6 +90,11 @@ class RhinoPlotterModule(BaseModule):
                 else:
                     upper_num_ms = panel.upper_num_ms
 
+                if "lower_num_ms" not in panel._fields:
+                    lower_num_ms = -5
+                else:
+                    lower_num_ms = panel.lower_num_ms
+
                 if panel.component in self.components_to_process:
                     panel = Heatmap(trace_data=trace, component=panel.component,
                                         wavelet_windows_to_show=wavelet_windows_to_show ,curves=curves,manual_time_windows=manual_time_windows,upper_num_ms=upper_num_ms)
