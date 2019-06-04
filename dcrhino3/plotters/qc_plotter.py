@@ -18,7 +18,7 @@ class QCLogPlotter():
 
     def __init__(self, axial, tangential, radial, depth, plot_title,
                  sampling_rate, mult_pos, mult_win_label, plot_panel_comp,
-                 components_to_plot, normalize=True, lower_num_ms=-5.0,
+                 components_to_plot, normalize=True, lower_num_ms=-10.0,
                  upper_num_ms=30.0, dt_ms=5, plot_by_depth=True, transformed_args=None):
         """
         todo: replace output_sampling_rate with sampling_rate;
