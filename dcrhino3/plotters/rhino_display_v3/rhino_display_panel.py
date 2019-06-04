@@ -40,16 +40,18 @@ class RhinoDisplayPanel(object):
             return ax
         #pdb.set_trace()
         #print(curve.scale)
-        #
+
         if curve.scale == "current" or  curve.scale == "new":
             if curve.scale == "current":
                 ax1 = ax
             if curve.scale == "new":
                 ax1 = ax.twinx()
-            #ax1.set_ylabel(curve.label).set_color("k")
 
-            ax1.set_ylim(axis_lims_method_1(curve.data,'buffer'))
-            ax1.set_ylabel(curve.label)
+            try:
+                ax1.set_ylim(min(curve.y_limits), max(curve.y_limits))
+            except:
+                ax1.set_ylim(axis_lims_method_1(curve.data, 'buffer'))
+
             if curve.color is not None:
                 ax1.set_ylabel(curve.label).set_color(curve.color)
                 ax1.spines[curve.spine_side].set_color(curve.color)
@@ -170,6 +172,7 @@ class Curve(object):
         #self.x_axis = kwargs.get('x_axis', None)
         self.x_axis_label = kwargs.get('x_axis_label', 'depth')
         self.x_axis_values = kwargs.get('x_axis_values', None)
+        self.y_limits = kwargs.get('y_limits', None)
         self.color = kwargs.get('color', None)
         self.formula = kwargs.get('formula', None)
         self.label = kwargs.get('label', '')
