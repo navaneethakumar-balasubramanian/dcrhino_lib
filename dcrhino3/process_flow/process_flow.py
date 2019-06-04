@@ -9,6 +9,7 @@ import pdb
 import time
 import os
 import pandas as pd
+import socket
 
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
 from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
@@ -59,6 +60,22 @@ from dcrhino3.unstable.multipass_util import update_acorr_with_resonance_info
 
 logger = init_logging(__name__)
 
+def get_depths_at_which_steels_change(df):
+    """
+    helper function to do with multipass stuff
+    """
+    resonant_lengths_array = df.drill_string_resonant_length.unique()
+    resonant_lengths = [x for x in resonant_lengths_array]
+    sub_dfs = [df[df.drill_string_resonant_length==x] for x in resonant_lengths]
+    splits = [x.depth.max() +0.0001 for x in sub_dfs]
+    #add a titch so that last split is after hole ... there should be N-1 splits where N is the number of sub_dfs
+    splits = splits[:-1]
+    splits.sort()
+    if len(splits) == 0:
+        splits = [1000,]
+    return splits
+
+
 
 class ProcessFlow:
     """
@@ -69,7 +86,7 @@ class ProcessFlow:
         self.id = "process_flow"
         self.now = datetime.now()
         self.datetime_str = self.now.strftime("%Y%m%d-%H%M%S")
-
+        self.env_config = None
         self.modules = {
             "binning": BinningModule,
             "rhino_physics": RhinoPhysicsModule,
@@ -158,7 +175,19 @@ class ProcessFlow:
                 module._components_to_process = self.components_to_process
                 self.modules_flow.append(module)
 
+    def make_database_connection(self, mine_name):
+        machine_id = socket.gethostname()
+        if machine_id=='thales4':
+            pass
+        else:
+            conn = self.env_config.get_rhino_db_connection_from_mine_name(mine_name)
 
+            self.rhino_db_helper = RhinoDBHelper(conn=conn)
+            sql_conn = self.env_config.get_rhino_sql_connection_from_mine_name(mine_name)
+            if sql_conn:
+                self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'], sql_conn['user'], sql_conn['password'],
+                                                       str(sql_conn['database']).lower())
+        return
 
     def process(self, trace_data,subset_index=False):
 
@@ -187,6 +216,8 @@ class ProcessFlow:
             module = self.modules_flow[self.actual_module]
             t0 = time.time()
             logger.info("Applying " + str(module.id) + " with: " + str(module.args))
+            #if module.id == 'rhino_plotter':
+            #    pdb.set_trace()
             output_trace = module.process_trace(output_trace)
             delta_t = time.time() - t0
             logger.info("{} ran in {}s ".format(module.id, delta_t))
@@ -232,15 +263,15 @@ class ProcessFlow:
         acorr_trace.load_from_h5(acorr_h5_file_path)
 
         #<NEW>
-        acorr_trace = update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0)
-        resonant_lengths_array = acorr_trace.dataframe.drill_string_resonant_length.unique()
-        resonant_lengths = [x for x in resonant_lengths_array]
-        df = acorr_trace.dataframe
-        sub_dfs = [df[df.drill_string_resonant_length==x] for x in resonant_lengths]
-        splits = [x.depth.max() +0.0001 for x in sub_dfs]
-        #add a titch so that last split is after hole ... there should be N-1 splits where N is the number of sub_dfs
-        splits = splits[:-1]
-        splits.sort()
+        print("EMERGENCY HACK FOR BMA. FIELD CONFIG NEEDS VARAIBLE STEELS CORRECT ON DB" )
+        try:
+            hack = process_json['vars'][0]['hack_multipass_bma']
+        except KeyError:
+            hack = False
+        acorr_trace = update_acorr_with_resonance_info(acorr_trace,
+                                                       transition_depth_offset_m=-1.0,
+                                                       hack=hack)
+        splits = get_depths_at_which_steels_change(acorr_trace.dataframe)
         process_json['subsets'] = splits
         #</NEW>
 
@@ -250,35 +281,18 @@ class ProcessFlow:
             acorr_trace.dataframe = acorr_trace.dataframe[:seconds_to_process]
         print("splits = {}".format(splits))
         splitted_subsets = self.split_subsets(process_json,process_json['subsets'],acorr_trace)
-        print("FOund {} subsets".format(len(splitted_subsets)))
+        print("FOund {} subsets".format(len(splitted_subsets))  )
+
         for i,subset in enumerate(splitted_subsets):
 
             self.set_process_flow(subset['process_json'],subset_index=i)
-
             self.env_config = env_config
-            #<WHY IS THIS HERE?>
-            print("@Thiago: we need to change this for local processing" )
-            import socket
-            machine_id = socket.gethostname()
-            if machine_id=='thales4':
-                pass
-            else:
-                conn = env_config.get_rhino_db_connection_from_mine_name(subset['acorr_trace'].mine_name)
-
-                self.rhino_db_helper = RhinoDBHelper(conn=conn)
-                sql_conn = env_config.get_rhino_sql_connection_from_mine_name(subset['acorr_trace'].mine_name)
-                if sql_conn:
-                    self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'], sql_conn['user'], sql_conn['password'],
-                                                           str(sql_conn['database']).lower())
-            #</WHY IS THIS HERE?>
-            #pdb.set_trace()
+            self.make_database_connection(subset['acorr_trace'].mine_name)
             subset['acorr_trace'] = self.process(subset['acorr_trace'],subset_index=i)
 
         acorr_trace , process_json =  self.merge_results(splitted_subsets)
         return_dict["acorr_trace"] = acorr_trace
         return_dict["process_json"] = process_json
-        print("HEY!!! are we using return_dict or are we returning the multiple acorr and json??")
-        print("lets make a decision on it and remove this cruft!!!!")
 
         acorr_trace.save_to_h5(os.path.join(self.output_path,'processed.h5'))
         acorr_trace.save_to_csv(os.path.join(self.output_path,'processed.csv'))

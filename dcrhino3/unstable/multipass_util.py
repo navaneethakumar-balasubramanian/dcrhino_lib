@@ -180,7 +180,7 @@ def reject_transitions_far_from_drill_stops(transition_times,
                                             potential_steels_change_time_intervals,
                                             all_steels_lengths):
     """
-    if there is no drill stop within a quarter steel of the transition depth
+    if there is no drill stop within a half steel of the transition depth
     then its a bogus transition
     """
     transition_times_out = []
@@ -188,7 +188,7 @@ def reject_transitions_far_from_drill_stops(transition_times,
     for i in range(len(transition_depths)):
         legit = False
         transition_depth = transition_depths[i]
-        quarter_steel = all_steels_lengths[i]/4.0
+        quarter_steel = all_steels_lengths[i]/2.0
         for ivl in potential_steels_change_time_intervals:
             distance_to_drill_stop = np.abs(transition_depth - ivl.depth)
             if distance_to_drill_stop < quarter_steel:
@@ -218,7 +218,8 @@ def reject_transitions_near_bottom_of_hole(max_depth, transition_times, transiti
     return transition_times_out, transition_depths_out
 
 def nearest_time_to_transition_depth(dataframe,
-                                     transition_depths,
+                                     approximate_transition_depths,
+                                     approximate_transition_times,
                                      potential_steels_change_time_intervals):
     """
     This overwrites the theoretical transition time and depth with the
@@ -227,16 +228,25 @@ def nearest_time_to_transition_depth(dataframe,
     """
 
     # Make a List of Middle Drill Stoppage Intervals
-    drill_stop_intervals= []
+    drill_stop_interval_center_times = [] #calculated from data
     for interval in potential_steels_change_time_intervals:
-        drill_stop_intervals.append((interval.upper_bound + interval.lower_bound) / 2)
+        drill_stop_interval_center_times.append((interval.upper_bound + interval.lower_bound) / 2)
 
     closest_drill_stop_times  = []
     closest_drill_stop_depths = []
-    for t_depth in transition_depths:
-        transition_depth_row = dataframe.loc[np.argmin(np.abs(t_depth - dataframe.depth))]
+    #pdb.set_trace()
+    for i, approximate_transition_depth in enumerate(approximate_transition_depths):
+        approximate_time = approximate_transition_times[i]
+        #need to find the closest drill stop BEFORE the depth
+        candidate_times = [x for x in drill_stop_interval_center_times if x < approximate_time]
+        if len(candidate_times) == 0:
+            logger.warning("no candidate times are earlier than theoretical time")
+            candidate_times = drill_stop_interval_center_times
+        approximate_transition_depth_index = np.argmin(np.abs(approximate_transition_depth - dataframe.depth))
+        approximate_transition_depth_row = dataframe.loc[approximate_transition_depth_index]
+        delta_times = candidate_times - approximate_transition_depth_row.timestamp
         # index of steel change time to use
-        closest_drill_stop_time = drill_stop_intervals[np.argmin(np.abs(drill_stop_intervals-transition_depth_row.timestamp))]
+        closest_drill_stop_time = drill_stop_interval_center_times[np.argmin(np.abs(delta_times))]
 
         # Gather Depth Data from Time + Dataframe
         closest_drill_stop_depth = dataframe.depth[np.argmin(np.abs(closest_drill_stop_time - dataframe.timestamp))]
@@ -248,7 +258,7 @@ def nearest_time_to_transition_depth(dataframe,
     return closest_drill_stop_times, closest_drill_stop_depths
 
 
-def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0):
+def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0, hack=False):
     """
     acorr_trace is of type dcrhino3.models.trace_dataframe.TraceData()
 
@@ -261,11 +271,19 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
         3. Place the 'actual' transition depth at the center of the drill stop
         nearest to the theoretical transition depth
     """
-    drill_rig = DrillRig(field_config=acorr_trace.first_global_config)
-    installed_steels_length = drill_rig.installed_steels_length
-    variable_steels_lengths = drill_rig.variable_steels_lengths
-    all_steels_lengths = [installed_steels_length] + variable_steels_lengths
-    installed_resonant_length = drill_rig.installed_resonant_length
+    if hack:
+        print("hack" )
+        logger.critical("HACJ HACK HACK HACK ALERT!!! BAD BAD NAUGHTY!!!")
+        installed_steels_length = 12.8
+        variable_steels_lengths = [12.8, 12.8, 12.8]
+        installed_resonant_length = 15.39999
+        all_steels_lengths = [installed_steels_length] + variable_steels_lengths
+    else:
+        drill_rig = DrillRig(field_config=acorr_trace.first_global_config)
+        installed_steels_length = drill_rig.installed_steels_length
+        variable_steels_lengths = drill_rig.variable_steels_lengths
+        all_steels_lengths = [installed_steels_length] + variable_steels_lengths
+        installed_resonant_length = drill_rig.installed_resonant_length
 
     df = acorr_trace.dataframe
     try:
@@ -279,7 +297,7 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
 
         potential_steels_change_time_intervals = drill_stops(acorr_trace.dataframe,
                                                              basically_zero_m=0.0017)
-
+    #pdb.set_trace()
     transition_times, transition_depths = get_approximate_transitions(acorr_trace.dataframe,
                                                          installed_steels_length,
                                                          variable_steels_lengths,
@@ -297,6 +315,7 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
 
     transition_times, transition_depths = nearest_time_to_transition_depth(df,
                                                                           transition_depths,
+                                                                          transition_times,
                                                                           potential_steels_change_time_intervals)
 
 
