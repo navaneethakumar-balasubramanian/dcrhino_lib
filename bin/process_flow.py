@@ -13,7 +13,10 @@ Quesiton for TM:
 
 """
 
-
+import os
+os.environ['MKL_NUM_THREADS'] = '1'
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
+os.environ['OMP_NUM_THREADS'] = '1'
 ## HACK TO WORK ON SERVERS NON INTERACTIVE MODE
 import matplotlib
 import matplotlib.rcsetup as rcsetup # do we need this?
