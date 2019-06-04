@@ -14,3 +14,7 @@ bin/scratch
 *.csv#
 
 bin/test\.py
+
+bin/\.ipynb_checkpoints/
+
+\.ipynb_checkpoints/
