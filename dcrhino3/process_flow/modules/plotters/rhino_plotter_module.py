@@ -97,7 +97,9 @@ class RhinoPlotterModule(BaseModule):
 
                 if panel.component in self.components_to_process:
                     panel = Heatmap(trace_data=trace, component=panel.component,
-                                        wavelet_windows_to_show=wavelet_windows_to_show ,curves=curves,manual_time_windows=manual_time_windows,upper_num_ms=upper_num_ms)
+                                        wavelet_windows_to_show=wavelet_windows_to_show
+                                        ,curves=curves, manual_time_windows=manual_time_windows,
+                                        upper_num_ms=upper_num_ms, lower_num_ms=lower_num_ms)
                     panels.append(panel)
                 else:
                     logger.warn("Ignored heatmap panel, this component is not on components_to_process " + str(panel.component))
