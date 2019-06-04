@@ -12,6 +12,9 @@ Quesiton for TM:
     3. WHat is up with return dict, I cant get it to work with multiprocessing
 
 """
+import os
+os.environ['MKL_NUM_THREADS'] = '1'
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
 
 ## HACK TO WORK ON SERVERS NON INTERACTIVE MODE
 import matplotlib
