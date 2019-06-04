@@ -34,7 +34,7 @@ import pdb
 
 from multiprocessing import Process
 
-from dcrhino3.helpers.general_helper_functions import init_logging
+from dcrhino3.helpers.general_helper_functions import init_logging,init_logging_to_file
 from dcrhino3.helpers.process_flow_helper_functions import handle_supplied_txt_file
 from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.process_flow.process_flow import ProcessFlow
@@ -45,6 +45,7 @@ from dcrhino3.process_flow.process_flow import ProcessFlow
 
 
 logger = init_logging(__name__)
+file_logger = init_logging_to_file(__name__)
 
 
 def process(list_of_args):
@@ -55,6 +56,7 @@ def process(list_of_args):
                                            return_dict=dict())
     except:
         logger.warn("FAILED TO PROCESS THIS " + str(list_of_args[2]))
+        file_logger.warn("FAILED TO PROCESS THIS " + str(list_of_args[2]))
 
 
 
