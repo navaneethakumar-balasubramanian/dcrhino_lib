@@ -52,7 +52,7 @@ def process(list_of_args):
 
 
 def process_glob(default_process_json, glob_str,
-                 env_config_path="env_config.json", seconds_to_process=False,processes=4):
+                 env_config_path="env_config.json", seconds_to_process=False,processes=False):
 
     env_config = EnvConfig(env_config_path)
     logger.info("Using env_config : {}".format(env_config_path))
@@ -119,7 +119,7 @@ def process_glob(default_process_json, glob_str,
                 process_json = ww
 
     if processes is not False:
-        p = Pool(processes)
+        p = Pool(int(processes))
         p.map(process, process_queue)
 
 
