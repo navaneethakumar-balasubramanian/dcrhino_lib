@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 
+
+import os
+os.environ['MKL_NUM_THREADS'] = '1'
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
+os.environ['OMP_NUM_THREADS'] = '1'
+
 import argparse
 import pdb
-
+from multiprocessing import Pool
 import glob2
 import os
 import logging
@@ -166,10 +172,11 @@ if __name__ == '__main__':
     clickhouse_logger.setLevel(50)
     argparser = argparse.ArgumentParser(description="Copyright (c) 2018 DataCloud")
     argparser.add_argument('-env', '--env-file', help="ENV File Path", default=False)
+    argparser.add_argument('-mp', '--mp-processes', help="MULTIPROCESSING PROCESSES", default=False)
     argparser.add_argument("src_path", metavar="path", type=str,
     help="Path to files to be merged; enclose in quotes, accepts * as wildcard for directories or filenames")
     args = argparser.parse_args()
-
+    processes = args.mp_processes
     env_config = EnvConfig(args.env_file)
     files = glob2.glob(args.src_path)
     
@@ -177,12 +184,23 @@ if __name__ == '__main__':
 
     if not files:
         print  'File does not exist: ' + args.src_path
-    for file in files:
-        if '.h5' in os.path.splitext(file)[1]:
-            if env_config.is_file_blacklisted(file) is False:
-                try:
-                    logger.info("PROCESSING FILE:" + str(file))
-                    raw_trace_h5_to_acorr_db(file, env_config)
 
-                except:
-                    logger.warn("FAILED TO PROCESS FILE:" + str(file))
+
+    if processes is not False:
+        list_of_args = []
+        for file in files:
+            list_of_args.append([file,env_config])
+
+        p = Pool(int(processes))
+        p.map(raw_trace_h5_to_acorr_db, list_of_args)
+    else:
+        for file in files:
+
+            if '.h5' in os.path.splitext(file)[1]:
+                if env_config.is_file_blacklisted(file) is False:
+                    try:
+                        logger.info("PROCESSING FILE:" + str(file))
+                        raw_trace_h5_to_acorr_db(file, env_config)
+
+                    except:
+                        logger.warn("FAILED TO PROCESS FILE:" + str(file))
