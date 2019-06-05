@@ -785,11 +785,9 @@ class CollectionDaemonThread(threading.Thread):
                                 calibrated_data = raw_trace_data.calibrate_1d_component_array(
                                     component_trace_raw_data[label], global_config,
                                     global_config.sensor_sensitivity[label], remove_mean=False)
-                                print("Calibrated", label, np.mean(calibrated_data))
                                 interp_data = raw_trace_data.interpolate_1d_component_array(ts, calibrated_data,
                                                                                             ideal_timestamps,
                                                                                             kind=interp_kind)
-                                print("Interp", label, np.mean(interp_data))
                                 acorr_data = raw_trace_data.autocorrelate_1d_component_array(interp_data,
                                                                                              number_of_samples)
                                 component_trace_dict[label] = {"{}_calibrated".format(label): calibrated_data,
@@ -993,6 +991,7 @@ def main_run(run=True):
             plt.suptitle("Trace Time "+ tracetime.strftime('%H:%M:%S' ) + " plotted at " + datetime.utcfromtimestamp(now).strftime('%H:%M:%S') +  " delay of " + str(sec_delay) )
 
             data_to_plot = trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)]
+            print(np.mean(data_to_plot))
             if remove_mean:
                 data_to_plot = data_to_plot - np.mean(data_to_plot)
             signal_plot.plot(data_to_plot, 'black')
