@@ -991,8 +991,8 @@ def main_run(run=True):
             plt.suptitle("Trace Time " + tracetime.strftime('%H:%M:%S' ) + " plotted at " +
                          datetime.utcfromtimestamp(now).strftime('%H:%M:%S') + " delay of " + str(sec_delay) )
 
-            print(np.mean(trace["trace_data"][component_to_display]["axial_calibrated"]))
-            print(np.mean(trace["trace_data"][component_to_display]["axial_interpolated"]))
+            print("Trace Calibrated", np.mean(trace["trace_data"][component_to_display]["axial_calibrated"]))
+            print("Trace Interp", np.mean(trace["trace_data"][component_to_display]["axial_interpolated"]))
             data_to_plot = trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)]
             if remove_mean:
                 data_to_plot = data_to_plot - np.mean(data_to_plot)

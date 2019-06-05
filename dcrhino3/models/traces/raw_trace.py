@@ -174,7 +174,10 @@ class RawTraceData(TraceData):
         #Extrapolation capabilities>
         # interp_data = np.interp(ideal_timestamps, raw_timestamps,component_array)
         #</numpy function>
-        return interpolate_data(raw_timestamps, component_array, ideal_timestamps, kind)
+        interp_data = interpolate_data(raw_timestamps, component_array, ideal_timestamps, kind)
+        print("raw", np.mean(component_array))
+        print("interp", np.mean(interp_data))
+        return interp_data
 
     def calibrate_1d_component_array(self, component_array, global_config, sensitivity, remove_mean=False):
         is_ide_file = not int(global_config.sensor_type) == 2 or global_config.rhino_version is None
