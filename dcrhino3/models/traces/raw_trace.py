@@ -198,7 +198,11 @@ class RawTraceData(TraceData):
         return filt_data
 
     def autocorrelate_1d_component_array(self, input_trace, samples_per_trace):
-        return autocorrelate_trace(input_trace, samples_per_trace)
+        print("Before Acorr", np.mean(input_trace))
+        acorr = autocorrelate_trace(input_trace, samples_per_trace)
+        print("After Acorr", np.mean(input_trace))
+
+        return acorr
 
     def raw_trace_fft(self, global_config, sensitivity):
 
