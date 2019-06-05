@@ -294,7 +294,7 @@ def interpolate_data(raw_timestamps, data, ideal_timestamps, kind="quadratic"):
     return np.asarray(interp_data, dtype=np.float32)
 
 
-def calibrate_data(data,sensitivity, accelerometer_max_voltage=3.0, rhino_version=1.0, is_ide_file=False,
+def calibrate_data(data, sensitivity, accelerometer_max_voltage=3.0, rhino_version=1.0, is_ide_file=False,
                    remove_mean=False):
     output = data
 
@@ -318,8 +318,10 @@ def calibrate_data(data,sensitivity, accelerometer_max_voltage=3.0, rhino_versio
         else:
             raise ValueError("Calibration Error: The Rhino Hardware version should be 1.0 or 1.1")
         output = output / (sensitivity/1000.0) #Convert to G's
+    print ("Before", np.mean(output))
     if remove_mean:
         output = output - np.mean(output)
+    print ("After", np.mean(output))
     return output
 
 
