@@ -175,8 +175,6 @@ class RawTraceData(TraceData):
         # interp_data = np.interp(ideal_timestamps, raw_timestamps,component_array)
         #</numpy function>
         interp_data = interpolate_data(raw_timestamps, component_array, ideal_timestamps, kind)
-        print("raw", np.mean(component_array))
-        print("interp", np.mean(interp_data))
         return interp_data
 
     def calibrate_1d_component_array(self, component_array, global_config, sensitivity, remove_mean=False):
