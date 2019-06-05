@@ -17,10 +17,11 @@ import numpy as np
 
 from dcrhino3.models.traces.raw_trace import RawTraceData
 from dcrhino3.models.env_config import EnvConfig
-from dcrhino3.helpers.general_helper_functions import init_logging,splitDataFrameIntoSmaller
 
+from dcrhino3.helpers.general_helper_functions import init_logging,init_logging_to_file,splitDataFrameIntoSmaller
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
 
+file_logger = init_logging_to_file(__name__)
 logger = init_logging(__name__)
 
 def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
@@ -166,6 +167,12 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
                                            packets=calibrated_dataframe["packets"]
                                            )
 
+def process(args_list):
+    try:
+        raw_trace_h5_to_acorr_db(args_list[0], args_list[1])
+    except:
+        logger.warn("FAILED TO PROCESS THIS " + str(list_of_args[2]))
+        file_logger.warn("FAILED TO PROCESS THIS " + str(list_of_args[2]))
 
 if __name__ == '__main__':
     clickhouse_logger = logging.getLogger('clickhouse_driver.connection')
@@ -192,7 +199,7 @@ if __name__ == '__main__':
             list_of_args.append([file,env_config])
 
         p = Pool(int(processes))
-        p.map(raw_trace_h5_to_acorr_db, list_of_args)
+        p.map(process, list_of_args)
     else:
         for file in files:
 
