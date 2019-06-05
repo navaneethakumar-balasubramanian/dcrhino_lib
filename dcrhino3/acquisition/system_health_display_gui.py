@@ -259,12 +259,20 @@ class GUI():
                 disk_usage = psutil.disk_usage("/")[3]
                 ram_usage = psutil.virtual_memory()[2]
                 tablet_temperature = ":".join(str(x.current) for x in psutil.sensors_temperatures()["coretemp"])
-                if psutil.sensors_battery()[2]:
-                    tablet_battery_status = 1
+
+                battery_sensor = psutil.sensors_battery()
+
+                if battery_sensor is not None:
+                    if battery_sensor[2]:
+                        tablet_battery_status = 1
+                    else:
+                        tablet_battery_status = 0
+                    tablet_battery_percentage = round(psutil.sensors_battery()[0], 2)
+                    tablet_battery_life = psutil.sensors_battery()[1]
                 else:
-                    tablet_battery_status = 0
-                tablet_battery_percentage = round(psutil.sensors_battery()[0], 2)
-                tablet_battery_life = psutil.sensors_battery()[1]
+                    tablet_battery_status = np.nan
+                    tablet_battery_percentage = np.nan
+                    tablet_battery_life = np.nan
                 tablet_cpu_usage = ":".join([str(x) for x in psutil.cpu_percent(percpu=True)])
 
                 line = [tracetime.strftime("%Y-%m-%d %H:%M:%S"), samples, battery, temp, rssi, delay, counter_changes,
