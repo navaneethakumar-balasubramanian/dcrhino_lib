@@ -380,6 +380,8 @@ class FileFlusher(threading.Thread):
                         # if packet.tx_clock_ticks > self.sequence:
                         if packet.tx_sequence > self.sequence:
                             packet = self.calculate_packet_timestamp(packet)
+                            # TODO:Only save the packet to processing row if it is good timing.  Otherwise save it to
+                            #  a spare file
                             self.save_row_to_processing_q(packet)
                         # elif packet.tx_clock_ticks == self.sequence:
                         elif packet.tx_sequence == self.sequence:
@@ -782,7 +784,7 @@ class CollectionDaemonThread(threading.Thread):
                             for label in component_labels:
                                 calibrated_data = raw_trace_data.calibrate_1d_component_array(
                                     component_trace_raw_data[label], global_config,
-                                    global_config.sensor_sensitivity[label])
+                                    global_config.sensor_sensitivity[label], remove_mean=False)
                                 interp_data = raw_trace_data.interpolate_1d_component_array(ts, calibrated_data,
                                                                                             ideal_timestamps,
                                                                                             kind=interp_kind)
@@ -914,7 +916,6 @@ def main_run(run=True):
     min_radial_acceleration = [np.nan] * length
     min_tangential_acceleration = [np.nan] * length
     disk_usage = [np.nan] * length
-    # traces_for_plot = []
     last_tracetime = time.time()
     counterchanges = 0
     channels = ["X","Y","Z"]
@@ -924,6 +925,7 @@ def main_run(run=True):
     sensor_radial_axis = 3 - sensor_axial_axis - sensor_tangential_axis
     channel_mapping = {"axial":sensor_axial_axis,"tangential":sensor_tangential_axis,"radial":sensor_radial_axis}
     component_to_display = config.get("RUNTIME","component_to_display")
+    # traces_for_plot = []
     # pre_cut=config.getint("SYSTEM_HEALTH_PLOTS","trace_plot_pre_cut")
     # post_add=config.getint("SYSTEM_HEALTH_PLOTS","trace_plot_post_add")
     # output_sampling_rate=config.getfloat("COLLECTION","output_sampling_rate")
@@ -993,14 +995,6 @@ def main_run(run=True):
                 data_to_plot = data_to_plot - np.mean(data_to_plot)
             signal_plot.plot(data_to_plot, 'black')
 
-
-            # signal_plot.plot(trace["ideal_timestamps"][0:100:10],normalize_array(trace["trace_data"][
-            #                                                                     component_to_display]["{"
-            #                                                                                     "}_interpolated".format(
-            #     component_to_display)])[0:100:10], 'k', marker="x")
-            # signal_plot.plot(trace["raw_timestamps"][0:100:10], normalize_array(trace["raw_data"][component_to_display])[0:100:10], 'r',
-            #                  marker=".")
-
     	    # if rhino_version == 1.1:
             if second_plot_display in components:
                 trace_plot.set_title("Channel {} - ".format(channels[channel_mapping[second_plot_display]]) + "{} Component Raw".format(second_plot_display.upper()))
@@ -1046,8 +1040,6 @@ def main_run(run=True):
 
             rssi.append(trace["rssi"])
             temp.append(trace["temp"])
-            battery_current_voltage = trace["batt"]
-            # batt.append(calculate_battery_percentage(battery_current_voltage, battery_max_voltage, battery_lower_limit))
             batt.append(trace["batt"])
             packets.append(len(trace["raw_data"][component_to_display]))
             delay.append(sec_delay)
@@ -1144,20 +1136,6 @@ def write_data_to_h5_files(h5f_path,trace_data,trace):
     trace.dataframe=df
     trace.realtime_append_to_h5(h5f_path)
 
-# def normalize_array(array):
-#     value = np.max(np.absolute(array))
-#     if value == 0:
-#         value=1
-#     return array/value
-
-
-# def calculate_battery_percentage(current_voltage,battery_max_voltage,battery_lower_limit):
-#     battery_plot_display_percentage = config.getboolean("SYSTEM_HEALTH_PLOTS","battery_plot_display_percentage")
-#     if battery_plot_display_percentage:
-#         value = 100 - (battery_max_voltage - current_voltage)/(battery_max_voltage - battery_lower_limit)*100
-#     else:
-#         value = current_voltage
-#     return value
 
 def add_empty_health_row_to_Q(rssi, temp, batt, packets, delay, trace_time_array, now_array, system_healthQ,
                               last_tracetime, last_counterchanges, corrupt_packets, tx_status,
