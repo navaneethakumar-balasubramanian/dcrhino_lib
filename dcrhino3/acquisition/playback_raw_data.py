@@ -15,6 +15,7 @@ from dcrhino3.models.traces.raw_trace import RawTraceData
 from test_spectral_qc_plot import make_spectral_qc_plot
 from dcrhino3.helpers.h5_helper import H5Helper
 import shutil
+import scipy.signal as ssig
 
 
 def main(args):
@@ -489,26 +490,53 @@ def main(args):
         else:
             rdata = rz_data
 
+        rideal_timestamps = (np.arange(total_seconds * 4000) * 1.0 / 4000) + rts[0]
+        rideal_timestamps = rideal_timestamps[rideal_timestamps <= end_time]
+        rideal_timestamps = np.round(rideal_timestamps, 6)
+        rdata = interpolate_data(rts, rdata, rideal_timestamps, kind=kind)
+
         norm = np.linalg.norm(interp_data[axial_axis_index])
         rnorm = np.linalg.norm(rdata)
+
+        norm_data = interp_data[axial_axis_index]/norm
+        rnorm_data = rdata/rnorm
 
         time_plot.set_title("Time Plot")
         norm_plot.set_title("Normalized Data")
         # x_ticks = [datetime.utcfromtimestamp(x) for x in rts]
         # rax2.set_xticklabels(x_ticks)
         if np.abs(norm) < np.abs(rnorm):
-            time_plot.plot(rts, rdata, 'b', label="repeat")
+            time_plot.plot(rideal_timestamps, rdata, 'b', label="repeat")
             time_plot.plot(ideal_timestamps, interp_data[axial_axis_index], 'r', label="playback")
-            norm_plot.plot(rts, rdata/rnorm, 'b', label="repeat")
-            norm_plot.plot(ideal_timestamps, interp_data[axial_axis_index]/norm, 'r', label="playback")
+            norm_plot.plot(rideal_timestamps, rnorm_data, 'b', label="repeat")
+            norm_plot.plot(ideal_timestamps, norm_data, 'r', label="playback")
         else:
             time_plot.plot(ideal_timestamps, interp_data[axial_axis_index], 'r', label="playback")
-            time_plot.plot(rts, rdata, 'b', label="repeat")
-            norm_plot.plot(ideal_timestamps, interp_data[axial_axis_index] / norm, 'r', label="playback")
-            norm_plot.plot(rts, rdata / rnorm, 'b', label="repeat")
+            time_plot.plot(rideal_timestamps, rdata, 'b', label="repeat")
+            norm_plot.plot(ideal_timestamps, norm_data, 'r', label="playback")
+            norm_plot.plot(rideal_timestamps, rnorm_data, 'b', label="repeat")
         plt.suptitle("Playback file {} with Time Offset {}\nRepeat File {}".format(fname, time_offset, repeat))
         time_plot.legend()
         norm_plot.legend()
+
+
+        if ris_ide_file and not is_ide_file:
+            xfig = plt.figure("DataCloud Rhino Raw Data Cross Correlation", figsize=(10, 5))
+            xcorr_plot = plt.subplot2grid((1, 1), (0, 0), colspan=1)
+            xcorr_plot.ticklabel_format(useOffset=False, style='plain')
+            xcorr_plot.set_title("Cross Correlation", **axis_font)
+
+            upsample_factor = 2
+            upsampled_interp_norm_data = ssig.resample(norm_data, len(norm_data) * upsample_factor)
+            xcorr = np.correlate(rnorm_data, upsampled_interp_norm_data, "same")
+            samples = len(upsampled_interp_norm_data)
+            tt = np.arange(-samples/2, samples/2)
+            xcorr_plot.plot(tt, xcorr)
+
+            # xcorr_plot.plot(upsampled_interp_norm_data, label="rhino")
+            # xcorr_plot.plot(rnorm_data, label="ssx")
+            xcorr_plot.legend()
+
 
     if show_plots:
         plt.show()
