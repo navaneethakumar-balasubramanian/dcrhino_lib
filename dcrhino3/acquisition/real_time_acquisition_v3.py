@@ -984,14 +984,16 @@ def main_run(run=True):
             row += 1
 
             trace_plot = plt.subplot2grid((rows, columns), (row, column), colspan=3,rowspan=1)
-            trace_plot.set_title("Channel {} - ".format(channels[channel_mapping[component_to_display]]) + "{} Component Trace".format(component_to_display.upper()))
+            trace_plot.set_title("Channel {} - ".format(channels[channel_mapping[component_to_display]]) +"{} Component Trace".format(component_to_display.upper()))
 
 
             sec_delay = round(now - trace_second,2)
-            plt.suptitle("Trace Time "+ tracetime.strftime('%H:%M:%S' ) + " plotted at " + datetime.utcfromtimestamp(now).strftime('%H:%M:%S') +  " delay of " + str(sec_delay) )
+            plt.suptitle("Trace Time " + tracetime.strftime('%H:%M:%S' ) + " plotted at " +
+                         datetime.utcfromtimestamp(now).strftime('%H:%M:%S') + " delay of " + str(sec_delay) )
 
+            print(np.mean(trace["trace_data"][component_to_display]["axial_calibrated"]))
+            print(np.mean(trace["trace_data"][component_to_display]["axial_interpolated"]))
             data_to_plot = trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)]
-            print(np.mean(data_to_plot))
             if remove_mean:
                 data_to_plot = data_to_plot - np.mean(data_to_plot)
             signal_plot.plot(data_to_plot, 'black')
@@ -1005,10 +1007,10 @@ def main_run(run=True):
                 data_to_plot = trace["trace_data"][second_plot_display]["{}_interpolated".format(second_plot_display)]
                 if remove_mean:
                     data_to_plot = data_to_plot - np.mean(data_to_plot)
-                trace_plot.plot(data_to_plot,'b')
+                trace_plot.plot(data_to_plot, 'b')
             else:
                 unfolded_trace = unfold_trace(trace["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display)])
-                trace_plot.plot(unfolded_trace,'b')
+                trace_plot.plot(unfolded_trace, 'b')
                 trace_plot.get_xaxis().set_visible(False)
     	    # else:
     		#     trace_start = int(output_sampling_rate/10)-pre_cut
