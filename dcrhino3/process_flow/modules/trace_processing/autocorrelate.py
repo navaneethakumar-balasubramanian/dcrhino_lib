@@ -7,6 +7,9 @@ from dcrhino3.process_flow.modules.trace_processing.base_trace_module import Bas
 def autocorrelate_trace(trace_data, n_pts, copy_input=False):
         """
         n_pts: integer, this is the number of taps in the decon filter that will be solved for
+        copy_input, this function is used in the realtime acquisition display and when the data is not copied
+        it removes any DC offset prior to displaying the data and that is misleading.  This argument prevents that
+        from happening.
         WARNING  wants even # points
         .. :CHANGE: 20190524 modifying this to subtract the mean
         """
