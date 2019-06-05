@@ -991,8 +991,10 @@ def main_run(run=True):
             plt.suptitle("Trace Time "+ tracetime.strftime('%H:%M:%S' ) + " plotted at " + datetime.utcfromtimestamp(now).strftime('%H:%M:%S') +  " delay of " + str(sec_delay) )
 
             data_to_plot = trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)]
+            print("Before", np.mean(data_to_plot))
             if remove_mean:
                 data_to_plot = data_to_plot - np.mean(data_to_plot)
+            print("After", np.mean(data_to_plot))
             signal_plot.plot(data_to_plot, 'black')
 
     	    # if rhino_version == 1.1:
