@@ -197,9 +197,9 @@ class RawTraceData(TraceData):
         filt_data = ssig.filtfilt(b, a, component_array)
         return filt_data
 
-    def autocorrelate_1d_component_array(self, input_trace, samples_per_trace):
+    def autocorrelate_1d_component_array(self, input_trace, samples_per_trace, copy_input):
         print("Before Acorr", np.mean(input_trace))
-        acorr = autocorrelate_trace(input_trace, samples_per_trace)
+        acorr = autocorrelate_trace(input_trace, samples_per_trace, copy_input)
         print("After Acorr", np.mean(input_trace))
 
         return acorr

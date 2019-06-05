@@ -789,7 +789,8 @@ class CollectionDaemonThread(threading.Thread):
                                                                                             ideal_timestamps,
                                                                                             kind=interp_kind)
                                 acorr_data = raw_trace_data.autocorrelate_1d_component_array(interp_data,
-                                                                                             number_of_samples)
+                                                                                             number_of_samples,
+                                                                                             copy_input=True)
                                 component_trace_dict[label] = {"{}_calibrated".format(label): calibrated_data,
                                                                "{}_interpolated".format(label): interp_data,
                                                                "{}_auto_correlated".format(label): acorr_data}
