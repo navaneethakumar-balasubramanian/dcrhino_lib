@@ -318,10 +318,8 @@ def calibrate_data(data, sensitivity, accelerometer_max_voltage=3.0, rhino_versi
         else:
             raise ValueError("Calibration Error: The Rhino Hardware version should be 1.0 or 1.1")
         output = output / (sensitivity/1000.0) #Convert to G's
-    print ("Before", np.mean(output))
     if remove_mean:
         output = output - np.mean(output)
-    print ("After", np.mean(output))
     return output
 
 

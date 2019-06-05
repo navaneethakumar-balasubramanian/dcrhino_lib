@@ -785,6 +785,7 @@ class CollectionDaemonThread(threading.Thread):
                                 calibrated_data = raw_trace_data.calibrate_1d_component_array(
                                     component_trace_raw_data[label], global_config,
                                     global_config.sensor_sensitivity[label], remove_mean=False)
+                                print("Saving", np.mean(calibrated_data))
                                 interp_data = raw_trace_data.interpolate_1d_component_array(ts, calibrated_data,
                                                                                             ideal_timestamps,
                                                                                             kind=interp_kind)
