@@ -785,10 +785,11 @@ class CollectionDaemonThread(threading.Thread):
                                 calibrated_data = raw_trace_data.calibrate_1d_component_array(
                                     component_trace_raw_data[label], global_config,
                                     global_config.sensor_sensitivity[label], remove_mean=False)
-                                print("Saving", np.mean(calibrated_data))
+                                print("Calibrated", label, np.mean(calibrated_data))
                                 interp_data = raw_trace_data.interpolate_1d_component_array(ts, calibrated_data,
                                                                                             ideal_timestamps,
                                                                                             kind=interp_kind)
+                                print("Interp", label, np.mean(interp_data))
                                 acorr_data = raw_trace_data.autocorrelate_1d_component_array(interp_data,
                                                                                              number_of_samples)
                                 component_trace_dict[label] = {"{}_calibrated".format(label): calibrated_data,
