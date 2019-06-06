@@ -67,9 +67,17 @@ def load_raw_file(h5_file_path, timestamp_min, timestamp_max,config_str):
     rtd = RawTraceData()
     f1 = h5py.File(h5_file_path, 'r+')
     h5_helper = H5Helper(f1, False, False)
-    #global_config = Config(h5_helper.metadata)
+    #global_config2 = Config(h5_helper.metadata)
     global_config = Config()
     global_config.set_data_from_json(json.loads(config_str))
+
+    upsample_factor = 1.25
+    try:
+        print(global_config.upsample_factor)
+    except AttributeError:
+        logger.warning("this warning will be removed once the upsample factor is coming from the global cfg")
+        global_config.output_sampling_rate *= upsample_factor
+
 
     raw_timestamp = np.asarray(h5_helper.h5f.get('ts'), dtype=np.float64)
     logger.info("LOADED TS")
@@ -216,6 +224,15 @@ def load_acorr_file(h5_file_path, timestamp_min, timestamp_max,config_str):
     global_config_jsons = json.loads(f1.attrs['global_config_jsons'])
     global_config = Config()
     global_config.set_data_from_json(json.loads(config_str))
+
+    upsample_factor = 1.25
+    try:
+        print(global_config.upsample_factor)
+    except AttributeError:
+        logger.warning("this warning will be removed once the upsample factor is coming from the global cfg")
+        global_config.output_sampling_rate *= upsample_factor
+
+
     timestamp_min = timestamp_min
     timestamp_max = timestamp_max
     timestamps = np.asarray(f1.get('timestamp'), dtype=np.float64)
