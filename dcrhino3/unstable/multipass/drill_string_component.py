@@ -28,7 +28,7 @@ import pdb
 
 from dcrhino3.models.interval import Interval
 from dcrhino3.models.trace_dataframe import TraceData
-from dcrhino3.helpers.general_helper_functions import init_logging
+from dcrhino3.helpers.general_helper_functions import init_logging, add_inverse_dictionary
 from dcrhino3.models.metadata import Measurement
 
 logger = init_logging(__name__)
@@ -45,11 +45,13 @@ DRILL_STRING_COMPONENT_TYPES[4] = 'saver sub'
 DRILL_STRING_COMPONENT_TYPES[5] = 'shock sub'
 DRILL_STRING_COMPONENT_TYPES[6] = 'other'
 DRILL_STRING_COMPONENT_TYPES[7] = 'rotary bit sub'
+DRILL_STRING_COMPONENT_TYPES = add_inverse_dictionary(DRILL_STRING_COMPONENT_TYPES)
 
 DRILL_STRING_COMPONENT_INSTALLATIONS = {}
 DRILL_STRING_COMPONENT_INSTALLATIONS[-1] = 'not installed'
 DRILL_STRING_COMPONENT_INSTALLATIONS[0] = 'variable'
 DRILL_STRING_COMPONENT_INSTALLATIONS[1] = 'installed'
+DRILL_STRING_COMPONENT_INSTALLATIONS = add_inverse_dictionary(DRILL_STRING_COMPONENT_INSTALLATIONS)
 
 LENGTH_UNITS = {}
 LENGTH_UNITS[1] = 'ft'
@@ -57,31 +59,75 @@ LENGTH_UNITS[2] = 'in'
 LENGTH_UNITS[3] = 'm'
 LENGTH_UNITS[4] = 'cm'
 LENGTH_UNITS[5] = 'mm'
+LENGTH_UNITS = add_inverse_dictionary(LENGTH_UNITS)
 
 NUM_DRILL_STRING_COMPONENTS_SUPPORTED = 10
-
+ORDERED_GUI_STRING_ELEMENTS = ['component_type', 'installation', 'length',
+                                'length_units', 'outer_diameter', 'outer_diameter_units']
 class DrillStringComponent(object):
     """
     ..:warning: there is possibility for error here as the length_in_meters
     applies a roundoff on each component, the roundoff should happen after summation.
+    Initializes from an attributes list, which is a text string that looks like this:
+    u'1,1,27.0,4,270.0,5'
+    these are in order:
+        component_type,
+        installation,
+        length
+
     """
-    def __init__(self, attributes_list=None):
+    def __init__(self, attributes_list=None, gui_string=None):
         self._component_type = None
         self._installation = None
         self._length = None
         self._length_units = None
         self._outer_diameter = None
         self._outer_diameter_units = None
+        self.gui_string = gui_string
         if attributes_list is not None:
-            if len(attributes_list) != 6:
-                logger.error('expected six values in drill string component attributes, got {}'.format(len(attributes_list)))
-                raise Exception
-            self._component_type = int(attributes_list[0])
-            self._installation = int(attributes_list[1])
-            self._length= float(attributes_list[2])
-            self._length_units= int(attributes_list[3])
-            self._outer_diameter = float(attributes_list[4])
-            self._outer_diameter_units = int(attributes_list[5])
+            self.populate_from_attributes_list(attributes_list)
+
+    def populate_from_attributes_list(self, attributes_list):
+        """
+        """
+        if len(attributes_list) != len(ORDERED_GUI_STRING_ELEMENTS):
+            error_msg_1 = 'expected {} values in drill string'.format(len(ORDERED_GUI_STRING_ELEMENTS))
+            error_msg_2 = 'found {} values in drill string'.format(len(attributes_list))
+            logger.error(error_msg_1)
+            logger.error(error_msg_2)
+            raise Exception
+        self._component_type = int(attributes_list[0])
+        self._installation = int(attributes_list[1])
+        self._length= float(attributes_list[2])
+        self._length_units= int(attributes_list[3])
+        self._outer_diameter = float(attributes_list[4])
+        self._outer_diameter_units = int(attributes_list[5])
+        return
+
+    def populate_from_gui_string(self):
+        """
+
+        """
+        attributes_list = self.gui_string.split(',')
+        self.populate_from_attributes_list(attributes_list)
+
+
+    def as_gui_string(self):
+        gui_values = len(ORDERED_GUI_STRING_ELEMENTS) * [None]
+        #component_type = self.component_type
+        #gui_value = DRILL_STRING_COMPONENT_TYPES[component_type]
+        #gui_strings[0] = gui_value
+        #installation = self.installation
+        #gui_value = DRILL_STRING_COMPONENT_INSTALLATIONS[installation]
+        #gui_strings[1] = gui_value
+        gui_values[0] = self._component_type
+        gui_values[1] = self._installation
+        gui_values[2] = self._length
+        gui_values[3] = self._length_units
+        gui_values[4] = self._outer_diameter
+        gui_values[5] = self._outer_diameter_units
+        gui_string = ','.join(['{}'.format(x) for x in gui_values])
+        return gui_string
 
     @property
     def component_type(self):
@@ -97,218 +143,6 @@ class DrillStringComponent(object):
         measurement = Measurement((self._length, self._length_units))
         return measurement.value_in_meters()
 
-
-
-
-
-def drill_stops(df, minimum_stop_duration=60.0, basically_zero_m=0.0017):
-    """
-    units of minimum_stop_duration are seconds.  Anything of shorter duration than
-    this will not be interpretted as a potential steels-change
-
-    .. Note:: This should actually be calculated from MWD... there is no RHINO
-    data being used in this algorithm.
-    """
-    qualifying_time_intervals = []
-    dzdt = np.diff(df.depth) #assumption of 1s trace again! :(
-    #d2zdt2 = np.diff(dzdt)
-    stopped_indices = np.where(dzdt <= basically_zero_m)[0]
-
-
-    if len(stopped_indices) == 0:
-        return qualifying_time_intervals
-    d_indices = np.diff(stopped_indices)
-    discontinuity_indices = np.where(np.abs(d_indices) > 1)[0]
-    reference_array = np.split(np.arange(len(stopped_indices)), discontinuity_indices+1)
-    for i_stopped_region in range(len(reference_array)):
-        lower_bound_index = stopped_indices[reference_array[i_stopped_region][0]]
-        upper_bound_index = stopped_indices[reference_array[i_stopped_region][-1]]
-        lower_bound_time = df.timestamp.iloc[lower_bound_index]
-        upper_bound_time = df.timestamp.iloc[upper_bound_index]
-        unix_time_interval = Interval(lower_bound=lower_bound_time,
-                                      upper_bound=upper_bound_time)
-        #pin the depth to the interval
-        approximate_depth = np.mean(df.depth.iloc[lower_bound_index:upper_bound_index])
-        unix_time_interval.depth = approximate_depth
-        if unix_time_interval.duration > minimum_stop_duration:
-            print("this could be a steels change")
-            print('check that the diff(dzdt)==0')
-            qualifying_time_intervals.append(unix_time_interval)
-    return qualifying_time_intervals
-
-def drill_stops_2(df, mwd_granularity, minimum_stop_duration=60.0):
-    """
-    20190523 an update to drill stops.  This one uses the thrid derivative and
-    seems like it would be more robust than the old one.
-    The idea here is that when the drill is stopped the mwd data are linear interpolated
-    and so dzdt is constant.  That means that the second derivative is zero along the
-    entire interval;
-
-    That can happen in a few places though.
-    units of minimum_stop_duration are seconds.  Anything of shorter duration than
-    this will not be interpretted as a potential steels-change.
-
-    The following mwd rows ALL need to show zero second derivative for > minimum_stop_duration:
-        weight_on_bit
-        torque
-        rpm
-        depth
-
-    in addition dzdt must be less than 1 mwd granularity per minimum_stop_duration
-
-
-    .. Note:: This should actually be calculated from MWD... there is no RHINO
-    data being used in this algorithm.
-    """
-    columns_which_have_zero_second_derivative_during_stop = ['weight_on_bit', 'torque', 'rpm', 'depth']
-    very_slow = mwd_granularity / minimum_stop_duration
-    qualifying_time_intervals = []
-    dzdt = np.diff(df.depth) #assumption of 1s trace again! :(
-#    plt.plot(dzdt);
-#    plt.plot(np.arange(len(df)), .2*np.ones(len(df))/60);plt.show()
-    stopped_indices = np.where(dzdt <= very_slow)[0]
-    if len(stopped_indices) == 0:
-        return qualifying_time_intervals
-
-    d_indices = np.diff(stopped_indices)
-    discontinuity_indices = np.where(np.abs(d_indices) > 1)[0]
-    reference_array = np.split(np.arange(len(stopped_indices)), discontinuity_indices+1)
-    for i_stopped_region in range(len(reference_array)):
-        lower_bound_index = stopped_indices[reference_array[i_stopped_region][0]]
-        upper_bound_index = stopped_indices[reference_array[i_stopped_region][-1]]
-        lower_bound_time = df.timestamp.iloc[lower_bound_index]
-        upper_bound_time = df.timestamp.iloc[upper_bound_index]
-        unix_time_interval = Interval(lower_bound=lower_bound_time,
-                                      upper_bound=upper_bound_time)
-        #pin the depth to the interval
-        approximate_depth = np.mean(df.depth.iloc[lower_bound_index:upper_bound_index])
-        unix_time_interval.depth = approximate_depth
-        if unix_time_interval.duration > minimum_stop_duration:
-            is_a_drill_stop = True
-            print("this could be a steels change")
-            for column_label in columns_which_have_zero_second_derivative_during_stop:
-                column_interval_data = df[column_label].iloc[lower_bound_index+1: upper_bound_index-1]
-                first_derivative = np.diff(column_interval_data)
-                second_derivative = np.diff(first_derivative)
-                if np.sum(second_derivative) > 0:
-                    is_a_drill_stop = False
-                    logger.info("drill stop not true based on {}".format(column_label))
-            if is_a_drill_stop:
-                qualifying_time_intervals.append(unix_time_interval)
-    return qualifying_time_intervals
-
-
-
-def get_approximate_transitions(df, installed_steels_length, variable_steels_lengths, install_offset_correction):
-    """
-    returns a list of depths and times which correspond to an approximate steels
-    transition
-    if variable_steels_lengths is empty then this should return an empty list
-
-    """
-    effective_installed_length = installed_steels_length + install_offset_correction
-    n_variable_steels = len(variable_steels_lengths)
-    if n_variable_steels == 0:
-        return [], []
-    else:
-        transition_depths = [effective_installed_length]
-        for i_steel in range(n_variable_steels):
-            transition_depths.append(transition_depths[-1] + variable_steels_lengths[i_steel])
-        transition_times = []
-        for depth in transition_depths:
-            loc = np.argmin(np.abs(df.depth-depth))
-            transition_times.append(df.timestamp.iloc[loc])
-            #print("transition index ={}".format(loc))
-
-        #you now have the depth and times, but there maybe degenerate values
-        #as you mave have more steels in reserve than you used, so clip those:
-        clip_degenerates = True
-        if len(transition_times) < 2:
-            clip_degenerates = False
-        while clip_degenerates:
-            if transition_times[-1] == transition_times[-2]:
-                print("found a degenerate value")
-                transition_times = transition_times[:-1]
-                transition_depths = transition_depths[:-1]
-                if len(transition_times) < 2:
-                    clip_degenerates = False
-            else:
-                clip_degenerates = False
-
-    return transition_times, transition_depths
-
-
-def reject_transitions_far_from_drill_stops(transition_times,
-                                            transition_depths,
-                                            potential_steels_change_time_intervals,
-                                            all_steels_lengths):
-    """
-    if there is no drill stop within a quarter steel of the transition depth
-    then its a bogus transition
-    """
-    transition_times_out = []
-    transition_depths_out = []
-    for i in range(len(transition_depths)):
-        legit = False
-        transition_depth = transition_depths[i]
-        quarter_steel = all_steels_lengths[i]/4.0
-        for ivl in potential_steels_change_time_intervals:
-            distance_to_drill_stop = np.abs(transition_depth - ivl.depth)
-            if distance_to_drill_stop < quarter_steel:
-                legit = True
-        if legit:
-            transition_times_out.append(transition_times[i])
-            transition_depths_out.append(transition_depth)
-    return transition_times_out, transition_depths_out
-
-
-def reject_transitions_near_bottom_of_hole(max_depth, transition_times, transition_depths,
-                                       significant_excess=2.0):
-    """
-    if the bit does not penetrate more than say a meter below the transition
-    depth the steel may not have changed.
-    """
-    transition_times_out = []
-    transition_depths_out = []
-    for i in range(len(transition_depths)):
-        legit = False
-        transition_depth = transition_depths[i]
-        if max_depth - transition_depth > significant_excess:
-            legit = True
-        if legit:
-            transition_times_out.append(transition_times[i])
-            transition_depths_out.append(transition_depth)
-    return transition_times_out, transition_depths_out
-
-def nearest_time_to_transition_depth(dataframe,
-                                     transition_depths,
-                                     potential_steels_change_time_intervals):
-    """
-    This overwrites the theoretical transition time and depth with the
-    time-depth at the center of the nearest actual observed drill_stop
-    status: in progress 23 May, 2019
-    """
-
-    # Make a List of Middle Drill Stoppage Intervals
-    drill_stop_intervals= []
-    for interval in potential_steels_change_time_intervals:
-        drill_stop_intervals.append((interval.upper_bound + interval.lower_bound) / 2)
-
-    closest_drill_stop_times  = []
-    closest_drill_stop_depths = []
-    for t_depth in transition_depths:
-        transition_depth_row = dataframe.loc[np.argmin(np.abs(t_depth - dataframe.depth))]
-        # index of steel change time to use
-        closest_drill_stop_time = drill_stop_intervals[np.argmin(np.abs(drill_stop_intervals-transition_depth_row.timestamp))]
-
-        # Gather Depth Data from Time + Dataframe
-        closest_drill_stop_depth = dataframe.depth[np.argmin(np.abs(closest_drill_stop_time - dataframe.timestamp))]
-
-        closest_drill_stop_times.append(closest_drill_stop_time)
-        closest_drill_stop_depths.append(closest_drill_stop_depth)
-
-
-    return closest_drill_stop_times, closest_drill_stop_depths
 
 
 
@@ -343,6 +177,11 @@ def test(acorr_filename=None):
 def main():
     """
     """
+    gui_string_example = '1,1,27.0,4,270.0,5'
+    dsc = DrillStringComponent(gui_string=gui_string_example)
+    dsc.populate_from_gui_string()
+    gui_string_back = dsc.as_gui_string()
+    #pdb.set_trace()
     test()
     print("finito {}".format(datetime.datetime.now()))
 

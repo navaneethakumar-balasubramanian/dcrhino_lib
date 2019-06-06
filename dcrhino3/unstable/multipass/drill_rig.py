@@ -74,8 +74,8 @@ class DrillRig(object):
         total_drill_string_length = 0.0
         for i_drill_string_component in range(1, NUM_DRILL_STRING_COMPONENTS_SUPPORTED+1):
             attribute_label = 'drill_string_component{}'.format(i_drill_string_component)
-            attribute = field_config.__getattribute__(attribute_label)
-            attributes_list = attribute.split(',')
+            gui_string = field_config.__getattribute__(attribute_label)
+            attributes_list = gui_string.split(',')
             dsc = DrillStringComponent(attributes_list=attributes_list)
             total_drill_string_length += dsc.length_in_meters
             if dsc.component_type == 'steel':
