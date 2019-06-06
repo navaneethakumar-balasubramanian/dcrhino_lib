@@ -123,7 +123,10 @@ def load_raw_file(h5_file_path, timestamp_min, timestamp_max,config_str):
     autcorrelated_dataframe = rtd.autocorrelate_l1h5(resampled_dataframe, global_config)
 
     for component_id in COMPONENT_IDS:
-        output_df[component_id] = autcorrelated_dataframe[component_id]
+        try:
+            output_df[component_id] = autcorrelated_dataframe[component_id]
+        except:
+            logger.warn("Missing component " + component_id + " on this file")
 
     autcorrelated_dataframe = output_df
 
