@@ -255,7 +255,7 @@ class ProcessFlow:
             first_global_config_index = acorr_trace.dataframe['acorr_file_id'].values[0]
             corrected_global_config = bma_hack_20190606(acorr_trace.first_global_config)
             acorr_trace._global_configs[first_global_config_index] = corrected_global_config
-
+            hack = False
         except KeyError:
             hack = False
         #pdb.set_trace()
