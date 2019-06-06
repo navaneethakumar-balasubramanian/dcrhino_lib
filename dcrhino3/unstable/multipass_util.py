@@ -281,7 +281,7 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
         print("hack" )
         logger.critical("HACJ HACK HACK HACK ALERT!!! BAD BAD NAUGHTY!!!")
         installed_steels_length = 12.8
-        variable_steels_lengths = [12.8, 12.8, 12.8]
+        variable_steels_lengths = [12.8, 12.8, 12.8, 12.8]
         installed_resonant_length = 15.39999
         all_steels_lengths = [installed_steels_length] + variable_steels_lengths
     else:
