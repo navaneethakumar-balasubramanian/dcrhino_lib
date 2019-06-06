@@ -61,7 +61,7 @@ def process(list_of_args):
 
 
 def process_glob(default_process_json, glob_str,
-                 env_config_path="env_config.json", seconds_to_process=False,processes=False):
+                 env_config_path="env_config.json", seconds_to_process=False, processes=False):
 
     env_config = EnvConfig(env_config_path)
     logger.info("Using env_config : {}".format(env_config_path))
@@ -95,13 +95,7 @@ def process_glob(default_process_json, glob_str,
                 if processes is not False:
                     temp = [process_flow,process_json, h5_file_path, env_config, seconds_to_process,return_dict]
                     process_queue.append(temp)
-                    #p = Process(target=process_flow.process_file,
-                    #            args=(process_json, h5_file_path,
-                    #                 env_config, seconds_to_process,return_dict))
-                    #p.start()
-                    #p.join()
-                    #pdb.set_trace()
-                    #process_json = return_dict["process_json"]
+                    
                 else:
                    # qq, ww = process_flow.process_file(process_json, h5_file_path, env_config=env_config,
                    #                                    seconds_to_process=seconds_to_process,
@@ -112,7 +106,6 @@ def process_glob(default_process_json, glob_str,
                                      env_config, seconds_to_process,return_dict))
                     p.start()
                     p.join()
-                    # pdb.set_trace()
                     process_json = return_dict["process_json"]
 
         elif '.h5' in os.path.splitext(ffile)[1]:
@@ -122,11 +115,6 @@ def process_glob(default_process_json, glob_str,
             if processes is not False:
                 temp = [process_flow,process_json, ffile, env_config, seconds_to_process, return_dict]
                 process_queue.append(temp)
-                #p = Process(target=process_flow.process_file,
-                #            args=(process_json, ffile, env_config, seconds_to_process,return_dict))
-                #p.start()
-                #p.join()
-                #process_json = return_dict["process_json"]
             else:
                 #qq, ww = process_flow.process_file(process_json, ffile,
                 #                                   env_config=env_config,
@@ -188,4 +176,4 @@ if __name__ == '__main__':
     with open(process_flow_path) as f:
         process_json = json.load(f)
 
-    process_glob(process_json, data_path, env_path, seconds_to_process,processes)
+    process_glob(process_json, data_path, env_path, seconds_to_process, processes)
