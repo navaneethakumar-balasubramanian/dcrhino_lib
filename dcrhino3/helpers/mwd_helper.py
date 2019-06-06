@@ -240,16 +240,9 @@ class MWDHelper():
             (Dataframe): remapped mwd dataframe with empty columns dropped
         """
         #temp = mwd_df
-        remaped = pd.DataFrame()
-        mwd_df = mwd_df.copy()
-        for col in mapping.keys():
-            remaped[col] = self.get_remaped_column_values(mwd_df,mapping[col])
-            if "|" not in mapping[col]:
-                mwd_df.drop([mapping[col], ], axis=1, inplace=True)
 
-        for col in mwd_df.columns:
-            remaped[col] = mwd_df[col]
-        return remaped
+        mwd_df = mwd_df.copy()
+        return mwd_df.rename(mapping)
 
     def _have_required_columns(self,mwd_df):
         """
@@ -336,6 +329,7 @@ class MWDHelper():
 
         
         remaped = self.remap_mwd_df(original_mwd_df,cfg['mapping'])
+
         if self._have_required_columns(remaped):
             remaped_with_optionals = self._create_optional_columns(remaped)
             remaped_with_optionals = self._post_process(remaped_with_optionals)
