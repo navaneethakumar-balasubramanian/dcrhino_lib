@@ -77,6 +77,7 @@ class DrillRig(object):
             gui_string = field_config.__getattribute__(attribute_label)
             attributes_list = gui_string.split(',')
             dsc = DrillStringComponent(attributes_list=attributes_list)
+            dsc.gui_number = i_drill_string_component
             total_drill_string_length += dsc.length_in_meters
             if dsc.component_type == 'steel':
                 if dsc.installation == 'installed':

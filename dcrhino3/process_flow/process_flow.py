@@ -55,19 +55,11 @@ from dcrhino3.process_flow.modules.hybrid.upsample_hybrid import UpsampleModuleH
 from dcrhino3.process_flow.modules.hybrid.phase_balance_trace_hybrid import PhaseBalanceHybridModule
 
 from dcrhino3.unstable.multipass_util import update_acorr_with_resonance_info
+from dcrhino3.unstable.hacks.bma_hack import bma_hack_20190606
 from dcrhino3.unstable.multipass_util import get_depths_at_which_steels_change
 from dcrhino3.unstable.multipass.drill_rig import DrillRig
 
 logger = init_logging(__name__)
-
-
-
-def bma_hack(first_global_config):
-    #pdb.set_trace()
-    first_global_config.drill_string_component4[2] = 0
-    first_global_config.drill_string_component5[2] = 0
-    first_global_config.drill_string_component6[2] = 0
-    return first_global_config
 
 
 
@@ -261,7 +253,7 @@ class ProcessFlow:
         try:
             hack = process_json['vars'][0]['hack_multipass_bma']
             first_global_config_index = acorr_trace.dataframe['acorr_file_id'].values[0]
-            corrected_global_config = bma_hack(acorr_trace.first_global_config)
+            corrected_global_config = bma_hack_20190606(acorr_trace.first_global_config)
             acorr_trace._global_configs[first_global_config_index] = corrected_global_config
 
         except KeyError:

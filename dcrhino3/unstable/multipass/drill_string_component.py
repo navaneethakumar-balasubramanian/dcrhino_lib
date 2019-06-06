@@ -83,6 +83,7 @@ class DrillStringComponent(object):
         self._length_units = None
         self._outer_diameter = None
         self._outer_diameter_units = None
+        self.gui_number = None
         self.gui_string = gui_string
         if attributes_list is not None:
             self.populate_from_attributes_list(attributes_list)

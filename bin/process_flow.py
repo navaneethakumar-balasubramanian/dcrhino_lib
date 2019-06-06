@@ -17,9 +17,9 @@ import os
 os.environ['MKL_NUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 os.environ['OMP_NUM_THREADS'] = '1'
+
 ## HACK TO WORK ON SERVERS NON INTERACTIVE MODE
 import matplotlib
-import matplotlib.rcsetup as rcsetup # do we need this?
 matplotlib.use('TkAgg')
 
 
@@ -95,7 +95,7 @@ def process_glob(default_process_json, glob_str,
                 if processes is not False:
                     temp = [process_flow,process_json, h5_file_path, env_config, seconds_to_process,return_dict]
                     process_queue.append(temp)
-                    
+
                 else:
                    # qq, ww = process_flow.process_file(process_json, h5_file_path, env_config=env_config,
                    #                                    seconds_to_process=seconds_to_process,
