@@ -49,7 +49,7 @@ class PhaseBalanceHybridModule(BaseHybridModule):
     def __init__(self, json, output_path, process_flow, order):
         BaseHybridModule.__init__(self, json, output_path, process_flow, order)
         self.id = "phase_balance_hybrid"
-        self.can_alter_trace = True
+        self.can_alter_trace = False
         self.can_create_columns = True
 
     def process_splitted_trace(self, splitted_traces):
