@@ -16,6 +16,10 @@ incehes, meters cm
 
 see
 https://datacloudintl.atlassian.net/wiki/spaces/RHINO/pages/139526154/Configuration+File+Definition
+
+ ..:TODO: From the Interval Class build a TimeInterval, and make support for
+ UTC and UNIX time so we dont have to look at the fkng unix times always and
+ digest 10-digit numbers everytime we want to think about when events happenn
 """
 
 
@@ -35,6 +39,8 @@ from dcrhino3.models.metadata import Measurement
 from dcrhino3.unstable.multipass.drill_rig import DrillRig
 
 logger = init_logging(__name__)
+
+
 
 
 
@@ -294,7 +300,7 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
         print("We need a way to handle this in the process_flow.json")
         print("@Thiago can you help with this?")
         logger.warning("HELP, we need to write the mwd spacing on the json")
-
+        #pdb.set_trace()
         potential_steels_change_time_intervals = drill_stops(acorr_trace.dataframe,
                                                              basically_zero_m=0.0017)
     #pdb.set_trace()
@@ -338,6 +344,21 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
 
     return acorr_trace
 
+def get_depths_at_which_steels_change(df):
+    """
+    helper function to do with multipass stuff
+    df is the df from an acorr_trace
+    """
+    resonant_lengths_array = df.drill_string_resonant_length.unique()
+    resonant_lengths = [x for x in resonant_lengths_array]
+    sub_dfs = [df[df.drill_string_resonant_length==x] for x in resonant_lengths]
+    splits = [x.depth.max() +0.0001 for x in sub_dfs]
+    #add a titch so that last split is after hole ... there should be N-1 splits where N is the number of sub_dfs
+    splits = splits[:-1]
+    splits.sort()
+    if len(splits) == 0:
+        splits = [1000,]
+    return splits
 
 def test(acorr_filename=None):
     """
