@@ -5,6 +5,10 @@ Created on Mon Jan 21 16:10:30 2019
 
 @author: thiago
 """
+import os
+os.environ['MKL_NUM_THREADS'] = '1'
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
+os.environ['OMP_NUM_THREADS'] = '1'
 #import json
 import numpy as np
 #import pandas as pd
@@ -12,6 +16,8 @@ import pdb
 import os
 import argparse
 import pandas as pd
+
+from multiprocessing import Process
 
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
 from dcrhino3.helpers.mwd_helper import MWDHelper
@@ -30,6 +36,8 @@ import h5py
 import json
 import os
 from dcrhino3.models.traces.raw_trace import RawTraceData
+
+COMPONENT_IDS = ['axial', 'tangential', 'radial']
 
 
 def merge_mwd_with_trace(hole_mwd, trace_data, merger):
@@ -110,44 +118,44 @@ def load_raw_file(h5_file_path, timestamp_min, timestamp_max,config_str):
     output_df["packets"] = packets
 
 
-    logger.info("CALIBRATING")
     calibrated_dataframe = rtd.calibrate_l1h5(output_df, global_config)
-    logger.info("CALIBRATED")
-    logger.info("RESAMPLING")
     resampled_dataframe = rtd.resample_l1h5(calibrated_dataframe, global_config)
-    logger.info("RESAMPLED")
-    logger.info("AUTOCORRELATING")
     autcorrelated_dataframe = rtd.autocorrelate_l1h5(resampled_dataframe, global_config)
-    logger.info("AUTOCORRELATED")
+
+    for component_id in COMPONENT_IDS:
+        output_df[component_id] = autcorrelated_dataframe[component_id]
+
+    autcorrelated_dataframe = output_df
+
 
     if 'axial' in calibrated_dataframe.columns:
-        calibrated_dataframe["max_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
+        autcorrelated_dataframe["max_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
             lambda x: np.max(x)))
-        calibrated_dataframe["min_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
+        autcorrelated_dataframe["min_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
             lambda x: np.min(x)))
     else:
-        calibrated_dataframe["max_axial_acceleration"] = 0
-        calibrated_dataframe["min_axial_acceleration"] = 0
+        autcorrelated_dataframe["max_axial_acceleration"] = 0
+        autcorrelated_dataframe["min_axial_acceleration"] = 0
 
     if 'tangential' in calibrated_dataframe.columns:
-        calibrated_dataframe["max_tangential_acceleration"] = np.asarray(calibrated_dataframe[
+        autcorrelated_dataframe["max_tangential_acceleration"] = np.asarray(calibrated_dataframe[
             "tangential"].apply(
             lambda x: np.max(x)))
-        calibrated_dataframe["min_tangential_acceleration"] = np.asarray(calibrated_dataframe[
+        autcorrelated_dataframe["min_tangential_acceleration"] = np.asarray(calibrated_dataframe[
             "tangential"].apply(
             lambda x: np.min(x)))
     else:
-        calibrated_dataframe["max_tangential_acceleration"] = 0
-        calibrated_dataframe["min_tangential_acceleration"] = 0
+        autcorrelated_dataframe["max_tangential_acceleration"] = 0
+        autcorrelated_dataframe["min_tangential_acceleration"] = 0
 
     if 'radial' in calibrated_dataframe.columns:
-        calibrated_dataframe["max_radial_acceleration"] = np.asarray(calibrated_dataframe["radial"].apply(
+        autcorrelated_dataframe["max_radial_acceleration"] = np.asarray(calibrated_dataframe["radial"].apply(
             lambda x: np.max(x)))
-        calibrated_dataframe["min_radial_acceleration"] = np.asarray(calibrated_dataframe["radial"].apply(
+        autcorrelated_dataframe["min_radial_acceleration"] = np.asarray(calibrated_dataframe["radial"].apply(
             lambda x: np.min(x)))
     else:
-        calibrated_dataframe["max_radial_acceleration"] = 0
-        calibrated_dataframe["min_radial_acceleration"] = 0
+        autcorrelated_dataframe["max_radial_acceleration"] = 0
+        autcorrelated_dataframe["min_radial_acceleration"] = 0
 
     if 'radial' not in autcorrelated_dataframe.columns:
         num_lines = autcorrelated_dataframe.shape[0]
@@ -196,7 +204,7 @@ def load_raw_file(h5_file_path, timestamp_min, timestamp_max,config_str):
         for i in range(num_lines):
             temp[i] = [0] * len_line
         autcorrelated_dataframe['packets'] = temp
-
+    f1.close()
     return autcorrelated_dataframe, global_config
 
 
@@ -213,7 +221,7 @@ def load_acorr_file(h5_file_path, timestamp_min, timestamp_max,config_str):
     inverted_mask = mask[::-1]
     last_true_idx = len(inverted_mask) - np.argmax(inverted_mask)
     h5f = f1
-    COMPONENT_IDS = ['axial', 'tangential', 'radial']
+
     dict_for_df = {}
     for component_id in COMPONENT_IDS:
         try:
@@ -233,7 +241,7 @@ def load_acorr_file(h5_file_path, timestamp_min, timestamp_max,config_str):
         data = h5f.get(key)[first_true_idx:last_true_idx]
         dict_for_df[key] = np.asarray(data)
     df = pd.DataFrame(dict_for_df)
-
+    f1.close()
     return df, global_config
 
 
@@ -266,9 +274,28 @@ def generate_cache_acorr(matches_line,files,mwd_df,mwd_helper):
     return td
 
 def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper):
+
     if line.solution_label == 'Non Conflict':
+
+
         td = generate_cache_acorr(line,files_df,mwd_df,mwd_helper)
         holes_cached_folder = env_config.get_hole_h5_interpolated_cache_folder(mine_name)
+        h5_filename = str(line.bench_name) + "_" + str(line.pattern_name) + "_" + str(line.hole_name) + "_" + str(
+            line.hole_id) + "_" + str(line.sensor_id) + "_" + str(line.digitizer_id) + ".h5"
+        h5_path = os.path.join(holes_cached_folder, h5_filename)
+        temp_h5_path = h5_path.replace(".h5", "temp.h5")
+
+        ## RENAME COLUMNS TO AXIAL_TRACE
+        for component_id in COMPONENT_IDS:
+            td.dataframe.rename(columns={component_id:component_id + "_trace"}, inplace=True)
+        td.save_to_h5(temp_h5_path)
+        logger.info("File saved at " + temp_h5_path)
+        try:
+            os.rename(temp_h5_path, h5_path)
+
+        except:
+            logger.error("Failed to rename " + str(temp_h5_path) + " to " + str(h5_path))
+    return
 
 
 if __name__ == '__main__':
@@ -293,4 +320,10 @@ if __name__ == '__main__':
     matches_df = sql_db_helper.matches.get_all()
     files_df = sql_db_helper.sensor_files.get_all()
     #generate_cache_acorr(mine_name, env_config_path,args.matches_output_path)
-    matches_df.apply(process_match_line, axis=1,args=(env_config,args.mine_name,files_df,mwd_df,mwd_helper))
+    for line in matches_df.iterrows():
+        line = line[1]
+        p = Process(target=process_match_line,
+                    args=(line,env_config,args.mine_name,files_df,mwd_df,mwd_helper))
+        p.start()
+        p.join()
+   # matches_df.apply(process_match_line, axis=1,args=(env_config,args.mine_name,files_df,mwd_df,mwd_helper))
