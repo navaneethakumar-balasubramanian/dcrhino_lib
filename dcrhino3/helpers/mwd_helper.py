@@ -240,9 +240,9 @@ class MWDHelper():
             (Dataframe): remapped mwd dataframe with empty columns dropped
         """
         #temp = mwd_df
-
+        inverted_kv_mapping = dict([(value, key) for key, value in mapping.items()])
         mwd_df = mwd_df.copy()
-        return mwd_df.rename(mapping)
+        return mwd_df.rename(inverted_kv_mapping,axis=1)
 
     def _have_required_columns(self,mwd_df):
         """
@@ -303,6 +303,13 @@ class MWDHelper():
         sorted_by_start_time = df.sort_values(by=['start_time'])
         return sorted_by_start_time
 
+    def try_creating_missing_columns(self,mwd_df):
+        if 'hole_id' not in mwd_df.columns and 'hole_name' in mwd_df.columns:
+            mwd_df['hole_id'] = mwd_df.hole_name
+        if 'hole_name' not in mwd_df.columns and 'hole_id' in mwd_df.columns:
+            mwd_df['hole_name'] = mwd_df.hole_id
+        return mwd_df
+
     def get_rhino_mwd_from_mine_name(self,mine_name):
         """
         Retrieves mwd from .csv or database connection, remaps,
@@ -329,7 +336,7 @@ class MWDHelper():
 
         
         remaped = self.remap_mwd_df(original_mwd_df,cfg['mapping'])
-
+        remaped = self.try_creating_missing_columns(remaped)
         if self._have_required_columns(remaped):
             remaped_with_optionals = self._create_optional_columns(remaped)
             remaped_with_optionals = self._post_process(remaped_with_optionals)
