@@ -314,16 +314,17 @@ if __name__ == '__main__':
     env_config = EnvConfig()
     mwd_helper = MWDHelper(env_config)
     mwd_df = mwd_helper.get_rhino_mwd_from_mine_name(args.mine_name)
-    merger = MWDRhinoMerger(None,None,False)
-    sqlconn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
-    sql_db_helper = RhinoSqlHelper(host=sqlconn['host'], user=sqlconn['user'], passwd=sqlconn['password'],database=sqlconn['database'])
-    matches_df = sql_db_helper.matches.get_all()
-    files_df = sql_db_helper.sensor_files.get_all()
-    #generate_cache_acorr(mine_name, env_config_path,args.matches_output_path)
-    for line in matches_df.iterrows():
-        line = line[1]
-        p = Process(target=process_match_line,
-                    args=(line,env_config,args.mine_name,files_df,mwd_df,mwd_helper))
-        p.start()
-        p.join()
+    if mwd_df is not False:
+        merger = MWDRhinoMerger(None,None,False)
+        sqlconn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
+        sql_db_helper = RhinoSqlHelper(host=sqlconn['host'], user=sqlconn['user'], passwd=sqlconn['password'],database=sqlconn['database'])
+        matches_df = sql_db_helper.matches.get_all()
+        files_df = sql_db_helper.sensor_files.get_all()
+        #generate_cache_acorr(mine_name, env_config_path,args.matches_output_path)
+        for line in matches_df.iterrows():
+            line = line[1]
+            p = Process(target=process_match_line,
+                        args=(line,env_config,args.mine_name,files_df,mwd_df,mwd_helper))
+            p.start()
+            p.join()
    # matches_df.apply(process_match_line, axis=1,args=(env_config,args.mine_name,files_df,mwd_df,mwd_helper))
