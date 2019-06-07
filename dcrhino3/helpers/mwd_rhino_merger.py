@@ -12,7 +12,7 @@ import pandas as pd
 from dcrhino3.helpers.general_helper_functions import init_logging
 from scipy.interpolate import interp1d
 from sklearn.neighbors.classification import KNeighborsClassifier
-
+from functools import reduce
 
 logger = init_logging(__name__)
 
@@ -130,14 +130,11 @@ class MWDRhinoMerger():
 
     def _detect_conflicts(self,files_in_match):
             conflict = False
+            ts_arrays = []
             for file_in_match in files_in_match.iterrows():
-                for file_in_match2 in files_in_match.iterrows():
-                    if (file_in_match[1]['min_ts'] > file_in_match2[1]['min_ts'] and file_in_match[1]['min_ts'] <
-                        file_in_match2[1]['max_ts']) or (
-                            file_in_match[1]['max_ts'] > file_in_match2[1]['min_ts'] and file_in_match[1]['max_ts'] <
-                            file_in_match2[1]['max_ts']):
-                        conflict = True
-            return conflict
+                ts_arrays.append(np.arange(file_in_match[1].min_ts,file_in_match[1].max_ts))
+            result = reduce(np.intersect1d, ts_arrays)
+            return len(result) > 0
 
     def _detect_missing_ts(self,line,files_in_match):
         ts_in_hole = np.arange(int(line[1]['start_time_min']),int(line[1]['start_time_max']),1)
