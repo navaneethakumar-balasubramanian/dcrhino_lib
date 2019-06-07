@@ -551,7 +551,7 @@ def onclick(event):
     print (event.xdata, event.ydata)
 
 if __name__ == "__main__":
-    argparser = argparse.ArgumentParser(description="Playback Raw Data -  Copyright (c) 2018 DataCloud")
+    argparser = argparse.ArgumentParser(description="Playback Raw Data -  Copyright (c) 2019 DataCloud")
     argparser.add_argument('-st', '--start_time', help="Start timestamp to process 'YYYY-MM-DD HH:MM:SS' in UTC Time",
                            default=None)
     argparser.add_argument('-et', '--end_time', help="End timestamp to process 'YYYY-MM-DD HH:MM:SS' in UTC Time",
