@@ -279,6 +279,9 @@ def generate_cache_acorr(matches_line,files,mwd_df,mwd_helper):
         elif int(file[1].type) == 2:
             output_df, global_config = load_acorr_file(file[1].file_path, matches_line.start_time_min,
                                                        matches_line.start_time_max,file[1].config_str)
+
+            for component_id in COMPONENT_IDS:
+                output_df.rename(columns={ component_id + "_trace":component_id}, inplace=True)
             # pdb.set_trace()
         file_id = file[1].sensor_file_id
         output_df['acorr_file_id'] = file_id
@@ -299,12 +302,14 @@ def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper):
 
 
         td = generate_cache_acorr(line,files_df,mwd_df,mwd_helper)
+        if td is False:
+            return
         holes_cached_folder = env_config.get_hole_h5_interpolated_cache_folder(mine_name)
         h5_filename = str(line.bench_name) + "_" + str(line.pattern_name) + "_" + str(line.hole_name) + "_" + str(
             line.hole_id) + "_" + str(line.sensor_id) + "_" + str(line.digitizer_id) + ".h5"
         h5_path = os.path.join(holes_cached_folder, h5_filename)
         temp_h5_path = h5_path.replace(".h5", "temp.h5")
-        print temp_h5_path
+        #print temp_h5_path
 
         ## RENAME COLUMNS TO AXIAL_TRACE
         for component_id in COMPONENT_IDS:
