@@ -236,7 +236,7 @@ def load_acorr_file(h5_file_path, timestamp_min, timestamp_max,config_str):
     timestamp_min = timestamp_min
     timestamp_max = timestamp_max
     timestamps = np.asarray(f1.get('timestamp'), dtype=np.float64)
-    mask = (timestamps >= timestamp_min) & (timestamps <= timestamp_max)
+    mask = (timestamps >= int(timestamp_min)) & (timestamps <= int(timestamp_max))
     first_true_idx = np.argmax(mask == True)
     inverted_mask = mask[::-1]
     last_true_idx = len(inverted_mask) - np.argmax(inverted_mask)
