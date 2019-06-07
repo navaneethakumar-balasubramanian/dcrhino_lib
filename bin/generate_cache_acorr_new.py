@@ -9,6 +9,8 @@ import os
 os.environ['MKL_NUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 os.environ['OMP_NUM_THREADS'] = '1'
+
+
 #import json
 import numpy as np
 #import pandas as pd
@@ -24,7 +26,7 @@ from dcrhino3.helpers.mwd_helper import MWDHelper
 from dcrhino3.helpers.mwd_rhino_merger import MWDRhinoMerger
 from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.models.trace_dataframe import TraceData
-from dcrhino3.helpers.general_helper_functions import init_logging
+from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
 
 logger = init_logging(__name__)
 
@@ -36,6 +38,10 @@ import h5py
 import json
 import os
 from dcrhino3.models.traces.raw_trace import RawTraceData
+from multiprocessing import Pool
+
+
+file_logger = init_logging_to_file(__name__)
 
 COMPONENT_IDS = ['axial', 'tangential', 'radial']
 
@@ -324,6 +330,14 @@ def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper):
     return
 
 
+def process(list_of_args):
+    try:
+        process_match_line(list_of_args[0], list_of_args[1], list_of_args[2], list_of_args[3],list_of_args[4], list_of_args[5])
+    except:
+        logger.warn("FAILED TO PROCESS THIS " + str(list_of_args[2]))
+        file_logger.warn("FAILED TO PROCESS THIS " + str(list_of_args[2]))
+
+
 if __name__ == '__main__':
     use_argparse = True
     if use_argparse:
@@ -331,9 +345,11 @@ if __name__ == '__main__':
         argparser.add_argument("mine_name", metavar="mine_name", type=str, help="Mine Name")
         argparser.add_argument("-env", '--env_config_path', help="Path to optional env config file", default=False)
         argparser.add_argument("-m", '--matches_output_path', help="Path to optional matches file", default=False)
+        argparser.add_argument('-mp', '--mp-processes', help="MULTIPROCESSING PROCESSES", default=False)
         args = argparser.parse_args()
         mine_name = args.mine_name
         env_config_path = args.env_config_path
+        processes = args.mp_processes
     else:
         mine_name = ''
 
@@ -347,11 +363,19 @@ if __name__ == '__main__':
         matches_df = sql_db_helper.matches.get_all()
         files_df = sql_db_helper.sensor_files.get_all()
         #generate_cache_acorr(mine_name, env_config_path,args.matches_output_path)
+        processes_queue = []
         for line in matches_df.iterrows():
             line = line[1]
            # p = Process(target=process_match_line,
            #             args=(line,env_config,args.mine_name,files_df,mwd_df,mwd_helper))
            # p.start()
            # p.join()
-            process_match_line(line,env_config,args.mine_name,files_df,mwd_df,mwd_helper)
+            if processes:
+                processes_queue.append([line,env_config,args.mine_name,files_df,mwd_df,mwd_helper])
+            else:
+                process_match_line(line, env_config, args.mine_name, files_df, mwd_df, mwd_helper)
+
+
+        p = Pool(int(processes))
+        p.map(process, processes_queue)
    # matches_df.apply(process_match_line, axis=1,args=(env_config,args.mine_name,files_df,mwd_df,mwd_helper))

@@ -64,6 +64,20 @@ def init_logging(name):
                         %(levelname)-8s line:%(lineno)d %(funcName)s %(message)s', \
                         datefmt='%m-%d %H:%M:%S',filemode='w')
     return logger
+
+def init_logging_to_file(name):
+    """
+    Start a basic logger.
+    Parameters:
+        name (str): name of logger
+    Returns:
+        logger to record DataCloud-specific warnings, errors, and steps.
+    """
+    logger = logging.getLogger(name)
+    logging.basicConfig(filename='output.log',level=logging.INFO, format='%(asctime)s %(name)-12s \
+                        %(levelname)-8s line:%(lineno)d %(funcName)s %(message)s', \
+                        datefmt='%m-%d %H:%M:%S', filemode='w')
+    return logger
 #<\temporary logging>
 
 logger = init_logging(__name__)
