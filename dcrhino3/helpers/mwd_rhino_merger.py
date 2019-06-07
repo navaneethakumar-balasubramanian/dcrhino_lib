@@ -129,12 +129,10 @@ class MWDRhinoMerger():
         return files_holes_df
 
     def _detect_conflicts(self,files_in_match):
-            conflict = False
-            ts_arrays = []
-            for file_in_match in files_in_match.iterrows():
-                ts_arrays.append(np.arange(file_in_match[1].min_ts,file_in_match[1].max_ts))
-            result = reduce(np.intersect1d, ts_arrays)
-            return len(result) > 0
+        nparr = np.array([])
+        for file_ in files_in_match.iterrows():
+            nparr = np.concatenate((nparr, np.arange(file_[1].min_ts, file_[1].max_ts)))
+        return len(nparr) != len(np.unique(nparr))
 
     def _detect_missing_ts(self,line,files_in_match):
         ts_in_hole = np.arange(int(line[1]['start_time_min']),int(line[1]['start_time_max']),1)
@@ -171,11 +169,14 @@ class MWDRhinoMerger():
             solution = self._get_bigger(line,solution)
         return solution
 
+
+
     def get_solution_arrays(self,matches,files):
         solution_array = []
         solution_label_array = []
         counter = 0
         for line in matches.iterrows():
+
             counter += 1
             logger.info("Solving conflict " + str(counter) + " of " + str(len(matches)) )
             files_ids =  line[1]['files_ids']
@@ -197,7 +198,7 @@ class MWDRhinoMerger():
                 #print line[1]['hole_id'] + " MISSING DATA " +str(int(missing_data_percentage)) + "%"
                 solution_label_array.append("Missing data")
                 solution_array.append('')
-                #plot(files_in_match,line,solution)
+
             elif conflict:
                 solution = self._solve_conflict(line,files_in_match)
                 solution_str = ''
@@ -226,6 +227,7 @@ class MWDRhinoMerger():
                 #print line[1]['hole_id'] + ' Non Conflict'
                 solution_label_array.append("Non Conflict")
                 solution_array.append(files_ids)
+
         return solution_array,solution_label_array
 
 
