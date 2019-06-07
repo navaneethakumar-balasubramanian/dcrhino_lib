@@ -304,6 +304,7 @@ def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper):
             line.hole_id) + "_" + str(line.sensor_id) + "_" + str(line.digitizer_id) + ".h5"
         h5_path = os.path.join(holes_cached_folder, h5_filename)
         temp_h5_path = h5_path.replace(".h5", "temp.h5")
+        print temp_h5_path
 
         ## RENAME COLUMNS TO AXIAL_TRACE
         for component_id in COMPONENT_IDS:
