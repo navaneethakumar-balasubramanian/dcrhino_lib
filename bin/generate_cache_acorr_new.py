@@ -344,8 +344,9 @@ if __name__ == '__main__':
         #generate_cache_acorr(mine_name, env_config_path,args.matches_output_path)
         for line in matches_df.iterrows():
             line = line[1]
-            p = Process(target=process_match_line,
-                        args=(line,env_config,args.mine_name,files_df,mwd_df,mwd_helper))
-            p.start()
-            p.join()
+           # p = Process(target=process_match_line,
+           #             args=(line,env_config,args.mine_name,files_df,mwd_df,mwd_helper))
+           # p.start()
+           # p.join()
+            process_match_line(line,env_config,args.mine_name,files_df,mwd_df,mwd_helper)
    # matches_df.apply(process_match_line, axis=1,args=(env_config,args.mine_name,files_df,mwd_df,mwd_helper))
