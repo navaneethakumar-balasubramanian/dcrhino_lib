@@ -269,7 +269,7 @@ import pdb
 
 
 def generate_cache_acorr(matches_line,files,mwd_df,mwd_helper):
-    files_ids_to_load = np.array(matches_line.files_ids.split(',')).astype(int)
+    files_ids_to_load = np.array(matches_line.solution.split(',')).astype(int)
     files_to_load = files[files['sensor_file_id'].astype(int).isin(files_ids_to_load)]
     td = TraceData()
     for file in files_to_load.iterrows():
