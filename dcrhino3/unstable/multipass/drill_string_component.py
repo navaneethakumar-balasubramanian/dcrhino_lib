@@ -142,7 +142,7 @@ class DrillStringComponent(object):
     @property
     def length_in_meters(self):
         measurement = Measurement((self._length, self._length_units))
-        return measurement.value_in_meters()
+        return measurement.convert_to_meters()
 
 
 

@@ -135,7 +135,7 @@ class DrillRig(object):
         """
         how do we handle when SS DNE?
         """
-        self.sensor_position.value_in_meters() - self.shocksub_length
+        self.sensor_position.convert_to_meters() - self.shocksub_length
 
     @property
     def installed_resonant_length(self):
