@@ -55,110 +55,40 @@ def raw_trace_h5_to_acorr_db(h5_file_path,env_config,chunk_size=5000):
 
     json_str = json.dumps(vars(global_config), indent=4)
 
-    config = db_helper.create_new_acorr_file_conf(file_id,json_str)
+    calibrated_dataframe = raw_trace_data.calibrate_l1h5(l1h5_dataframe, global_config)
 
+    resampled_dataframe = raw_trace_data.resample_l1h5(calibrated_dataframe, global_config)
+    autcorrelated_dataframe = raw_trace_data.autocorrelate_l1h5(resampled_dataframe, global_config)
+    #pdb.set_trace()
+    if 'axial' in calibrated_dataframe.columns:
+        calibrated_dataframe["max_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
+            lambda x: np.max(x)))
+        calibrated_dataframe["min_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
+            lambda x: np.min(x)))
+    else:
+        calibrated_dataframe["max_axial_acceleration"] = 0
+        calibrated_dataframe["min_axial_acceleration"] = 0
 
-    list_df = splitDataFrameIntoSmaller(l1h5_dataframe.reset_index(drop=True),chunk_size)
+    if 'tangential' in calibrated_dataframe.columns:
+        calibrated_dataframe["max_tangential_acceleration"] = np.asarray(calibrated_dataframe[
+                                                                             "tangential"].apply(
+            lambda x: np.max(x)))
+        calibrated_dataframe["min_tangential_acceleration"] = np.asarray(calibrated_dataframe[
+                                                                             "tangential"].apply(
+            lambda x: np.min(x)))
+    else:
+        calibrated_dataframe["max_tangential_acceleration"] = 0
+        calibrated_dataframe["min_tangential_acceleration"] = 0
 
-    for chunk in list_df:
-        if len(chunk) > 0:
-            calibrated_dataframe = raw_trace_data.calibrate_l1h5(chunk, global_config)
-	   
-            resampled_dataframe = raw_trace_data.resample_l1h5(calibrated_dataframe, global_config)
-            autcorrelated_dataframe = raw_trace_data.autocorrelate_l1h5(resampled_dataframe, global_config)
-            #pdb.set_trace()
-            if 'axial' in calibrated_dataframe.columns:
-                calibrated_dataframe["max_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
-                    lambda x: np.max(x)))
-                calibrated_dataframe["min_axial_acceleration"] = np.asarray(calibrated_dataframe["axial"].apply(
-                    lambda x: np.min(x)))
-            else:
-                calibrated_dataframe["max_axial_acceleration"] = 0
-                calibrated_dataframe["min_axial_acceleration"] = 0
+    if 'radial' in calibrated_dataframe.columns:
+        calibrated_dataframe["max_radial_acceleration"] = np.asarray(calibrated_dataframe["radial"].apply(
+            lambda x: np.max(x)))
+        calibrated_dataframe["min_radial_acceleration"] = np.asarray(calibrated_dataframe["radial"].apply(
+            lambda x: np.min(x)))
+    else:
+        calibrated_dataframe["max_radial_acceleration"] = 0
+        calibrated_dataframe["min_radial_acceleration"] = 0
 
-            if 'tangential' in calibrated_dataframe.columns:
-                calibrated_dataframe["max_tangential_acceleration"] = np.asarray(calibrated_dataframe[
-                                                                                     "tangential"].apply(
-                    lambda x: np.max(x)))
-                calibrated_dataframe["min_tangential_acceleration"] = np.asarray(calibrated_dataframe[
-                                                                                     "tangential"].apply(
-                    lambda x: np.min(x)))
-            else:
-                calibrated_dataframe["max_tangential_acceleration"] = 0
-                calibrated_dataframe["min_tangential_acceleration"] = 0
-
-            if 'radial' in calibrated_dataframe.columns:
-                calibrated_dataframe["max_radial_acceleration"] = np.asarray(calibrated_dataframe["radial"].apply(
-                    lambda x: np.max(x)))
-                calibrated_dataframe["min_radial_acceleration"] = np.asarray(calibrated_dataframe["radial"].apply(
-                    lambda x: np.min(x)))
-            else:
-                calibrated_dataframe["max_radial_acceleration"] = 0
-                calibrated_dataframe["min_radial_acceleration"] = 0
-
-            if 'radial' not in autcorrelated_dataframe.columns:
-                num_lines = autcorrelated_dataframe.shape[0]
-                len_line = len(autcorrelated_dataframe['axial'].values[0])
-                temp = [None] * num_lines
-                for i in range(num_lines):
-                    temp[i] = [0] * len_line
-                autcorrelated_dataframe['radial'] = temp
-    
-            if 'tangential' not in autcorrelated_dataframe.columns:
-                num_lines = autcorrelated_dataframe.shape[0]
-                len_line = len(autcorrelated_dataframe['axial'].values[0])
-                temp = [None] * num_lines
-                for i in range(num_lines):
-                    temp[i] = [0] * len_line
-                autcorrelated_dataframe['tangential'] = temp
-
-            if 'rssi' not in autcorrelated_dataframe.columns:
-                num_lines = autcorrelated_dataframe.shape[0]
-                len_line = len(autcorrelated_dataframe['axial'].values[0])
-                temp = [None] * num_lines
-                for i in range(num_lines):
-                    temp[i] = [0] * len_line
-                autcorrelated_dataframe['rssi'] = temp
-
-            if 'temp' not in autcorrelated_dataframe.columns:
-                num_lines = autcorrelated_dataframe.shape[0]
-                len_line = len(autcorrelated_dataframe['axial'].values[0])
-                temp = [None] * num_lines
-                for i in range(num_lines):
-                    temp[i] = [0] * len_line
-                autcorrelated_dataframe['temp'] = temp
-
-            if 'batt' not in autcorrelated_dataframe.columns:
-                num_lines = autcorrelated_dataframe.shape[0]
-                len_line = len(autcorrelated_dataframe['axial'].values[0])
-                temp = [None] * num_lines
-                for i in range(num_lines):
-                    temp[i] = [0] * len_line
-                autcorrelated_dataframe['batt'] = temp
-
-            if 'packets' not in autcorrelated_dataframe.columns:
-                num_lines = autcorrelated_dataframe.shape[0]
-                len_line = len(autcorrelated_dataframe['axial'].values[0])
-                temp = [None] * num_lines
-                for i in range(num_lines):
-                    temp[i] = [0] * len_line
-                autcorrelated_dataframe['packets'] = temp
-            
-            db_helper.save_autocorr_traces(file_id, autcorrelated_dataframe['timestamp'],
-                                           axial=autcorrelated_dataframe['axial'],
-                                           radial=autcorrelated_dataframe['radial'],
-                                           tangential=autcorrelated_dataframe['tangential'],
-                                           max_axial_acceleration=calibrated_dataframe['max_axial_acceleration'],
-                                           min_axial_acceleration=calibrated_dataframe['min_axial_acceleration'],
-                                           max_tangential_acceleration=calibrated_dataframe['max_tangential_acceleration'],
-                                           min_tangential_acceleration=calibrated_dataframe['min_tangential_acceleration'],
-                                           max_radial_acceleration=calibrated_dataframe['max_radial_acceleration'],
-                                           min_radial_acceleration=calibrated_dataframe['min_radial_acceleration'],
-                                           rssi=calibrated_dataframe["rssi"],
-                                           temp=calibrated_dataframe["temp"],
-                                           batt=calibrated_dataframe["batt"],
-                                           packets=calibrated_dataframe["packets"]
-                                           )
 
 
 if __name__ == '__main__':

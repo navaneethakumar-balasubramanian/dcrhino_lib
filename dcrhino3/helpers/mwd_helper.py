@@ -334,7 +334,11 @@ class MWDHelper():
             cfg = self.env_config.get_mwd_db_cfg(mine_name)
             original_mwd_df = self.get_mwd_from_db(cfg['domain'],cfg['dataset_name'])
 
-        
+        for column in original_mwd_df.columns:
+            if "Unnamed: " in column:
+                original_mwd_df.drop([column],axis=1,inplace=True)
+        original_mwd_df = original_mwd_df.drop_duplicates()
+
         remaped = self.remap_mwd_df(original_mwd_df,cfg['mapping'])
         remaped = self.try_creating_missing_columns(remaped)
         if self._have_required_columns(remaped):

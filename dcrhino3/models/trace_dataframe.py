@@ -222,7 +222,7 @@ class TraceData(object):
 
 
 
-    def save_to_h5(self, path):
+    def save_to_h5(self, path,compress=False):
         """
         Save dataframe (without trace data) to h5 at location specified by "path"
         
@@ -258,7 +258,10 @@ class TraceData(object):
             try:
                 trace_label = '{}_trace'.format(component_id)
                 trace_data = self.component_as_array(component_id)
-                h5f.create_dataset(trace_label, data=trace_data, dtype=float)#, compression="gzip", compression_opts=9)
+                if compress:
+                    h5f.create_dataset(trace_label, data=trace_data, dtype=float, chunks=True,compression='lzf',shuffle=True)
+                else:
+                    h5f.create_dataset(trace_label, data=trace_data, dtype=float)#, compression="gzip", compression_opts=9)
                 all_columns.remove(trace_label)
             except KeyError:
                 logger.info('Skipping saving {} as it DNE'.format(trace_label))
@@ -285,13 +288,23 @@ class TraceData(object):
                     dt = h5py.special_dtype(vlen=str)
                 else:
                     dt = h5py.special_dtype(vlen=unicode)
-                h5f.create_dataset(column_label, data=column_data, dtype=dt)#, compression="gzip", compression_opts=9)
+                if compress:
+                    h5f.create_dataset(column_label, data=column_data, dtype=dt, chunks=True, compression='lzf',
+                                       shuffle=True)
+                else:
+                    h5f.create_dataset(column_label, data=column_data, dtype=dt)
             elif dtype == np.int64:
-                h5f.create_dataset(column_label, data=column_data, dtype='i8')#, compression="gzip", compression_opts=9)
+                if compress:
+                    h5f.create_dataset(column_label, data=column_data, dtype='i8',chunks=True,compression='lzf',shuffle=True)
+                else:
+                    h5f.create_dataset(column_label, data=column_data, dtype='i8')#, compression="gzip", compression_opts=9)
             else:
 
                 column_data = column_data.astype(float)
-                h5f.create_dataset(column_label, data=column_data, dtype=float)#, compression="gzip", compression_opts=9)
+                if compress:
+                    h5f.create_dataset(column_label, data=column_data, dtype=float,chunks=True,compression='lzf',shuffle=True)
+                else:
+                    h5f.create_dataset(column_label, data=column_data, dtype=float)#, compression="gzip", compression_opts=9)
         #</mwd columns>
 
         #<config>

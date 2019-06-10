@@ -225,7 +225,7 @@ def load_raw_file(h5_file_path, timestamp_min, timestamp_max,config_str):
     return autcorrelated_dataframe, global_config
 
 
-def load_acorr_file(h5_file_path, timestamp_min, timestamp_max,config_str):
+def load_acorr_file(h5_file_path, timestamp_min, timestamp_max,config_str, file_min_ts):
     f1 = h5py.File(h5_file_path, 'r+')
     global_config_jsons = json.loads(f1.attrs['global_config_jsons'])
     global_config = Config()
@@ -239,8 +239,8 @@ def load_acorr_file(h5_file_path, timestamp_min, timestamp_max,config_str):
         global_config.output_sampling_rate *= upsample_factor
 
 
-    timestamp_min = timestamp_min
-    timestamp_max = timestamp_max
+    timestamp_min = int(timestamp_min) - int(file_min_ts)
+    timestamp_max = int(timestamp_max) - int(file_min_ts)
     timestamps = np.asarray(f1.get('timestamp'), dtype=np.float64)
     mask = (timestamps >= int(timestamp_min)) & (timestamps <= int(timestamp_max))
     first_true_idx = np.argmax(mask == True)
@@ -267,6 +267,7 @@ def load_acorr_file(h5_file_path, timestamp_min, timestamp_max,config_str):
         data = h5f.get(key)[first_true_idx:last_true_idx]
         dict_for_df[key] = np.asarray(data)
     df = pd.DataFrame(dict_for_df)
+    df['timestamp'] = df['timestamp'] + int(file_min_ts)
     f1.close()
     return df, global_config
 
@@ -274,20 +275,18 @@ def load_acorr_file(h5_file_path, timestamp_min, timestamp_max,config_str):
 import pdb
 
 
-def generate_cache_acorr(matches_line,files,mwd_df,mwd_helper):
+def generate_cache_acorr(matches_line,files,mwd_df,mwd_helper,env_config,mine_name):
     files_ids_to_load = np.array(matches_line.solution.split(',')).astype(int)
     files_to_load = files[files['sensor_file_id'].astype(int).isin(files_ids_to_load)]
     td = TraceData()
     for file in files_to_load.iterrows():
-        if int(file[1].type) == 1:
-            output_df, global_config = load_raw_file(file[1].file_path, matches_line.start_time_min,
-                                                     matches_line.start_time_max,file[1].config_str)
-        elif int(file[1].type) == 2:
-            output_df, global_config = load_acorr_file(file[1].file_path, matches_line.start_time_min,
-                                                       matches_line.start_time_max,file[1].config_str)
+        folder = env_config.get_sensor_files_storage_folder(mine_name)
+        file_path = os.path.join(folder,str(file[1].sensor_file_id) + ".h5")
 
-            for component_id in COMPONENT_IDS:
-                output_df.rename(columns={ component_id + "_trace":component_id}, inplace=True)
+        output_df, global_config = load_acorr_file(file_path, matches_line.start_time_min, matches_line.start_time_max,file[1].config_str, file[1].min_ts)
+
+        for component_id in COMPONENT_IDS:
+            output_df.rename(columns={ component_id + "_trace":component_id}, inplace=True)
             # pdb.set_trace()
         file_id = file[1].sensor_file_id
         output_df['acorr_file_id'] = file_id
@@ -299,15 +298,16 @@ def generate_cache_acorr(matches_line,files,mwd_df,mwd_helper):
     hole_mwd = mwd_helper.get_hole_mwd_from_mine_mwd(mwd_df, matches_line.bench_name,
                                                      matches_line.pattern_name, matches_line.hole_name,
                                                      matches_line.hole_id)
+    hole_mwd.reset_index(drop=True,inplace=True)
     td.dataframe = merge_mwd_with_trace(hole_mwd, td, merger)
     return td
 
 def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper):
 
-    if line.solution_label == 'Non Conflict':
+    if line.solution_label == 'Non Conflict' or line.solution_label== 'Conflict Solved':
 
 
-        td = generate_cache_acorr(line,files_df,mwd_df,mwd_helper)
+        td = generate_cache_acorr(line,files_df,mwd_df,mwd_helper,env_config,mine_name)
         if td is False:
             return
         holes_cached_folder = env_config.get_hole_h5_interpolated_cache_folder(mine_name)
@@ -366,16 +366,12 @@ if __name__ == '__main__':
         processes_queue = []
         for line in matches_df.iterrows():
             line = line[1]
-           # p = Process(target=process_match_line,
-           #             args=(line,env_config,args.mine_name,files_df,mwd_df,mwd_helper))
-           # p.start()
-           # p.join()
-            if processes:
+            if processes is not False:
                 processes_queue.append([line,env_config,args.mine_name,files_df,mwd_df,mwd_helper])
             else:
                 process_match_line(line, env_config, args.mine_name, files_df, mwd_df, mwd_helper)
 
-
-        p = Pool(int(processes))
-        p.map(process, processes_queue)
-   # matches_df.apply(process_match_line, axis=1,args=(env_config,args.mine_name,files_df,mwd_df,mwd_helper))
+        if processes is not False:
+            p = Pool(int(processes))
+            p.map(process, processes_queue)
+        # matches_df.apply(process_match_line, axis=1,args=(env_config,args.mine_name,files_df,mwd_df,mwd_helper))
