@@ -3,6 +3,7 @@ import os
 os.environ['MKL_NUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 os.environ['OMP_NUM_THREADS'] = '1'
+from multiprocessing import Pool
 import argparse
 import pdb
 import sys
@@ -18,7 +19,7 @@ from dcrhino3.helpers.h5_helper import H5Helper
 from dcrhino3.helpers.sensor_file_manager import SensorFileManager
 from dcrhino3.models.traces.raw_trace import RawTraceData
 from dcrhino3.models.env_config import EnvConfig
-from dcrhino3.helpers.general_helper_functions import init_logging,splitDataFrameIntoSmaller
+from dcrhino3.helpers.general_helper_functions import init_logging,splitDataFrameIntoSmaller,init_logging_to_file
 import os
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
 from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
@@ -26,8 +27,33 @@ from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
 from multiprocessing import Process
 
 logger = init_logging(__name__)
+file_logger = init_logging_to_file(__name__)
 
 COMPONENT_IDS = ['axial', 'tangential', 'radial']
+
+
+def process(list_of_args):
+    file = list_of_args[0]
+    env_config = list_of_args[1]
+    try:
+        h5f = h5py.File(file, 'r+')
+        min_ts = sensor_file_manager.min_ts(h5f)
+        max_ts = sensor_file_manager.max_ts(h5f)
+        # raw_trace_h5_to_db(file,env_config,min_ts,max_ts)
+
+        if sensor_file_manager.is_h5_level0(h5f):
+            h5f.close()
+            print ("TYPE 1 " + str(file))
+            raw_trace_h5_to_db(file, env_config, min_ts, max_ts)
+        else:
+            h5f.close()
+            print ("TYPE 2 " + str(file))
+            acorr_h5_to_db(file, env_config, min_ts, max_ts)
+
+
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
+        print ("Failed to open : " + str(file))
 
 def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
     raw_trace_data = RawTraceData()
@@ -173,7 +199,7 @@ if __name__ == '__main__':
     clickhouse_logger.setLevel(50)
     argparser = argparse.ArgumentParser(description="Copyright (c) 2018 DataCloud")
     argparser.add_argument('-env', '--env-file', help="ENV File Path", default=False)
-    argparser.add_argument('-cpus', '--cpus', help="CPUS", default=4)
+    argparser.add_argument('-mp', '--mp-processes', help="MULTIPROCESSING PROCESSES", default=False)
     argparser.add_argument("src_path", metavar="path", type=str,
     help="Path to files to be merged; enclose in quotes, accepts * as wildcard for directories or filenames")
     args = argparser.parse_args()
@@ -185,27 +211,18 @@ if __name__ == '__main__':
 
     sensor_file_manager = SensorFileManager(env_config)
 
+    process_queue = []
+
     if not files:
         print  'File does not exist: ' + args.src_path
     for file in files:
         if '.h5' in os.path.splitext(file)[1]:
             if env_config.is_file_blacklisted(file) is False:
-                try:
-                    h5f = h5py.File(file, 'r+')
-                    min_ts = sensor_file_manager.min_ts(h5f)
-                    max_ts = sensor_file_manager.max_ts(h5f)
-                    # raw_trace_h5_to_db(file,env_config,min_ts,max_ts)
+                process_queue.append([file,env_config])
 
-                    if sensor_file_manager.is_h5_level0(h5f):
-                        h5f.close()
-                        print ("TYPE 1 " + str(file))
-                        raw_trace_h5_to_db(file, env_config, min_ts, max_ts)
-                    else:
-                        h5f.close()
-                        print ("TYPE 2 " + str(file))
-                        acorr_h5_to_db(file, env_config, min_ts, max_ts)
-
-
-                except:
-                    print("Unexpected error:", sys.exc_info()[0])
-                    print ("Failed to open : " + str(file))
+    if args.mp_processes is not False:
+        p = Pool(int(args.mp_processes))
+        p.map(process, process_queue)
+    else:
+        for process_args in process_queue:
+            process(process_args)
