@@ -507,8 +507,8 @@ class GUI():
 
     def internet_on(self):
         try:
-            urllib2.urlopen('http://www.google.com', timeout=1)
-            return "OK"
+            # urllib2.urlopen('http://www.google.com', timeout=1)
+            return "N/A"
         except urllib2.URLError as err:
             return "No Connection"
 
