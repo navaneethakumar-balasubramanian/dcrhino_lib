@@ -144,8 +144,19 @@ def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper):
         for column in td.dataframe.columns:
             data_array = td.dataframe[column]
             ## IGNORE COLUMN IF ALL ZEROES OR ALL NANS
-            if data_array.dtype != np.dtype('datetime64[ns]') and( (np.array(data_array) == None).all() or (np.array(data_array) == 0).all() or (np.array(list(data_array)) == None).all() or ((np.array(np.array(data_array).min()).min() == None or np.array(np.array(data_array).min()).min() == 0) and (np.array(np.array(data_array).max()).max() == None or np.array(np.array(data_array).max()).max() == 0) )):
+            if data_array.dtype != np.dtype('datetime64[ns]') and( (np.array(data_array) == None).all() or (np.array(data_array) == 0).all() or (np.array(list(data_array)) == None).all()):
                 td.dataframe.drop([column],axis=1,inplace=True)
+            else:
+                if '_trace' in column:
+                    have_data_on_line = False
+                    for line in data_array:
+                        if ((np.array(line) == 0).all() or (np.array(line) == None).all() or np.isnan(np.array(line)).all()) == False:
+                            have_data_on_line = True
+                            break
+                    if have_data_on_line is False:
+                        td.dataframe.drop([column], axis=1, inplace=True)
+
+
         try:
             td.save_to_h5(temp_h5_path)
         except:
