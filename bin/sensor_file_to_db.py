@@ -13,6 +13,7 @@ import logging
 import json
 import numpy as np
 import h5py
+import time
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.models.config import Config
 from dcrhino3.helpers.h5_helper import H5Helper
@@ -23,6 +24,7 @@ from dcrhino3.helpers.general_helper_functions import init_logging,splitDataFram
 import os
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
 from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
+from dcrhino3.helpers.rhino_clickhouse_helper import ClickhouseHelper
 
 from multiprocessing import Process
 
@@ -32,28 +34,60 @@ file_logger = init_logging_to_file(__name__)
 COMPONENT_IDS = ['axial', 'tangential', 'radial']
 
 
+
+def prepare_to_save(autcorrelated_dataframe,sensor_file_id,original_file_record_day):
+    autcorrelated_dataframe['relative_timestamp'] = autcorrelated_dataframe.timestamp
+    if 'rssi' not in autcorrelated_dataframe.columns:
+        autcorrelated_dataframe['rssi'] = None
+    if 'batt' not in autcorrelated_dataframe.columns:
+        autcorrelated_dataframe['batt'] = None
+    if 'temp' not in autcorrelated_dataframe.columns:
+        autcorrelated_dataframe['temp'] = None
+    if 'microtime' not in autcorrelated_dataframe.columns:
+        autcorrelated_dataframe['microtime'] = 0
+    if 'radial_trace' not in autcorrelated_dataframe.columns:
+        autcorrelated_dataframe['radial_trace'] = list(np.full([autcorrelated_dataframe.shape[0], 1], None))
+    if 'tangential_trace' not in autcorrelated_dataframe.columns:
+        autcorrelated_dataframe['tangential_trace'] = list(np.full([autcorrelated_dataframe.shape[0], 1], None))
+    if 'axial_trace' not in autcorrelated_dataframe.columns:
+        autcorrelated_dataframe['axial_trace'] = list(np.full([autcorrelated_dataframe.shape[0], 1], None))
+    if 'min_tangential_acceleration' not in autcorrelated_dataframe.columns:
+        autcorrelated_dataframe['min_tangential_acceleration'] = None
+    if 'max_tangential_acceleration' not in autcorrelated_dataframe.columns:
+        autcorrelated_dataframe['max_tangential_acceleration'] = None
+    if 'min_radial_acceleration' not in autcorrelated_dataframe.columns:
+        autcorrelated_dataframe['min_radial_acceleration'] = None
+    if 'max_radial_acceleration' not in autcorrelated_dataframe.columns:
+        autcorrelated_dataframe['max_radial_acceleration'] = None
+    if 'min_axial_acceleration' not in autcorrelated_dataframe.columns:
+        autcorrelated_dataframe['min_axial_acceleration'] = None
+    if 'max_axial_acceleration' not in autcorrelated_dataframe.columns:
+        autcorrelated_dataframe['max_axial_acceleration'] = None
+    autcorrelated_dataframe['sensor_file_id'] = sensor_file_id
+    autcorrelated_dataframe['original_file_record_day'] = int(original_file_record_day)
+    autcorrelated_dataframe.drop(['timestamp'], axis=1, inplace=True)
+    return autcorrelated_dataframe
+
 def process(list_of_args):
     file = list_of_args[0]
     env_config = list_of_args[1]
     try:
         h5f = h5py.File(file, 'r+')
-        min_ts = sensor_file_manager.min_ts(h5f)
-        max_ts = sensor_file_manager.max_ts(h5f)
-        # raw_trace_h5_to_db(file,env_config,min_ts,max_ts)
-
-        if sensor_file_manager.is_h5_level0(h5f):
-            h5f.close()
-            print ("TYPE 1 " + str(file))
-            raw_trace_h5_to_db(file, env_config, min_ts, max_ts)
-        else:
-            h5f.close()
-            print ("TYPE 2 " + str(file))
-            acorr_h5_to_db(file, env_config, min_ts, max_ts)
-
-
     except:
-        print("Unexpected error:", sys.exc_info()[0])
-        print ("Failed to open : " + str(file))
+        return
+    min_ts = sensor_file_manager.min_ts(h5f)
+    max_ts = sensor_file_manager.max_ts(h5f)
+    # raw_trace_h5_to_db(file,env_config,min_ts,max_ts)
+
+    if sensor_file_manager.is_h5_level0(h5f):
+        h5f.close()
+        print ("TYPE 1 " + str(file))
+        raw_trace_h5_to_db(file, env_config, min_ts, max_ts)
+    else:
+        h5f.close()
+        print ("TYPE 2 " + str(file))
+        acorr_h5_to_db(file, env_config, min_ts, max_ts)
+
 
 def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
     raw_trace_data = RawTraceData()
@@ -65,7 +99,8 @@ def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000)
     sql_db_helper = RhinoSqlHelper(host=sql_conn['host'], user=sql_conn['user'], passwd=sql_conn['password'],
                                    database=sql_conn['database'])
 
-    file_exists = sql_db_helper.sensor_files.file_name_exists(os.path.basename(h5_file_path))
+    #file_exists = sql_db_helper.sensor_files.file_name_exists(os.path.basename(h5_file_path))
+    file_exists = sql_db_helper.sensor_files.relative_path_exists(h5_file_path)
 
     if file_exists:
         logger.warning("IGNORED THIS FILE: DUPLICATED")
@@ -132,29 +167,40 @@ def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000)
                                              status='valid',
                                              file_name=os.path.basename(h5_file_path))
 
-    td = TraceData()
-    td.dataframe = autcorrelated_dataframe
-    path = env_config.get_sensor_files_storage_folder(str(global_config.mine_name))
-    td.save_to_h5(os.path.join(path,str(file_id) + ".h5"),compress=True)
+    clickhouse_helper = ClickhouseHelper(conn=conn)
+
+    autcorrelated_dataframe = prepare_to_save(autcorrelated_dataframe,file_id,time.strftime("%Y%m%d",time.gmtime(min_ts_df)))
+
+
+    clickhouse_helper.sensor_file_acorr_trace.add_pandas_to_table(autcorrelated_dataframe)
+
+    #td = TraceData()
+    #td.dataframe = autcorrelated_dataframe
+    #path = env_config.get_sensor_files_storage_folder(str(global_config.mine_name))
+    #td.save_to_h5(os.path.join(path,str(file_id) + ".h5"),compress=True)
 
     return autcorrelated_dataframe
 
 
 def acorr_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
-    h5_file_path = file
     h5f = h5py.File(h5_file_path, 'r+')
-    unicode_string = h5f.attrs['global_config_jsons']
-    global_config_jsons = json.loads(unicode_string)
-    for file_id, file_config in global_config_jsons.items():
-        global_config = Config()
-        global_config.set_data_from_json(json.loads(file_config))
+    if 'global_config_jsons' in h5f.attrs.keys():
+        unicode_string = h5f.attrs['global_config_jsons']
+        global_config_jsons = json.loads(unicode_string)
+        for file_id, file_config in global_config_jsons.items():
+            global_config = Config()
+            global_config.set_data_from_json(json.loads(file_config))
+    else:
+        h5_helper = H5Helper(h5f, False, False)
+        global_config = Config(h5_helper.metadata)
 
     conn = env_config.get_rhino_db_connection_from_mine_name(global_config.mine_name)
     sql_conn = env_config.get_rhino_sql_connection_from_mine_name(global_config.mine_name)
     sql_db_helper = RhinoSqlHelper(host=sql_conn['host'], user=sql_conn['user'], passwd=sql_conn['password'],
                                    database=sql_conn['database'])
 
-    file_exists = sql_db_helper.sensor_files.file_name_exists(os.path.basename(h5_file_path))
+    #file_exists = sql_db_helper.sensor_files.file_name_exists(os.path.basename(h5_file_path))
+    file_exists = sql_db_helper.sensor_files.relative_path_exists(h5_file_path)
     if file_exists:
         logger.warning("IGNORED THIS FILE: DUPLICATED")
         return
@@ -181,16 +227,26 @@ def acorr_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
 
 
     logger.info("Added this file")
+
+
+    clickhouse_helper = ClickhouseHelper(conn=conn)
+
+    min_ts_df = l1h5_dataframe['timestamp'].min()
+    l1h5_dataframe['timestamp'] = l1h5_dataframe['timestamp'] - min_ts_df
+
     file_id = sql_db_helper.sensor_files.add(h5_file_path, global_config.rig_id,
                                              str(global_config.sensor_serial_number),
                                              str(global_config.digitizer_serial_number), min_ts, max_ts,
                                              json.dumps(vars(global_config), indent=4), 2, status='valid',
                                              file_name=os.path.basename(h5_file_path))
+    l1h5_dataframe = prepare_to_save(l1h5_dataframe, file_id, time.strftime("%Y%m%d", time.gmtime(min_ts_df)))
 
-    td_out = TraceData()
-    td_out.dataframe = l1h5_dataframe
-    path = env_config.get_sensor_files_storage_folder(str(global_config.mine_name))
-    td.save_to_h5(os.path.join(path, str(file_id) + ".h5"), compress=True)
+    clickhouse_helper.sensor_file_acorr_trace.add_pandas_to_table(l1h5_dataframe)
+
+    #td_out = TraceData()
+    #td_out.dataframe = l1h5_dataframe
+    #path = env_config.get_sensor_files_storage_folder(str(global_config.mine_name))
+    #td.save_to_h5(os.path.join(path, str(file_id) + ".h5"), compress=True)
 
     return
 
