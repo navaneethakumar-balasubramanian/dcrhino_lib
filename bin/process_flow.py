@@ -30,6 +30,7 @@ import glob2
 import json
 import multiprocessing
 import os
+import shutil
 import pdb
 
 from multiprocessing import Process
@@ -51,17 +52,18 @@ file_logger = init_logging_to_file(__name__)
 def process(list_of_args):
     try:
         process_flow = list_of_args[0]
-        qq, ww = process_flow.process_file(list_of_args[1], list_of_args[2], env_config=list_of_args[3],
+        qq, ww, results_dict = process_flow.process_file(list_of_args[1], list_of_args[2], env_config=list_of_args[3],
                                            seconds_to_process=list_of_args[4],
                                            return_dict=dict())
+
+        return results_dict
     except:
         logger.warn("FAILED TO PROCESS THIS " + str(list_of_args[2]))
         file_logger.warn("FAILED TO PROCESS THIS " + str(list_of_args[2]))
 
 
-
 def process_glob(default_process_json, glob_str,
-                 env_config_path="env_config.json", seconds_to_process=False, processes=False):
+                 env_config_path="env_config.json", seconds_to_process=False, processes=False, photo_folder = False):
 
     env_config = EnvConfig(env_config_path)
     logger.info("Using env_config : {}".format(env_config_path))
@@ -129,7 +131,17 @@ def process_glob(default_process_json, glob_str,
 
     if processes is not False:
         p = Pool(int(processes))
-        p.map(process, process_queue)
+        results = p.map(process, process_queue)
+
+        for i in range (0,len(results)):
+            source_dir = results[i]['output_path']
+            dest_dir =  os.path.abspath(os.path.join(source_dir, '../..', 'tmp_output_photos'))
+            if not os.path.exists(dest_dir):
+                os.mkdir(dest_dir)
+            for png in glob2.iglob(os.path.join(source_dir, "*.png")):
+                names = png.split('/')
+                png_title = names[len(names) - 3]
+                shutil.copy(png, os.path.join(dest_dir, png_title))
 
 
 
@@ -163,17 +175,18 @@ if __name__ == '__main__':
         home = os.path.expanduser('~/')
         process_flow_dir = os.path.join(home, 'anaconda2/dc_hybrid/dcrhino_lib/bin/process_flows')
         process_flow_json_filehandle = 'tristan_test.json'
+        process_flow_json_filehandle = 'v3.1_processing_flow.json'
         process_flow_path = os.path.join(process_flow_dir, process_flow_json_filehandle)
-        #data_path = os.path.join(home, '.cache/datacloud/mont_wright/6585_5451_5451.h5')
-        data_path = os.path.join(home, '.cache/datacloud/line_creek/885_NS92_82_9607T_9607T_6172_6172.h5')
+        data_path = os.path.join(home, '.cache/datacloud/mont_wright/6585_5451_5451.h5')
+        #data_path = os.path.join(home, '.cache/datacloud/line_creek/885_NS92_82_9607T_9607T_6172_6172.h5')
         processes = 4 ## SET IT TO FALSE TO PREVENT MULTIPROCESS OR SET TO ANOTHER NUMBER TO USE LESS OR MORE PROCESSES
 
-        #txt_path = os.path.join(home, '.cache/datacloud/mont_wright/tjw_hole_selection.txt')
+        txt_path = os.path.join(home, '.cache/datacloud/mont_wright/tjw_hole_selection.txt')
 
         env_path = "env_config.json"
-        seconds_to_process = 100
+        seconds_to_process = 50
 
     with open(process_flow_path) as f:
         process_json = json.load(f)
 
-    process_glob(process_json, data_path, env_path, seconds_to_process, processes)
+    process_glob(process_json, txt_path, env_path, seconds_to_process, processes)

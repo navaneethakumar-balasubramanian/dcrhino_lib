@@ -285,6 +285,7 @@ class ProcessFlow:
         acorr_trace , process_json =  self.merge_results(splitted_subsets)
         return_dict["acorr_trace"] = acorr_trace
         return_dict["process_json"] = process_json
+        return_dict["output_path"] = self.output_path
 
         acorr_trace.save_to_h5(os.path.join(self.output_path,'processed.h5'))
         acorr_trace.save_to_csv(os.path.join(self.output_path,'processed.csv'))
@@ -304,7 +305,7 @@ class ProcessFlow:
                                                       process_id=process_id)
             # self.rhino_db_helper.save_processed_trace(trace_data, self.id, json.dumps(self.process_json),process_flow_output_path, int(now.strftime("%s")),99999)
 
-        return acorr_trace, process_json
+        return acorr_trace, process_json, return_dict
 
 
     def merge_results(self,subsets):
@@ -338,6 +339,7 @@ class ProcessFlow:
                         subset_obj['process_json']['vars'] = subset_obj['process_json']['vars'][i]
                     except:
                         subset_obj['process_json']['vars'] = {}
+
                 subsets_objs.append(subset_obj)
                 start_depth = subset
 

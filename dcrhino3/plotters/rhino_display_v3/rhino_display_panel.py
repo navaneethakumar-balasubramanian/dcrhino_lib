@@ -223,7 +223,7 @@ class Header(RhinoDisplayPanel):
         #super(RhinoDisplayPanel, .__init__(self).__init__(**kwargs)
         self.plot_style = "header"
         self.curves= kwargs.get('curves', [])
-
+        self.component = kwargs.get('component', '')
         self.trace_data = kwargs.get('trace_data', None)
         self.load_curve_data_from_dataframe()
 
@@ -232,11 +232,12 @@ class Header(RhinoDisplayPanel):
     def plot(self, ax, **kwargs):
         """
         .. todo: make a legend method that draws the legend box below like in
-        the v3 plotter.  Also add handling for stripping off label or useing synonyns
+            the v3 plotter.  Also add handling for stripping off label or useing synonyns
         .. todo: handle case of "depth"
         """
         for curve in self.curves:
             curve_ax = self.plot_curve(curve,ax)
+            ax.set_title(str(self.component).capitalize(), loc="left")
             #curve_ax.legend()
             #curve_ax.set_xlabel(curve.x_axis_label)
 
@@ -343,7 +344,6 @@ class Heatmap(RhinoDisplayPanel):
             heatmap = ax.pcolormesh(X, Y, Z, cmap=self.cmap_string,
                                     vmin=self.v_min, vmax=self.v_max)
         locs,labs = plt.xticks()
-        #pdb.set_trace()
         ax.set_ylabel('time (ms)')
 
 

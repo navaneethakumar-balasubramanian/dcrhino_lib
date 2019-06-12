@@ -67,7 +67,10 @@ class RhinoPlotterModule(BaseModule):
                         if temp_curve.column_label in trace.dataframe.columns:
                             have_curve_to_plot = True
                 if have_curve_to_plot:
-                    panel = Header(trace_data=trace, curves=curves)
+                    if "component" in panel._fields:
+                        panel = Header(trace_data=trace, curves=curves, component=panel.component)
+                    else:
+                        panel = Header(trace_data=trace, curves=curves)
                     panels.append(panel)
             elif panel.type == "heatmap":
                 curves = []
