@@ -133,15 +133,16 @@ def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000)
 
 
     for column in COMPONENT_IDS:
-        data_array = np.atleast_2d(list(autcorrelated_dataframe[column]))
-        count_non_zeroes = np.count_nonzero(data_array)
-        if count_non_zeroes == 0:
-            autcorrelated_dataframe.drop([column],axis=1,inplace=True)
-        else:
-            autcorrelated_dataframe["max_" + column + "_acceleration"] = np.asarray(calibrated_dataframe[column].apply(
-                lambda x: np.max(x)))
-            autcorrelated_dataframe["min_" + column + "_acceleration"] = np.asarray(calibrated_dataframe[column].apply(
-                lambda x: np.min(x)))
+        if column in autcorrelated_dataframe:
+            data_array = np.atleast_2d(list(autcorrelated_dataframe[column]))
+            count_non_zeroes = np.count_nonzero(data_array)
+            if count_non_zeroes == 0:
+                autcorrelated_dataframe.drop([column],axis=1,inplace=True)
+            else:
+                autcorrelated_dataframe["max_" + column + "_acceleration"] = np.asarray(calibrated_dataframe[column].apply(
+                    lambda x: np.max(x)))
+                autcorrelated_dataframe["min_" + column + "_acceleration"] = np.asarray(calibrated_dataframe[column].apply(
+                    lambda x: np.min(x)))
 
 
 
