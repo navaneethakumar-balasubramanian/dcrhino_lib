@@ -293,6 +293,11 @@ class MWDHelper():
             df['start_time'] = pd.to_datetime(df['start_time'],unit='s')
         else:
             df['start_time'] = pd.to_datetime(df['start_time'])
+        if 'end_time' in df.columns:
+            if  df.end_time.dtype == 'int64':
+                df['end_time'] = pd.to_datetime(df['end_time'],unit='s')
+            else:
+                df['end_time'] = pd.to_datetime(df['end_time'])
         df['bench_name'] = df['bench_name'].astype(str)
         df['pattern_name'] = df['pattern_name'].astype(str)
         df['hole_name'] = df['hole_name'].astype(str)
