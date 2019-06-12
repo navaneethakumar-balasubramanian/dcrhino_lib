@@ -127,8 +127,6 @@ def generate_cache_acorr(matches_line,files,mwd_df,mwd_helper,env_config,mine_na
 def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper):
 
     if line.solution_label == 'Non Conflict' or line.solution_label== 'Conflict Solved':
-
-
         td = generate_cache_acorr(line,files_df,mwd_df,mwd_helper,env_config,mine_name)
         if td is False:
             return
@@ -146,10 +144,12 @@ def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper):
         for column in td.dataframe.columns:
             data_array = td.dataframe[column]
             ## IGNORE COLUMN IF ALL ZEROES OR ALL NANS
-            if data_array.dtype != np.dtype('datetime64[ns]') and( (np.array(data_array) == None).all() or (np.array(data_array) == 0).all() or (np.array(list(data_array)) == None).all()):
+            if data_array.dtype != np.dtype('datetime64[ns]') and( (np.array(data_array) == None).all() or (np.array(data_array) == 0).all() or (np.array(list(data_array)) == None).all() or ((np.array(np.array(data_array).min()).min() == None or np.array(np.array(data_array).min()).min() == 0) and (np.array(np.array(data_array).max()).max() == None or np.array(np.array(data_array).max()).max() == 0) )):
                 td.dataframe.drop([column],axis=1,inplace=True)
-
-        td.save_to_h5(temp_h5_path)
+        try:
+            td.save_to_h5(temp_h5_path)
+        except:
+            pass
         logger.info("File saved at " + temp_h5_path)
         try:
             os.rename(temp_h5_path, h5_path)
