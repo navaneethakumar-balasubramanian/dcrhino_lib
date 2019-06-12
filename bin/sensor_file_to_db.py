@@ -73,20 +73,21 @@ def process(list_of_args):
     env_config = list_of_args[1]
     try:
         h5f = h5py.File(file, 'r+')
+
+        min_ts = sensor_file_manager.min_ts(h5f)
+        max_ts = sensor_file_manager.max_ts(h5f)
+        # raw_trace_h5_to_db(file,env_config,min_ts,max_ts)
+
+        if sensor_file_manager.is_h5_level0(h5f):
+            h5f.close()
+            print ("TYPE 1 " + str(file))
+            raw_trace_h5_to_db(file, env_config, min_ts, max_ts)
+        else:
+            h5f.close()
+            print ("TYPE 2 " + str(file))
+            acorr_h5_to_db(file, env_config, min_ts, max_ts)
     except:
         return
-    min_ts = sensor_file_manager.min_ts(h5f)
-    max_ts = sensor_file_manager.max_ts(h5f)
-    # raw_trace_h5_to_db(file,env_config,min_ts,max_ts)
-
-    if sensor_file_manager.is_h5_level0(h5f):
-        h5f.close()
-        print ("TYPE 1 " + str(file))
-        raw_trace_h5_to_db(file, env_config, min_ts, max_ts)
-    else:
-        h5f.close()
-        print ("TYPE 2 " + str(file))
-        acorr_h5_to_db(file, env_config, min_ts, max_ts)
 
 
 def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
