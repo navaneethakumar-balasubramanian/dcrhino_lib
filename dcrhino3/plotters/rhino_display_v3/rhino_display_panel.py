@@ -40,7 +40,7 @@ class RhinoDisplayPanel(object):
             return ax
         #pdb.set_trace()
         #print(curve.scale)
-        #
+
         if curve.scale == "current" or  curve.scale == "new":
             if curve.scale == "current":
                 ax1 = ax
@@ -49,8 +49,11 @@ class RhinoDisplayPanel(object):
             #ax1.set_ylabel(curve.label).set_color("k")
             curve.data = np.nan_to_num(curve.data)
 
-            ax1.set_ylim(axis_lims_method_1(curve.data,'buffer'))
-            ax1.set_ylabel(curve.label)
+            try:
+                ax1.set_ylim(min(curve.y_limits), max(curve.y_limits))
+            except:
+                ax1.set_ylim(axis_lims_method_1(curve.data, 'buffer'))
+
             if curve.color is not None:
                 ax1.set_ylabel(curve.label).set_color(curve.color)
                 ax1.spines[curve.spine_side].set_color(curve.color)
@@ -171,6 +174,7 @@ class Curve(object):
         #self.x_axis = kwargs.get('x_axis', None)
         self.x_axis_label = kwargs.get('x_axis_label', 'depth')
         self.x_axis_values = kwargs.get('x_axis_values', None)
+        self.y_limits = kwargs.get('y_limits', None)
         self.color = kwargs.get('color', None)
         self.formula = kwargs.get('formula', None)
         self.label = kwargs.get('label', '')
@@ -221,7 +225,7 @@ class Header(RhinoDisplayPanel):
         #super(RhinoDisplayPanel, .__init__(self).__init__(**kwargs)
         self.plot_style = "header"
         self.curves= kwargs.get('curves', [])
-
+        self.component = kwargs.get('component', '')
         self.trace_data = kwargs.get('trace_data', None)
         self.load_curve_data_from_dataframe()
 
@@ -230,11 +234,12 @@ class Header(RhinoDisplayPanel):
     def plot(self, ax, **kwargs):
         """
         .. todo: make a legend method that draws the legend box below like in
-        the v3 plotter.  Also add handling for stripping off label or useing synonyns
+            the v3 plotter.  Also add handling for stripping off label or useing synonyns
         .. todo: handle case of "depth"
         """
         for curve in self.curves:
             curve_ax = self.plot_curve(curve,ax)
+            ax.set_title(str(self.component).capitalize(), loc="left")
             #curve_ax.legend()
             #curve_ax.set_xlabel(curve.x_axis_label)
 
@@ -341,7 +346,6 @@ class Heatmap(RhinoDisplayPanel):
             heatmap = ax.pcolormesh(X, Y, Z, cmap=self.cmap_string,
                                     vmin=self.v_min, vmax=self.v_max)
         locs,labs = plt.xticks()
-        #pdb.set_trace()
         ax.set_ylabel('time (ms)')
 
 

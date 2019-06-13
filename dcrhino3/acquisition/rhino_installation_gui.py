@@ -1400,6 +1400,9 @@ class GUI():
         var.set(not var.get())
 
     def calculate_sensor_distance_to_source(self):
+        """
+        it looks like the sensor_distance_to_source is drill_string_total_length - sensor_position
+        """
         m = Measurement((float(self.sensor_position.get()), measurement_units_options.index(
             self.sensor_position_units.get())+1))
         return round(float(self.drill_string_total_length.get()) - m.value_in_meters(), 2)

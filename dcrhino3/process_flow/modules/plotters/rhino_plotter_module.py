@@ -67,7 +67,10 @@ class RhinoPlotterModule(BaseModule):
                         if temp_curve.column_label in trace.dataframe.columns:
                             have_curve_to_plot = True
                 if have_curve_to_plot:
-                    panel = Header(trace_data=trace, curves=curves)
+                    if "component" in panel._fields:
+                        panel = Header(trace_data=trace, curves=curves, component=panel.component)
+                    else:
+                        panel = Header(trace_data=trace, curves=curves)
                     panels.append(panel)
             elif panel.type == "heatmap":
                 curves = []
@@ -90,9 +93,16 @@ class RhinoPlotterModule(BaseModule):
                 else:
                     upper_num_ms = panel.upper_num_ms
 
+                if "lower_num_ms" not in panel._fields:
+                    lower_num_ms = -5
+                else:
+                    lower_num_ms = panel.lower_num_ms
+
                 if panel.component in self.components_to_process:
                     panel = Heatmap(trace_data=trace, component=panel.component,
-                                        wavelet_windows_to_show=wavelet_windows_to_show ,curves=curves,manual_time_windows=manual_time_windows,upper_num_ms=upper_num_ms)
+                                        wavelet_windows_to_show=wavelet_windows_to_show
+                                        ,curves=curves, manual_time_windows=manual_time_windows,
+                                        upper_num_ms=upper_num_ms, lower_num_ms=lower_num_ms)
                     panels.append(panel)
                 else:
                     logger.warn("Ignored heatmap panel, this component is not on components_to_process " + str(panel.component))

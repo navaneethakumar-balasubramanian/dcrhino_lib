@@ -37,29 +37,6 @@ def StandardString(s):
             string+= "_"
     return string.upper()
 
-def convert_to_meters(value,units):
-    """
-    Converts distances to meters.
-    
-    Parameters:
-        value (float): value to be converted
-        units (int): current units of value represented by an integer
-        
-            + 1 for feet
-            + 2 for inches
-            + 5 for km
-    
-    Returns:
-        (float): converted value rounded to 2 decimal places
-    """
-    for m in range(4,6):
-        if units == m:
-            value = value / (10**(m-2))
-    if units == 1:
-        value = value * 0.3048
-    elif units == 2:
-        value =  value * 0.0254
-    return round(value,2)
 
 class Measurement():
     """
@@ -75,8 +52,42 @@ class Measurement():
     def value_in_meters(self):
         """
         See :func:`metadata.convert_to_meters`
+
+        TJW: This returns the rounded value (to 2 dec places) for GUI purposes
+
         """
-        return convert_to_meters(self._value,self._units)
+        return round(self.convert_to_meters(),2)
+
+    def convert_to_meters(self):
+        """
+        Converts distances to meters.
+
+        Parameters:
+            value (float): value to be converted
+            units (int): current units of value represented by an integer
+
+                + 1 for feet
+                + 2 for inches
+                + 3 for Meters
+                + 4 for 10's   of Meters (Decameters)
+                + 5 for 100's  of Meters
+                + 6 for 1000's of Meters (Kilometers)
+
+        Returns:
+            (float): converted value
+        """
+
+        units = self._units
+        value = self._value
+
+        if units == 1:
+            value = value * 0.3048
+        elif units == 2:
+            value = value * 0.0254
+        elif units > 2:
+            value = value * (10 ** (units - 3))
+
+        return value
 
 
 
@@ -105,7 +116,9 @@ class Drill_String_Component():
 
     @property
     def length_in_meters(self):
-        return convert_to_meters(self._length,self._length_units)
+        measurement = Measurement([self._length, self._length_units])
+        return measurement.value_in_meters()
+
 
     #@property
     #def drill_string_compnent_length_untis(self):
