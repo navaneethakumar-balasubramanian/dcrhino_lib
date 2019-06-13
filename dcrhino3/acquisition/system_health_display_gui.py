@@ -418,8 +418,8 @@ class GUI():
         for new_data in self.gps_socket:
             if new_data:
                 self.data_stream.unpack(new_data)
-                pdb.set_trace()
                 self.satellite_count = self.data_stream.SKY['satellites']
+                print(self.satellite_count)
         return self.satellite_count
         # self.gps_socket.send('?POLL;')
         # response = self.gps_socket.next()
