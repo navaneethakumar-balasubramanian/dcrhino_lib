@@ -848,11 +848,12 @@ def main_run(run=True):
     logger = LogFileDaemonThread(logQ)
     comport = SerialThread(rhino_port, rhino_baudrate, rhino_pktlen, flushQ, logQ, displayQ)
     comport.stop_rx()
+    comport.close()
     display = GUI(displayQ, system_healthQ)
     fflush = FileFlusher(flushQ, logQ, displayQ)
     collection_daemon = CollectionDaemonThread(fflush.bufferQ, traces, logQ, displayQ)
     comport = SerialThread(rhino_port, rhino_baudrate, rhino_pktlen, flushQ, logQ, displayQ)
-    
+
     m = "Started Main\n"
     print(m)
     logQ.put(m)
