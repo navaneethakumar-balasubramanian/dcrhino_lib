@@ -14,14 +14,12 @@ from datetime import datetime
 import dcrhino3.acquisition.rhino_installation_gui as rig
 import dcrhino3.acquisition.update_headers_gui as uhg
 import dcrhino3.acquisition.merge_gui as mfg
-import calendar,time
 import pdb
-import os,glob
+import os
 from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
 from dcrhino3.acquisition.constants import DATA_PATH, LOGS_PATH, RAM_PATH
-from subprocess import call
 from subprocess import Popen
-import signal
+
 import subprocess
 import serial
 import logging
@@ -38,6 +36,32 @@ fname = os.path.join(PATH,"collection_daemon.cfg")
 config = ConfigParser.SafeConfigParser()
 
 debug = False
+
+
+
+def goodbye():
+    stop_rx(True)
+
+def stop_rx(active):
+    try:
+        rhino_ttyusb = subprocess.check_output('ls -l /dev/serial/by-id/ | grep "usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_" | grep -Po -- "../../\K\w*"',shell=True)
+        rhino_ttyusb = rhino_ttyusb.replace('\n','')
+        rhino_port = "/dev/"+rhino_ttyusb
+        baud_rate = config.getint("COLLECTION","baud_rate")
+        cport = serial.Serial(rhino_port, baud_rate, timeout=1.0)
+        cport.write(bytearray("stop\r\n", "utf-8"))
+        cport.close()
+        logging.info("Serial Port Closed")
+        m =("{}: SERIAL PORT CLOSED".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        print (m)
+        if active:
+            m =("{}: ACQUISITION STOPPED".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+            print (m)
+    except:
+        pass
+
+import atexit
+atexit.register(goodbye)
 
 def load_config_file():
     config.read(fname)
@@ -290,21 +314,7 @@ class GUI():
     #     plt.main()
 
     def stop_rx(self,active):
-        #pdb.set_trace()
-        # pass
-        rhino_ttyusb = subprocess.check_output('ls -l /dev/serial/by-id/ | grep "usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_" | grep -Po -- "../../\K\w*"',shell=True)
-        rhino_ttyusb = rhino_ttyusb.replace('\n','')
-        rhino_port = "/dev/"+rhino_ttyusb
-        baud_rate = config.getint("COLLECTION","baud_rate")
-        cport = serial.Serial(rhino_port, baud_rate, timeout=1.0)
-        cport.write(bytearray("stop\r\n", "utf-8"))
-        cport.close()
-        logging.info("Serial Port Closed")
-        m =  ("{}: SERIAL PORT CLOSED".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
-        print (m)
-        if active:
-            m =  ("{}: ACQUISITION STOPPED".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
-            print (m)
+        stop_rx(active)
 
 
     def exit(self):
