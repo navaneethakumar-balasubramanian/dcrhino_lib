@@ -14,6 +14,7 @@ from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
 from dcrhino3.acquisition.constants import DATA_PATH, LOGS_PATH, RAM_PATH
 from dcrhino3.acquisition.config_file_utilities import config_file_to_attrs
 from dcrhino3.acquisition.system_health_display_gui import GUI
+
 import pdb
 import time
 import numpy as np
@@ -39,7 +40,6 @@ from dcrhino3.acquisition.external.seismic_wiggle import seismic_wiggle
 from dcrhino3.process_flow.modules.trace_processing.unfold_autocorrelation import unfold_trace
 import multiprocessing
 import psutil
-import pyudev
 
 
 

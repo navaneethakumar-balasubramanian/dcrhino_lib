@@ -8,6 +8,7 @@ import numpy as np
 import psutil
 from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
 from dcrhino3.acquisition.constants import LOGS_PATH
+from dcrhino3.acquisition.rhino_threads import NetworkThread
 from gps3 import gps3
 import json
 import urllib2
@@ -59,6 +60,8 @@ class GUI():
         self.gps_socket.connect()
         self.gps_socket.watch(devicepath="/dev/ttyACM0")
         self.satellite_count = 0
+        self.network = NetworkThread()
+        self.network.start()
 
         column_span = 7
 
@@ -366,7 +369,7 @@ class GUI():
                 self.cpu4_usage_var.set(tablet_cpu_usage.split(":")[-1])
                 self.tablet_batt_life_var.set(tablet_battery_life)
                 self.tablet_batt_percentage_var.set(tablet_battery_percentage)
-                self.network_var.set(self.internet_on())
+                self.network_var.set(self.network.network_staus)
 
 
                 line = [tracetime.strftime("%Y-%m-%d %H:%M:%S"), samples, battery, temp, rssi, delay, counter_changes,
@@ -523,17 +526,6 @@ class GUI():
         value = 100 - (battery_max_voltage - current_voltage) / (battery_max_voltage - battery_lower_limit) * 100
         return round(value, 2)
 
-    def internet_on(self):
-        try:
-            # hostname = "google.com"  # example
-            # response = os.system("ping -c 1 " + hostname)
-            # # and then check the response...
-            # if response == 0:
-            #     return "OK"
-            # else:
-            return "No Connection"
-        except:
-            return "No Connection"
 
 
 def main():
