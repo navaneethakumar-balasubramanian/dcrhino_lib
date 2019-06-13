@@ -426,7 +426,10 @@ class SerialThread(threading.Thread):
         self.tx_status = 0
         self.comport = comport
         self.brate = brate
-        self.pktlen = pktlen
+        self.cmd = "stop\r\n"
+
+    def get_cport(self):
+        return self.cport
 
     def start_rx(self):
         self.cport.write(bytearray("ready\r\n", "utf-8"))
@@ -435,6 +438,9 @@ class SerialThread(threading.Thread):
         self.cport.write(bytearray("stop\r\n", "utf-8"))
         self.cport.close()
         self.stope.set()
+
+    def do_stop_cmd(self):
+        self.cport.write(bytearray("stop\r\n", "utf-8"))
 
     def restart_rx(self):
         self.cport.write(bytearray("stop\r\n", "utf-8"))
@@ -516,7 +522,8 @@ class SerialThread(threading.Thread):
         self.displayQ.put(m)
         counter = 0
         restarted = False
-        while True:
+        # while True:
+        while self.portOpen and not self.stope.isSet():
             try:
                 # print("trying")
                 a = self.cport.read(self.pktlen)
@@ -840,10 +847,12 @@ def main_run(run=True):
     system_healthQ = Queue.Queue()
     logger = LogFileDaemonThread(logQ)
     comport = SerialThread(rhino_port, rhino_baudrate, rhino_pktlen, flushQ, logQ, displayQ)
+    comport.stop_rx()
     display = GUI(displayQ, system_healthQ)
     fflush = FileFlusher(flushQ, logQ, displayQ)
     collection_daemon = CollectionDaemonThread(fflush.bufferQ, traces, logQ, displayQ)
-
+    comport = SerialThread(rhino_port, rhino_baudrate, rhino_pktlen, flushQ, logQ, displayQ)
+    
     m = "Started Main\n"
     print(m)
     logQ.put(m)
