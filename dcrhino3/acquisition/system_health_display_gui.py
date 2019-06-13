@@ -525,13 +525,13 @@ class GUI():
 
     def internet_on(self):
         try:
-            hostname = "google.com"  # example
-            response = os.system("ping -c 1 " + hostname)
-            # and then check the response...
-            if response == 0:
-                return "OK"
-            else:
-                return "No Connection"
+            # hostname = "google.com"  # example
+            # response = os.system("ping -c 1 " + hostname)
+            # # and then check the response...
+            # if response == 0:
+            #     return "OK"
+            # else:
+            return "No Connection"
         except:
             return "No Connection"
 
