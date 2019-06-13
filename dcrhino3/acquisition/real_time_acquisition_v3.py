@@ -1000,7 +1000,8 @@ def main_run(run=True):
 
             sec_delay = round(now - trace_second,2)
             plt.suptitle("Trace Time "+ tracetime.strftime('%Y-%m-%d %H:%M:%S' ) + " plotted at " +
-                         datetime.utcfromtimestamp(now).strftime('%Y-%m-%d %H:%M:%S') + " delay of " + str(sec_delay) )
+                         datetime.utcfromtimestamp(now).strftime('%Y-%m-%d %H:%M:%S') + " delay of " + str(
+                sec_delay), fontsize=10)
 
             data_to_plot = trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)]
             if remove_mean:

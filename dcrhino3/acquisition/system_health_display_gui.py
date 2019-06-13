@@ -420,9 +420,9 @@ class GUI():
                 json_gps = json.loads(response)
                 if json_gps["class"] == "POLL":
                     return len(json_gps["sky"][0]["satellites"])
-            return np.nan
+            return 0
         except:
-            return np.nan
+            return "ERROR"
         return 1
 
     def colors(self, component, value):

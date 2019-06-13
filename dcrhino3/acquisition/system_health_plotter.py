@@ -164,7 +164,7 @@ while True:
 
 
         plt.suptitle(tracetime.strftime('%Y-%m-%d %H:%M:%S' ) + " plotted at " + datetime.utcfromtimestamp(
-            now).strftime('%Y-%m-%d %H:%M:%S') + " delay of " + str(sec_delay) )
+            now).strftime('%Y-%m-%d %H:%M:%S') + " delay of " + str(sec_delay) ,fontsize=10)
 
         # pdb.set_trace()
         packets_plot.plot(np.flipud(packets), "black", label="packets")
