@@ -26,6 +26,7 @@
       select-all
       class="elevation-1"
       hide-actions
+      v-if="!show_dialog_comparison"
     >
     <template slot="headerCell" slot-scope="props">
       <v-dialog v-model='props.header.dialog' scrollable max-width="300px">

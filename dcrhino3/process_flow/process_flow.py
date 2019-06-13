@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, division, print_function
+import copy
+from datetime import datetime
 import json
 import logging
 import pdb
 import time
 import os
-
-import copy
 import pandas as pd
 
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
@@ -51,8 +51,11 @@ from dcrhino3.process_flow.modules.hybrid.template_hybrid import TemplateModuleH
 from dcrhino3.process_flow.modules.hybrid.trim_trace import TrimTraceModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import UnfoldAutocorrelationModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.upsample_hybrid import UpsampleModuleHybrid
+from dcrhino3.process_flow.modules.hybrid.phase_balance_trace_hybrid import PhaseBalanceHybridModule
 
-from datetime import datetime
+from dcrhino3.unstable.multipass_util import update_acorr_with_resonance_info
+
+
 
 logger = init_logging(__name__)
 
@@ -77,6 +80,7 @@ class ProcessFlow:
             "b0": B0FeaturesModule,
             "qc_log_v1": QCPlotterModule,
             "balance": BalanceModule,
+            "phase_balance_hybrid": PhaseBalanceHybridModule,
             "band_pass_filter": BandPassFilterModule,
             "band_pass_filter_hybrid": BandPassFilterModuleHybrid,
             "add_one": AddOneModule,
@@ -227,72 +231,65 @@ class ProcessFlow:
         acorr_trace = TraceData()
         acorr_trace.load_from_h5(acorr_h5_file_path)
 
+        #<NEW>
+        acorr_trace = update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0)
+        resonant_lengths_array = acorr_trace.dataframe.drill_string_resonant_length.unique()
+        resonant_lengths = [x for x in resonant_lengths_array]
+        df = acorr_trace.dataframe
+        sub_dfs = [df[df.drill_string_resonant_length==x] for x in resonant_lengths]
+        splits = [x.depth.max() for x in sub_dfs]
+        splits.sort()
+        if 'subsets' not in process_json.keys():
+            process_json['subsets'] = splits
+
+        #</NEW>
+
         self.output_path = self.output_folder(acorr_trace,process_json,env_config)
 
         if seconds_to_process is not False:
             acorr_trace.dataframe = acorr_trace.dataframe[:seconds_to_process]
 
-        if "subsets" in process_json.keys() and len(process_json['subsets']) > 0:
-            splitted_subsets = self.split_subsets(process_json,process_json['subsets'],acorr_trace)
-            for i,subset in enumerate(splitted_subsets):
+        splitted_subsets = self.split_subsets(process_json,process_json['subsets'],acorr_trace)
+        logger.info("Found " + str(len(splitted_subsets)) + " subsets")
+        for i,subset in enumerate(splitted_subsets):
 
+            self.set_process_flow(subset['process_json'],subset_index=i)
 
-                self.set_process_flow(subset['process_json'],subset_index=i)
-
-                self.env_config = env_config
-                conn = env_config.get_rhino_db_connection_from_mine_name(subset['acorr_trace'].mine_name)
-
-                self.rhino_db_helper = RhinoDBHelper(conn=conn)
-                sql_conn = env_config.get_rhino_sql_connection_from_mine_name(subset['acorr_trace'].mine_name)
-                if sql_conn:
-                    self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'], sql_conn['user'], sql_conn['password'],
-                                                           str(subset['acorr_trace'].mine_name).lower())
-
-                subset['acorr_trace'] = self.process(subset['acorr_trace'],subset_index=i)
-
-            acorr_trace , process_json =  self.merge_results(splitted_subsets)
-            return_dict["acorr_trace"] = acorr_trace
-            return_dict["process_json"] = process_json
-
-            acorr_trace.save_to_h5(os.path.join(self.output_path,'processed.h5'))
-            acorr_trace.save_to_csv(os.path.join(self.output_path,'processed.csv'))
-            with open(os.path.join(self.output_path,'process_flow.json'), 'w') as outfile:
-                json.dump(process_json, outfile)
-
-            if self.output_to_db and self.rhino_sql_helper:
-                seconds_processed = int(acorr_trace.max_ts - acorr_trace.min_ts)
-                relative_output_path = "/".join(self.output_path.split('/')[-2:]) + "/"
-                process_id = int(self.now.strftime("%s"))
-                self.rhino_sql_helper.processed_holes.add(int(self.now.strftime("%s")), seconds_processed,
-                                                          acorr_trace.hole_id, acorr_trace.sensor_id,
-                                                          acorr_trace.bench_name, acorr_trace.pattern_name,
-                                                          acorr_trace.hole_name, acorr_trace.rig_id,
-                                                          acorr_trace.digitizer_id, acorr_trace.sensor_accelerometer_type,
-                                                          acorr_trace.sensor_saturation_g, self.id, relative_output_path,
-                                                          process_id=process_id)
-                # self.rhino_db_helper.save_processed_trace(trace_data, self.id, json.dumps(self.process_json),process_flow_output_path, int(now.strftime("%s")),99999)
-
-            return acorr_trace, process_json
-
-
-
-        else:
-            #filename = os.path.basename(acorr_h5_file_path)
-
-
-            self.set_process_flow(process_json)
             self.env_config = env_config
-            conn = env_config.get_rhino_db_connection_from_mine_name(acorr_trace.mine_name)
+            conn = env_config.get_rhino_db_connection_from_mine_name(subset['acorr_trace'].mine_name)
 
             self.rhino_db_helper = RhinoDBHelper(conn=conn)
-            sql_conn = env_config.get_rhino_sql_connection_from_mine_name(acorr_trace.mine_name)
+            sql_conn = env_config.get_rhino_sql_connection_from_mine_name(subset['acorr_trace'].mine_name)
             if sql_conn:
-                self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'],sql_conn['user'],sql_conn['password'],str(acorr_trace.mine_name).lower())
+                self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'], sql_conn['user'], sql_conn['password'],
+                                                       str(sql_conn['database']).lower())
 
-            acorr_trace = self.process(acorr_trace)
-            return_dict["acorr_trace"] = acorr_trace
-            return_dict["process_json"] = process_json
-            return acorr_trace, self.process_json
+            subset['acorr_trace'] = self.process(subset['acorr_trace'],subset_index=i)
+
+        acorr_trace , process_json =  self.merge_results(splitted_subsets)
+        return_dict["acorr_trace"] = acorr_trace
+        return_dict["process_json"] = process_json
+
+        acorr_trace.save_to_h5(os.path.join(self.output_path,'processed.h5'))
+        acorr_trace.save_to_csv(os.path.join(self.output_path,'processed.csv'))
+        with open(os.path.join(self.output_path,'process_flow.json'), 'w') as outfile:
+            json.dump(process_json, outfile)
+
+        if self.output_to_db and self.rhino_sql_helper:
+            seconds_processed = int(acorr_trace.max_ts - acorr_trace.min_ts)
+            relative_output_path = "/".join(self.output_path.split('/')[-2:]) + "/"
+            process_id = int(self.now.strftime("%s"))
+            self.rhino_sql_helper.processed_holes.add(int(self.now.strftime("%s")), seconds_processed,
+                                                      acorr_trace.hole_id, acorr_trace.sensor_id,
+                                                      acorr_trace.bench_name, acorr_trace.pattern_name,
+                                                      acorr_trace.hole_name, acorr_trace.rig_id,
+                                                      acorr_trace.digitizer_id, acorr_trace.sensor_accelerometer_type,
+                                                      acorr_trace.sensor_saturation_g, self.id, relative_output_path,
+                                                      process_id=process_id)
+            # self.rhino_db_helper.save_processed_trace(trace_data, self.id, json.dumps(self.process_json),process_flow_output_path, int(now.strftime("%s")),99999)
+
+        return acorr_trace, process_json
+
 
     def merge_results(self,subsets):
         process_json = copy.deepcopy(subsets[0]['process_json'])

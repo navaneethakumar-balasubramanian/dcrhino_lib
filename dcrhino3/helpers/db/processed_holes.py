@@ -19,8 +19,17 @@ class ProcessedHoles(BaseDbModel):
         sql = 'Select * from ' + self.table_name + " where processed_hole_id IN ( " + ",".join(processed_hole_ids) + ")"
         return self.query_to_df(sql)
 
+    def get_latests_process_for_each_hole(self):
+        query = 'SELECT * FROM processed_holes WHERE processed_hole_id IN( SELECT MAX(processed_hole_id) FROM processed_holes GROUP BY bench_name, pattern_name, hole_name )'
+        return self.query_to_df(query)
+
+    def get_holes_to_mp(self):
+        return self.get_latests_process_for_each_hole()
+
     def get_latests(self,limit=1000):
-        return self.query_to_df("select * from " + self.table_name + " order by processed_at_ts DESC limit " + str(limit))
+        return self.query_to_df("select * from " + self.table_name + " order by processed_hole_id DESC limit " + str(limit))
+
+
 
     def hole_to_mp(self,processed_hole_id,to_mp):
         sql = "UPDATE " + self.table_name + " set to_mp = %s where processed_hole_id = %s"
@@ -39,7 +48,7 @@ class ProcessedHoles(BaseDbModel):
         query = "select * from " + self.table_name +" where "
         for word in words:
             query += 'LOWER(CONCAT(bench_name,pattern_name,hole_name,hole_id,rig_id,sensor_id,digitizer_id,flow_id)) LIKE LOWER("%'+str(word)+'%") and '
-        query += "1 = 1 order by processed_at_ts DESC limit " + str(limit)
+        query += "1 = 1 order by processed_hole_id DESC limit " + str(limit)
         #print query
         return self.query_to_df(query)
 

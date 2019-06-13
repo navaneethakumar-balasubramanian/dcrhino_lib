@@ -21,6 +21,9 @@ logger = init_logging(__name__)
 
 class SymmetricTrace(object):
     """
+    .. :NOTE: 20190528: this would actually make a note bad base class for a TimeSeries, 
+    SymmetricTrace could then extend TimeSeries. to do this I would need:
+    - the t0 method to be overwritten 
     """
     def __init__(self, data, sampling_rate, **kwargs):
         #BaseTraceModule.__init__(self, json, output_path)
@@ -29,6 +32,7 @@ class SymmetricTrace(object):
         self.sampling_rate = sampling_rate#kwargs.get('sampling_rate', None)
         self.component_id = kwargs.get('component_id', None)
         self.timestamp = kwargs.get('timestamp', None)
+        self.n_samples_shift = 0
         #self.global_config = kwargs.get('global_config', None)
         if (self.data is not None) & (self.sampling_rate is not None):
             self.calculate_time_vector()
@@ -121,7 +125,8 @@ class SymmetricTrace(object):
         """
         rotated_data = rotate_phase(self.data, phi)
         new_center_index = np.argmax(rotated_data)
-        shifted_rotated_data = np.roll(rotated_data, self.center_index-new_center_index)
+        self.n_samples_shift = self.center_index-new_center_index
+        shifted_rotated_data = np.roll(rotated_data, self.n_samples_shift)
 #        left_side = rotated_data[:new_center_index]
 #        right_side = rotated_data[new_center_index+1:]
 #        new_half_len = min(len(left_side), len(right_side))
@@ -130,6 +135,10 @@ class SymmetricTrace(object):
         self.data = shifted_rotated_data #previously trimmed_trace
         #self.calculate_time_vector()
         return
+
+    @property
+    def applied_shift(self):
+        return self.n_samples_shift * self.dt
 
 
 def my_function():

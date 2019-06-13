@@ -26,8 +26,8 @@
         </v-layout>
         
         <v-layout row wrap v-if='processed'>
-            <v-flex xs12>
-                <v-img :src="get_image(processed.images[0])"></v-img>
+            <v-flex xs12 v-for="image in processed.images">
+                <v-img :src="get_image(image)"></v-img>
             </v-flex >
             <v-flex xs12>
             <v-subheader>Processed hole details:</v-subheader>
@@ -171,6 +171,7 @@
     },
     computed : {
       processed () {
+        console.log(this.$store.state.hole_info.hole_info)
         return this.$store.state.hole_info.hole_info
       },
       loading () {

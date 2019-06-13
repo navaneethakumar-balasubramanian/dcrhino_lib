@@ -49,11 +49,12 @@ def processed_holes():
     env_config = EnvConfig()
     mine_name = req_json['mine_name']
     db_conn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
-    db_helper = RhinoSqlHelper(db_conn['host'], db_conn['user'], db_conn['password'], req_json['mine_name'])
+    db_helper = RhinoSqlHelper(db_conn['host'], db_conn['user'], db_conn['password'], db_conn['database'])
     if 'search' in req_json.keys():
         processed_holes = db_helper.processed_holes.get_search_string(req_json['search'])
     else:
         processed_holes = db_helper.processed_holes.get_latests()
+    processed_holes = processed_holes[processed_holes['archived'] == '0']
     return processed_holes.to_json(orient='records')
 
 @app.route('/api/hole_to_mp',methods=['GET', 'POST'])
@@ -64,7 +65,7 @@ def hole_to_mp():
     processed_hole_id = req_json['processed_hole_id']
     to_mp = req_json['to_mp']
     db_conn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
-    db_helper = RhinoSqlHelper(db_conn['host'], db_conn['user'], db_conn['password'], req_json['mine_name'])
+    db_helper = RhinoSqlHelper(db_conn['host'], db_conn['user'], db_conn['password'], db_conn['database'])
 
     return jsonify(db_helper.processed_holes.hole_to_mp(processed_hole_id,to_mp))
 
@@ -77,7 +78,7 @@ def acorr_files():
     env_config = EnvConfig()
     mine_name = req_json['mine_name']
     db_conn = env_config.get_rhino_db_connection_from_mine_name(mine_name)
-    db_helper = RhinoDBHelper(db_conn['host'], db_conn['user'], db_conn['password'], req_json['mine_name'])
+    db_helper = RhinoDBHelper(db_conn['host'], db_conn['user'], db_conn['password'], db_conn['database'])
     acorr_files = db_helper.get_files_list()
     return acorr_files.to_json(orient='records')
 
@@ -128,7 +129,7 @@ def processed_hole():
     if not isinstance(processed_hole_ids, list):
         processed_hole_ids = [processed_hole_ids]
 
-    db_helper = RhinoSqlHelper(db_conn['host'], db_conn['user'], db_conn['password'], req_json['mine_name'])
+    db_helper = RhinoSqlHelper(db_conn['host'], db_conn['user'], db_conn['password'], db_conn['database'])
     processed_holes = db_helper.processed_holes.get_processed_holes(processed_hole_ids)
     processed_holes = processed_holes.to_dict(orient='records')
 

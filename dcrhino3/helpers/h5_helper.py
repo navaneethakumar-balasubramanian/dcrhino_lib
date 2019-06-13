@@ -25,35 +25,36 @@ class H5Helper:
         load_xyz (boolean): true to load xyz data
     """
 
-    def __init__(self, h5f,load_xyz=True):
+    def __init__(self, h5f,load_xyz=True,load_ts=True):
         self.h5f = h5f
         self.metadata = self._extract_metadata_from_h5_file()
-        if "ts" in self.h5f.keys():
-            self._ts = np.asarray(self.h5f.get('ts'), dtype=np.float64)
-        else:
-            self._ts = np.asarray(self.h5f.get('timestamp'), dtype=np.float64)
+        if load_ts:
+            if "ts" in self.h5f.keys():
+                self._ts = np.asarray(self.h5f.get('ts'), dtype=np.float64)
+            else:
+                self._ts = np.asarray(self.h5f.get('timestamp'), dtype=np.float64)
 
-        if load_xyz:
-            self.data_xyz = self.load_xyz()
+            if load_xyz:
+                self.data_xyz = self.load_xyz()
 
-        # laptop_ts = self.h5f.get('laptop_ts')
-        # if laptop_ts is not None:
-        #     self.clock_ts = np.asarray(self.h5f.get('laptop_ts'))
-        #     self.min_ts = self.clock_ts.min()
-        #     self.max_ts = self.clock_ts.max()
-        # else:
-        #     self.clock_ts = None
-        #     self.min_ts = self._ts.min()
-        #     self.max_ts = self._ts.max()
-        self.clock_ts = None
-        self.min_ts = self._ts.min()
-        self.max_ts = self._ts.max()
+            # laptop_ts = self.h5f.get('laptop_ts')
+            # if laptop_ts is not None:
+            #     self.clock_ts = np.asarray(self.h5f.get('laptop_ts'))
+            #     self.min_ts = self.clock_ts.min()
+            #     self.max_ts = self.clock_ts.max()
+            # else:
+            #     self.clock_ts = None
+            #     self.min_ts = self._ts.min()
+            #     self.max_ts = self._ts.max()
+            self.clock_ts = None
+            self.min_ts = self._ts.min()
+            self.max_ts = self._ts.max()
 
-        self.max_dtime = datetime.utcfromtimestamp(int(self.max_ts))
-        self.min_dtime = datetime.utcfromtimestamp(int(self.min_ts))
+            self.max_dtime = datetime.utcfromtimestamp(int(self.max_ts))
+            self.min_dtime = datetime.utcfromtimestamp(int(self.min_ts))
 
-        self.sensitivity_xyz = self._get_sensitivity_xyz()
-        self.is_ide_file = self._is_ide_file()
+            self.sensitivity_xyz = self._get_sensitivity_xyz()
+            self.is_ide_file = self._is_ide_file()
         #pdb.set_trace()
 
 
@@ -65,6 +66,12 @@ class H5Helper:
             (list): list of three arrays, one for each axis
         """
         return [self.load_axis('x'), self.load_axis('y'), self.load_axis('z')]
+
+    def shift_time(self, time_offset=0):
+        self._ts += time_offset
+        del self.h5f["ts"]
+        self.h5f["ts"] = self._ts
+
 
     def load_axis(self,axis):
         """
@@ -155,7 +162,8 @@ class H5Helper:
 
     def _extract_global_config_from_h5_file(self):
         global_config_json = json.loads(self.h5f.attrs["global_config_jsons"])
-        first_config = json.loads(global_config_json["0"])
+        keys = global_config_json.keys()
+        first_config = json.loads(global_config_json[keys[0]])
         c = Config()
         c.set_data_from_json(first_config)
         return c

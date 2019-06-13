@@ -47,6 +47,7 @@ class RhinoDisplayPanel(object):
             if curve.scale == "new":
                 ax1 = ax.twinx()
             #ax1.set_ylabel(curve.label).set_color("k")
+            curve.data = np.nan_to_num(curve.data)
 
             ax1.set_ylim(axis_lims_method_1(curve.data,'buffer'))
             ax1.set_ylabel(curve.label)

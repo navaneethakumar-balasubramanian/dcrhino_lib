@@ -83,6 +83,7 @@ class MWDHelper():
         
         """
         conn_dict = self.get_db_conn(mine_domain)
+
         client = Client(conn_dict['host'],user=conn_dict['username'],password=conn_dict['password'],database=conn_dict['database'],compression='lz4')
 
         datasets = self.get_dc_datasets_configs(mine_domain)
@@ -295,7 +296,10 @@ class MWDHelper():
         Returns:
             (DataFrame): DataFrame *df* with values rows sorted by start_time.
         """
-        df['start_time'] = pd.to_datetime(df['start_time'])
+        if df.start_time.dtype == 'int64':
+            df['start_time'] = pd.to_datetime(df['start_time'],unit='s')
+        else:
+            df['start_time'] = pd.to_datetime(df['start_time'])
         df['bench_name'] = df['bench_name'].astype(str)
         df['pattern_name'] = df['pattern_name'].astype(str)
         df['hole_name'] = df['hole_name'].astype(str)

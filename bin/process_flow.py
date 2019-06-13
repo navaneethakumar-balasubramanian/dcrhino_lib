@@ -42,6 +42,7 @@ def process_glob(default_process_json,glob_str,env_config_path="env_config.json"
 
 
     process_flow = ProcessFlow()
+    process_json = default_process_json
     manager = multiprocessing.Manager()
     return_dict = manager.dict()
     files_list = glob2.glob(glob_str)
@@ -53,7 +54,7 @@ def process_glob(default_process_json,glob_str,env_config_path="env_config.json"
     output_path = False
 
     if not files_list:
-        print  ('File does not exist: ' + h5_path)
+        print  ('File does not exist: ' + glob_str)
     for ffile in files_list:
 
         if ".txt" in os.path.splitext(ffile)[1]:
@@ -64,6 +65,7 @@ def process_glob(default_process_json,glob_str,env_config_path="env_config.json"
 
             for process_in_file in processes_in_file:
                 try:
+                    process_in_file = process_in_file.strip()
                     hole, process_flow_json_filehandle = process_in_file.split(' ')
                 except ValueError:
                     hole = process_in_file
@@ -87,6 +89,7 @@ def process_glob(default_process_json,glob_str,env_config_path="env_config.json"
 
 
         elif '.h5' in os.path.splitext(ffile)[1]:
+
             if env_config.is_file_blacklisted(ffile) is False:
                 p = Process(target=process_flow.process_file,
                             args=(process_json, ffile, env_config, seconds_to_process,return_dict))
@@ -99,23 +102,21 @@ if __name__ == '__main__':
     use_argparse = True#False
     if use_argparse:
         argparser = argparse.ArgumentParser(description="Copyright (c) 2018 DataCloud")
-        argparser.add_argument('-f', '--flow-path', help="JSON File Path", required=True)
-        argparser.add_argument('-env', '--env-path', help="ENV CONFIG File Path", default="env_config.json")
-        argparser.add_argument('-tid', '--task-id', help="Task ID", default=False)
+        #argparser.add_argument('-f', '--flow-path', help="JSON File Path", required=True)
+        argparser.add_argument('-f',   '--flow-path',  help="JSON File Path",             default = "./process_flows/v3.1_processing_flow.json")
+        argparser.add_argument('-env', '--env-path',   help="ENV CONFIG File Path",       default="env_config.json")
+        argparser.add_argument('-tid', '--task-id',    help="Task ID",                    default=False)
         argparser.add_argument('-stp', '--seconds-to-process', help="Seconds to process", default=False)
 
-        argparser.add_argument('-h5', '--h5_path', metavar="path", type=str,
-        help="Path to files to be processed; enclose in quotes, accepts * as wildcard for directories or filenames" )
-
-        argparser.add_argument('-txt','--txt_path', metavar="path", type=str,
-        help=".txt file with rows like this (leave process_flow blank for default spec'd in cmd line):   <hole_to_be_processed.h5> <process_flow_to_use.json>")
+        argparser.add_argument("data_path", metavar="path", type=str,
+        help="Path to .h5 or .txt file with the following format: <hole_to_be_processed.h5> <process_flow_to_use.json> ; enclose in quotes, accepts * as wildcard for directories or filenames" )
 
         args = argparser.parse_args()
         process_flow_path = args.flow_path
-        process_flow_dir  = os.path.abspath(os.path.join(process_flow_path, '..')) #Works as long as process flows in same loc
-        h5_path = args.h5_path
-        txt_path = args.txt_path
+        process_flow_dir = os.path.abspath(os.path.join(process_flow_path, '..'))  # Works as long as process flows in same loc
+        data_path = args.data_path
         env_path = args.env_path
+
         if args.seconds_to_process is not False:
             seconds_to_process = int(args.seconds_to_process)
         else:
@@ -123,14 +124,17 @@ if __name__ == '__main__':
     else:
         home = os.path.expanduser('~/')
         process_flow_dir = os.path.join(home, 'anaconda2/dc_hybrid/dcrhino_lib/bin/process_flows')
-        process_flow_json_filehandle = 'v3.1_processing_flow.json'
+        process_flow_json_filehandle = 'tristan_test.json'
         process_flow_path = os.path.join(process_flow_dir, process_flow_json_filehandle)
-        #h5_path = os.path.join(home, '.cache/datacloud/line_creek/acorr/23831_5208_5208.h5')
-        txt_path = os.path.join(home, '.cache/datacloud/mont_wright/tjw_hole_selection.txt')
+        #data_path = os.path.join(home, '.cache/datacloud/mont_wright/6585_5451_5451.h5')
+        data_path = os.path.join(home, '.cache/datacloud/line_creek/885_NS92_82_9607T_9607T_6172_6172.h5')
+
+        #txt_path = os.path.join(home, '.cache/datacloud/mont_wright/tjw_hole_selection.txt')
+
         env_path = "env_config.json"
         seconds_to_process = 100
 
     with open(process_flow_path) as f:
         process_json = json.load(f)
 
-    process_glob(process_json,txt_path,env_path,seconds_to_process)
+    process_glob(process_json,data_path,env_path,seconds_to_process)
