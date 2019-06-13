@@ -57,6 +57,7 @@ class GUI():
         self.data_stream = gps3.DataStream()
         self.gps_socket.connect()
         self.gps_socket.watch(devicepath="/dev/ttyACM0")
+        self.satellite_count = 0
 
         column_span = 7
 
@@ -407,23 +408,28 @@ class GUI():
             # pdb.set_trace()
 
     def disable_element(self, element):
-        element.config(bg="gray",fg="gray")
+        element.config(bg="gray", fg="gray")
 
     def do_nothing(self):
         pass
 
     def poll_gps(self):
-        self.gps_socket.send('?POLL;')
-        response = self.gps_socket.next()
-        try:
-            if response:
-                json_gps = json.loads(response)
-                if json_gps["class"] == "POLL":
-                    return len(json_gps["sky"][0]["satellites"])
-            return 0
-        except:
-            return "ERROR"
-        return 1
+        for new_data in self.gps_socket:
+            if new_data:
+                self.data_stream.unpack(new_data)
+                self.satellite_count = self.data_stream.SKY['satellites']
+        return self.satellite_count
+        # self.gps_socket.send('?POLL;')
+        # response = self.gps_socket.next()
+        # try:
+        #     if response:
+        #         json_gps = json.loads(response)
+        #         if json_gps["class"] == "POLL":
+        #             return len(json_gps["sky"][0]["satellites"])
+        #     return 0
+        # except:
+        #     return "ERROR"
+        # return 1
 
     def colors(self, component, value):
 
@@ -513,9 +519,14 @@ class GUI():
 
     def internet_on(self):
         try:
-            # urllib2.urlopen('http://www.google.com', timeout=1)
-            return "N/A"
-        except urllib2.URLError as err:
+            hostname = "google.com"  # example
+            response = os.system("ping -c 1 " + hostname)
+            # and then check the response...
+            if response == 0:
+                return "OK"
+            else:
+                return "No Connection"
+        except:
             return "No Connection"
 
 
