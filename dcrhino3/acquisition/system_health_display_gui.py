@@ -56,7 +56,7 @@ class GUI():
         self.gps_socket = gps3.GPSDSocket()
         self.data_stream = gps3.DataStream()
         self.gps_socket.connect()
-        self.gps_socket.watch(devicepath="/dev/ttyACM1")
+        self.gps_socket.watch(devicepath="/dev/ttyACM0")
 
         column_span = 7
 
