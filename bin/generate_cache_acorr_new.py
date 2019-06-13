@@ -59,6 +59,11 @@ def merge_mwd_with_trace(hole_mwd, trace_data, merger):
     Returns:
         (DataFrame): dataframe combining the two dataframes' columns
     """
+
+    mwd_depth_spacing = np.median(np.diff(hole_mwd.depth))
+    for key, global_config in trace_data._global_configs.items():
+        global_config.mwd_depth_spacing = mwd_depth_spacing
+
     rhino_traces_df = trace_data.dataframe
     time_vector = pd.to_datetime(rhino_traces_df['timestamp'], unit='s')
     # time_vector = *(rhino_traces_df['timestamp'].values).astype(np.int64)
