@@ -418,6 +418,7 @@ class GUI():
         for new_data in self.gps_socket:
             if new_data:
                 self.data_stream.unpack(new_data)
+                pdb.set_trace()
                 self.satellite_count = len(self.data_stream.SKY['satellites'].keys())
                 print(self.satellite_count)
         return self.satellite_count
