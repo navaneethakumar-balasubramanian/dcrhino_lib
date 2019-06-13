@@ -415,15 +415,16 @@ class GUI():
         pass
 
     def poll_gps(self):
-        for new_data in self.gps_socket:
-            if new_data:
-                self.data_stream.unpack(new_data)
-                if self.data_stream.SKY['satellites'] == "n/a":
-                    self.satellite_count = 0
-                else:
-                    self.satellite_count = len(self.data_stream.SKY['satellites'])
-                print(self.satellite_count)
-        return self.satellite_count
+        return 0
+        # for new_data in self.gps_socket:
+        #     if new_data:
+        #         self.data_stream.unpack(new_data)
+        #         if self.data_stream.SKY['satellites'] == "n/a":
+        #             self.satellite_count = 0
+        #         else:
+        #             self.satellite_count = len(self.data_stream.SKY['satellites'])
+        #         # print(self.satellite_count)
+        # return self.satellite_count
         # self.gps_socket.send('?POLL;')
         # response = self.gps_socket.next()
         # try:
