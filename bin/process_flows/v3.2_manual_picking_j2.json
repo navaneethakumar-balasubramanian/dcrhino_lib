@@ -1,0 +1,593 @@
+{
+    "output_to_file": true,
+    "output_to_db": true,
+    "components_to_process": [
+        "axial"
+    ], 
+    "modules": [
+        {
+            "output_to_file": false, 
+            "args": {
+                "sampling_rate": "|global_config.sampling_rate|"
+            }, 
+            "type": "columns_to_df"
+        }, 
+        {
+            "output_to_file": false, 
+            "args": {}, 
+            "type": "unfold_hybrid"
+        }, 
+        {
+            "output_to_file": false, 
+            "args": {
+                "deconvolution_filter_duration": 0.1
+            }, 
+            "type": "lead_channel_deconvolution_hybrid"
+        },
+        {
+            "output_to_file": false,
+            "args": {},
+            "type": "export_segy"
+        },
+        {
+            "output_to_file": false, 
+            "args": {
+                "trapezoidal_bpf_corner_4": "|global_config.trapezoidal_bpf_corner_4|", 
+                "trapezoidal_bpf_corner_3": "|global_config.trapezoidal_bpf_corner_3|", 
+                "trapezoidal_bpf_corner_2": "|global_config.trapezoidal_bpf_corner_2|", 
+                "trapezoidal_bpf_corner_1": "|global_config.trapezoidal_bpf_corner_1|", 
+                "trapezoidal_bpf_duration": "|global_config.trapezoidal_bpf_duration|"
+            }, 
+            "type": "band_pass_filter_hybrid"
+        }, 
+        {
+            "output_to_file": false, 
+            "args": {
+                "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|", 
+                "max_lag_trimmed_trace": "|global_config.max_lag_trimmed_trace|"
+            }, 
+            "type": "trim_hybrid"
+        }, 
+        {
+            "output_to_file": false, 
+            "args": {
+                "upsample_interpolation_kind": [
+                    "|global_config.upsample_interpolation_kind|", 
+                    "quadratic"
+                ], 
+                "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|", 
+                "upsample_sampling_rate": [
+                    "|global_config.upsample_sampling_rate|", 
+                    50000
+                ], 
+                "max_lag_trimmed_trace": "|global_config.max_lag_trimmed_trace|", 
+                "trimmed_trace_duration": "|global_config.trimmed_trace_duration|"
+            }, 
+            "type": "upsample_hybrid"
+        }, 
+        {
+            "output_to_file": false, 
+            "args": {
+                "sensor_distance_to_source": "|global_config.sensor_distance_to_source|", 
+                "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|", 
+                "component": "axial", 
+                "trace_downsample_factor": 10, 
+                "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|", 
+                "window_widths": "|global_config.window_widths"
+            }, 
+            "type": "rhino_plotter_picker"
+        }, 
+        {
+            "output_to_file": false, 
+            "args": {
+                "upper_num_ms": 60, 
+                "sensor_distance_to_source": "|global_config.sensor_distance_to_source|", 
+                "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|", 
+                "component": "tangential", 
+                "trace_downsample_factor": 10, 
+                "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|", 
+                "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|", 
+                "window_widths": "|global_config.window_widths"
+            }, 
+            "type": "rhino_plotter_picker"
+        }, 
+        {
+            "output_to_file": false, 
+            "args": {
+                "sensor_distance_to_source": "|global_config.sensor_distance_to_source|", 
+                "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|", 
+                "amplitude_half_widths": {
+                    "axial": {
+                        "multiple_3": 0.00105, 
+                        "multiple_2": 0.00105, 
+                        "multiple_1": 0.00105, 
+                        "primary": 0.00105
+                    }, 
+                    "tangential": {
+                        "multiple_3": 0.00105, 
+                        "multiple_2": 0.00105, 
+                        "multiple_1": 0.00105, 
+                        "primary": 0.00105
+                    }
+                },
+                "additional_pick_based_amplitude_windows": {
+                    "axial": {
+                        "multiple_1": {
+                            "left_lower_bound_offset": -0.002,
+                            "left_upper_bound_offset": -0.001,
+                            "right_lower_bound_offset": 0.001,
+                            "right_upper_bound_offset": 0.002
+                            }
+                    },
+                    "tangential": {
+                        "multiple_1": {
+                            "left_lower_bound_offset": -0.002,
+                            "left_upper_bound_offset": -0.001,
+                            "right_lower_bound_offset": 0.001,
+                            "right_upper_bound_offset": 0.002
+                            }
+                    }
+                },
+                "sensor_saturation_g": "|global_config.sensor_saturation_g|", 
+                "manual_time_windows": {
+                    "axial": {
+                        "multiple_3": "|process_flow.axial_multiple_3|", 
+                        "multiple_2": "|process_flow.axial_multiple_2|", 
+                        "multiple_1": "|process_flow.axial_multiple_1|", 
+                        "primary": "|process_flow.axial_primary|"
+                    }, 
+                    "tangential": {
+                        "multiple_3": "|process_flow.tangential_multiple_3|", 
+                        "multiple_2": "|process_flow.tangential_multiple_2|", 
+                        "multiple_1": "|process_flow.tangential_multiple_1|", 
+                        "primary": "|process_flow.tangential_primary|"
+                    }
+                }, 
+                "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|", 
+                "upsample_sampling_rate": [
+                    "|global_config.upsample_sampling_rate|", 
+                    50000
+                ], 
+                "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|", 
+                "time_picks": {
+                    "axial": {
+                        "multiple_3": "zero_crossing_positive_slope",
+                        "multiple_2": "minimum", 
+                        "multiple_1": "zero_crossing_negative_slope",
+                        "primary": "maximum"
+                    }, 
+                    "tangential": {
+                        "multiple_3": "zero_crossing", 
+                        "multiple_2": "minimum", 
+                        "multiple_1": "zero_crossing", 
+                        "primary": "maximum"
+                    }
+                }, 
+                "amplitude_picks": {
+                    "axial": {
+                        "multiple_3": "integrated_absolute_amplitude", 
+                        "multiple_2": "integrated_absolute_amplitude", 
+                        "multiple_1": "integrated_absolute_amplitude", 
+                        "primary": "integrated_absolute_amplitude"
+                    }, 
+                    "tangential": {
+                        "multiple_3": "integrated_absolute_amplitude", 
+                        "multiple_2": "integrated_absolute_amplitude", 
+                        "multiple_1": "integrated_absolute_amplitude", 
+                        "primary": "integrated_absolute_amplitude"
+                    }
+                }
+            }, 
+            "type": "j2"
+        }, 
+        {
+            "output_to_file": false, 
+            "args": {
+                "picker_module_idx": 6, 
+                "padding_right": 0.03, 
+                "panels": [
+                    {
+                        "type": "curves", 
+                        "curves": [
+                            {
+                                "scale": "current", 
+                                "space": 0, 
+                                "color": "red", 
+                                "spine_side": "left", 
+                                "label": "J2-ax-prim-int-abs-amp", 
+                                "column_label": "J2-axial-primary-integrated_absolute_amplitude"
+                            }, 
+                            {
+                                "color": "blue", 
+                                "column_label": "J2-axial-reflection_coefficient_1", 
+                                "spine_side": "right", 
+                                "scale": "new", 
+                                "space": 0
+                            }, 
+                            {
+                                "color": "lime", 
+                                "column_label": "J2-axial-delay_1", 
+                                "spine_side": "right", 
+                                "scale": "new", 
+                                "space": 60
+                            }
+                        ]
+                    }, 
+                    {
+                        "component": "axial", 
+                        "manual_time_windows": {
+                            "axial": {
+                                "multiple_3": "|process_flow.axial_multiple_3|", 
+                                "multiple_2": "|process_flow.axial_multiple_2|", 
+                                "multiple_1": "|process_flow.axial_multiple_1|", 
+                                "primary": "|process_flow.axial_primary|"
+                            }
+                        }, 
+                        "type": "heatmap", 
+                        "curves": [
+                            {
+                                "linewidth": 2, 
+                                "column_label": "J2-axial-primary-maximum_time", 
+                                "label": "primary Max", 
+                                "color": "#FFFFFF", 
+                                "formula": "data*1000"
+                            }, 
+                            {
+                                "linewidth": 2, 
+                                "column_label": "J2-axial-multiple_1-zero_crossing_negative_slope_time",
+                                "label": "M1 Zx", 
+                                "color": "#FFFFFF", 
+                                "formula": "data*1000"
+                            }, 
+                            {
+                                "linewidth": 2, 
+                                "column_label": "J2-axial-multiple_2-minimum_time", 
+                                "label": "M2 Min", 
+                                "color": "#FFFFFF", 
+                                "formula": "data*1000"
+                            }, 
+                            {
+                                "linewidth": 2, 
+                                "column_label": "J2-axial-multiple_3-zero_crossing_positive_slope_time" ,
+                                "label": "M3 Zx", 
+                                "color": "#FFFFFF", 
+                                "formula": "data*1000"
+                            }
+                        ], 
+                        "wavelet_windows_to_show": [
+                            "primary", 
+                            "multiple_1", 
+                            "multiple_2", 
+                            "multiple_3"
+                        ]
+                    }, 
+                    {
+                        "type": "curves", 
+                        "curves": [
+                            {
+                                "scale": "current", 
+                                "space": 0, 
+                                "color": "red", 
+                                "spine_side": "left", 
+                                "label": "J2-tang-prim-int-abs-amp", 
+                                "column_label": "J2-tangential-primary-integrated_absolute_amplitude"
+                            }, 
+                            {
+                                "color": "blue", 
+                                "column_label": "J2-tangential-reflection_coefficient_1", 
+                                "spine_side": "right", 
+                                "scale": "new", 
+                                "space": 0
+                            }, 
+                            {
+                                "color": "lime", 
+                                "column_label": "J2-tangential-delay_1", 
+                                "spine_side": "right", 
+                                "scale": "new", 
+                                "space": 60
+                            }
+                        ]
+                    }, 
+                    {
+                        "upper_num_ms": 60, 
+                        "wavelet_windows_to_show": [
+                            "primary", 
+                            "multiple_1", 
+                            "multiple_2", 
+                            "multiple_3"
+                        ], 
+                        "component": "tangential", 
+                        "curves": [
+                            {
+                                "linewidth": 2, 
+                                "column_label": "J2-tangential-primary-maximum_time", 
+                                "label": "primary Max", 
+                                "color": "#FFFFFF", 
+                                "formula": "data*1000"
+                            }, 
+                            {
+                                "linewidth": 2, 
+                                "column_label": "J2-tangential-multiple_1-zero_crossing_time", 
+                                "label": "M1 Zx", 
+                                "color": "#FFFFFF", 
+                                "formula": "data*1000"
+                            }, 
+                            {
+                                "linewidth": 2, 
+                                "column_label": "J2-tangential-multiple_2-minimum_time", 
+                                "label": "M2 Min", 
+                                "color": "#FFFFFF", 
+                                "formula": "data*1000"
+                            }, 
+                            {
+                                "linewidth": 2, 
+                                "column_label": "J2-tangential-multiple_3-zero_crossing_time", 
+                                "label": "M3 Zx", 
+                                "color": "#FFFFFF", 
+                                "formula": "data*1000"
+                            }
+                        ], 
+                        "manual_time_windows": {
+                            "tangential": {
+                                "multiple_3": "|process_flow.tangential_multiple_3|", 
+                                "multiple_2": "|process_flow.tangential_multiple_2|", 
+                                "multiple_1": "|process_flow.tangential_multiple_1|", 
+                                "primary": "|process_flow.tangential_primary|"
+                            }
+                        }, 
+                        "type": "heatmap"
+                    }
+                ]
+            }, 
+            "type": "rhino_plotter_repicker"
+        }, 
+        {
+            "output_to_file": true, 
+            "args": {
+                "padding_right": 0.03, 
+                "panels": [
+                    {
+                        "type": "curves",
+                        "curves": [
+                            {
+                                "scale": "current",
+                                "space": 0,
+                                "spine_side": "left",
+                                "column_label": "wob",
+                                "color": "red"
+                            },
+                            {
+                                "color": "blue",
+                                "column_label": "mse",
+                                "spine_side": "right",
+                                "scale": "new",
+                                "space": 0
+                            },
+                            {
+                                "color": "lime",
+                                "label": "timestamp",
+                                "column_label": "timestamp",
+                                "spine_side": "right",
+                                "scale": "new",
+                                "space": 60
+                            }
+                        ]
+                    },
+                    {
+                        "type": "curves",
+                        "curves": [
+                            {
+                                "scale": "current",
+                                "space": 0,
+                                "color": "red",
+                                "spine_side": "left",
+                                "label": "J2-ax-prim-int-abs-amp",
+                                "column_label": "J2-axial-primary-integrated_absolute_amplitude"
+                            },
+                            {
+                                "color": "blue",
+                                "column_label": "J2-axial-reflection_coefficient_1",
+                                "spine_side": "right",
+                                "scale": "new",
+                                "space": 0
+                            },
+                            {
+                                "color": "lime",
+                                "column_label": "J2-axial-delay_1",
+                                "spine_side": "right",
+                                "scale": "new",
+                                "space": 60
+                            }
+                        ]
+                    },
+                    {
+                        "component": "axial",
+                        "manual_time_windows": {
+                            "axial": {
+                                "multiple_3": "|process_flow.axial_multiple_3|",
+                                "multiple_2": "|process_flow.axial_multiple_2|",
+                                "multiple_1": "|process_flow.axial_multiple_1|",
+                                "primary": "|process_flow.axial_primary|"
+                            }
+                        },
+                        "type": "heatmap",
+                        "curves": [
+                            {
+                                "linewidth": 2,
+                                "column_label": "J2-axial-primary-maximum_time",
+                                "label": "primary Max",
+                                "color": "#FFFFFF",
+                                "formula": "data*1000"
+                            },
+                            {
+                                "linewidth": 2,
+                                "column_label": "J2-axial-multiple_1-zero_crossing_negative_slope_time",
+                                "label": "M1 Zx",
+                                "color": "#FFFFFF",
+                                "formula": "data*1000"
+                            },
+                            {
+                                "linewidth": 2,
+                                "column_label": "J2-axial-multiple_2-minimum_time",
+                                "label": "M2 Min",
+                                "color": "#FFFFFF",
+                                "formula": "data*1000"
+                            },
+                            {
+                                "linewidth": 2,
+                                "column_label": "J2-axial-multiple_3-zero_crossing_positive_slope_time",
+                                "label": "M3 Zx",
+                                "color": "#FFFFFF",
+                                "formula": "data*1000"
+                            }
+                        ],
+                        "wavelet_windows_to_show": [
+                            "primary",
+                            "multiple_1",
+                            "multiple_2",
+                            "multiple_3"
+                        ]
+                    },
+                    {
+                        "type": "curves",
+                        "curves": [
+                            {
+                                "scale": "current",
+                                "space": 0,
+                                "color": "red",
+                                "spine_side": "left",
+                                "label": "J2-tang-prim-int-abs-amp",
+                                "column_label": "J2-tangential-primary-integrated_absolute_amplitude"
+                            },
+                            {
+                                "color": "blue",
+                                "column_label": "J2-tangential-reflection_coefficient_1",
+                                "spine_side": "right",
+                                "scale": "new",
+                                "space": 0
+                            },
+                            {
+                                "color": "lime",
+                                "column_label": "J2-tangential-delay_1",
+                                "spine_side": "right",
+                                "scale": "new",
+                                "space": 60
+                            }
+                        ]
+                    },
+                    {
+                        "upper_num_ms": 60,
+                        "wavelet_windows_to_show": [
+                            "primary",
+                            "multiple_1",
+                            "multiple_2",
+                            "multiple_3"
+                        ],
+                        "component": "tangential",
+                        "curves": [
+                            {
+                                "linewidth": 2,
+                                "column_label": "J2-tangential-primary-maximum_time",
+                                "label": "primary Max",
+                                "color": "#FFFFFF",
+                                "formula": "data*1000"
+                            },
+                            {
+                                "linewidth": 2,
+                                "column_label": "J2-tangential-multiple_1-zero_crossing_time",
+                                "label": "M1 Zx",
+                                "color": "#FFFFFF",
+                                "formula": "data*1000"
+                            },
+                            {
+                                "linewidth": 2,
+                                "column_label": "J2-tangential-multiple_2-minimum_time",
+                                "label": "M2 Min",
+                                "color": "#FFFFFF",
+                                "formula": "data*1000"
+                            },
+                            {
+                                "linewidth": 2,
+                                "column_label": "J2-tangential-multiple_3-zero_crossing_time",
+                                "label": "M3 Zx",
+                                "color": "#FFFFFF",
+                                "formula": "data*1000"
+                            }
+                        ], 
+                        "manual_time_windows": {
+                            "tangential": {
+                                "multiple_3": "|process_flow.tangential_multiple_3|", 
+                                "multiple_2": "|process_flow.tangential_multiple_2|", 
+                                "multiple_1": "|process_flow.tangential_multiple_1|", 
+                                "primary": "|process_flow.tangential_primary|"
+                            }
+                        }, 
+                        "type": "heatmap"
+                    }
+                ], 
+                "legend": true, 
+                "show": false
+            }, 
+            "type": "rhino_plotter"
+        }, 
+        {
+            "output_to_file": false, 
+            "args": {
+                "interval_in_meters": 0.05
+            }, 
+            "type": "binning"
+        }, 
+        {
+            "output_to_file": false, 
+            "args": {
+                "recipe_to_use": "J2"
+            }, 
+            "type": "rhino_physics"
+        }, 
+        {
+            "output_to_file": false,
+            "args": {
+                "panels": [
+                    {
+                        "type": "curves", 
+                        "curves": [
+                            "a_density"
+                        ]
+                    }, 
+                    {
+                        "type": "curves", 
+                        "curves": [
+                            "a_velocity"
+                        ]
+                    }, 
+                    {
+                        "type": "curves", 
+                        "curves": [
+                            "a_delay"
+                        ]
+                    }, 
+                    {
+                        "type": "curves", 
+                        "curves": [
+                            "a_modulus"
+                        ]
+                    }, 
+                    {
+                        "type": "curves", 
+                        "curves": [
+                            "a_ratio"
+                        ]
+                    }, 
+                    {
+                        "type": "curves", 
+                        "curves": [
+                            "a_reflection_coef"
+                        ]
+                    }
+                ]
+            }, 
+            "type": "rhino_plotter"
+        }
+    ], 
+    "id": "v3.2_manual_picker_j2"
+}

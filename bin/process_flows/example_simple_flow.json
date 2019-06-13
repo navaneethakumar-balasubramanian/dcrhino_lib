@@ -1,0 +1,33 @@
+{
+    "id":"example_simple_flow",
+	"trace_processing":{
+		"modules":[
+			{
+    			"type":"add_one",
+    			"output_to_file":true
+    		},
+			{
+    			"type":"add_n",
+    			"output_to_file":true,
+        		"args":{
+        			"axial":10,
+        			"tangential":"|global_config.sensor_distance_to_source|",
+        			"radial":10
+    			}
+			}
+		]
+	},
+	"features_extraction":{
+    	"modules":[
+        	{
+            	"type":"j1",
+            	"output_to_file":true,
+            	"args":{
+        			"axial":10,
+        			"tangential":"|global_config.sensor_distance_to_source|",
+        			"radial":10
+    			}
+        	}
+    	]
+	}
+}
