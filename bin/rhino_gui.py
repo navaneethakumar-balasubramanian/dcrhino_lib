@@ -88,6 +88,7 @@ class GUI():
         self.automatic_acquisition = config.getboolean("RUNTIME", "automatic_acquisition")
         self.automatic_upload = config.getboolean("RUNTIME", "automatic_upload")
 
+        self.stop_rx(False)
 
         default_font = tkFont.nametofont("TkDefaultFont")
         default_font.configure(size=16)
