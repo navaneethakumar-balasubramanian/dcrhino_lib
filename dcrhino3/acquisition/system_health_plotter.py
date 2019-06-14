@@ -4,6 +4,7 @@ from datetime import datetime
 import ConfigParser
 from dcrhino3.acquisition.constants import RAM_PATH
 from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
+from dcrhino3.helpers.general_helper_functions import calculate_battery_percentage
 # matplotlib.use('GTKAgg')
 if plt.get_backend() == "Qt4Agg":
     pass
@@ -32,6 +33,8 @@ rhino_version = config.getfloat("COLLECTION","rhino_version")
 accel_component = config.get("SYSTEM_HEALTH_PLOTS","accel_line_plot_component")
 sensor_saturation_g = config.getint("INSTALLATION", "sensor_saturation_g")
 accel_scale_multiplier = config.getfloat("SYSTEM_HEALTH_PLOTS","accel_scale_multiplier")
+battery_max_voltage = config.getfloat("INSTALLATION", "battery_max_voltage")
+battery_min_voltage = config.getfloat("INSTALLATION", "battery_min_voltage")
 health = [0] * length
 fig1 = plt.figure("DataCloud Rhino Health Plots",figsize=(6,4))
 plt.subplots_adjust(hspace=1.0,wspace=0.5)
@@ -139,8 +142,11 @@ while True:
         batt_plot.set_xlabel("time (sec)", **axis_font)
         if config.getboolean("SYSTEM_HEALTH_PLOTS", "battery_plot_display_percentage"):
             batt_label = "%"
+            batt_to_plot = np.asarray([calculate_battery_percentage(battery_max_voltage, battery_min_voltage,
+                                                                    x) for x in batt])
         else:
             batt_label = "V"
+            batt_to_plot = batt
         batt_plot.set_ylabel(batt_label, **axis_font)
         min, max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS", "battery_y_lim"))
         batt_plot.set_ylim(min, max)
@@ -206,7 +212,7 @@ while True:
         temp_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "temp_negative_upper_limit"),0,length,"y","dashed")
         temp_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "temp_negative_lower_limit"),0,length,"r","dashed")
 
-        batt_plot.plot(np.flipud(batt), 'g')#3
+        batt_plot.plot(np.flipud(batt_to_plot), 'g')#3
         batt_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "battery_upper_limit"),0,length,"y","dashed")
         batt_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "battery_lower_limit"),0,length,"r","dashed")
 
