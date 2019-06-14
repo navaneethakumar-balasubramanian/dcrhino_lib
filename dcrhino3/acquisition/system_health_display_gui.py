@@ -64,7 +64,9 @@ class GUI():
         self.gps_thread = GPSThread(ignore_gpsd)
         self.gps_thread.start()
         screen_height = self.master.winfo_screenheight()
-        self.master.geometry('x%d+%d+%d' % (screen_height, 0, 0))
+        if screen_height > 1000:
+            screen_height = 1000
+        self.master.geometry('%dx%d+%d+%d' % (1200, screen_height, 0, 0))
 
 
         column_span = 7
