@@ -92,14 +92,14 @@ def process(list_of_args):
         acorr_h5_to_db(file, env_config, min_ts, max_ts)
 
 
-def save_to_db(sql_db_helper,h5_file_path,min_ts_df,global_config,min_ts,max_ts,conn,autcorrelated_dataframe):
+def save_to_db(sql_db_helper,h5_file_path,min_ts_df,global_config,min_ts,max_ts,conn,autcorrelated_dataframe,type):
     logger.info("Adding this file to sensor_files_table")
     original_file_record_day = int(time.strftime("%Y%m%d", time.gmtime(min_ts_df)))
     file_id = sql_db_helper.sensor_files.add(h5_file_path, global_config.rig_id,
                                              str(global_config.sensor_serial_number),
                                              str(global_config.digitizer_serial_number), min_ts,
                                              max_ts,
-                                             json.dumps(vars(global_config), indent=4), 1,
+                                             json.dumps(vars(global_config), indent=4), type,
                                              status='valid',
                                              file_name=os.path.basename(h5_file_path),
                                              original_file_record_day=original_file_record_day)
@@ -180,7 +180,7 @@ def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000)
         if column in autcorrelated_dataframe.columns:
             autcorrelated_dataframe.rename({column:column+"_trace"},axis=1,inplace=True)
 
-    save_to_db(sql_db_helper,h5_file_path,min_ts_df,global_config,min_ts,max_ts,conn,autcorrelated_dataframe)
+    save_to_db(sql_db_helper,h5_file_path,min_ts_df,global_config,min_ts,max_ts,conn,autcorrelated_dataframe,1)
 
 
     return autcorrelated_dataframe
@@ -230,7 +230,7 @@ def acorr_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
 
     min_ts_df = l1h5_dataframe['timestamp'].min()
     l1h5_dataframe['timestamp'] = l1h5_dataframe['timestamp'] - min_ts_df
-    save_to_db(sql_db_helper, h5_file_path, min_ts_df, global_config, min_ts, max_ts, conn, l1h5_dataframe)
+    save_to_db(sql_db_helper, h5_file_path, min_ts_df, global_config, min_ts, max_ts, conn, l1h5_dataframe,2)
 
 
     return
