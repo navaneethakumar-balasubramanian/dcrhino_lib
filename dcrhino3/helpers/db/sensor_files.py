@@ -27,6 +27,10 @@ class SensorFiles(BaseDbModel):
         return False
 
 
+
+    def get_all_valid(self):
+        return self.query_to_df("select * from " + self.table_name + " where status='valid'")
+    
     def add(self,file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name,original_file_record_day):
         sql = "INSERT INTO "+self.table_name+" (file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name,original_file_record_day) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s)"
         val = (file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name,original_file_record_day)

@@ -14,8 +14,7 @@ class Matches(BaseDbModel):
         sql = f.read()
         return sql
 
-    def get_all_valid(self):
-        return self.query_to_df("select * from " + self.table_name + " where status='valid'")
+
 
 
     def add(self,match_id,files_ids,bench_name,pattern_name,hole_id,hole_name,rig_id,sensor_id,digitizer_id,start_time_max,start_time_min,solution,solution_label):
