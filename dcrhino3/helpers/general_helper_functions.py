@@ -334,6 +334,10 @@ def fft_data(data_array, sampling_rate):
             "frequency": freq,
             "calibrated": data_array}
 
+def calculate_battery_percentage(max_voltage, min_voltage, current_voltage):
+    value = 100 - (max_voltage - current_voltage) / (max_voltage - min_voltage) * 100
+    return round(value, 2)
+
 
 
 #def arrayBounds(ts,ordered=False,**kwargs):
