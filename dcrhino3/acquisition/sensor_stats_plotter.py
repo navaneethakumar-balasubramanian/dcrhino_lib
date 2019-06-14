@@ -26,7 +26,7 @@ class StatsPlotter():
 
     def __init__(self, global_config):
         self.fig = plt.figure("DataCloud Rhino Sensor Stats", figsize=(6, 4))
-        self.fig.canvas.manager.window.wm_geometry("+%d+%d" % (1300, 500))
+        self.fig.canvas.manager.window.wm_geometry("+%d+%d" % (1300, 490))
         plt.subplots_adjust(hspace=1.0, wspace=0.5, top=0.8, bottom=.1)
         plt.pause(.05)
         self.fig.canvas.draw()

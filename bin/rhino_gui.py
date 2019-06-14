@@ -73,7 +73,7 @@ class GUI():
     def __init__(self,master):
         row = 0
         self.master = master
-        self.master.geometry('+%d+%d' % (1300, 880))
+        self.master.geometry('+%d+%d' % (1300, 870))
         self.playback_daemon_process = None
         self.gps_process = None
         self.acquisition_process = None
