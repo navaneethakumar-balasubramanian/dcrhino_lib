@@ -24,8 +24,11 @@ class BaseDbModel:
             self.cursor.close()
         except mysql.connector.Error as err:
             print("Something went wrong: {}".format(err))
+
     def get_all(self):
         return self.query_to_df("select * from " + self.table_name)
+
+
 
     def query_to_df(self,query):
         cursor = self.query(query)
