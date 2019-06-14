@@ -11,11 +11,11 @@ from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
 from dcrhino3.acquisition.constants import LOGS_PATH
 from dcrhino3.acquisition.rhino_threads import NetworkThread, GPSThread
 from dcrhino3.helpers.general_helper_functions import calculate_battery_percentage
-
-import json
-import urllib2
-cfg_fname = os.path.join(PATH, "collection_daemon.cfg")
 import math
+
+
+cfg_fname = os.path.join(PATH, "collection_daemon.cfg")
+
 import pdb
 
 
@@ -23,6 +23,8 @@ config = ConfigParser.SafeConfigParser()
 config.read(cfg_fname)
 
 rhino_version = config.getfloat("COLLECTION", "rhino_version")
+
+ignore_gpsd = False
 
 class SystemHealthLogger():
     def __init__(self):
@@ -59,7 +61,7 @@ class GUI():
         self.drift = 0
         self.network_thread = NetworkThread()
         self.network_thread.start()
-        self.gps_thread = GPSThread()
+        self.gps_thread = GPSThread(ignore_gpsd)
         self.gps_thread.start()
 
 

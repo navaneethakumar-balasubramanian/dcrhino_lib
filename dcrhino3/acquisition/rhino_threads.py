@@ -31,26 +31,30 @@ class NetworkThread(threading.Thread):
 
 
 class GPSThread(threading.Thread):
-    def __init__(self):
+    def __init__(self, ignore_gpsd):
         threading.Thread.__init__(self)
-        self.gps_socket = gps3.GPSDSocket()
-        self.data_stream = gps3.DataStream()
-        self.gps_socket.connect()
-        self.gps_socket.watch(devicepath="/dev/ttyACM0")
-        self._satellite_count = 0
-        # self._counter = 0
+        self._ignore_gpsd = ignore_gpsd
+        if not ignore_gpsd:
+            self.gps_socket = gps3.GPSDSocket()
+            self.data_stream = gps3.DataStream()
+            self.gps_socket.connect()
+            self.gps_socket.watch(devicepath="/dev/ttyACM0")
+            self._satellite_count = 0
+        else:
+            self._satellite_count = "GPS OFF"
 
     def run(self):
-        try:
-            for new_data in self.gps_socket:
-                if new_data:
-                    self.data_stream.unpack(new_data)
-                    if self.data_stream.SKY['satellites'] == "n/a":
-                        self._satellite_count = 0
-                    else:
-                        self._satellite_count = len(self.data_stream.SKY['satellites'])
-        except:
-            self._satellite_count = sys.exc_info()
+        if not self._ignore_gpsd:
+            try:
+                for new_data in self.gps_socket:
+                    if new_data:
+                        self.data_stream.unpack(new_data)
+                        if self.data_stream.SKY['satellites'] == "n/a":
+                            self._satellite_count = 0
+                        else:
+                            self._satellite_count = len(self.data_stream.SKY['satellites'])
+            except:
+                self._satellite_count = sys.exc_info()
 
     @property
     def satellite_count(self):
