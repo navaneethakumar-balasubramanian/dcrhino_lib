@@ -221,6 +221,7 @@ class FileFlusher(threading.Thread):
         self.good_packets_in_a_row = 1
         self.offset = 0
         self.allowed_clock_difference = config.getfloat("RUNTIME","allowed_clock_difference")
+        self._drift = 0
 
     def first_packet_received(self, packet, timestamp):
         m = "First packet received at t0 {} with delta T of {}\n".format(repr(timestamp), delta_t)
@@ -280,8 +281,13 @@ class FileFlusher(threading.Thread):
                                                             self.counter_changes)
                     self.logQ.put(m)
                     self.displayQ.put(m)
+                    self._drift = diff
         self.previous_second = int(self.current_timestamp)
         return packet
+
+    @property
+    def drift(self):
+        return self._drift
 
     def save_row_to_processing_q(self, packet):
 
@@ -879,7 +885,7 @@ def main_run(run=True):
         logger.start()
 
         # SET THREADS TO EXCLUSIVE CPUS
-        p = subprocess.Popen(['pstree', '-p', str(pid) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(['pstree', '-p', str(pid)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate()
         subpids = []
         for sub_pid in re.findall('\(.*?\)',out):
@@ -922,6 +928,7 @@ def main_run(run=True):
     batt = [np.nan] * length
     packets = [np.nan] * length
     delay = [np.nan] * length
+    drift = [np.nan] * length
     trace_time_array = [np.nan] * length
     now_array = [np.nan] * length
     max_axial_acceleration = [np.nan] * length
@@ -946,14 +953,14 @@ def main_run(run=True):
     # output_sampling_rate=config.getfloat("COLLECTION","output_sampling_rate")
     # traces_subsample = config.getint("SYSTEM_HEALTH_PLOTS","traces_subsample")
     # number_of_traces_to_display=config.getint("SYSTEM_HEALTH_PLOTS","number_of_traces_to_display")
-    second_plot_display=config.get("RUNTIME","second_plot_display")
+    second_plot_display = config.get("RUNTIME", "second_plot_display")
     # last_filename=None
 
     realtime_trace = RawTraceData()
-    realtime_trace.add_global_config(global_config ,file_id='0')
+    realtime_trace.add_global_config(global_config, file_id='0')
 
-    fig1 = plt.figure("DataCloud Rhino Real Time Data",figsize=(6,4))
-    plt.subplots_adjust(hspace=0.8)
+    fig1 = plt.figure("DataCloud Rhino Real Time Data", figsize=(6, 4))
+    plt.subplots_adjust(hspace=0.8, top=0.8)
     plt.pause(.05)
     fig1.canvas.draw()
 
@@ -1002,10 +1009,10 @@ def main_run(run=True):
             trace_plot.set_title("Channel {} - ".format(channels[channel_mapping[component_to_display]]) +"{} Component Trace".format(component_to_display.upper()))
 
 
-            sec_delay = round(now - trace_second,2)
+            sec_delay = round(now - trace_second, 2)
             plt.suptitle("Trace Time "+ tracetime.strftime('%Y-%m-%d %H:%M:%S' ) + " plotted at " +
                          datetime.utcfromtimestamp(now).strftime('%Y-%m-%d %H:%M:%S') + " delay of " + str(
-                sec_delay), fontsize=10)
+                sec_delay)+"\nAnd a drift of " + str(fflush.drift), fontsize=10)
 
             data_to_plot = trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)]
             if remove_mean:
@@ -1054,6 +1061,7 @@ def main_run(run=True):
             min_tangential_acceleration.pop(0)
             min_radial_acceleration.pop(0)
             disk_usage.pop(0)
+            drift.pop(0)
 
             rssi.append(trace["rssi"])
             temp.append(trace["temp"])
@@ -1069,11 +1077,12 @@ def main_run(run=True):
             min_tangential_acceleration.append(trace["acceleration"]["tangential"]["min"])
             min_radial_acceleration.append(trace["acceleration"]["radial"]["min"])
             disk_usage.append(trace["disk_usage"])
+            drift.append(fflush.drift)
             counterchanges = trace["counter_changes"]
             health = [rssi, packets, delay, temp, batt, counterchanges, tracetime, now, sec_delay,
                       comport.corrupt_packets, fflush.tx_status, max_axial_acceleration, min_axial_acceleration,
                       max_tangential_acceleration, min_tangential_acceleration,
-                      max_radial_acceleration, min_radial_acceleration, disk_usage]
+                      max_radial_acceleration, min_radial_acceleration, disk_usage, drift]
             system_healthQ.put(health)
             np.save(os.path.join(RAM_PATH, 'system_health.npy'), np.asarray(health))
             display.update_system_health()
@@ -1118,7 +1127,8 @@ def main_run(run=True):
                                           last_tracetime, counterchanges, comport.corrupt_packets, fflush.tx_status,
                                           max_axial_acceleration, min_axial_acceleration,
                                           max_tangential_acceleration, min_tangential_acceleration,
-                                          max_radial_acceleration, min_radial_acceleration, disk_usage)
+                                          max_radial_acceleration, min_radial_acceleration, disk_usage,
+                                          drift, fflush.drift)
             display.update_system_health()
         except:
             m = "{}\n".format(sys.exc_info())
@@ -1149,7 +1159,7 @@ def write_data_to_h5_files(h5f_path,trace_data,trace):
     df["min_radial_acceleration"] = np.asarray([np.min(radial_calibrated_trace)],)
     df["axial_trace"]=list([trace_data["trace_data"]["axial"]["axial_auto_correlated"],])
     df["tangential_trace"]=list([trace_data["trace_data"]["tangential"]["tangential_auto_correlated"],])
-    df["radial_trace"]=list([trace_data["trace_data"]["radial"]["radial_auto_correlated"],])
+    df["radial_trace"]=list([trace_data["trace_data"]["radial"]["radial_auto_correlated"], ])
     trace.dataframe=df
     trace.realtime_append_to_h5(h5f_path)
 
@@ -1158,7 +1168,7 @@ def add_empty_health_row_to_Q(rssi, temp, batt, packets, delay, trace_time_array
                               last_tracetime, last_counterchanges, corrupt_packets, tx_status,
                               max_axial_acceleration, min_axial_acceleration, max_tangential_acceleration,
                               min_tangential_acceleration, max_radial_acceleration, min_radial_acceleration,
-                              disk_usage):
+                              disk_usage, drift_list, current_drift):
     now = time.time()
     rssi.pop(0)
     temp.pop(0)
@@ -1174,6 +1184,7 @@ def add_empty_health_row_to_Q(rssi, temp, batt, packets, delay, trace_time_array
     min_tangential_acceleration.pop(0)
     min_radial_acceleration.pop(0)
     disk_usage.pop(0)
+    drift_list.pop(0)
 
     if tx_status == 1:
         rssi.append(np.nan)
@@ -1199,6 +1210,7 @@ def add_empty_health_row_to_Q(rssi, temp, batt, packets, delay, trace_time_array
         min_tangential_acceleration.append(min_tangential_acceleration[-1])
         min_radial_acceleration.append(min_radial_acceleration[-1])
         disk_usage.append(disk_usage[-1])
+    drift_list.append(current_drift)
 
     sec_delay = round(now-last_tracetime, 2)
     delay.append(sec_delay)

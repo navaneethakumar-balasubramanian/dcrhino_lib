@@ -48,7 +48,7 @@ while True:
         # latest_run = max(glob.glob(os.path.join(RAM_PATH,"*")), key=os.path.getmtime)
         system_health = os.path.join(RAM_PATH, "system_health.npy")
         if os.path.exists(system_health):
-            health = np.load(system_health,allow_pickle=True)
+            health = np.load(system_health, allow_pickle=True)
 
         rows = 3
         columns = 2
@@ -89,14 +89,21 @@ while True:
         row += 1
 
         delay_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1, sharex=packets_plot)
+        delay_plot_twin = delay_plot.twinx()
         delay_plot.tick_params(labelsize=tick_font_size)
+        delay_plot.tick_params(axis="y", labelcolor="C0")
         delay_plot.set_title("Plotting Delay", **title_font)
         delay_plot.set_xlabel("Elapsed Time (sec)", **axis_font)
-        delay_plot.set_ylabel("seconds", **axis_font)
+        delay_plot.set_ylabel("seconds", color="C0", **axis_font)
         min, max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS", "delay_y_lim"))
-        delay_plot.set_ylim(min, max)
+        delay_plot.set_ylim(min, max, )
         delay_plot.yaxis.tick_right()
         delay_plot.yaxis.set_label_position("right")
+        delay_plot_twin.tick_params(labelsize=tick_font_size)
+        delay_plot_twin.tick_params(axis="y", labelcolor="C7")
+        delay_plot_twin.yaxis.tick_left()
+        delay_plot_twin.yaxis.set_label_position("left")
+        delay_plot_twin.set_ylabel("drift (sec)", color="C7", **axis_font)
         row += 1
 
 
@@ -146,15 +153,16 @@ while True:
             temp_plot.set_visible(False)
             batt_plot.set_visible(False)
 
-        rssi =  health[0]
-        packets=  health[1]
-        delay=  health[2]
-        temp=  health[3]
-        batt=  health[4]
+        rssi = health[0]
+        packets = health[1]
+        delay = health[2]
+        temp = health[3]
+        batt = health[4]
         counterchanges = health[5]
         tracetime = health[6]
         now = health[7]
-        sec_delay = delay[-1]
+        drift = np.asarray(health[18])
+        sec_delay = round(delay[-1] + drift[-1], 2)
 
         components = ["axial", "tangential", "radial"]
         accel_health_index = [11, 13, 15]
@@ -164,7 +172,7 @@ while True:
 
 
         plt.suptitle(tracetime.strftime('%Y-%m-%d %H:%M:%S' ) + " plotted at " + datetime.utcfromtimestamp(
-            now).strftime('%Y-%m-%d %H:%M:%S') + " delay of " + str(sec_delay) ,fontsize=10)
+            now).strftime('%Y-%m-%d %H:%M:%S') + " delay of " + str(sec_delay), fontsize=10)
 
         # pdb.set_trace()
         packets_plot.plot(np.flipud(packets), "black", label="packets")
@@ -179,7 +187,11 @@ while True:
         rssi_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "rssi_lower_limit"), 0, length, "r", "dashed",
                          label="rssi lower limit")
 
-        delay_plot.plot(np.flipud(delay))
+        delay_plot.plot(np.flipud(delay), 'C0')
+        delay_plot_twin.plot(np.flipud(drift), 'C7')
+        drift_mean = np.mean(drift[~np.isnan(drift)])
+        min, max = drift_mean * -10, drift_mean * 10
+        delay_plot_twin.set_ylim(min, max)
         delay_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "delay_lower_limit"), 0, length, "y", "dashed")
         delay_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "delay_upper_limit"), 0, length, "r", "dashed")
 
@@ -188,15 +200,15 @@ while True:
         accel_plot.hlines(sensor_saturation_g, 0, length, "r", "dashed")
         accel_plot.hlines(-sensor_saturation_g, 0, length, "r", "dashed")
 
-        temp_plot.plot(np.flipud(temp),'r')#3
-        temp_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS","temp_positive_upper_limit"),0,length,"y","dashed")
-        temp_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS","temp_positive_lower_limit"),0,length,"r","dashed")
-        temp_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS","temp_negative_upper_limit"),0,length,"y","dashed")
-        temp_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS","temp_negative_lower_limit"),0,length,"r","dashed")
+        temp_plot.plot(np.flipud(temp), 'r')#3
+        temp_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "temp_positive_upper_limit"),0,length,"y","dashed")
+        temp_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "temp_positive_lower_limit"),0,length,"r","dashed")
+        temp_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "temp_negative_upper_limit"),0,length,"y","dashed")
+        temp_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "temp_negative_lower_limit"),0,length,"r","dashed")
 
-        batt_plot.plot(np.flipud(batt),'g')#3
-        batt_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS","battery_upper_limit"),0,length,"y","dashed")
-        batt_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS","battery_lower_limit"),0,length,"r","dashed")
+        batt_plot.plot(np.flipud(batt), 'g')#3
+        batt_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "battery_upper_limit"),0,length,"y","dashed")
+        batt_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "battery_lower_limit"),0,length,"r","dashed")
 
         fig1.canvas.draw()
         plt.pause(0.05)
@@ -206,4 +218,4 @@ while True:
     except:
         time.sleep(.1)
         pass
-        # print(sys.exc_info())
+        # print("System Health Plotter Exception: ", sys.exc_info())
