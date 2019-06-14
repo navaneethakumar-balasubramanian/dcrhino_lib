@@ -8,8 +8,8 @@ import numpy as np
 import psutil
 from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
 from dcrhino3.acquisition.constants import LOGS_PATH
-from dcrhino3.acquisition.rhino_threads import NetworkThread
-from gps3 import gps3
+from dcrhino3.acquisition.rhino_threads import NetworkThread, GPSThread
+
 import json
 import urllib2
 cfg_fname = os.path.join(PATH, "collection_daemon.cfg")
@@ -55,13 +55,10 @@ class GUI():
         self.system_health_logger = SystemHealthLogger()
         self.corrupt_packets = 0
         self.drift = 0
-        self.gps_socket = gps3.GPSDSocket()
-        self.data_stream = gps3.DataStream()
-        self.gps_socket.connect()
-        self.gps_socket.watch(devicepath="/dev/ttyACM0")
-        self.satellite_count = 0
         self.network = NetworkThread()
         self.network.start()
+        self.gps = GPSThread()
+        self.gps.start()
 
         column_span = 7
 
@@ -359,7 +356,7 @@ class GUI():
 
                 self.disk_usage_var.set(disk_usage)
                 self.ram_usage_var.set(ram_usage)
-                self.gps_var.set(self.poll_gps())
+                self.gps_var.set(self.gps.satellite_count)
                 self.package_temp_var.set(tablet_temperature.split(":")[0])
                 self.core1_temp_var.set(tablet_temperature.split(":")[1])
                 self.core2_temp_var.set(tablet_temperature.split(":")[2])
@@ -369,7 +366,7 @@ class GUI():
                 self.cpu4_usage_var.set(tablet_cpu_usage.split(":")[-1])
                 self.tablet_batt_life_var.set(tablet_battery_life)
                 self.tablet_batt_percentage_var.set(tablet_battery_percentage)
-                self.network_var.set(self.network.network_staus)
+                self.network_var.set(self.network.network_status)
 
 
                 line = [tracetime.strftime("%Y-%m-%d %H:%M:%S"), samples, battery, temp, rssi, delay, counter_changes,
@@ -416,29 +413,6 @@ class GUI():
 
     def do_nothing(self):
         pass
-
-    def poll_gps(self):
-        return 0
-        # for new_data in self.gps_socket:
-        #     if new_data:
-        #         self.data_stream.unpack(new_data)
-        #         if self.data_stream.SKY['satellites'] == "n/a":
-        #             self.satellite_count = 0
-        #         else:
-        #             self.satellite_count = len(self.data_stream.SKY['satellites'])
-        #         # print(self.satellite_count)
-        # return self.satellite_count
-        # self.gps_socket.send('?POLL;')
-        # response = self.gps_socket.next()
-        # try:
-        #     if response:
-        #         json_gps = json.loads(response)
-        #         if json_gps["class"] == "POLL":
-        #             return len(json_gps["sky"][0]["satellites"])
-        #     return 0
-        # except:
-        #     return "ERROR"
-        # return 1
 
     def colors(self, component, value):
 
