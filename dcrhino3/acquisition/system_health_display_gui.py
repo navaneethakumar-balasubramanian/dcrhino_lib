@@ -10,6 +10,7 @@ import psutil
 from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
 from dcrhino3.acquisition.constants import LOGS_PATH
 from dcrhino3.acquisition.rhino_threads import NetworkThread, GPSThread
+from dcrhino3.helpers.general_helper_functions import calculate_battery_percentage
 
 import json
 import urllib2
@@ -526,8 +527,8 @@ class GUI():
     def calculate_battery_percentage(self, current_voltage):
         battery_max_voltage = config.getfloat("INSTALLATION", "battery_max_voltage")
         battery_lower_limit = config.getfloat("INSTALLATION", "battery_min_voltage")
-        value = 100 - (battery_max_voltage - current_voltage) / (battery_max_voltage - battery_lower_limit) * 100
-        return round(value, 2)
+        value = calculate_battery_percentage(battery_max_voltage, battery_lower_limit, current_voltage)
+        return value
 
 
 
