@@ -961,6 +961,7 @@ def main_run(run=True):
 
     fig1 = plt.figure("DataCloud Rhino Real Time Data", figsize=(6, 4))
     plt.subplots_adjust(hspace=0.8, top=0.8)
+    fig1.canvas.manager.window.wm_geometry("+%d+%d" % (0, 0))
     plt.pause(.05)
     fig1.canvas.draw()
 

@@ -63,6 +63,7 @@ class GUI():
         self.network_thread.start()
         self.gps_thread = GPSThread(ignore_gpsd)
         self.gps_thread.start()
+        self.master.geometry('+%d+%d' % (0, 0))
 
 
         column_span = 7

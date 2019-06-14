@@ -37,6 +37,7 @@ battery_max_voltage = config.getfloat("INSTALLATION", "battery_max_voltage")
 battery_min_voltage = config.getfloat("INSTALLATION", "battery_min_voltage")
 health = [0] * length
 fig1 = plt.figure("DataCloud Rhino Health Plots",figsize=(6,4))
+fig1.canvas.manager.window.wm_geometry("+%d+%d" % (1300, 0))
 plt.subplots_adjust(hspace=1.0,wspace=0.5)
 plt.pause(.05)
 # plt.show()
