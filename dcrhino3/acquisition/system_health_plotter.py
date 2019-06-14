@@ -53,6 +53,17 @@ while True:
         if os.path.exists(system_health):
             health = np.load(system_health, allow_pickle=True)
 
+        rssi = health[0]
+        packets = health[1]
+        delay = health[2]
+        temp = health[3]
+        batt = health[4]
+        counterchanges = health[5]
+        tracetime = health[6]
+        now = health[7]
+        drift = np.asarray(health[18])
+        sec_delay = round(delay[-1] + drift[-1], 2)
+
         rows = 3
         columns = 2
 
@@ -158,17 +169,6 @@ while True:
             rssi_plot.set_visible(False)
             temp_plot.set_visible(False)
             batt_plot.set_visible(False)
-
-        rssi = health[0]
-        packets = health[1]
-        delay = health[2]
-        temp = health[3]
-        batt = health[4]
-        counterchanges = health[5]
-        tracetime = health[6]
-        now = health[7]
-        drift = np.asarray(health[18])
-        sec_delay = round(delay[-1] + drift[-1], 2)
 
         components = ["axial", "tangential", "radial"]
         accel_health_index = [11, 13, 15]
