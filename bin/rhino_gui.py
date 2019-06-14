@@ -181,12 +181,16 @@ class GUI():
                     self.sensor_stats_process = Popen(['python', os.path.abspath(os.path.join(PATH,sensor_stats))],stderr=self.err)
                 logging.info("Acquisition started in regular mode")
 
-            p = subprocess.Popen(['taskset', '-cp','{}'.format(multiprocessing.cpu_count()-1),
+            processor_number = multiprocessing.cpu_count()-1
+            p = subprocess.Popen(['taskset', '-cp','{}'.format(processor_number),
                                   str(self.system_health_process.pid)],
                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            p = subprocess.Popen(['taskset', '-cp','{}'.format(multiprocessing.cpu_count()-2),
+            print("System Health Plotter Running in processor {} \n".format(processor_number))
+            processor_number = multiprocessing.cpu_count() - 2
+            p = subprocess.Popen(['taskset', '-cp','{}'.format(processor_number),
                                   str(self.sensor_stats_process.pid)], stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
+            print("Sensor Stats Plotter Running in processor {} \n".format(processor_number))
 
     def acquisition_daemon_stop(self):
         if self.acquisition_process != None:
