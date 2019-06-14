@@ -27,7 +27,7 @@
       },
       {
         "name": "BHP",
-        "mines":["EASTERN_RIDGE", "BMA", "BMC", "GOONYELLA_RIVERSIDE"]
+        "mines":["EASTERN_RIDGE", "BMA", "SOUTH_WALKER_CREEK", "GOONYELLA_RIVERSIDE"]
       }
     ]
 }
