@@ -71,23 +71,39 @@ def prepare_to_save(autcorrelated_dataframe,sensor_file_id,original_file_record_
 def process(list_of_args):
     file = list_of_args[0]
     env_config = list_of_args[1]
-    try:
-        h5f = h5py.File(file, 'r+')
 
-        min_ts = sensor_file_manager.min_ts(h5f)
-        max_ts = sensor_file_manager.max_ts(h5f)
-        # raw_trace_h5_to_db(file,env_config,min_ts,max_ts)
+    h5f = h5py.File(file, 'r+')
 
-        if sensor_file_manager.is_h5_level0(h5f):
-            h5f.close()
-            print ("TYPE 1 " + str(file))
-            raw_trace_h5_to_db(file, env_config, min_ts, max_ts)
-        else:
-            h5f.close()
-            print ("TYPE 2 " + str(file))
-            acorr_h5_to_db(file, env_config, min_ts, max_ts)
-    except:
-        return
+    min_ts = sensor_file_manager.min_ts(h5f)
+    max_ts = sensor_file_manager.max_ts(h5f)
+    # raw_trace_h5_to_db(file,env_config,min_ts,max_ts)
+
+    if sensor_file_manager.is_h5_level0(h5f):
+        h5f.close()
+        print ("TYPE 1 " + str(file))
+        raw_trace_h5_to_db(file, env_config, min_ts, max_ts)
+    else:
+        h5f.close()
+        print ("TYPE 2 " + str(file))
+        acorr_h5_to_db(file, env_config, min_ts, max_ts)
+
+
+def save_to_db(sql_db_helper,h5_file_path,min_ts_df,global_config,min_ts,max_ts,conn,autcorrelated_dataframe):
+    logger.info("Adding this file to sensor_files_table")
+    original_file_record_day = int(time.strftime("%Y%m%d", time.gmtime(min_ts_df)))
+    file_id = sql_db_helper.sensor_files.add(h5_file_path, global_config.rig_id,
+                                             str(global_config.sensor_serial_number),
+                                             str(global_config.digitizer_serial_number), min_ts,
+                                             max_ts,
+                                             json.dumps(vars(global_config), indent=4), 1,
+                                             status='valid',
+                                             file_name=os.path.basename(h5_file_path),
+                                             original_file_record_day=original_file_record_day)
+
+    logger.info("Adding this file traces to clickhouse sensor_file_acorr_traces")
+    clickhouse_helper = ClickhouseHelper(conn=conn)
+    autcorrelated_dataframe = prepare_to_save(autcorrelated_dataframe, file_id, original_file_record_day)
+    clickhouse_helper.sensor_file_acorr_trace.add_pandas_to_table(autcorrelated_dataframe)
 
 
 def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
@@ -160,26 +176,8 @@ def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000)
         if column in autcorrelated_dataframe.columns:
             autcorrelated_dataframe.rename({column:column+"_trace"},axis=1,inplace=True)
 
-    logger.info("Added this file")
-    file_id = sql_db_helper.sensor_files.add(h5_file_path, global_config.rig_id,
-                                             str(global_config.sensor_serial_number),
-                                             str(global_config.digitizer_serial_number), min_ts,
-                                             max_ts,
-                                             json.dumps(vars(global_config), indent=4), 1,
-                                             status='valid',
-                                             file_name=os.path.basename(h5_file_path))
+    save_to_db(sql_db_helper,h5_file_path,min_ts_df,global_config,min_ts,max_ts,conn,autcorrelated_dataframe)
 
-    clickhouse_helper = ClickhouseHelper(conn=conn)
-
-    autcorrelated_dataframe = prepare_to_save(autcorrelated_dataframe,file_id,time.strftime("%Y%m%d",time.gmtime(min_ts_df)))
-
-
-    clickhouse_helper.sensor_file_acorr_trace.add_pandas_to_table(autcorrelated_dataframe)
-
-    #td = TraceData()
-    #td.dataframe = autcorrelated_dataframe
-    #path = env_config.get_sensor_files_storage_folder(str(global_config.mine_name))
-    #td.save_to_h5(os.path.join(path,str(file_id) + ".h5"),compress=True)
 
     return autcorrelated_dataframe
 
@@ -226,29 +224,10 @@ def acorr_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
             if max_accel in l1h5_dataframe.columns:
                 l1h5_dataframe.drop([max_accel], axis=1, inplace=True)
 
-
-
-    logger.info("Added this file")
-
-
-    clickhouse_helper = ClickhouseHelper(conn=conn)
-
     min_ts_df = l1h5_dataframe['timestamp'].min()
     l1h5_dataframe['timestamp'] = l1h5_dataframe['timestamp'] - min_ts_df
+    save_to_db(sql_db_helper, h5_file_path, min_ts_df, global_config, min_ts, max_ts, conn, l1h5_dataframe)
 
-    file_id = sql_db_helper.sensor_files.add(h5_file_path, global_config.rig_id,
-                                             str(global_config.sensor_serial_number),
-                                             str(global_config.digitizer_serial_number), min_ts, max_ts,
-                                             json.dumps(vars(global_config), indent=4), 2, status='valid',
-                                             file_name=os.path.basename(h5_file_path))
-    l1h5_dataframe = prepare_to_save(l1h5_dataframe, file_id, time.strftime("%Y%m%d", time.gmtime(min_ts_df)))
-
-    clickhouse_helper.sensor_file_acorr_trace.add_pandas_to_table(l1h5_dataframe)
-
-    #td_out = TraceData()
-    #td_out.dataframe = l1h5_dataframe
-    #path = env_config.get_sensor_files_storage_folder(str(global_config.mine_name))
-    #td.save_to_h5(os.path.join(path, str(file_id) + ".h5"), compress=True)
 
     return
 

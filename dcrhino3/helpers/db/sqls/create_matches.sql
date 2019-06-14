@@ -1,4 +1,4 @@
-CREATE TABLE `matches` (
+CREATE TABLE IF NOT EXISTS `matches` (
 	`match_id` VARCHAR(50) NOT NULL COLLATE 'utf8_bin',
 	`bench_name` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8_bin',
 	`digitizer_id` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8_bin',

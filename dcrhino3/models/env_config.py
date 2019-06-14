@@ -95,9 +95,10 @@ class EnvConfig(object):
         Returns:
             (bool): True is blacklisted, False if not
         """
-        for black_list_file_path in self.blacklist_files:
-            if black_list_file_path == file_path:
-                return True
+        if 'blacklist_files' in vars(self):
+            for black_list_file_path in self.blacklist_files:
+                if black_list_file_path == file_path:
+                    return True
         return False
         
 
@@ -118,7 +119,7 @@ class EnvConfig(object):
     def get_rhino_sql_connection_from_mine_name(self,mine_name):
         mine_cfg = self._get_mine_config(mine_name)
         if not mine_cfg or 'rhino_sql_connection' not in mine_cfg.keys():
-            logger.warn("Missing rhino_db_connection on env.json for " + str(mine_name) + " mine.")
+            logger.warn("Missing rhino_sql_connection on env.json for " + str(mine_name) + " mine.")
             return False
         return mine_cfg['rhino_sql_connection']
 
