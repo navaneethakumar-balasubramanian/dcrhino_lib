@@ -71,8 +71,12 @@ def prepare_to_save(autcorrelated_dataframe,sensor_file_id,original_file_record_
 def process(list_of_args):
     file = list_of_args[0]
     env_config = list_of_args[1]
-
-    h5f = h5py.File(file, 'r+')
+    try:
+        h5f = h5py.File(file, 'r+')
+    except:
+        file_logger.warn("COULDNT OPEN THIS FILE :" + str(file))
+        logger.warn("COULDNT OPEN THIS FILE :" + str(file))
+        return
 
     min_ts = sensor_file_manager.min_ts(h5f)
     max_ts = sensor_file_manager.max_ts(h5f)
