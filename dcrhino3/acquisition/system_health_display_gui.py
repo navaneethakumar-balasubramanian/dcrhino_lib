@@ -55,10 +55,10 @@ class GUI():
         self.system_health_logger = SystemHealthLogger()
         self.corrupt_packets = 0
         self.drift = 0
-        self.network = NetworkThread()
-        self.network.start()
-        self.gps = GPSThread()
-        self.gps.start()
+        self.network_thread = NetworkThread()
+        self.network_thread.start()
+        self.gps_thread = GPSThread()
+        self.gps_thread.start()
 
         column_span = 7
 
@@ -356,7 +356,7 @@ class GUI():
 
                 self.disk_usage_var.set(disk_usage)
                 self.ram_usage_var.set(ram_usage)
-                self.gps_var.set(self.gps.satellite_count)
+                self.gps_var.set(self.gps_thread.satellite_count)
                 self.package_temp_var.set(tablet_temperature.split(":")[0])
                 self.core1_temp_var.set(tablet_temperature.split(":")[1])
                 self.core2_temp_var.set(tablet_temperature.split(":")[2])
@@ -366,7 +366,7 @@ class GUI():
                 self.cpu4_usage_var.set(tablet_cpu_usage.split(":")[-1])
                 self.tablet_batt_life_var.set(tablet_battery_life)
                 self.tablet_batt_percentage_var.set(tablet_battery_percentage)
-                self.network_var.set(self.network.network_status)
+                self.network_var.set(self.network_thread.network_status)
 
 
                 line = [tracetime.strftime("%Y-%m-%d %H:%M:%S"), samples, battery, temp, rssi, delay, counter_changes,
