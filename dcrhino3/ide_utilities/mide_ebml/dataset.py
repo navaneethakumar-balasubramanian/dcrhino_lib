@@ -41,7 +41,6 @@ Created on Sep 26, 2013
 #
 # TODO: Clean up the min/mean/max stuff.
 
-# import ConfigParser
 import os.path
 import random
 import struct
@@ -55,14 +54,12 @@ import pdb
 
 import h5py
 import numpy
-# from dcrhino.models.raw_data import RawDataModel
-# import data_formats as df
 from dcrhino3.ide_utilities import data_formats as df
-# from infi.clickhouse_orm.database import Database
 
 from calibration import Transform, CombinedPoly, PolyPoly
 from ebmlite.core import loadSchema
 from parsers import getParserTypes, getParserRanges
+import shutil
 
 SCHEMA_FILE = 'mide.xml'
 
@@ -2873,13 +2870,13 @@ class EventList(Transformable):
 
         if os.path.exists(output_path):
             if os.path.exists(os.path.join(output_path, "{}.h5".format(fname))):
-                output_path = os.path.join(output_path, "{}_{}.h5".format(fname,datetime.now().strftime(
+                output_path = os.path.join(output_path, "{}_{}.tmp".format(fname,datetime.now().strftime(
                     "%Y%m%d%H%M%S")))
             else:
-                output_path = os.path.join(output_path, "{}.h5".format(fname))
+                output_path = os.path.join(output_path, "{}.tmp".format(fname))
         else:
             os.makedirs(output_path)
-            output_path = os.path.join(output_path, "{}.h5".format(fname))
+            output_path = os.path.join(output_path, "{}.tmp".format(fname))
 
         buffer = list()
         buffer_size = 10000
@@ -2928,7 +2925,7 @@ class EventList(Transformable):
                         break
                     if updateInt == 0 or num % updateInt == 0:
                         callback(num*numChannels, total=totalSamples)
-            print ("{} samples procesed".format(counter))
+            print ("{} samples processed".format(counter))
             if callback is not None:
                 callback(done=True)
             #pdb.set_trace()
@@ -2947,6 +2944,9 @@ class EventList(Transformable):
             self.saveNumpyToFile(h5f, "z", z_data)
 
             h5f.close()
+
+            new_output_path = output_path.replace(".tmp",".h5")
+            shutil.move(output_path, new_output_path)
 
         except ex as e:
             callback(error=e)
