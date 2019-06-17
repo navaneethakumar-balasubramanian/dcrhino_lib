@@ -200,10 +200,10 @@ while True:
         print(min, max)
         if drift_mean >= 0:
             print("A")
-            delay_plot_twin.set_ylim(-1, max)
+            delay_plot_twin.set_ylim(-1, np.max(drift)*1.05)
         else:
             print("B")
-            delay_plot_twin.set_ylim(min, 1)
+            delay_plot_twin.set_ylim(np.min(drift)*1.05, 1)
         print(min, max)
         delay_plot_twin.plot(np.flipud(drift), 'C7')
         delay_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "delay_lower_limit"), 0, length, "y", "dashed")
