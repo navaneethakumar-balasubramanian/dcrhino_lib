@@ -429,9 +429,9 @@ class GUI():
                         line = 429
                         tablet_battery_status = 0
                         line = 431
-                    tablet_battery_percentage = round(psutil.sensors_battery()[0], 2)
+                    tablet_battery_percentage = round(battery_sensor[0], 2)
                     line = 433
-                    tablet_battery_life = psutil.sensors_battery()[1]
+                    tablet_battery_life = battery_sensor[1]
                     line = 435
                 else:
                     line = 437
