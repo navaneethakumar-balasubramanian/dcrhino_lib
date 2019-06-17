@@ -303,114 +303,183 @@ class GUI():
         #Structure of system_healthQ = [0=rssi,1=packets,2=delay,3=temp,4=batt,5=counterchanges,6=tracetime])
         try:
             while not self.system_healthQ.empty():
+                line = 306
                 health = self.system_healthQ.get_nowait()
-                # pdb.set_trace()
+                line = 308
                 self.utc_time.set(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-
+                line = 310
 
                 battery = round(health[4][-1],2)
-                #battery = 20
+                line = 313
                 if self.battery_plot_display_percentage:
+                    line = 315
                     self.battery_life.set("{} %".format(self.calculate_battery_percentage(battery)))
+                    line = 317
                     bgcolor, fgcolor = self.colors("battery", self.calculate_battery_percentage(battery))
+                    line = 319
                 else:
+                    line = 321
                     self.battery_life.set("{} V".format(battery))
+                    line = 323
                     bgcolor,fgcolor = self.colors("battery", battery)
+                    line = 325
                 self.battery_label.config(bg=bgcolor,fg=fgcolor)
+                line = 327
 
-                temp = round(health[3][-1],2)
-                #temp = 72
-                bgcolor,fgcolor = self.colors("temperature",temp)
+                temp = round(health[3][-1], 2)
+                line = 330
+                bgcolor, fgcolor = self.colors("temperature", temp)
+                line = 332
                 self.board_temperature.set("{} degC".format(temp))
-                self.temperature_label.config(bg=bgcolor,fg=fgcolor)
+                line = 334
+                self.temperature_label.config(bg=bgcolor, fg=fgcolor)
+                line = 336
 
-                rssi = round(health[0][-1],2)
-                #rssi = -73
-                bgcolor,fgcolor = self.colors("rssi",rssi)
+                rssi = round(health[0][-1], 2)
+                line = 339
+                bgcolor, fgcolor = self.colors("rssi", rssi)
+                line = 341
                 self.rssi.set("{} dB".format(rssi))
-                self.rssi_label.config(bg=bgcolor,fg=fgcolor)
+                line = 343
+                self.rssi_label.config(bg=bgcolor, fg=fgcolor)
+                line = 345
 
                 samples = health[1][-1]
-                #samples = 2700
-                bgcolor,fgcolor = self.colors("samples",samples)
+                line = 348
+                bgcolor, fgcolor = self.colors("samples", samples)
+                line = 350
                 self.sample_count.set(str(samples))
-                self.samples_label.config(bg=bgcolor,fg=fgcolor)
+                line = 352
+                self.samples_label.config(bg=bgcolor, fg=fgcolor)
+                line = 354
 
                 delay = round(health[2][-1], 2)
-                # print ("Delay", delay)
+                line = 357
                 calculated_delay = delay + self.drift
-                # print ("Delay + Drift", delay)
-                #delay = 3
-                bgcolor,fgcolor = self.colors("delay", calculated_delay)
+                line = 359
+                bgcolor, fgcolor = self.colors("delay", calculated_delay)
+                line = 361
                 self.delay.set("{} sec".format(calculated_delay))
+                line = 363
                 self.delay_label.config(bg=bgcolor, fg=fgcolor)
+                line = 365
 
                 self.drift_var.set("{} sec".format(self.drift))
+                line = 368
 
                 counter_changes = health[5]
+                line = 371
                 self.acq_time.set("{} sec".format(counter_changes))
+                line = 373
                 up_time = int(ceil(time.time()-self.initialization_time))
+                line = 375
                 self.sys_up_time.set("{} sec".format(up_time))
+                line = 377
 
                 self.corrupt_packets = health[9]
+                line = 380
                 self.corrupt_packets_var.set(str(self.corrupt_packets))
+                line = 382
 
                 tx_status = health[10]
+                line = 385
 
                 if tx_status == 1:
-                    bgcolor,fgcolor = self.colors("transmitter",1)
+                    line = 388
+                    bgcolor, fgcolor = self.colors("transmitter", 1)
+                    line = 390
                     self.tx_status.set("TRANSMITTING")
-                    self.tx_status_label.config(bg="green",fg="white")
+                    line = 392
+                    self.tx_status_label.config(bg="green", fg="white")
+                    line = 394
                 elif tx_status == 0:
-                    bgcolor,fgcolor = self.colors("transmitter",0)
+                    line = 396
+                    bgcolor, fgcolor = self.colors("transmitter", 0)
+                    line = 398
                     self.tx_status.set("SLEEPING")
-                    self.tx_status_label.config(bg="black",fg="green")
+                    line = 400
+                    self.tx_status_label.config(bg="black", fg="green")
+                    line = 402
                 else:
                     self.tx_status.set("NFC")
+                    line = 405
                     self.tx_status_label.config(bg="red", fg="black")
+                    line = 407
 
                 tracetime = health[6]
+                line = 410
 
                 disk_usage = psutil.disk_usage("/")[3]
+                line = 413
                 ram_usage = psutil.virtual_memory()[2]
+                line = 415
                 tablet_temperature = ":".join(str(x.current) for x in psutil.sensors_temperatures()["coretemp"])
+                line = 417
 
                 battery_sensor = psutil.sensors_battery()
+                line = 420
 
                 if battery_sensor is not None:
+                    line = 423
                     if battery_sensor[2]:
+                        line = 425
                         tablet_battery_status = 1
+                        line = 427
                     else:
+                        line = 429
                         tablet_battery_status = 0
+                        line = 431
                     tablet_battery_percentage = round(psutil.sensors_battery()[0], 2)
+                    line = 433
                     tablet_battery_life = psutil.sensors_battery()[1]
+                    line = 435
                 else:
+                    line = 437
                     tablet_battery_status = np.nan
+                    line = 439
                     tablet_battery_percentage = np.nan
+                    line = 441
                     tablet_battery_life = np.nan
+                    line = 443
                 tablet_cpu_usage = ":".join([str(x) for x in psutil.cpu_percent(percpu=True)])
+                line = 445
 
                 self.disk_usage_var.set(disk_usage)
+                line = 448
                 self.ram_usage_var.set(ram_usage)
+                line = 450
                 self.gps_var.set(self.gps_thread.satellite_count)
+                line = 452
                 self.package_temp_var.set(tablet_temperature.split(":")[0])
+                line = 454
                 self.core1_temp_var.set(tablet_temperature.split(":")[1])
+                line = 456
                 self.core2_temp_var.set(tablet_temperature.split(":")[2])
+                line = 458
                 self.cpu1_usage_var.set(tablet_cpu_usage.split(":")[-4])
+                line = 460
                 self.cpu2_usage_var.set(tablet_cpu_usage.split(":")[-3])
+                line = 462
                 self.cpu3_usage_var.set(tablet_cpu_usage.split(":")[-2])
+                line = 464
                 self.cpu4_usage_var.set(tablet_cpu_usage.split(":")[-1])
+                line = 466
                 self.tablet_batt_life_var.set(tablet_battery_life)
+                line = 468
                 self.tablet_batt_percentage_var.set(tablet_battery_percentage)
+                line = 470
                 self.network_var.set(self.network_thread.network_status)
+                line = 472
 
 
                 line = [tracetime.strftime("%Y-%m-%d %H:%M:%S"), samples, battery, temp, rssi, delay, counter_changes,
                         self.corrupt_packets, tx_status, self.drift, calculated_delay, disk_usage, ram_usage,
                         tablet_temperature, tablet_battery_status, tablet_battery_percentage, tablet_battery_life,
                         tablet_cpu_usage]
+                line = 479
 
                 self.system_health_logger.log(line)
+                line = 482
 
                 if rhino_version == 1.0:
                     self.disable_element(self.rssi_label)
@@ -418,29 +487,42 @@ class GUI():
                     self.disable_element(self.battery_label)
 
                 axial_accel = np.max([health[11][-1], health[12][-1]*-1])
-                # delay = 3
+                line = 490
                 bgcolor, fgcolor = self.colors("accel", axial_accel)
+                line = 492
                 if not np.isnan(axial_accel):
+                    line = 494
                     self.a_accel.set("{}".format(int(ceil(axial_accel))))
+                    line = 496
                 self.a_accel_label.config(bg=bgcolor, fg=fgcolor)
+                line = 498
 
                 tangential_accel = np.max([health[13][-1], health[14][-1]*-1])
-                # delay = 3
+                line = 501
                 bgcolor, fgcolor = self.colors("accel", tangential_accel)
+                line = 503
                 if not np.isnan(tangential_accel):
+                    line = 505
                     self.t_accel.set("{}".format(int(ceil(tangential_accel))))
+                    line = 507
                 self.t_accel_label.config(bg=bgcolor, fg=fgcolor)
+                line = 509
 
                 radial_accel = np.max([health[15][-1], health[16][-1]*-1])
-                # delay = 3
+                line = 512
                 bgcolor, fgcolor = self.colors("accel", radial_accel)
+                line = 514
                 if not np.isnan(radial_accel):
+                    line = 516
                     self.r_accel.set("{}".format(int(ceil(radial_accel))))
+                    line = 518
                 self.r_accel_label.config(bg=bgcolor, fg=fgcolor)
+                line = 520
 
                 self.master.update()
+                line = 523
         except:
-            print("System Health Display GUI")
+            print("System Health Display GUI, last line was ", line)
             print(sys.exc_info())
             # pdb.set_trace()
 
