@@ -197,9 +197,8 @@ while True:
         delay_plot.plot(np.flipud(delay + drift), 'C0')
         delay_plot_twin.plot(np.flipud(drift), 'C7')
         drift_mean = np.mean(drift[~np.isnan(drift)])
-        min, max = 100, -100
-        delay_plot_twin.set_ylim(min, max)
-        delay_plot_twin.set_yscale("log")
+        delay_plot_twin.set_ylim(-100, 10)
+        # delay_plot_twin.set_yscale("log")
         delay_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "delay_lower_limit"), 0, length, "y", "dashed")
         delay_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "delay_upper_limit"), 0, length, "r", "dashed")
 
