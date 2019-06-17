@@ -898,7 +898,7 @@ def main_run(run=True):
         processor_number = multiprocessing.cpu_count()-3
         p = subprocess.Popen(['taskset', '-cp','{}'.format(processor_number), str(pid)],
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE) # 6
-        print("Realtime Acquisition Opened in processod {}\n".format(processor_number))
+        # print("Realtime Acquisition Opened in processod {}\n".format(processor_number))
         out, err = p.communicate()
         # p = subprocess.Popen(['taskset', '-cp','7', str(subpids[0])], stdout=subprocess.PIPE, stderr=subprocess.PIPE) #6
         # out, err = p.communicate()
@@ -913,7 +913,7 @@ def main_run(run=True):
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
             out, err = p.communicate()
-            print("Process {} Opened in processod {}\n".format(subpids[index],processor_number))
+            # print("Process {} Opened in processod {}\n".format(subpids[index],processor_number))
 
 
 
