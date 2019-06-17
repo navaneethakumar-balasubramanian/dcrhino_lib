@@ -472,13 +472,14 @@ class GUI():
                 line = 472
 
 
-                line = [tracetime.strftime("%Y-%m-%d %H:%M:%S"), samples, battery, temp, rssi, delay, counter_changes,
+                health_line = [tracetime.strftime("%Y-%m-%d %H:%M:%S"), samples, battery, temp, rssi, delay,
+                           counter_changes,
                         self.corrupt_packets, tx_status, self.drift, calculated_delay, disk_usage, ram_usage,
                         tablet_temperature, tablet_battery_status, tablet_battery_percentage, tablet_battery_life,
                         tablet_cpu_usage]
                 line = 479
 
-                self.system_health_logger.log(line)
+                self.system_health_logger.log(health_line)
                 line = 482
 
                 if rhino_version == 1.0:
