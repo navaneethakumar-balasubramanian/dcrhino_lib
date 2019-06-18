@@ -234,7 +234,8 @@ class GUI():
         self.cpu4_usage.grid(row=row, column=column + 2, columnspan=1, sticky="news")
         self.cpu4_usage.config(bg="#deebf7")
         row += 1
-        Label(self.master, text="GPS Connection", borderwidth=1, relief="solid").grid(row=row, column=column, columnspan=column_span, sticky="news")
+        Label(self.master, text="GPS Satellites", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                             columnspan=column_span, sticky="news")
         row += 1
         self.gps_var = StringVar(self.master)
         self.gps = Label(self.master, textvar=self.gps_var)
