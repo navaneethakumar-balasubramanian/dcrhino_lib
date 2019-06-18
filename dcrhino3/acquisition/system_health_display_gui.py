@@ -469,6 +469,7 @@ class GUI():
                 self.tablet_batt_life_var.set(tablet_battery_life)
                 line = 468
                 self.tablet_batt_percentage_var.set(tablet_battery_percentage)
+                self.tablet_batt_status_var.set(tablet_battery_status)
                 line = 470
                 self.network_var.set(self.network_thread.network_status)
                 line = 472
