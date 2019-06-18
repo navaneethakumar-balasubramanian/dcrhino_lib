@@ -195,16 +195,17 @@ while True:
                          label="rssi lower limit")
 
         delay_plot.plot(np.flipud(delay + drift), 'C0')
-        drift_mean = np.mean(drift[~np.isnan(drift)])
+        not_nan_drift = drift[~np.isnan(drift)]
+        drift_mean = np.mean(not_nan_drift)
         delay_plot_twin.plot(np.flipud(drift), 'C7')
         min, max = delay_plot_twin.get_ylim()
         print("original", min, max)
         if drift_mean >= 0:
-            print("A", -1, np.max(drift)*1.05)
-            delay_plot_twin.set_ylim(-1, np.max(drift)*1.05)
+            print("A", -1, np.max(not_nan_drift)*1.05)
+            delay_plot_twin.set_ylim(-1, np.max(not_nan_drift)*1.05)
         else:
-            print("B",np.min(drift)*1.05, 1)
-            delay_plot_twin.set_ylim(np.min(drift)*1.05, 1)
+            print("B",np.min(not_nan_drift)*1.05, 1)
+            delay_plot_twin.set_ylim(np.min(not_nan_drift)*1.05, 1)
         print("new", min, max)
 
         delay_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "delay_lower_limit"), 0, length, "y", "dashed")
