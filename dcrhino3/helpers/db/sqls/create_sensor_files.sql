@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS `sensor_files` (
 	`original_file_record_day` INT(11) NOT NULL,
 	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`file_changed_at` FLOAT NOT NULL,
+	`file_size` INT NOT NULL,
+
 	PRIMARY KEY (`sensor_file_id`),
 	UNIQUE INDEX `file_path` (`file_path`),
 	INDEX `rig_id` (`rig_id`),

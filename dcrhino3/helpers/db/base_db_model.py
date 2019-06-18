@@ -32,6 +32,8 @@ class BaseDbModel:
 
     def query_to_df(self,query):
         cursor = self.query(query)
+        if cursor == None:
+            return pd.DataFrame()
         return pd.DataFrame(cursor.fetchall(), columns=cursor.column_names)
 
 

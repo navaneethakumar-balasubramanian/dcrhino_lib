@@ -4,6 +4,7 @@ os.environ['MKL_NUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 os.environ['OMP_NUM_THREADS'] = '1'
 from multiprocessing import Pool
+import traceback
 import argparse
 import pdb
 import sys
@@ -87,15 +88,18 @@ def process(list_of_args):
             h5f.close()
             print ("TYPE 2 " + str(file))
             acorr_h5_to_db(file, env_config, min_ts, max_ts)
-    except:
+    except Exception, e:
         file_logger.warn("COULDNT OPEN THIS FILE :" + str(file))
         logger.warn("COULDNT OPEN THIS FILE :" + str(file))
+        traceback.print_exc()
         return
 
 
 def save_to_db(sql_db_helper,h5_file_path,min_ts_df,global_config,min_ts,max_ts,conn,autcorrelated_dataframe,file_type):
     logger.info("Adding this file to sensor_files_table")
     original_file_record_day = int(time.strftime("%Y%m%d", time.gmtime(min_ts_df)))
+    file_changed_at = os.path.getmtime(h5_file_path)
+    file_size = os.path.getsize(h5_file_path)
     file_id = sql_db_helper.sensor_files.add(h5_file_path, global_config.rig_id,
                                              str(global_config.sensor_serial_number),
                                              str(global_config.digitizer_serial_number), min_ts,
@@ -103,7 +107,9 @@ def save_to_db(sql_db_helper,h5_file_path,min_ts_df,global_config,min_ts,max_ts,
                                              json.dumps(vars(global_config), indent=4), file_type,
                                              status='valid',
                                              file_name=os.path.basename(h5_file_path),
-                                             original_file_record_day=original_file_record_day)
+                                             original_file_record_day=original_file_record_day,
+                                             file_changed_at=file_changed_at,
+                                             file_size = file_size)
 
     logger.info("Adding this file traces to clickhouse sensor_file_acorr_traces")
     clickhouse_helper = ClickhouseHelper(conn=conn)
@@ -122,11 +128,18 @@ def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000)
                                    database=sql_conn['database'])
 
     #file_exists = sql_db_helper.sensor_files.file_name_exists(os.path.basename(h5_file_path))
-    file_exists = sql_db_helper.sensor_files.relative_path_exists(h5_file_path)
+    #file_exists = sql_db_helper.sensor_files.relative_path_exists(h5_file_path)
 
+    file_with_path = sql_db_helper.sensor_files.get_file_by_relative_path(h5_file_path)
+    file_exists = (len(file_with_path)>0)
     if file_exists:
-        logger.warning("IGNORED THIS FILE: DUPLICATED")
-        return False
+        file_same_size =  os.path.getsize(h5_file_path) in file_with_path.file_size
+        if file_same_size:
+            logger.warning("IGNORED THIS FILE: DUPLICATED" , os.path.getsize(h5_file_path), )
+            return False
+        else:
+            logger.info("Update")
+            return False
 
     raw_trace_data.load_from_h5(h5_file_path)
     l1h5_dataframe = raw_trace_data.dataframe
@@ -204,12 +217,16 @@ def acorr_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
     sql_db_helper = RhinoSqlHelper(host=sql_conn['host'], user=sql_conn['user'], passwd=sql_conn['password'],
                                    database=sql_conn['database'])
 
-    #file_exists = sql_db_helper.sensor_files.file_name_exists(os.path.basename(h5_file_path))
-    file_exists = sql_db_helper.sensor_files.relative_path_exists(h5_file_path)
+    file_with_path = sql_db_helper.sensor_files.get_file_by_relative_path(h5_file_path)
+    file_exists = (len(file_with_path) > 0)
     if file_exists:
-        logger.warning("IGNORED THIS FILE: DUPLICATED")
-        return
-
+        file_same_size = os.path.getsize(h5_file_path) in file_with_path.file_size
+        if file_same_size:
+            logger.warning("IGNORED THIS FILE: DUPLICATED", os.path.getsize(h5_file_path), )
+            return False
+        else:
+            logger.info("Update")
+            return False
 
 
     td = TraceData()

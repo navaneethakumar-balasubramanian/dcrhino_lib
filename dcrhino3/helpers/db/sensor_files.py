@@ -30,10 +30,10 @@ class SensorFiles(BaseDbModel):
 
     def get_all_valid(self):
         return self.query_to_df("select * from " + self.table_name + " where status='valid'")
-    
-    def add(self,file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name,original_file_record_day):
-        sql = "INSERT INTO "+self.table_name+" (file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name,original_file_record_day) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s)"
-        val = (file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name,original_file_record_day)
+
+    def add(self,file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name,original_file_record_day,file_changed_at,file_size):
+        sql = "INSERT INTO "+self.table_name+" (file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name,original_file_record_day,file_changed_at,file_size) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s)"
+        val = (file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name,original_file_record_day,file_changed_at,file_size)
         try:
             cursor = self.conn.cursor()
             cursor.execute(sql, val)
@@ -56,6 +56,9 @@ class SensorFiles(BaseDbModel):
         except mysql.connector.Error as err:
             print("Something went wrong: {}".format(err))
         return False
+
+    def get_file_by_relative_path(self,path):
+        return self.query_to_df("SELECT * from " + self.table_name + " where file_path = '" + str(path)+ "'")
 
     def relative_path_exists(self,path,status=False):
         if status:

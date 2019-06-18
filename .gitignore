@@ -23,3 +23,5 @@ bin/\.ipynb_checkpoints/
 bin/dr0345_minus_8_hrs\.csv
 
 bin/temp\.csv
+
+*.log
