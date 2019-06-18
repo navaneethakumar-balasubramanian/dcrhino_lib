@@ -133,9 +133,9 @@ def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000)
     file_with_path = sql_db_helper.sensor_files.get_file_by_relative_path(h5_file_path)
     file_exists = (len(file_with_path)>0)
     if file_exists:
-        file_same_size =  os.path.getsize(h5_file_path) in file_with_path.file_size
+        file_same_size = os.path.getsize(h5_file_path) in file_with_path.file_size.values.astype(np.int)
         if file_same_size:
-            logger.warning("IGNORED THIS FILE: DUPLICATED" , os.path.getsize(h5_file_path), )
+            logger.warning("IGNORED THIS FILE: DUPLICATED with same file size : " + str(os.path.getsize(h5_file_path)) )
             return False
         else:
             logger.info("Update")
@@ -220,9 +220,9 @@ def acorr_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
     file_with_path = sql_db_helper.sensor_files.get_file_by_relative_path(h5_file_path)
     file_exists = (len(file_with_path) > 0)
     if file_exists:
-        file_same_size = os.path.getsize(h5_file_path) in file_with_path.file_size
+        file_same_size = os.path.getsize(h5_file_path) in file_with_path.file_size.values.astype(np.int)
         if file_same_size:
-            logger.warning("IGNORED THIS FILE: DUPLICATED", os.path.getsize(h5_file_path), )
+            logger.warning("IGNORED THIS FILE: DUPLICATED with same file size : " + str(os.path.getsize(h5_file_path)) )
             return False
         else:
             logger.info("Update")
