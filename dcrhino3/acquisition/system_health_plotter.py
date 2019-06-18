@@ -196,14 +196,15 @@ while True:
 
         delay_plot.plot(np.flipud(delay + drift), 'C0')
         not_nan_drift = drift[~np.isnan(drift)]
-        drift_mean = np.mean(not_nan_drift)
-        drift_std = np.std(not_nan_drift)
+        # drift_mean = np.mean(not_nan_drift)
+        # drift_std = np.std(not_nan_drift)
+        delay_plot_twin.set_ylim(1, -50)
         delay_plot_twin.plot(np.flipud(drift), 'C7')
         # min, max = delay_plot_twin.get_ylim()
-        if drift_mean >= 0:
-            delay_plot_twin.set_ylim(-1, drift_mean + 3*drift_std)
-        else:
-            delay_plot_twin.set_ylim(drift_mean - 3*drift_std, 1)
+        # if drift_mean >= 0:
+        #     delay_plot_twin.set_ylim(-1, drift_mean + 3*drift_std)
+        # else:
+        #     delay_plot_twin.set_ylim(drift_mean - 3*drift_std, 1)
 
         delay_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "delay_lower_limit"), 0, length, "y", "dashed")
         delay_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "delay_upper_limit"), 0, length, "r", "dashed")
