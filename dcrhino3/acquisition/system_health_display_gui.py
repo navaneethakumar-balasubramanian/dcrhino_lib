@@ -263,14 +263,16 @@ class GUI():
         self.tablet_batt_life.grid(row=row, column=column+2, columnspan=1, sticky="news")
         self.tablet_batt_life.config(bg="#deebf7")
         row += 1
-        Label(self.master, text="Disk Usage", borderwidth=1, relief="solid").grid(row=row, column=column, columnspan=column_span, sticky="news")
+        Label(self.master, text="Disk Usage %", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                   columnspan=column_span, sticky="news")
         row += 1
         self.disk_usage_var = StringVar(self.master)
         self.disk_usage = Label(self.master, textvar=self.disk_usage_var)
         self.disk_usage.grid(row=row, column=column, columnspan=column_span, sticky="news")
         self.disk_usage.config(bg="#deebf7")
         row += 1
-        Label(self.master, text="Ram Usage", borderwidth=1, relief="solid").grid(row=row, column=column, columnspan=column_span, sticky="news")
+        Label(self.master, text="Ram Usage %", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                  columnspan=column_span, sticky="news")
         row += 1
         self.ram_usage_var = StringVar(self.master)
         self.ram_usage = Label(self.master, textvar=self.ram_usage_var)

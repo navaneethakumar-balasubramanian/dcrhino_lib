@@ -157,7 +157,7 @@ while True:
             batt_to_plot = np.asarray([calculate_battery_percentage(battery_max_voltage, battery_min_voltage,
                                                                     x) for x in batt])
         else:
-            batt_label = "V"
+            batt_label = "Volts"
             batt_to_plot = batt
         batt_plot.set_ylabel(batt_label, **axis_font)
         min, max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS", "battery_y_lim"))
@@ -199,14 +199,10 @@ while True:
         drift_mean = np.mean(not_nan_drift)
         delay_plot_twin.plot(np.flipud(drift), 'C7')
         min, max = delay_plot_twin.get_ylim()
-        print("original", min, max)
         if drift_mean >= 0:
-            print("A", -1, np.max(not_nan_drift)*1.05)
-            delay_plot_twin.set_ylim(-1, np.max(not_nan_drift)*1.05)
+            delay_plot_twin.set_ylim(-1, np.max(not_nan_drift)*1.1)
         else:
-            print("B",np.min(not_nan_drift)*1.05, 1)
-            delay_plot_twin.set_ylim(np.min(not_nan_drift)*1.05, 1)
-        print("new", min, max)
+            delay_plot_twin.set_ylim(np.min(not_nan_drift)*1.1, 1)
 
         delay_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "delay_lower_limit"), 0, length, "y", "dashed")
         delay_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "delay_upper_limit"), 0, length, "r", "dashed")
