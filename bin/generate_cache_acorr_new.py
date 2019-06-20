@@ -105,8 +105,8 @@ def generate_cache_acorr(matches_line,files,mwd_df,mwd_helper,env_config,mine_na
     files_to_load = files[files['sensor_file_id'].astype(int).isin(files_ids_to_load)]
     td = TraceData()
     for file in files_to_load.iterrows():
-        folder = env_config.get_sensor_files_storage_folder(mine_name)
-        file_path = os.path.join(folder,str(file[1].sensor_file_id) + ".h5")
+        #folder = env_config.get_sensor_files_storage_folder(mine_name)
+        #file_path = os.path.join(folder,str(file[1].sensor_file_id) + ".h5")
         clickhouse_helper = ClickhouseHelper(conn=env_config.get_rhino_db_connection_from_mine_name(mine_name))
         #output_df, global_config = load_acorr_file(file_path, matches_line.start_time_min, matches_line.start_time_max,file[1].config_str, file[1].min_ts)
         output_df, global_config = load_acorr_db(file[1].sensor_file_id, matches_line.start_time_min, matches_line.start_time_max,
