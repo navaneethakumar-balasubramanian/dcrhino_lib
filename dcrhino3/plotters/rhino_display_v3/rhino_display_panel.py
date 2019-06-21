@@ -196,7 +196,7 @@ class Curve(object):
             logger.warn('problem accessing data from dataframe in Curve()')
             logger.warn('column label = {}'.format(self.column_label))
             logger.warn('df_type = {}'.format(type(df)))
-            logger.warn(df.columns.)
+            logger.warn(df.columns)
             raise Exception
         if self.x_axis_values is None:
             if self.x_axis_label:
