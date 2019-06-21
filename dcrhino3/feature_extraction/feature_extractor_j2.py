@@ -101,11 +101,12 @@ from dcrhino3.feature_extraction.intermediate_derived_features_j2 import Interme
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.signal_processing.time_picker import TimePicker
 from dcrhino3.signal_processing.phase_rotation import rotate_phase
-
+from dcrhino3.feature_extraction.jazz_with_zero_crossings import jazz2
 #from feature_extractor_j1a import calculate_boolean_features
 
 
 logger = init_logging(__name__)
+
 
 
 
@@ -140,10 +141,17 @@ class FeatureExtractorJ2(object):
         self.amplitude_windows = AmplitudeWindows()
         self.amplitude_windows.populate_from_transformed_args(amplitude_half_widths,
                                                               amplitude_picks)
+
+        self.jazz2_wavelets = []
         try:
             self.additional_pick_based_amplitude_windows = getattr(transformed_args.additional_pick_based_amplitude_windows, component_id)
         except:
             self.additional_pick_based_amplitude_windows = None
+
+        try:
+            self.jazz2_wavelets = getattr(transformed_args.jazz2_wavelets, component_id)
+        except:
+            self.jazz2_wavelets = []
         #</fix this up>
 
 
@@ -170,6 +178,8 @@ class FeatureExtractorJ2(object):
         .. todo:: lists of time_wavelets to pick should be taken from json, rather than explicitly hard coded here
         .. todo:: review rotation angles for mult1/3 zerocrossings
         .. todo:: remove support for ambiguous zero_crossing pick type
+
+
         """
         extracted_features_dict = {}
         time_wavelets_to_pick = ['primary', 'multiple_1', 'multiple_2', 'multiple_3']
@@ -191,9 +201,7 @@ class FeatureExtractorJ2(object):
         #<HACK>
         if self.additional_pick_based_amplitude_windows is not None:
             for wavelet_id  in self.additional_pick_based_amplitude_windows._fields:
-                #print(wavelet_id)
-                #wavelet_id = 'multiple_1'
-                #wavelet_id = 'primary'
+                #print(wavelet_id);#wavelet_id = 'multiple_1';#wavelet_id = 'primary'
                 bounds = getattr(self.additional_pick_based_amplitude_windows,wavelet_id)
                 search_feature = self.manual_windows.get_search_feature(wavelet_id)
                 wavelet_reference_label = '{}_time'.format(search_feature)
@@ -223,6 +231,11 @@ class FeatureExtractorJ2(object):
                                                  'additional_pick_based_right_integrated_absolute_amplitude')
                 extracted_features_dict[output_label] = result
         #</HACK>
+        for wavelet_id in self.jazz2_wavelets:
+            #print('jazz2 {}'.format(wavelet_id))
+            center_time_key = '{}-{}-maximum_time'.format(self.trace.component_id, wavelet_id)
+            wavelet_center_time = extracted_features_dict[center_time_key]
+            jazz2(self.trace, wavelet_center_time)
         for wavelet_id in amplitude_wavelets_to_pick:
             amplitude_window = self.amplitude_windows.windows[wavelet_id]
             search_feature = self.manual_windows.get_search_feature(wavelet_id)
