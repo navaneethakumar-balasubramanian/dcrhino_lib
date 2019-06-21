@@ -193,9 +193,10 @@ class Curve(object):
         try:
             self.data = np.asarray(df[self.column_label])
         except:
-            print('problem accessing data from dataframe in Curve()')
-            print('column label = {}'.format(self.column_label))
-            print('df_type = {}'.format(type(df)))
+            logger.warn('problem accessing data from dataframe in Curve()')
+            logger.warn('column label = {}'.format(self.column_label))
+            logger.warn('df_type = {}'.format(type(df)))
+            logger.warn(df.columns.)
             raise Exception
         if self.x_axis_values is None:
             if self.x_axis_label:
