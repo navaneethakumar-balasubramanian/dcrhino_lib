@@ -9,6 +9,13 @@ import numpy as np
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
 
+def initialize_jazz2_dict():
+    tmp = {}
+    tmp['left_trough_integral'] = np.nan
+    tmp['right_trough_integral'] = np.nan
+    tmp['center_peak_integral'] = np.nan
+    return tmp
+
 def jazz2(symmetric_trace, center_time):
     """
     This method expects a trace and a time corresponding to a wavelet maxima.  It will measure the width of the peak
@@ -42,9 +49,9 @@ def jazz2(symmetric_trace, center_time):
     # here the designations of left and right inidcate the sample to the
     # left and right of the zero-crossing
     positive_slope_zx_indices_left = np.where(d_signs > 0)[0]
-    positive_slope_zx_indices_right = positive_slope_zx_indices_left + 1
+    #positive_slope_zx_indices_right = positive_slope_zx_indices_left + 1
     negative_slope_zx_indices_left = np.where(d_signs < 0)[0]
-    negative_slope_zx_indices_right = negative_slope_zx_indices_left + 1
+    #negative_slope_zx_indices_right = negative_slope_zx_indices_left + 1
     # can either interpolate to get these fine tuned or not.
 
     # lhs trough is a neg_slope then a pos slope (headed to max)
@@ -72,18 +79,23 @@ def jazz2(symmetric_trace, center_time):
     left_integral = np.sum(np.abs(left_trough))
     right_integral = np.sum(np.abs(right_trough))
     center_integral = np.sum(np.abs(positive_peak))
-    return left_integral, right_integral, positive_peak
+    output_dict = initialize_jazz2_dict()
+    output_dict['left_trough_integral'] = left_integral
+    output_dict['right_trough_integral'] = right_integral
+    output_dict['center_peak_integral'] = center_integral
+    return output_dict
 
 
 def jazz2_test(acorr_trace):
     sampling_rate = acorr_trace.dataframe.sampling_rate.iloc[0]
     sample_trace = acorr_trace.dataframe.axial_trace.iloc[10]
+    sample_trace = acorr_trace.dataframe.axial_trace.iloc[11]
     #sample_trace = sample_trace[:-300]
     #center_index = np.argmax(sample_trace)
     symmeteric_trace = SymmetricTrace(sample_trace, sampling_rate)
     time_vector = symmeteric_trace.time_vector
     center_time = time_vector[np.argmax(symmeteric_trace.data)] #not center index!
-    left_integral, right_integral, positive_peak = jazz2(symmeteric_trace, center_time)
+    jazz_dict = jazz2(symmeteric_trace, center_time)
 
 
 def main():

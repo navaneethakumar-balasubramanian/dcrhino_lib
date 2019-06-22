@@ -16,6 +16,7 @@ i.e. primary, integrated_absolute_amplitude, is centered on the time_pick,
 multiple_1, integrated_absolute_amplitude, is centered on the zero_crossing time_pick, with data -90deg rotated
 but in general we should have a tree of {time_pick_type, amplitude_pick_type} --> algortihm description
 
+.. todo:: factor the additional_pick_based_amplitude_windows (original manual jazz hack out)
 Example json control block:
 
     {
@@ -107,8 +108,16 @@ from dcrhino3.feature_extraction.jazz_with_zero_crossings import jazz2
 
 logger = init_logging(__name__)
 
+def full_feature_label(component_id, wavelet_id, feature_id):
+    """
 
-
+    :param component_id:
+    :param wavelet_id:
+    :param feature_id:
+    :return:
+    """
+    output_label = '{}-{}-{}'.format(component_id, wavelet_id, feature_id)
+    return output_label
 
 class FeatureExtractorJ2(object):
     """
@@ -154,7 +163,45 @@ class FeatureExtractorJ2(object):
             self.jazz2_wavelets = []
         #</fix this up>
 
+    def jazz1(self, extracted_features_dict):
+        """
+        originally a hack, but we seem to use it a lot, so I'm factoring it out.
+        Will probably rename to jazz1
+        :return:
+        """
+        for wavelet_id  in self.additional_pick_based_amplitude_windows._fields:
+            #print(wavelet_id);#wavelet_id = 'multiple_1';#wavelet_id = 'primary'
+            bounds = getattr(self.additional_pick_based_amplitude_windows,wavelet_id)
+            search_feature = self.manual_windows.get_search_feature(wavelet_id)
+            wavelet_reference_label = '{}_time'.format(search_feature)
+            pick_time_key = '{}-{}-{}'.format(self.trace.component_id, wavelet_id, wavelet_reference_label)
+            pick_time = extracted_features_dict[pick_time_key]
 
+            left_window_lower_bound = pick_time + bounds.left_lower_bound_offset
+            left_window_upper_bound = pick_time + bounds.left_upper_bound_offset
+            left_window_half_width = (left_window_upper_bound - left_window_lower_bound)/2.0
+            left_window_center = left_window_lower_bound + left_window_half_width
+            #print('dogs')
+            result = self.extract_average_absolute_amplitude(left_window_center,
+                                                    left_window_half_width,
+                                                    rotate_angle=False)
+            feature_id = 'additional_pick_based_left_integrated_absolute_amplitude'
+            output_label = full_feature_label(self.trace.component_id, wavelet_id, feature_id)
+            extracted_features_dict[output_label] = result
+
+            right_window_lower_bound = pick_time + bounds.right_lower_bound_offset
+            right_window_upper_bound = pick_time + bounds.right_upper_bound_offset
+            right_window_half_width = (right_window_upper_bound - right_window_lower_bound) / 2.0
+            right_window_center = right_window_lower_bound + right_window_half_width
+            #print('cats')
+            result = self.extract_average_absolute_amplitude(right_window_center,
+                                                            right_window_half_width,
+                                                            rotate_angle=False)
+
+            feature_id = 'additional_pick_based_right_integrated_absolute_amplitude'
+            output_label = full_feature_label(self.trace.component_id, wavelet_id, feature_id)
+            extracted_features_dict[output_label] = result
+        return extracted_features_dict
 
     def extract_average_absolute_amplitude(self, time_center, window_half_width, rotate_angle=False):
         trace_data = self.trace.data.copy()
@@ -195,47 +242,20 @@ class FeatureExtractorJ2(object):
                 final = start+0.004
 
             result = self.trace.extract_time_pick(start, final, search_feature)
-
-            output_label = '{}-{}-{}'.format(self.trace.component_id, wavelet_id, reference_label)
+            output_label = full_feature_label(self.trace.component_id, wavelet_id, reference_label)
             extracted_features_dict[output_label] = result
-        #<HACK>
+
         if self.additional_pick_based_amplitude_windows is not None:
-            for wavelet_id  in self.additional_pick_based_amplitude_windows._fields:
-                #print(wavelet_id);#wavelet_id = 'multiple_1';#wavelet_id = 'primary'
-                bounds = getattr(self.additional_pick_based_amplitude_windows,wavelet_id)
-                search_feature = self.manual_windows.get_search_feature(wavelet_id)
-                wavelet_reference_label = '{}_time'.format(search_feature)
-                pick_time_key = '{}-{}-{}'.format(self.trace.component_id, wavelet_id, wavelet_reference_label)
-                pick_time = extracted_features_dict[pick_time_key]
+            extracted_features_dict = self.jazz1(extracted_features_dict)
 
-                left_window_lower_bound = pick_time + bounds.left_lower_bound_offset
-                left_window_upper_bound = pick_time + bounds.left_upper_bound_offset
-                left_window_half_width = (left_window_upper_bound - left_window_lower_bound)/2.0
-                left_window_center = left_window_lower_bound + left_window_half_width
-                #print('dogs')
-                result = self.extract_average_absolute_amplitude(left_window_center,
-                                                        left_window_half_width,
-                                                        rotate_angle=False)
-                output_label = '{}-{}-{}'.format(self.trace.component_id, wavelet_id, 'additional_pick_based_left_integrated_absolute_amplitude')
-                extracted_features_dict[output_label] = result
-
-                right_window_lower_bound = pick_time + bounds.right_lower_bound_offset
-                right_window_upper_bound = pick_time + bounds.right_upper_bound_offset
-                right_window_half_width = (right_window_upper_bound - right_window_lower_bound) / 2.0
-                right_window_center = right_window_lower_bound + right_window_half_width
-                #print('cats')
-                result = self.extract_average_absolute_amplitude(right_window_center,
-                                                                 right_window_half_width,
-                                                                 rotate_angle=False)
-                output_label = '{}-{}-{}'.format(self.trace.component_id, wavelet_id,
-                                                 'additional_pick_based_right_integrated_absolute_amplitude')
-                extracted_features_dict[output_label] = result
-        #</HACK>
         for wavelet_id in self.jazz2_wavelets:
-            #print('jazz2 {}'.format(wavelet_id))
             center_time_key = '{}-{}-maximum_time'.format(self.trace.component_id, wavelet_id)
             wavelet_center_time = extracted_features_dict[center_time_key]
-            jazz2(self.trace, wavelet_center_time)
+            jazz2_dict = jazz2(self.trace, wavelet_center_time)
+            for feature_id, feature_value in jazz2_dict.items():
+                output_label = full_feature_label(self.trace.component_id, wavelet_id, feature_id)
+                extracted_features_dict[output_label] = feature_value
+
         for wavelet_id in amplitude_wavelets_to_pick:
             amplitude_window = self.amplitude_windows.windows[wavelet_id]
             search_feature = self.manual_windows.get_search_feature(wavelet_id)
@@ -258,7 +278,7 @@ class FeatureExtractorJ2(object):
                 result = self.extract_average_absolute_amplitude(window_center,
                                                     amplitude_window.half_width,
                                                     rotate_angle=rotate_angle)
-            output_label = '{}-{}-{}'.format(self.trace.component_id, wavelet_id, amplitude_window.feature)
+            output_label = full_feature_label(self.trace.component_id, wavelet_id, amplitude_window.feature)
             extracted_features_dict[output_label] = result
 
         feature_deriver = IntermediateFeatureDeriver(self.trace.component_id, self.manual_windows,
