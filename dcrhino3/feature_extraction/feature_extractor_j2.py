@@ -251,7 +251,7 @@ class FeatureExtractorJ2(object):
         for wavelet_id in self.jazz2_wavelets:
             center_time_key = '{}-{}-maximum_time'.format(self.trace.component_id, wavelet_id)
             wavelet_center_time = extracted_features_dict[center_time_key]
-            jazz2_dict = jazz2(self.trace, wavelet_center_time)
+            jazz2_dict = jazz2(self.trace, wavelet_center_time, wavelet_id=wavelet_id)
             for feature_id, feature_value in jazz2_dict.items():
                 output_label = full_feature_label(self.trace.component_id, wavelet_id, feature_id)
                 extracted_features_dict[output_label] = feature_value

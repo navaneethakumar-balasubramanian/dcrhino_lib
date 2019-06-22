@@ -95,14 +95,14 @@ class SymmetricTrace(object):
         self._time_vector = self._time_vector[indices]
 
 
-    def plot(self):
+    def plot(self, block=True):
         """
         Plot time_vector vs. data, title, label, and show.
         """
         plt.plot(self.time_vector, self.data, 'bs');
         plt.title('{} component'.format(self.component_id))
         plt.xlabel('Time (s)')
-        plt.show()
+        plt.show(block=block)
 
     def rotate_recenter_and_trim(self, phi):
         """
