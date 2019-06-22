@@ -986,10 +986,14 @@ def main_run(run=True):
             trace = traces.get(block=True, timeout=q_timeout_wait)
             now = time.time()
             trace_second = trace["timestamp"][-1]
+
             filename = trace["filename"].replace("RTR", "RTA")
             if previous_filename != filename:
                 if previous_filename is not None:
+                    rta_previous_filename = previous_filename.replace("RTR", "RTA")
                     move(previous_filename, previous_filename.replace(".tmp", ".h5"))
+                    move(rta_previous_filename, rta_previous_filename.replace(".tmp",".h5"))
+                    previous_filename = filename
             tracetime = datetime.utcfromtimestamp(trace_second)
 
 
