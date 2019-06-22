@@ -990,9 +990,9 @@ def main_run(run=True):
             filename = trace["filename"].replace("RTR", "RTA")
             if previous_filename != filename:
                 if previous_filename is not None:
-                    pdb.set_trace()
+                    # pdb.set_trace()
                     move(previous_filename, previous_filename.replace(".tmp", ".h5"))
-                    previous_filename = filename
+                previous_filename = filename
             tracetime = datetime.utcfromtimestamp(trace_second)
 
 
