@@ -32,7 +32,7 @@ import h5py
 from datetime import datetime
 import subprocess
 import re
-from shutil import copyfile
+from shutil import copyfile, move
 from dcrhino3.models.config import Config
 from dcrhino3.models.metadata import Metadata
 from dcrhino3.models.traces.raw_trace import RawTraceData
@@ -681,6 +681,8 @@ class CollectionDaemonThread(threading.Thread):
                             utc_dt = datetime.utcfromtimestamp(temp_lastSecond)
                             if lastFileName is None or (utc_dt.minute % file_change_interval_in_min == 0 and
                                                         look_for_time):
+                                if lastFileName is not None:
+                                    move(filename, filename.replace(".tmp", ".h5"))
                                 look_for_time = False
                                 prefix = utc_dt.strftime('%Y%m%d')+"_RTR"
                                 delta = utc_dt - datetime(year=utc_dt.year, month=utc_dt.month, day=utc_dt.day)
@@ -688,7 +690,7 @@ class CollectionDaemonThread(threading.Thread):
                                 leading_zeros = ""
                                 if len(elapsed) < 5:
                                     leading_zeros = "0" * (5-len(elapsed))
-                                filename = "{}{}{}_{}.h5".format(prefix, leading_zeros, elapsed, rhino_serial_number)
+                                filename = "{}{}{}_{}.tmp".format(prefix, leading_zeros, elapsed, rhino_serial_number)
                                 filename = os.path.join(run_folder_path, filename)
                                 lastFileName = utc_dt
                                 first = True
@@ -965,6 +967,7 @@ def main_run(run=True):
     fig1.canvas.get_tk_widget().focus_force()
     plt.pause(.05)
     fig1.canvas.draw()
+    previous_filename = None
 
     #this is for newer pyplot versions in case we want to prevent the user to close the plot windows
     #win = plt.gcf().canvas.manager.window
@@ -980,17 +983,19 @@ def main_run(run=True):
         #                 "counter_changes":counterchanges}
         try:
             display.print_line()
-
             trace = traces.get(block=True, timeout=q_timeout_wait)
             now = time.time()
             trace_second = trace["timestamp"][-1]
-            filename = trace["filename"].replace("RTR","RTA")
+            filename = trace["filename"].replace("RTR", "RTA")
+            if previous_filename != filename:
+                if previous_filename is not None:
+                    move(previous_filename, previous_filename.replace(".tmp", ".h5"))
             tracetime = datetime.utcfromtimestamp(trace_second)
 
 
             #<Save Trace data to h5>
-            h5f_path = os.path.join(run_folder_path,filename)
-            write_data_to_h5_files(h5f_path,trace,realtime_trace)#This are the Acorr traces
+            h5f_path = os.path.join(run_folder_path, filename)
+            write_data_to_h5_files(h5f_path, trace, realtime_trace)#This are the Acorr traces
             #</Save Trace data to h5>
 
             #rows,columns
