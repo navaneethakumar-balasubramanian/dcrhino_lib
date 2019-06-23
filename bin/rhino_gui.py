@@ -30,9 +30,10 @@ if not os.path.exists(LOGS_PATH):
     os.makedirs(LOGS_PATH)
 
 timestamp = datetime.now().strftime('%Y_%m_%d_%H')
-logging.basicConfig(filename=os.path.join(LOGS_PATH,"{}_GUI.log".format(timestamp)),level=logging.DEBUG,format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+logging.basicConfig(filename=os.path.join(LOGS_PATH, "{}_GUI.log".format(timestamp)), level=logging.DEBUG,
+                    format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
-fname = os.path.join(PATH,"collection_daemon.cfg")
+fname = os.path.join(PATH, "collection_daemon.cfg")
 config = ConfigParser.SafeConfigParser()
 
 debug = False
@@ -45,9 +46,9 @@ def goodbye():
 def stop_rx(active):
     try:
         rhino_ttyusb = subprocess.check_output('ls -l /dev/serial/by-id/ | grep "usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_" | grep -Po -- "../../\K\w*"',shell=True)
-        rhino_ttyusb = rhino_ttyusb.replace('\n','')
+        rhino_ttyusb = rhino_ttyusb.replace('\n', '')
         rhino_port = "/dev/"+rhino_ttyusb
-        baud_rate = config.getint("COLLECTION","baud_rate")
+        baud_rate = config.getint("COLLECTION", "baud_rate")
         cport = serial.Serial(rhino_port, baud_rate, timeout=1.0)
         cport.write(bytearray("stop\r\n", "utf-8"))
         cport.close()
@@ -105,8 +106,9 @@ class GUI():
         # row += 1
 
         Label(master, text="Rhino Configuration").grid(row=row)
-        Button(master, text='Settings', command=self.rhino_installation_settings).grid(row=row, column=1, sticky="ew", pady=4,columnspan=1)
-        row+=1
+        Button(master, text='Settings', command=self.rhino_installation_settings).grid(row=row, column=1,
+                                                                                       sticky="ew", pady=4, columnspan=1)
+        row += 1
 
         #Label(master, text="Processisng").grid(row=row)
         #Button(master, text='Settings', command=self.collection_settings).grid(row=row, column=1, sticky=W, pady=4,columnspan=2)
@@ -126,7 +128,7 @@ class GUI():
 
         Label(master, text="Playback").grid(row=row)
         Button(master, text='Go', command=self.playback_daemon).grid(row=row, column=1, sticky="ew", pady=4)
-        Label(master, text="Based on Rhino Configuration Settings", fg="blue").grid(row=row,column=2,columnspan=4)
+        Label(master, text="Based on Rhino Configuration Settings", fg="blue").grid(row=row, column=2, columnspan=4)
         row += 1
 
         Label(master, text="Upload Files").grid(row=row)
@@ -170,25 +172,29 @@ class GUI():
             health_script = 'system_health_plotter.py'
             sensor_stats = 'sensor_stats_plotter.py'
             if debug:
-                self.acquisition_process = Popen(['python', os.path.abspath(os.path.join(PATH,acq_script))])
-                self.system_health_process = Popen(['python', os.path.abspath(os.path.join(PATH,health_script))])
-                self.sensor_stats_process = Popen(['python', os.path.abspath(os.path.join(PATH,sensor_stats))])
+                self.acquisition_process = Popen(['python', os.path.abspath(os.path.join(PATH, acq_script))])
+                self.system_health_process = Popen(['python', os.path.abspath(os.path.join(PATH, health_script))])
+                self.sensor_stats_process = Popen(['python', os.path.abspath(os.path.join(PATH, sensor_stats))])
                 logging.info("Acquisition started in debug mode")
             else:
-                self.error_file = os.path.join(LOGS_PATH,"{}.err".format(timestamp))
-                with open(self.error_file,"ar",buffering=0) as self.err:
-                    self.acquisition_process = Popen(['python', os.path.abspath(os.path.join(PATH,acq_script))],stderr=self.err)
-                    self.system_health_process = Popen(['python', os.path.abspath(os.path.join(PATH,health_script))],stderr=self.err)
-                    self.sensor_stats_process = Popen(['python', os.path.abspath(os.path.join(PATH,sensor_stats))],stderr=self.err)
+                self.error_file = os.path.join(LOGS_PATH, "{}.err".format(timestamp))
+                with open(self.error_file, "ar", buffering=0) as self.err:
+                    self.acquisition_process = Popen(['python', os.path.abspath(os.path.join(PATH, acq_script))],
+                                                     stderr=self.err)
+                    self.system_health_process = Popen(['python', os.path.abspath(os.path.join(PATH,
+                                                                                               health_script))],
+                                                       stderr=self.err)
+                    self.sensor_stats_process = Popen(['python', os.path.abspath(os.path.join(PATH, sensor_stats))],
+                                                      stderr=self.err)
                 logging.info("Acquisition started in regular mode")
 
             processor_number = multiprocessing.cpu_count()-1
-            p = subprocess.Popen(['taskset', '-cp','{}'.format(processor_number),
+            p = subprocess.Popen(['taskset', '-cp', '{}'.format(processor_number),
                                   str(self.system_health_process.pid)],
                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             print("System Health Plotter Running in processor {} \n".format(processor_number))
             processor_number = multiprocessing.cpu_count() - 2
-            p = subprocess.Popen(['taskset', '-cp','{}'.format(processor_number),
+            p = subprocess.Popen(['taskset', '-cp', '{}'.format(processor_number),
                                   str(self.sensor_stats_process.pid)], stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
             print("Sensor Stats Plotter Running in processor {} \n".format(processor_number))
@@ -204,7 +210,7 @@ class GUI():
             self.sensor_stats_process.terminate()
             self.sensor_stats_process = None
             self.stop_rx(True)
-            os.remove(os.path.join(RAM_PATH,"system_health.npy"))
+            os.remove(os.path.join(RAM_PATH, "system_health.npy"))
             logging.info("Acquisition stopped")
         # else:
         #     self.stop_rx(False)
@@ -213,9 +219,9 @@ class GUI():
 
     def gps_daemon(self):
         if self.gps_process == None:
-            cmd = os.path.join(PATH,"startGps.sh")
+            cmd = os.path.join(PATH, "startGps.sh")
             #self.gps_process = Popen(args=["gnome-terminal", "--command={}".format(cmd)])
-            self.gps_process = Popen(args=["lxterminal", "-e","{}".format(cmd)])
+            self.gps_process = Popen(args=["lxterminal", "-e", "{}".format(cmd)])
             #print self.gps_process.pid
 
     def gps_daemon_stop(self):
@@ -234,7 +240,7 @@ class GUI():
         m = Metadata(config)
         if self.rsync_daemon_process == None:
             local_folder = config.get("DATA_TRANSMISSION", "local_folder")
-            remote_folder = os.path.join(config.get("DATA_TRANSMISSION", "remote_folder"),m.level_0_path())
+            remote_folder = os.path.join(config.get("DATA_TRANSMISSION", "remote_folder"), m.level_0_path())
             sleep_interval = config.get("DATA_TRANSMISSION", "sleep_interval")
             server = config.get("DATA_TRANSMISSION", "server")
             stats_folder = config.get("DATA_TRANSMISSION", "stats_folder")
@@ -263,8 +269,8 @@ class GUI():
         load_config_file()
         f = None
         #if self.playback_daemon_process == None:
-        f = tkFileDialog.askopenfilename(initialdir = DATA_PATH, defaultextension=".h5")
-        if len(f)==0: # asksaveasfile return `None` if dialog closed with "cancel".
+        f = tkFileDialog.askopenfilename(initialdir=DATA_PATH, defaultextension=".h5")
+        if len(f) == 0: # asksaveasfile return `None` if dialog closed with "cancel".
             f = None
             return
         fname = f # starts from `1.0`, not `0.0`
@@ -273,14 +279,16 @@ class GUI():
         show_plots = config.get("PLAYBACK","show_plots")
         #pdb.set_trace()
         #self.playback_daemon_process = Popen(['python', os.path.abspath(os.path.join(PATH,'playback_raw_data.py')),'-source {} -sr {} -plot {}'.format(fname,sampling_rate,show_plots)])
-        cmd = "python {} -source {} -sr {} -plot {}".format(os.path.abspath(os.path.join(PATH,'playback_raw_data.py')),fname,sampling_rate,show_plots)
+        cmd = "python {} -source {} -sr {} -plot {}".format(os.path.abspath(os.path.join(PATH,
+                                                                                         'playback_raw_data.py')),
+                                                            fname, sampling_rate, show_plots)
         #self.playback_daemon_process = Popen(['python', os.path.abspath(os.path.join(PATH,'playback_raw_data.py'))])
         print cmd
-        self.playback_daemon_process = Popen(cmd,shell=True)
+        self.playback_daemon_process = Popen(cmd, shell=True)
         logging.info("Played back file {}".format(fname))
 
     def playback_daemon_stop(self):
-        if self.playback_daemon_process != None:
+        if self.playback_daemon_process is None:
             self.playback_daemon_process.terminate()
             self.playback_daemon_process = None
 
@@ -301,6 +309,7 @@ class GUI():
     def rhino_installation_settings(self):
         rig.main()
 
+
     def update_h5_headers(self):
         uhg.main()
 
@@ -319,9 +328,8 @@ class GUI():
     # def plot(self):
     #     plt.main()
 
-    def stop_rx(self,active):
+    def stop_rx(self, active):
         stop_rx(active)
-
 
     def exit(self):
         m =  ("{}: GUI EXITED".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))

@@ -1,12 +1,11 @@
 import threading
-import pyudev
-import os
 import urllib2
 import time
 import sys
 from gps3 import gps3
 import pyudev
 import subprocess
+from dcrhino3.acquisition.external.dimmer import dimmer
 
 
 class NetworkThread(threading.Thread):
@@ -92,16 +91,26 @@ class USBportThread(threading.Thread):
                 self.rhino_disconnected = True
                 print(sys.exc_info())
 
+class DimmerThread(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+
+    def run(self):
+        dimmer.main()
+
 
 if __name__ == "__main__":
-    network = NetworkThread()
-    network.start()
+    # network = NetworkThread()
+    # network.start()
+    #
+    # gps = GPSThread()
+    # gps.start()
+    #
+    # usb_port = USBportThread()
+    # usb_port.start()
 
-    gps = GPSThread()
-    gps.start()
-
-    usb_port = USBportThread()
-    usb_port.start()
+    dim = DimmerThread()
+    dim.start()
 
     while True:
         # print network.network_status,network._counter,  gps.satellite_count, gps._counter
