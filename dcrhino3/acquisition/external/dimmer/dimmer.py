@@ -138,6 +138,14 @@ def main():
             dif = np.abs(val - prev_val)
             if dif > config.update_threshold:
                 print("setting brigness to", val)
+                if val > prev_val:
+                    val += config.offset
+                    if val > 100:
+                        val = 100
+                else:
+                    val -= config.offset
+                    if val < 0:
+                        val = 0
                 change_brightness(val)
                 prev_val = val
             else:

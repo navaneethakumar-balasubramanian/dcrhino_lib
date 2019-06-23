@@ -21,3 +21,6 @@ block_zero_brightness = False
 
 #screen name
 display = "eDP-1"
+
+#calibration offset
+offset = 25
