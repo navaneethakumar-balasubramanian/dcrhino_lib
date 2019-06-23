@@ -166,7 +166,7 @@ class GUI():
 
     def acquisition_daemon(self):
         load_config_file()
-        if self.acquisition_process == None:
+        if self.acquisition_process is None:
             timestamp = datetime.now().strftime('%Y_%m_%d_%H')
             acq_script = 'real_time_acquisition_v3.py'
             health_script = 'system_health_plotter.py'
@@ -200,7 +200,7 @@ class GUI():
             print("Sensor Stats Plotter Running in processor {} \n".format(processor_number))
 
     def acquisition_daemon_stop(self):
-        if self.acquisition_process != None:
+        if self.acquisition_process is not None:
             if not debug:
                 self.err.close()
             self.acquisition_process.terminate()
@@ -218,7 +218,7 @@ class GUI():
 
 
     def gps_daemon(self):
-        if self.gps_process == None:
+        if self.gps_process is None:
             cmd = os.path.join(PATH, "startGps.sh")
             #self.gps_process = Popen(args=["gnome-terminal", "--command={}".format(cmd)])
             self.gps_process = Popen(args=["lxterminal", "-e", "{}".format(cmd)])
@@ -226,7 +226,7 @@ class GUI():
 
     def gps_daemon_stop(self):
         #print ("launched")
-        if self.gps_process != None:
+        if self.gps_process is not None:
             #print("about to kill")
             os.system("pkill -f gpsd --signal SIGTERM")
             #os.kill(self.gps_process.pid, signal.SIGTERM)
@@ -238,7 +238,7 @@ class GUI():
     def rsync_daemon(self):
         load_config_file()
         m = Metadata(config)
-        if self.rsync_daemon_process == None:
+        if self.rsync_daemon_process is None:
             local_folder = config.get("DATA_TRANSMISSION", "local_folder")
             remote_folder = os.path.join(config.get("DATA_TRANSMISSION", "remote_folder"), m.level_0_path())
             sleep_interval = config.get("DATA_TRANSMISSION", "sleep_interval")
@@ -253,7 +253,7 @@ class GUI():
             #print self.gps_process.pid
 
     def rsync_daemon_stop(self):
-        if self.rsync_daemon_process != None:
+        if self.rsync_daemon_process is not None:
             #os.kill(self.rsync_daemon_process.pid, signal.SIGTERM)
             os.system("pkill -f sendfiles.sh --signal SIGTERM")
             #self.rsync_daemon_process.kill()
@@ -288,7 +288,7 @@ class GUI():
         logging.info("Played back file {}".format(fname))
 
     def playback_daemon_stop(self):
-        if self.playback_daemon_process is None:
+        if self.playback_daemon_process is not None:
             self.playback_daemon_process.terminate()
             self.playback_daemon_process = None
 
