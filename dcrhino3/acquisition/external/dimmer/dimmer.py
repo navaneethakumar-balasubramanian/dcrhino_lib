@@ -39,10 +39,10 @@ def change_brightness(val):
     val: int
         value between 0 and 100
         100 -> maximum brightness is set'''
-    cmd = "xrandr --output eDP-1-1 --brightness " + str(val/100)
+
     if config.block_zero_brightness:
         val += 1
-    val = str(int(val))
+    cmd = "xrandr --output {} --brightness {}".format(config.display, val/100)
     os.system(cmd)
 
 

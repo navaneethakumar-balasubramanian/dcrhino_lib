@@ -17,4 +17,7 @@ update_threshold = 5
 sleep = 5
 
 # if brightness=0 should be blocked
-block_zero_brightness = True
+block_zero_brightness = False
+
+#screen name
+display = "eDP-1"
