@@ -201,7 +201,7 @@ if __name__ == '__main__':
         mine_name = args.mine_name
         env_config_path = args.env_config_path
         processes = args.mp_processes
-        match_id = args.match_id
+        bo_id = args.match_id
     else:
         mine_name = ''
 
@@ -217,7 +217,7 @@ if __name__ == '__main__':
         #generate_cache_acorr(mine_name, env_config_path,args.matches_output_path)
         processes_queue = []
         for line in matches_df.iterrows():
-            if match_id is False or str(line[1].match_id) == match_id:
+            if bo_id is False or str(line[1].bo_id) == bo_id:
                 line = line[1]
                 if processes is not False:
                     processes_queue.append([line,env_config,args.mine_name,files_df,mwd_df,mwd_helper,sql_db_helper])
