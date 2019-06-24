@@ -14,17 +14,17 @@ from datetime import datetime
 import dcrhino3.acquisition.rhino_installation_gui as rig
 import dcrhino3.acquisition.update_headers_gui as uhg
 import dcrhino3.acquisition.merge_gui as mfg
-import pdb
 import os
 from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
 from dcrhino3.acquisition.constants import DATA_PATH, LOGS_PATH, RAM_PATH
 from subprocess import Popen
-
+import shutil
 import subprocess
 import serial
 import logging
 from dcrhino3.models.metadata import Metadata
 import multiprocessing
+import glob
 
 if not os.path.exists(LOGS_PATH):
     os.makedirs(LOGS_PATH)
@@ -42,6 +42,7 @@ debug = False
 
 def goodbye():
     stop_rx(True)
+    rename_temp_files()
 
 def stop_rx(active):
     try:
@@ -64,6 +65,18 @@ def stop_rx(active):
 import atexit
 atexit.register(goodbye)
 
+def rename_temp_files():
+    try:
+        data_path = config.get("DATA_TRANSMISSION", "local_folder")
+        temp_files = glob.glob((os.path.join(data_path, "**", "*.tmp")))
+        for file in temp_files:
+            if "RTA" in file or "RTR" in file:
+                new_name = file.replace(".tmp", ".h5")
+                print("Renaming {} to {}".format(file, new_name))
+                shutil.move(file, new_name)
+    except:
+        pass
+
 def load_config_file():
     config.read(fname)
 
@@ -82,6 +95,7 @@ class GUI():
         self.rsync_daemon_process = None
         self.display_daemon_process = None
         self.system_health_process = None
+        self.rename_temp_files()
 
         # if config.getboolean("RUNTIME","field_deployment"):
         #     self.prepare_acq_usb_port()
@@ -100,19 +114,10 @@ class GUI():
         master.resizable(width=False, height=False)
 
 
-        # Label(master, text="GPS").grid(row=row)
-        # Button(master, text='Stop', command=self.gps_daemon_stop).grid(row=row, column=1, sticky="ew", pady=4)
-        # Button(master, text='Restart', command=self.gps_daemon).grid(row=row, column=2, sticky="ew", pady=4)
-        # row += 1
-
         Label(master, text="Rhino Configuration").grid(row=row)
         Button(master, text='Settings', command=self.rhino_installation_settings).grid(row=row, column=1,
                                                                                        sticky="ew", pady=4, columnspan=1)
         row += 1
-
-        #Label(master, text="Processisng").grid(row=row)
-        #Button(master, text='Settings', command=self.collection_settings).grid(row=row, column=1, sticky=W, pady=4,columnspan=2)
-        #row += 1
 
         Label(master, text="Acquisition").grid(row=row)
         Button(master, text='Go', command=self.acquisition_daemon).grid(row=row, column=1, sticky="ew", pady=4)
@@ -140,19 +145,6 @@ class GUI():
         Button(master, text='Go', command=self.update_h5_headers).grid(row=row, column=1, sticky="ew", pady=4)
         #Button(master, text='Settings', command="").grid(row=row, column=2, sticky=W, pady=4)
         row += 1
-
-        # Label(master, text="Processing Pipeline").grid(row=row)
-        # Button(master, text='Go', command=self.processing_pipeline).grid(row=row, column=1, sticky="ew", pady=4)
-        # #Button(master, text='Settings', command="").grid(row=row, column=2, sticky=W, pady=4)
-        # row += 1
-        # Label(master, text="Feature Extract").grid(row=row)
-        # Button(master, text='Go', command=self.feature_extract).grid(row=row, column=1, sticky=W, pady=4)
-        # Button(master, text='Stop', command=self.feature_extract_stop).grid(row=row, column=2, sticky=W, pady=4)
-        # Button(master, text='Settings', command=self.feature_extract_settings).grid(row=row, column=3, sticky=W, pady=4)
-        # row += 1
-        # Label(master, text="Plot").grid(row=row)
-        # Button(master, text='Go', command=self.plot).grid(row=row, column=1, sticky=W, pady=4)
-        # row+=1
 
         Button(master, text='Exit', command=self.exit).grid(row=row, column=1, sticky="ew", pady=4)
 
@@ -210,30 +202,9 @@ class GUI():
             self.sensor_stats_process.terminate()
             self.sensor_stats_process = None
             self.stop_rx(True)
+            self.rename_temp_files()
             os.remove(os.path.join(RAM_PATH, "system_health.npy"))
             logging.info("Acquisition stopped")
-        # else:
-        #     self.stop_rx(False)
-        #     logging.info("Acquisition stopped but was already stopped")
-
-
-    def gps_daemon(self):
-        if self.gps_process is None:
-            cmd = os.path.join(PATH, "startGps.sh")
-            #self.gps_process = Popen(args=["gnome-terminal", "--command={}".format(cmd)])
-            self.gps_process = Popen(args=["lxterminal", "-e", "{}".format(cmd)])
-            #print self.gps_process.pid
-
-    def gps_daemon_stop(self):
-        #print ("launched")
-        if self.gps_process is not None:
-            #print("about to kill")
-            os.system("pkill -f gpsd --signal SIGTERM")
-            #os.kill(self.gps_process.pid, signal.SIGTERM)
-            #Popen.kill(self.gps_process.pid)
-            #self.gps_process.kill()
-            self.gps_process = None
-        #print("finished")
 
     def rsync_daemon(self):
         load_config_file()
@@ -249,21 +220,13 @@ class GUI():
             print cmd
             self.rsync_daemon_process = Popen(args=["lxterminal", "--command={}".format(cmd)])
             logging.info("Rsync Started")
-            #self.rsync_daemon_process = Popen(args=["gnome-terminal", "-e","{}".format(cmd)])
-            #print self.gps_process.pid
 
     def rsync_daemon_stop(self):
         if self.rsync_daemon_process is not None:
-            #os.kill(self.rsync_daemon_process.pid, signal.SIGTERM)
             os.system("pkill -f sendfiles.sh --signal SIGTERM")
-            #self.rsync_daemon_process.kill()
             self.rsync_daemon_process = None
             logging.info("Rsync Stopped")
 
-    # def prepare_acq_usb_port(self):
-    #     cmd = os.path.join(PATH,"prepare_acq_port.sh")
-    #     self.prepare_acq_usb_port_process=Popen(cmd,shell=True)
-    #     logging.info("USB Port Permissions Changed")
 
     def playback_daemon(self):
         load_config_file()
@@ -292,19 +255,6 @@ class GUI():
             self.playback_daemon_process.terminate()
             self.playback_daemon_process = None
 
-    # def feature_extract(self):
-    #     if self.feature_extract_process == None:
-    #         self.feature_extract_process = Popen(['python', os.path.abspath(os.path.join(PATH,'feature_extract.py'))])
-    #
-    # def feature_extract_stop(self):
-    #     if self.feature_extract_process != None:
-    #         self.feature_extract_process.terminate()
-    #         self.feature_extract_process = None
-
-
-
-    # def real_time_acquisition_settings(self):
-    #     rtas.main()
 
     def rhino_installation_settings(self):
         rig.main()
@@ -316,27 +266,18 @@ class GUI():
     def merge_files(self):
         mfg.main()
 
-    # def processing_pipeline(self):
-    #     ppl.main()
-
-    # def feature_extract_settings(self):
-    #     fg.main()
-
-    # def collection_settings(self):
-    #     cg.main()
-
-    # def plot(self):
-    #     plt.main()
-
     def stop_rx(self, active):
         stop_rx(active)
+
+    def rename_temp_files(self):
+        rename_temp_files()
 
     def exit(self):
         m =  ("{}: GUI EXITED".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
         self.acquisition_daemon_stop()
-        self.gps_daemon_stop()
         self.playback_daemon_stop()
         self.rsync_daemon_stop()
+        self.rename_temp_files()
         self.master.destroy()
         print(m)
         logging.info("GUI Exited")
