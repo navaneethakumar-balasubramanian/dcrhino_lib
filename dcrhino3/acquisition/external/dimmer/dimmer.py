@@ -135,6 +135,7 @@ def main():
         try:
             x = gen_x()
             val = clf.predict([x])[0]
+            tmp = val
             dif = np.abs(val - prev_val)
             if dif > config.update_threshold:
                 if val > prev_val:
@@ -147,7 +148,7 @@ def main():
                         val = 0
                 print("setting brigness to", val)
                 change_brightness(val)
-                prev_val = val
+                prev_val = tmp
             else:
                 print("difference below %d, brighness not changed" %
                       config.update_threshold)
