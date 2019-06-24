@@ -137,15 +137,15 @@ def main():
             val = clf.predict([x])[0]
             dif = np.abs(val - prev_val)
             if dif > config.update_threshold:
-                print("setting brigness to", val)
                 if val > prev_val:
                     val += config.offset
                     if val > 100:
                         val = 100
-                else:
+                elif val < prev_val:
                     val -= config.offset
                     if val < 0:
                         val = 0
+                print("setting brigness to", val)
                 change_brightness(val)
                 prev_val = val
             else:
