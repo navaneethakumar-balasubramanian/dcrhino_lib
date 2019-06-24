@@ -10,7 +10,7 @@ from sklearn.ensemble import RandomForestRegressor
 from scipy.misc import imresize
 from sklearn.externals import joblib
 import os
-import pickle
+import sys
 
 
 def get_img():
@@ -154,7 +154,10 @@ def main():
                       config.update_threshold)
         except SystemError:
             print("Camera blocked by other Programm")
+        except KeyboardInterrupt:
+            sys.exit(0)
         sleep(config.sleep)
+
 
 
 def aquire_data():
