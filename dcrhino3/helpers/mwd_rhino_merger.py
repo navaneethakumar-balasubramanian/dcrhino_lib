@@ -29,8 +29,6 @@ class MWDRhinoMerger():
 
             if len(self.pre_filtered_mwd) == 0:
                 logger.warn("Couldnt find any combination on this file_list and mwd, please check rig_ids and start_time")
-                return False
-
 
             self.observed_blasthole_catalog = self._generate_matches_list()
 

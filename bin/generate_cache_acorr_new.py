@@ -127,9 +127,11 @@ def generate_cache_acorr(matches_line,files,mwd_df,mwd_helper,env_config,mine_na
                                                      matches_line.hole_id)
     hole_mwd.reset_index(drop=True,inplace=True)
     td.dataframe = merge_mwd_with_trace(hole_mwd, td, merger)
+
+
     return td
 
-def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper):
+def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper,sql_db_helper):
 
     if line.solution_label == 'Non Conflict' or line.solution_label== 'Conflict Solved':
         td = generate_cache_acorr(line,files_df,mwd_df,mwd_helper,env_config,mine_name)
@@ -154,8 +156,8 @@ def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper):
             else:
                 if '_trace' in column:
                     have_data_on_line = False
-                    for line in data_array:
-                        if ((np.array(line) == 0).all() or (np.array(line) == None).all() or np.isnan(np.array(line)).all()) == False:
+                    for data_line in data_array:
+                        if ((np.array(data_line) == 0).all() or (np.array(data_line) == None).all() or np.isnan(np.array(data_line)).all()) == False:
                             have_data_on_line = True
                             break
                     if have_data_on_line is False:
@@ -166,7 +168,10 @@ def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper):
             td.save_to_h5(temp_h5_path)
         except:
             pass
-        logger.info("File saved at " + temp_h5_path)
+        logger.info("File saved at " + h5_path)
+        sql_db_helper.acorr_files.add(td.hole_id, td.sensor_id, td.bench_name,
+                                  td.pattern_name, td.hole_name, td.rig_id,
+                                  td.digitizer_id, h5_path, int(td.min_ts), int(td.max_ts),line.bo_id)
         try:
             os.rename(temp_h5_path, h5_path)
 
@@ -177,7 +182,7 @@ def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper):
 
 def process(list_of_args):
     try:
-        process_match_line(list_of_args[0], list_of_args[1], list_of_args[2], list_of_args[3],list_of_args[4], list_of_args[5])
+        process_match_line(list_of_args[0], list_of_args[1], list_of_args[2], list_of_args[3],list_of_args[4], list_of_args[5],list_of_args[6])
     except:
         logger.warn("FAILED TO PROCESS THIS " + str(list_of_args[2]))
         file_logger.warn("FAILED TO PROCESS THIS " + str(list_of_args[2]))
@@ -207,7 +212,7 @@ if __name__ == '__main__':
         merger = MWDRhinoMerger(None,None,False)
         sqlconn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
         sql_db_helper = RhinoSqlHelper(host=sqlconn['host'], user=sqlconn['user'], passwd=sqlconn['password'],database=sqlconn['database'])
-        matches_df = sql_db_helper.matches.get_all()
+        matches_df = sql_db_helper.blasthole_observations.get_bo_to_update_acorr()
         files_df = sql_db_helper.sensor_files.get_all()
         #generate_cache_acorr(mine_name, env_config_path,args.matches_output_path)
         processes_queue = []
@@ -215,9 +220,9 @@ if __name__ == '__main__':
             if match_id is False or str(line[1].match_id) == match_id:
                 line = line[1]
                 if processes is not False:
-                    processes_queue.append([line,env_config,args.mine_name,files_df,mwd_df,mwd_helper])
+                    processes_queue.append([line,env_config,args.mine_name,files_df,mwd_df,mwd_helper,sql_db_helper])
                 else:
-                    process_match_line(line, env_config, args.mine_name, files_df, mwd_df, mwd_helper)
+                    process_match_line(line, env_config, args.mine_name, files_df, mwd_df, mwd_helper,sql_db_helper)
 
         if processes is not False:
             p = Pool(int(processes))

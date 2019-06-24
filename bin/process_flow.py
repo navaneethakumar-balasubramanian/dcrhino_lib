@@ -166,7 +166,7 @@ if __name__ == '__main__':
         data_path = args.data_path
         env_path = args.env_path
         processes = args.mp_processes
-
+        txt_path = data_path
 
         if args.seconds_to_process is not False:
             seconds_to_process = int(args.seconds_to_process)

@@ -1,5 +1,7 @@
 from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
+from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
+
 from dcrhino3.helpers.mwd_helper import MWDHelper
 
 import matplotlib.pyplot as plt
@@ -29,12 +31,17 @@ def check(mine_name):
     env_config = EnvConfig()
     mwd_helper = MWDHelper(env_config)
     mwd_df = mwd_helper.get_rhino_mwd_from_mine_name(mine_name)
+
     conn = env_config.get_rhino_db_connection_from_mine_name(mine_name)
+    sql_conn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
+    db_helper = RhinoDBHelper(conn=conn)
+    db_sql_helper = RhinoSqlHelper(host=sql_conn['host'], user=sql_conn['user'], passwd=sql_conn['password'],
+                                   database=sql_conn['database'])
 
-    db_helper= RhinoDBHelper(conn=conn)
-    result = db_helper.client.execute("select acorr_file_id , timestamp, max_axial_acceleration from acorr_traces order by timestamp")
-    df_traces = db_helper.query_result_to_pd(result,['acorr_file_id','timestamp','max_axial_acceleration'])
-
+    result = db_helper.client.execute("select sensor_file_id , relative_timestamp, max_axial_acceleration from sensor_file_acorr_traces order by relative_timestamp")
+    df_traces = db_helper.query_result_to_pd(result,['acorr_file_id','relative_timestamp','max_axial_acceleration'])
+    sensor_files = db_sql_helper.sensor_files.get_all()
+    #sensor_files = db_helper.
     sanity_plot(mwd_df,df_traces)
 
 

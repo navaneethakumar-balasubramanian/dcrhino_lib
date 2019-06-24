@@ -193,8 +193,9 @@ def get_matches_list(mine_name,env_config):
 
     logger.info("Getting Matches List")
     merger = MWDRhinoMerger(files, mwd_df)
-    matches = merger.observed_blasthole_catalog
-    logger.info("Getting Matches List Conflicts")
+    if merger :
+        matches = merger.observed_blasthole_catalog
+        logger.info("Getting Matches List Conflicts")
     #matches['solution'], matches['solution_label'] = get_solution_arrays(matches, files)
 
     return matches
@@ -216,7 +217,7 @@ def update_matches_list(mine_name,env_config):
         row_id = line.bench_name + line.pattern_name + line.hole_name + line.hole_id + line.rig_id+ line.sensor_id + line.digitizer_id
         hash_object = hashlib.md5(row_id.encode())
         hex_dig = hash_object.hexdigest()
-        sql_db_helper.matches.add(hex_dig,line.files_ids,line.bench_name,line.pattern_name,line.hole_id,line.hole_name,line.rig_id,line.sensor_id,line.digitizer_id,line.start_time_max,line.start_time_min,line.solution,line.solution_label)
+        sql_db_helper.blasthole_observations.add(hex_dig,line.files_ids,line.bench_name,line.pattern_name,line.hole_id,line.hole_name,line.rig_id,line.sensor_id,line.digitizer_id,line.start_time_max,line.start_time_min,line.solution,line.solution_label)
     return
 
 

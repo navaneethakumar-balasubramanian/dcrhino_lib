@@ -1,5 +1,5 @@
-CREATE TABLE IF NOT EXISTS `matches` (
-	`match_id` VARCHAR(50) NOT NULL COLLATE 'utf8_bin',
+CREATE TABLE IF NOT EXISTS `blasthole_observations`(
+	`bo_id` VARCHAR(50) NOT NULL COLLATE 'utf8_bin',
 	`bench_name` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8_bin',
 	`digitizer_id` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8_bin',
 	`files_ids` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8_bin',
@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS `matches` (
 	`start_time_min` INT(11) NULL DEFAULT NULL,
 	`solution` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8_bin',
 	`solution_label` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8_bin',
-	PRIMARY KEY (`match_id`),
+	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (`bo_id`),
 	INDEX `bench_name` (`bench_name`),
 	INDEX `digitizer_id` (`digitizer_id`),
 	INDEX `hole_id` (`hole_id`),
@@ -20,7 +21,8 @@ CREATE TABLE IF NOT EXISTS `matches` (
 	INDEX `sensor_id` (`sensor_id`),
 	INDEX `pattern_name` (`pattern_name`),
 	INDEX `hole_name` (`hole_name`),
-	INDEX `solution_label` (`solution_label`)
+	INDEX `solution_label` (`solution_label`),
+	INDEX `updated_at` (`updated_at`)
 )
 COLLATE='utf8_bin'
 ENGINE=InnoDB
