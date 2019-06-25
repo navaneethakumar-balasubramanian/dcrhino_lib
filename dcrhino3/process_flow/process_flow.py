@@ -275,17 +275,24 @@ class ProcessFlow:
         splitted_subsets = self.split_subsets(process_json,process_json['subsets'],acorr_trace)
         print("FoUnD {} subsets".format(len(splitted_subsets))  )
 
-        for i,subset in enumerate(splitted_subsets):
-
-            self.set_process_flow(subset['process_json'],subset_index=i)
+        if len(splitted_subsets) == 0:
+            self.set_process_flow(process_json)
             self.env_config = env_config
-            self.make_database_connection(subset['acorr_trace'].mine_name)
-            subset['acorr_trace'] = self.process(subset['acorr_trace'],subset_index=i)
+            self.make_database_connection(acorr_trace.mine_name)
+            acorr_trace = self.process(acorr_trace)
 
-        acorr_trace , process_json =  self.merge_results(splitted_subsets)
-        return_dict["acorr_trace"] = acorr_trace
-        return_dict["process_json"] = process_json
-        return_dict["output_path"] = self.output_path
+        else:
+            for i,subset in enumerate(splitted_subsets):
+
+                self.set_process_flow(subset['process_json'],subset_index=i)
+                self.env_config = env_config
+                self.make_database_connection(subset['acorr_trace'].mine_name)
+                subset['acorr_trace'] = self.process(subset['acorr_trace'],subset_index=i)
+
+            acorr_trace , process_json =  self.merge_results(splitted_subsets)
+            return_dict["acorr_trace"] = acorr_trace
+            return_dict["process_json"] = process_json
+            return_dict["output_path"] = self.output_path
 
         acorr_trace.save_to_h5(os.path.join(self.output_path,'processed.h5'))
         acorr_trace.save_to_csv(os.path.join(self.output_path,'processed.csv'))
