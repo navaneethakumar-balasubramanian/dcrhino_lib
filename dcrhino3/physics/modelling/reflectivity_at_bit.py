@@ -59,19 +59,22 @@ def amplitude_and_phase(drill_pipe, rock, frequency):
     #Zb = (numerator / denominator_1) / (1j - cot_phi) * .00001
     print("WHERE IS THE 0.00001 (=1/1e5) coming from??")
     Zb = 0.00001 * (numerator / denominator_1) / (1j - cot_phi)
-    pdb.set_trace()
     #<below is equation 62 from poletto * -1)
     RC_complex = (drill_pipe.Z1 - Zb) / (drill_pipe.Z1 + Zb) #reflection coefficient = (Z1-Z2) / (Z1 + Z2)
     RC_complex[0] = (-1+0j)
     RC = np.abs(RC_complex)
     RC_tanphi = RC_complex.imag / RC_complex.real
     phi = np.arctan(RC_tanphi)
-    pdb.set_trace()
     return RC, phi
 
 #def plot_frequency_response
 
 
+def sanity_check_complex_response(frqs, complex_response):
+    fig, (ax1, ax2) = plt.subplots(2, 1)
+    ax1.plot(frqs, np.real(complex_response))
+    ax2.plot(frqs, np.imag(complex_response))
+    plt.show(block=True)
 
 
 def my_function():
@@ -81,44 +84,41 @@ def my_function():
     rho=np.arange(2200, 3200 + 50, 50)
     drill_pipe = DrillPipe(0.1365, 0.0687, 0.16, 4875.0, 7800.0)
     rock = Rock(alpha, rho) # maybe init as needed
-    pdb.set_trace()
+    #pdb.set_trace()
     print(rock)
+    sampling_rate = 5000.0
+    df = 0.5; frequency_resolution = df;  # Hz
 
-    number_of_points_in_series = 100000
-    jjj = np.arange(10000)+1
-    f = (jjj - 1) * 0.5
-    frequency_resolution = .5
-    nyquist = 5000.0 # hertz
+    #<derived>
+    nyquist = sampling_rate / 2.0 # hertz
+    dt = 1./sampling_rate
+    N = 1 / (df * dt);number_of_points_in_series = N; #this will give you T=N*dt (2s @5Khz and 0.5Hz resolution)
+    print('N=',N, int(N));
+    N = int(N)
+    dt = 1./sampling_rate
+    df = 1/(N*dt) #N = 1/(df*dt)
+    frqs = np.fft.fftfreq(N, dt)
 
     r, a = 1700, 1700
+    amp, phase = amplitude_and_phase(drill_pipe, Rock(r, a), frqs)
+    complex_response = amp * np.exp(-jj * phase)
+    impulse_response = np.fft.ifft(complex_response)
 
-    amp, phase = amplitude_and_phase(drill_pipe, Rock(r, a), f)
-    pdb.set_trace()
+    frqs = np.fft.fftshift(frqs)
+    complex_response = np.fft.fftshift(complex_response)
+    impulse_response = np.fft.fftshift(impulse_response)
+    #sanity_check_complex_response(frqs, complex_response)
+
+
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1)
-
-    freq_domain = np.nan_to_num(amp * np.cos(phase) + (amp * np.sin(phase))* 1j)
-    # freq_domain[0] = 1+0j
-
-    huge_step = np.argmax(np.diff(freq_domain)[1:])+1
-
-    freq_domain.real[huge_step:] = (0-freq_domain.real[huge_step:])
-    freq_domain.imag[huge_step:] = freq_domain.imag.max() - (freq_domain.imag[huge_step:]) - freq_domain.imag.max()
-
-    freq_domain_real = np.r_[freq_domain.real, freq_domain.real[::-1]][:-1]
-    freq_domain_imag = np.r_[freq_domain.imag, freq_domain.imag[::-1]][:-1]
-
-    freq_domain_imag[int(len(freq_domain_imag)/2):] = - freq_domain_imag[int(len(freq_domain_imag)/2):]
-
-    inverse = np.fft.ifft(freq_domain_real + freq_domain_imag*1j, n=None)
-    ax1.plot(np.r_[f[:], f[:]+f.max()][:-1], freq_domain_real)
-    ax2.plot(np.r_[f[:], f[:]+f.max()][:-1], freq_domain_imag)
-    ax3.plot(np.fft.fftshift(inverse.real)[9950:10050])
-    ax3.plot(np.fft.fftshift(inverse.imag)[9950:10050])
+    ax1.plot(frqs, np.real(complex_response))
+    ax2.plot(frqs, np.imag(complex_response))
+    ax3.plot(dt*np.arange(N), impulse_response)
 
 
     ax1.set_ylabel('real')
     ax2.set_ylabel('imag')
-    ax3.set_ylabel('')
+    ax3.set_ylabel('impulse response')
     ax3.set_xlabel('')
     # ax3.set_ylim(0)
     for ax in [ax1, ax2, ax3]:
@@ -127,7 +127,7 @@ def my_function():
     fig = plt.gcf()
     fig.set_size_inches(15,7.5)
     fig.dpi = 200
-    plt.show()
+    plt.show(block=True)
 
 
 def main():
