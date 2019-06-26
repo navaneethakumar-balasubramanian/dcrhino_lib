@@ -34,7 +34,9 @@ line_creek_mwd_filehandle = os.path.join(line_creek_data_cache_path, 'mwd.csv')
 bma_data_cache_path = os.path.join(dc_cache_path, 'bma')
 bma_acorr_folder = os.path.join(bma_data_cache_path, 'acorr')
 
-
+bmc_data_cache_path = os.path.join(dc_cache_path, 'bmc')
+south_walker_creek_data_cache_path = os.path.join(bmc_data_cache_path, 'south_walker_creek')
+south_walker_creek_acorr_folder = os.path.join(south_walker_creek_data_cache_path, 'acorr')
 
 def my_function():
     """
