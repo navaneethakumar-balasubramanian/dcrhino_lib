@@ -15,7 +15,8 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.helpers.general_helper_functions import add_inverse_dictionary
 
 #<this should be somewhere more general>
-..:todo: we should review the units stuff and start using pint or similar package
+#..:todo: we should review the units stuff and start using pint or similar package
+
 LENGTH_UNITS = {}
 LENGTH_UNITS[1] = 'ft'
 LENGTH_UNITS[2] = 'in'
