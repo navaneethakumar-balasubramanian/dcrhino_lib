@@ -103,6 +103,7 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.signal_processing.time_picker import TimePicker
 from dcrhino3.signal_processing.phase_rotation import rotate_phase
 from dcrhino3.feature_extraction.jazz_with_zero_crossings import jazz2
+from dcrhino3.feature_extraction.jazz_with_zero_crossings import estimate_trough_width
 #from feature_extractor_j1a import calculate_boolean_features
 
 
@@ -249,9 +250,13 @@ class FeatureExtractorJ2(object):
             extracted_features_dict = self.jazz1(extracted_features_dict)
 
         for wavelet_id in self.jazz2_wavelets:
+            bpf_center_frequency = np.mean([self.transformed_args.trapezoidal_bpf_corner_2,
+                                        self.transformed_args.trapezoidal_bpf_corner_3])
+            bpf_period = 1./bpf_center_frequency
+            expected_trough_duration = estimate_trough_width(bpf_period, self.trace.component_id)
             center_time_key = '{}-{}-maximum_time'.format(self.trace.component_id, wavelet_id)
             wavelet_center_time = extracted_features_dict[center_time_key]
-            jazz2_dict = jazz2(self.trace, wavelet_center_time, wavelet_id=wavelet_id)
+            jazz2_dict = jazz2(self.trace, wavelet_center_time, expected_trough_duration, wavelet_id=wavelet_id)
             for feature_id, feature_value in jazz2_dict.items():
                 output_label = full_feature_label(self.trace.component_id, wavelet_id, feature_id)
                 extracted_features_dict[output_label] = feature_value

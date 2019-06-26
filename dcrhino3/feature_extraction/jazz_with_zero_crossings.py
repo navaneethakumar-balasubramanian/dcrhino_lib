@@ -16,9 +16,23 @@ def initialize_jazz2_dict():
     tmp['right_trough_integral'] = np.nan
     tmp['center_peak_integral'] = np.nan
     return tmp
+
+
+def estimate_trough_width(wavelet_period, component_id):
+    """
+    this maybe belongs with filters
+    :return:
+    """
+    if component_id == 'axial':
+        expected_period = wavelet_period/2.0
+    elif component_id == 'tangential':
+        expected_period = wavelet_period/2.0
+    return expected_period
+
+
 def sanity_check_plot_jazz2(left_trough, positive_peak, right_trough,
                             t_left_trough, t_positive_peak, t_right_trough,
-                            tick_times, ttl_string):
+                            expected_trough_duration, tick_times, ttl_string):
     wiggly_wiggle = np.hstack((left_trough, positive_peak, right_trough))
     #wiggly_wiggle = np.hstack((left_trough, positive_peak, right_trough))
     tick_heights = 0.1 * np.ptp(wiggly_wiggle)
@@ -27,13 +41,15 @@ def sanity_check_plot_jazz2(left_trough, positive_peak, right_trough,
     plt.plot(t_right_trough, right_trough, label='right');
     plt.hlines(0, t_left_trough[0], t_right_trough[-1], color='black');
     plt.vlines(tick_times, -tick_heights/2, tick_heights/2)
+    plt.vlines([tick_times[1]-expected_trough_duration, tick_times[2]+expected_trough_duration], -tick_heights / 2, tick_heights / 2, color='purple')
     plt.xlabel(('Time (s)'))
     plt.ylabel('Wavelet Amplitude')
     plt.legend();
     plt.title(ttl_string)
     plt.show(block=True)
 
-def jazz2(symmetric_trace, center_time, wavelet_id='', sanity_check_plot=False):
+
+def jazz2(symmetric_trace, center_time, expected_trough_duration, wavelet_id='', sanity_check_plot=False):
     """
     This method expects a trace and a time corresponding to a wavelet maxima.  It will measure the width of the peak
     and of the two troughs left and right of the peak.  It will also calculate the absolute area under curve for
@@ -103,7 +119,7 @@ def jazz2(symmetric_trace, center_time, wavelet_id='', sanity_check_plot=False):
         ttl_string = '{} {}'.format(symmetric_trace.component_id, wavelet_id)
         sanity_check_plot_jazz2(left_trough, positive_peak, right_trough,
                                 t_left_trough, t_positive_peak, t_right_trough,
-                                tick_times, ttl_string)
+                                expected_trough_duration, tick_times, ttl_string)
 
     left_integral = np.sum(np.abs(left_trough))
     right_integral = np.sum(np.abs(right_trough))
@@ -137,6 +153,7 @@ def main():
     acorr_trace = TraceData()
     acorr_trace.load_from_h5(acorr_h5_file_path)
     jazz2_test(acorr_trace)
+
 
 if __name__ == '__main__':
     main()
