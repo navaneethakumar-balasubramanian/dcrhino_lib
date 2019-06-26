@@ -12,15 +12,36 @@ from enum import Enum
 import pdb
 import sys
 from dcrhino3.helpers.general_helper_functions import init_logging
+from dcrhino3.helpers.general_helper_functions import add_inverse_dictionary
+
+#<this should be somewhere more general>
+..:todo: we should review the units stuff and start using pint or similar package
+LENGTH_UNITS = {}
+LENGTH_UNITS[1] = 'ft'
+LENGTH_UNITS[2] = 'in'
+LENGTH_UNITS[3] = 'm'
+LENGTH_UNITS[4] = 'cm'
+LENGTH_UNITS[5] = 'mm'
+LENGTH_UNITS = add_inverse_dictionary(LENGTH_UNITS)
+
+LENGTH_SCALE_FACTORS = {}
+LENGTH_SCALE_FACTORS['ft'] = 0.3048
+LENGTH_SCALE_FACTORS['in'] = 0.0254
+LENGTH_SCALE_FACTORS['m'] = 1.0
+LENGTH_SCALE_FACTORS['cm'] = 0.10
+LENGTH_SCALE_FACTORS['mm'] = 0.001
+#</this should be somewhere more general>
+
 logger = init_logging(__name__)
 #==============================================================================
 #FUNCTIONS
 #==============================================================================
+
 def StandardString(s):
     """
     Parameters:
         s (str): string to be standardized
-    
+
     Returns:
         (str): cleaned, standardized string with underscores instead of spaces
     """
@@ -60,35 +81,36 @@ class Measurement():
 
     def convert_to_meters(self):
         """
-        Converts distances to meters.
-
         Parameters:
             value (float): value to be converted
             units (int): current units of value represented by an integer
-
+            see mappings: LENGTH_SCALE_FACTORS, LENGTH_UNITS
                 + 1 for feet
                 + 2 for inches
                 + 3 for Meters
-                + 4 for 10's   of Meters (Decameters)
-                + 5 for 100's  of Meters
-                + 6 for 1000's of Meters (Kilometers)
-
+                + 4 for centimeters
+                + 5 for millimeters
         Returns:
             (float): converted value
         """
-
-        units = self._units
-        value = self._value
-
-        if units == 1:
-            value = value * 0.3048
-        elif units == 2:
-            value = value * 0.0254
-        elif units > 2:
-            value = value * (10 ** (units - 3))
-
-        return value
-
+        units_string = LENGTH_UNITS[self._units]
+        scale_factor = LENGTH_SCALE_FACTORS[units_string]
+        length_in_meters = self._value * scale_factor
+        return length_in_meters
+#<remove during housekeeping>
+#        units = self._units
+#        value = self._value
+#
+#        if units == 1:
+#            value = value * 0.3048
+#        elif units == 2:
+#            value = value * 0.0254
+#        #this is cute but more sophisticated than we want to support (too tough change)
+#        #elif units > 2:
+#        #    value = value * (10 ** (units - 3))
+#
+#        return value
+#</remove during housekeeping>
 
 
 
@@ -329,10 +351,10 @@ class Metadata(object):
     def get_sensitivities_dict(self,cfg):
         """
         Get sensitivities dictionary for axial, tangential, and radial components.
-        
+
         Parameters:
             cfg (dataframe): to retrieve sensitivity data from
-        
+
         Returns:
             (dict): dictionary with keys component_id (str) and values for respective
                 sensitivities. All component sensitivities are the same unless sensor_type = 2
@@ -382,13 +404,13 @@ class Metadata(object):
         """
         Returns:
             Path from :func:`field_base_path` joined by level_0
-        """   
+        """
         return os.path.join(self.field_base_path(),"level_0").lower()
 
     def level_1_path(self):
         """
         Distinguishes between piezo and mems sensors in path.
-        
+
         Returns:
             Path from :func:`field_base_path` joined by level_1 and sensor type
         """
@@ -405,7 +427,7 @@ class Metadata(object):
     def save(self,filename):
         """
         Saves metadata to a file.
-        
+
         Parameters:
             filename (str): file to be saved
         """
@@ -419,7 +441,7 @@ class Metadata(object):
     def load(self,path):
         """
         Loads csv metafile. Formats using :func:`format_dtype`
-        
+
         Parameters:
             path (str): path to csv metafile
         """
@@ -432,10 +454,10 @@ class Metadata(object):
     def format_dtype(self,row):
         """
         Standardized metadata format and variable type.
-        
+
         Parameters:
-            row: list with attribute name,value 
-            
+            row: list with attribute name,value
+
         Returns:
             atrribute_name,value formatted
         """
@@ -458,10 +480,10 @@ class Metadata(object):
     def metadata_to_dictionary(self):
         """
         Creates dictionary of metadata.
-        
+
         Returns:
             (dict): Metadata with the following keys:
-                
+
                 + drill_id
                 + digitizer_id
                 + orientation
@@ -469,7 +491,7 @@ class Metadata(object):
                 + sensor_distance_to_source_in_meters
                 + sensor_distance_to_shocksub
                 + accelerometer_type
-                + sensor_type       
+                + sensor_type
         """
         dict = {}
         dict["drill_id"] = self.rig_id
