@@ -23,21 +23,6 @@ def wavenumber_formation(f, alpha):
     return 2 * pi * f / alpha
 
 jj = np.complex(0, 1)
-def inverse_transform(amplitude, phase, n=100000):
-    freq_domain = np.nan_to_num(amplitude * np.cos(phase) + (amplitude * np.sin(phase))* 1j)
-
-    huge_step = np.argmax(np.diff(freq_domain)[1:])+1
-
-    freq_domain.real[huge_step:] = (0-freq_domain.real[huge_step:])
-    freq_domain.imag[huge_step:] = freq_domain.imag.max() - (freq_domain.imag[huge_step:]) - freq_domain.imag.max()
-
-    freq_domain_real = np.r_[freq_domain.real, freq_domain.real[::-1]][:-1]
-    freq_domain_imag = np.r_[freq_domain.imag, freq_domain.imag[::-1]][:-1]
-
-    freq_domain_imag[int(len(freq_domain_imag)/2):] = - freq_domain_imag[int(len(freq_domain_imag)/2):]
-
-    inverse = np.fft.ifft(freq_domain_real + freq_domain_imag*1j, n=n)
-    return np.fft.fftshift(inverse.real)
 
 def amplitude_and_phase(drill_pipe, rock, frequency):
     """
