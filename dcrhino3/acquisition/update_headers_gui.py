@@ -90,9 +90,11 @@ class GUI():
         replace_config = ConfigParser.ConfigParser()
         replace_config.read(self.cfg_path.get())
         for h5file in files:
+            print("Updating File {}".format(h5file))
             h5f = h5py.File(h5file, 'r+')
             h5f = update_h5f_headers(h5f, replace_config)
             h5f.close()
+        print("Finished updating files")
 
 
 def main():
