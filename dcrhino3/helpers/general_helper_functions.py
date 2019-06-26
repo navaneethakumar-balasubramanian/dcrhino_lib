@@ -311,7 +311,7 @@ def interpolate_data(raw_timestamps, data, ideal_timestamps, kind="quadratic"):
     return np.asarray(interp_data, dtype=np.float32)
 
 
-def calibrate_data(data,sensitivity, accelerometer_max_voltage=3.0, rhino_version=1.0, is_ide_file=False,
+def calibrate_data(data, sensitivity, accelerometer_max_voltage=3.0, rhino_version=1.0, is_ide_file=False,
                    remove_mean=False):
     output = data
 
@@ -350,6 +350,10 @@ def fft_data(data_array, sampling_rate):
     return {"content": np.abs(sp.real[0:np.int(N / 2)]),
             "frequency": freq,
             "calibrated": data_array}
+
+def calculate_battery_percentage(max_voltage, min_voltage, current_voltage):
+    value = 100 - (max_voltage - current_voltage) / (max_voltage - min_voltage) * 100
+    return round(value, 2)
 
 
 

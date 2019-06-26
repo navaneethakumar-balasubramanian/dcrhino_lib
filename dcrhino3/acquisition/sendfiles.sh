@@ -20,7 +20,7 @@ while :
 do
 	echo "Uploading data"
 	# echo $local_folder $server:$remote_folder
-	rsync -azP --exclude '*RTR*' $local_folder $server:$remote_folder
+	rsync -azP --exclude '*RTR*' --exclude "*.tmp" $local_folder $server:$remote_folder
 	rsync -azP --exclude 'system_health.npy' $stats_folder $server:$remote_folder
 	sleep $sleep_interval
 done

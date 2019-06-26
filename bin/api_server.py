@@ -54,6 +54,7 @@ def processed_holes():
         processed_holes = db_helper.processed_holes.get_search_string(req_json['search'])
     else:
         processed_holes = db_helper.processed_holes.get_latests()
+    processed_holes = processed_holes[processed_holes['archived'] == '0']
     return processed_holes.to_json(orient='records')
 
 @app.route('/api/hole_to_mp',methods=['GET', 'POST'])

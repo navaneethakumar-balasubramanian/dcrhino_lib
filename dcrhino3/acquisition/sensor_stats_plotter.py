@@ -26,6 +26,7 @@ class StatsPlotter():
 
     def __init__(self, global_config):
         self.fig = plt.figure("DataCloud Rhino Sensor Stats", figsize=(6, 4))
+        self.fig.canvas.manager.window.wm_geometry("+%d+%d" % (1300, 470))
         plt.subplots_adjust(hspace=1.0, wspace=0.5, top=0.8, bottom=.1)
         plt.pause(.05)
         self.fig.canvas.draw()
@@ -171,12 +172,12 @@ min_axial_accel = list()
 min_tangential_accel = list()
 min_radial_accel = list()
 tracetime_list = list()
+drift = list()
 
 
 plotter = StatsPlotter(global_config)
 previous_tracetime = 0
-
-initial_tracetime = datetime.now()
+initial_tracetime = datetime.utcnow()
 
 while True:
     #rows,columns
@@ -189,9 +190,9 @@ while True:
 
         tracetime = health[6]
         if previous_tracetime != tracetime:
-            # print("list",len(rssi),len(packets),len(temp))
             previous_tracetime = tracetime
-            if len(rssi) >= length:
+            total_seconds = (tracetime - initial_tracetime).total_seconds()
+            if total_seconds >= length:
                 rssi.pop(0)
                 packets.pop(0)
                 delay.pop(0)
@@ -218,13 +219,13 @@ while True:
             min_tangential_accel.append(health[14][-1])
             max_radial_accel.append(health[15][-1])
             min_radial_accel.append(health[16][-1])
-
             now = health[7]
-            sec_delay = delay[-1]
+            drift = health[18][-1]
+            sec_delay = round(delay[-1] + drift, 2)
 
-            plotter.set_title(tracetime.strftime('%H:%M:%S') + " plotted at " + datetime.utcfromtimestamp(
+            plotter.set_title(tracetime.strftime('%Y-%m-%d %H:%M:%S') + " plotted at " + datetime.utcfromtimestamp(
                 now).strftime('%H:%M:%S') + " delay of " + str(sec_delay) + "\n" + "Data From: {} to {}".format(
-                initial_tracetime.strftime('%H:%M:%S'), tracetime.strftime('%H:%M:%S')))
+                initial_tracetime.strftime('%Y-%m-%d %H:%M:%S'), tracetime.strftime('%Y-%m-%d %H:%M:%S')))
 
             plotter.plot(packets, temp, rssi, max_axial_accel, min_axial_accel, max_tangential_accel,
                          min_tangential_accel, max_radial_accel, min_radial_accel)

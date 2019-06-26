@@ -25,3 +25,5 @@ bin/dr0345_minus_8_hrs\.csv
 bin/temp\.csv
 
 *.log
+
+dcrhino3/acquisition/external/dimmer/traindata/

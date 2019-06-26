@@ -14,6 +14,7 @@ from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
 from dcrhino3.acquisition.constants import DATA_PATH, LOGS_PATH, RAM_PATH
 from dcrhino3.acquisition.config_file_utilities import config_file_to_attrs
 from dcrhino3.acquisition.system_health_display_gui import GUI
+
 import pdb
 import time
 import numpy as np
@@ -31,7 +32,7 @@ import h5py
 from datetime import datetime
 import subprocess
 import re
-from shutil import copyfile
+from shutil import copyfile, move
 from dcrhino3.models.config import Config
 from dcrhino3.models.metadata import Metadata
 from dcrhino3.models.traces.raw_trace import RawTraceData
@@ -39,7 +40,6 @@ from dcrhino3.acquisition.external.seismic_wiggle import seismic_wiggle
 from dcrhino3.process_flow.modules.trace_processing.unfold_autocorrelation import unfold_trace
 import multiprocessing
 import psutil
-import pyudev
 
 
 
@@ -221,6 +221,7 @@ class FileFlusher(threading.Thread):
         self.good_packets_in_a_row = 1
         self.offset = 0
         self.allowed_clock_difference = config.getfloat("RUNTIME","allowed_clock_difference")
+        self._drift = 0
 
     def first_packet_received(self, packet, timestamp):
         m = "First packet received at t0 {} with delta T of {}\n".format(repr(timestamp), delta_t)
@@ -280,8 +281,13 @@ class FileFlusher(threading.Thread):
                                                             self.counter_changes)
                     self.logQ.put(m)
                     self.displayQ.put(m)
+                    self._drift = diff
         self.previous_second = int(self.current_timestamp)
         return packet
+
+    @property
+    def drift(self):
+        return self._drift
 
     def save_row_to_processing_q(self, packet):
 
@@ -380,6 +386,8 @@ class FileFlusher(threading.Thread):
                         # if packet.tx_clock_ticks > self.sequence:
                         if packet.tx_sequence > self.sequence:
                             packet = self.calculate_packet_timestamp(packet)
+                            # TODO:Only save the packet to processing row if it is good timing.  Otherwise save it to
+                            #  a spare file
                             self.save_row_to_processing_q(packet)
                         # elif packet.tx_clock_ticks == self.sequence:
                         elif packet.tx_sequence == self.sequence:
@@ -424,7 +432,10 @@ class SerialThread(threading.Thread):
         self.tx_status = 0
         self.comport = comport
         self.brate = brate
-        self.pktlen = pktlen
+        self.cmd = "stop\r\n"
+
+    def get_cport(self):
+        return self.cport
 
     def start_rx(self):
         self.cport.write(bytearray("ready\r\n", "utf-8"))
@@ -433,6 +444,9 @@ class SerialThread(threading.Thread):
         self.cport.write(bytearray("stop\r\n", "utf-8"))
         self.cport.close()
         self.stope.set()
+
+    def do_stop_cmd(self):
+        self.cport.write(bytearray("stop\r\n", "utf-8"))
 
     def restart_rx(self):
         self.cport.write(bytearray("stop\r\n", "utf-8"))
@@ -514,7 +528,8 @@ class SerialThread(threading.Thread):
         self.displayQ.put(m)
         counter = 0
         restarted = False
-        while True:
+        # while True:
+        while self.portOpen and not self.stope.isSet():
             try:
                 # print("trying")
                 a = self.cport.read(self.pktlen)
@@ -666,6 +681,8 @@ class CollectionDaemonThread(threading.Thread):
                             utc_dt = datetime.utcfromtimestamp(temp_lastSecond)
                             if lastFileName is None or (utc_dt.minute % file_change_interval_in_min == 0 and
                                                         look_for_time):
+                                if lastFileName is not None:
+                                    move(filename, filename.replace(".tmp", ".h5"))
                                 look_for_time = False
                                 prefix = utc_dt.strftime('%Y%m%d')+"_RTR"
                                 delta = utc_dt - datetime(year=utc_dt.year, month=utc_dt.month, day=utc_dt.day)
@@ -673,7 +690,7 @@ class CollectionDaemonThread(threading.Thread):
                                 leading_zeros = ""
                                 if len(elapsed) < 5:
                                     leading_zeros = "0" * (5-len(elapsed))
-                                filename = "{}{}{}_{}.h5".format(prefix, leading_zeros, elapsed, rhino_serial_number)
+                                filename = "{}{}{}_{}.tmp".format(prefix, leading_zeros, elapsed, rhino_serial_number)
                                 filename = os.path.join(run_folder_path, filename)
                                 lastFileName = utc_dt
                                 first = True
@@ -782,12 +799,13 @@ class CollectionDaemonThread(threading.Thread):
                             for label in component_labels:
                                 calibrated_data = raw_trace_data.calibrate_1d_component_array(
                                     component_trace_raw_data[label], global_config,
-                                    global_config.sensor_sensitivity[label])
+                                    global_config.sensor_sensitivity[label], remove_mean=False)
                                 interp_data = raw_trace_data.interpolate_1d_component_array(ts, calibrated_data,
                                                                                             ideal_timestamps,
                                                                                             kind=interp_kind)
                                 acorr_data = raw_trace_data.autocorrelate_1d_component_array(interp_data,
-                                                                                             number_of_samples)
+                                                                                             number_of_samples,
+                                                                                             copy_input=True)
                                 component_trace_dict[label] = {"{}_calibrated".format(label): calibrated_data,
                                                                "{}_interpolated".format(label): interp_data,
                                                                "{}_auto_correlated".format(label): acorr_data}
@@ -837,9 +855,12 @@ def main_run(run=True):
     system_healthQ = Queue.Queue()
     logger = LogFileDaemonThread(logQ)
     comport = SerialThread(rhino_port, rhino_baudrate, rhino_pktlen, flushQ, logQ, displayQ)
+    comport.stop_rx()
+    comport.cport.close()
     display = GUI(displayQ, system_healthQ)
     fflush = FileFlusher(flushQ, logQ, displayQ)
     collection_daemon = CollectionDaemonThread(fflush.bufferQ, traces, logQ, displayQ)
+    comport = SerialThread(rhino_port, rhino_baudrate, rhino_pktlen, flushQ, logQ, displayQ)
 
     m = "Started Main\n"
     print(m)
@@ -866,7 +887,7 @@ def main_run(run=True):
         logger.start()
 
         # SET THREADS TO EXCLUSIVE CPUS
-        p = subprocess.Popen(['pstree', '-p', str(pid) ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(['pstree', '-p', str(pid)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate()
         subpids = []
         for sub_pid in re.findall('\(.*?\)',out):
@@ -876,8 +897,10 @@ def main_run(run=True):
                 logQ.put(m)
                 displayQ.put(m)
                 subpids.append(sub_pid)
-        p = subprocess.Popen(['taskset', '-cp','{}'.format(multiprocessing.cpu_count()-3), str(pid)],
+        processor_number = multiprocessing.cpu_count()-3
+        p = subprocess.Popen(['taskset', '-cp','{}'.format(processor_number), str(pid)],
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE) # 6
+        # print("Realtime Acquisition Opened in processod {}\n".format(processor_number))
         out, err = p.communicate()
         # p = subprocess.Popen(['taskset', '-cp','7', str(subpids[0])], stdout=subprocess.PIPE, stderr=subprocess.PIPE) #6
         # out, err = p.communicate()
@@ -888,10 +911,12 @@ def main_run(run=True):
         # p = subprocess.Popen(['taskset', '-cp','7', str(subpids[3])], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # out, err = p.communicate()
         for index in range(len(subpids)):
-            p = subprocess.Popen(['taskset', '-cp','{}'.format(multiprocessing.cpu_count()-3), str(subpids[index])],
+            p = subprocess.Popen(['taskset', '-cp','{}'.format(processor_number), str(subpids[index])],
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
             out, err = p.communicate()
+            # print("Process {} Opened in processod {}\n".format(subpids[index],processor_number))
+
 
 
     else:
@@ -905,6 +930,7 @@ def main_run(run=True):
     batt = [np.nan] * length
     packets = [np.nan] * length
     delay = [np.nan] * length
+    drift = [np.nan] * length
     trace_time_array = [np.nan] * length
     now_array = [np.nan] * length
     max_axial_acceleration = [np.nan] * length
@@ -914,7 +940,6 @@ def main_run(run=True):
     min_radial_acceleration = [np.nan] * length
     min_tangential_acceleration = [np.nan] * length
     disk_usage = [np.nan] * length
-    # traces_for_plot = []
     last_tracetime = time.time()
     counterchanges = 0
     channels = ["X","Y","Z"]
@@ -924,21 +949,25 @@ def main_run(run=True):
     sensor_radial_axis = 3 - sensor_axial_axis - sensor_tangential_axis
     channel_mapping = {"axial":sensor_axial_axis,"tangential":sensor_tangential_axis,"radial":sensor_radial_axis}
     component_to_display = config.get("RUNTIME","component_to_display")
+    # traces_for_plot = []
     # pre_cut=config.getint("SYSTEM_HEALTH_PLOTS","trace_plot_pre_cut")
     # post_add=config.getint("SYSTEM_HEALTH_PLOTS","trace_plot_post_add")
     # output_sampling_rate=config.getfloat("COLLECTION","output_sampling_rate")
     # traces_subsample = config.getint("SYSTEM_HEALTH_PLOTS","traces_subsample")
     # number_of_traces_to_display=config.getint("SYSTEM_HEALTH_PLOTS","number_of_traces_to_display")
-    second_plot_display=config.get("RUNTIME","second_plot_display")
+    second_plot_display = config.get("RUNTIME", "second_plot_display")
     # last_filename=None
 
     realtime_trace = RawTraceData()
-    realtime_trace.add_global_config(global_config ,file_id='0')
+    realtime_trace.add_global_config(global_config, file_id='0')
 
-    fig1 = plt.figure("DataCloud Rhino Real Time Data",figsize=(6,4))
-    plt.subplots_adjust(hspace=0.8)
+    fig1 = plt.figure("DataCloud Rhino Real Time Data", figsize=(6, 4))
+    plt.subplots_adjust(hspace=0.8, top=0.8)
+    fig1.canvas.manager.window.wm_geometry("+%d+%d" % (0, 0))
+    fig1.canvas.get_tk_widget().focus_force()
     plt.pause(.05)
     fig1.canvas.draw()
+    previous_filename = None
 
     #this is for newer pyplot versions in case we want to prevent the user to close the plot windows
     #win = plt.gcf().canvas.manager.window
@@ -954,17 +983,21 @@ def main_run(run=True):
         #                 "counter_changes":counterchanges}
         try:
             display.print_line()
-
             trace = traces.get(block=True, timeout=q_timeout_wait)
             now = time.time()
             trace_second = trace["timestamp"][-1]
-            filename = trace["filename"].replace("RTR","RTA")
+
+            filename = trace["filename"].replace("RTR", "RTA")
+            if previous_filename != filename:
+                if previous_filename is not None:
+                    move(previous_filename, previous_filename.replace(".tmp", ".h5"))
+                previous_filename = filename
             tracetime = datetime.utcfromtimestamp(trace_second)
 
 
             #<Save Trace data to h5>
-            h5f_path = os.path.join(run_folder_path,filename)
-            write_data_to_h5_files(h5f_path,trace,realtime_trace)#This are the Acorr traces
+            h5f_path = os.path.join(run_folder_path, filename)
+            write_data_to_h5_files(h5f_path, trace, realtime_trace)#This are the Acorr traces
             #</Save Trace data to h5>
 
             #rows,columns
@@ -982,24 +1015,18 @@ def main_run(run=True):
             row += 1
 
             trace_plot = plt.subplot2grid((rows, columns), (row, column), colspan=3,rowspan=1)
-            trace_plot.set_title("Channel {} - ".format(channels[channel_mapping[component_to_display]]) + "{} Component Trace".format(component_to_display.upper()))
+            trace_plot.set_title("Channel {} - ".format(channels[channel_mapping[component_to_display]]) +"{} Component Trace".format(component_to_display.upper()))
 
 
-            sec_delay = round(now - trace_second,2)
-            plt.suptitle("Trace Time "+ tracetime.strftime('%H:%M:%S' ) + " plotted at " + datetime.utcfromtimestamp(now).strftime('%H:%M:%S') +  " delay of " + str(sec_delay) )
+            sec_delay = round(now - trace_second, 2)
+            plt.suptitle("Trace Time "+ tracetime.strftime('%Y-%m-%d %H:%M:%S' ) + " plotted at " +
+                         datetime.utcfromtimestamp(now).strftime('%Y-%m-%d %H:%M:%S') + " delay of " + str(
+                sec_delay)+"\nAnd a drift of " + str(fflush.drift), fontsize=10)
 
             data_to_plot = trace["trace_data"][component_to_display]["{}_interpolated".format(component_to_display)]
             if remove_mean:
                 data_to_plot = data_to_plot - np.mean(data_to_plot)
             signal_plot.plot(data_to_plot, 'black')
-
-
-            # signal_plot.plot(trace["ideal_timestamps"][0:100:10],normalize_array(trace["trace_data"][
-            #                                                                     component_to_display]["{"
-            #                                                                                     "}_interpolated".format(
-            #     component_to_display)])[0:100:10], 'k', marker="x")
-            # signal_plot.plot(trace["raw_timestamps"][0:100:10], normalize_array(trace["raw_data"][component_to_display])[0:100:10], 'r',
-            #                  marker=".")
 
     	    # if rhino_version == 1.1:
             if second_plot_display in components:
@@ -1010,10 +1037,10 @@ def main_run(run=True):
                 data_to_plot = trace["trace_data"][second_plot_display]["{}_interpolated".format(second_plot_display)]
                 if remove_mean:
                     data_to_plot = data_to_plot - np.mean(data_to_plot)
-                trace_plot.plot(data_to_plot,'b')
+                trace_plot.plot(data_to_plot, 'b')
             else:
                 unfolded_trace = unfold_trace(trace["trace_data"][component_to_display]["{}_auto_correlated".format(component_to_display)])
-                trace_plot.plot(unfolded_trace,'b')
+                trace_plot.plot(unfolded_trace, 'b')
                 trace_plot.get_xaxis().set_visible(False)
     	    # else:
     		#     trace_start = int(output_sampling_rate/10)-pre_cut
@@ -1043,11 +1070,10 @@ def main_run(run=True):
             min_tangential_acceleration.pop(0)
             min_radial_acceleration.pop(0)
             disk_usage.pop(0)
+            drift.pop(0)
 
             rssi.append(trace["rssi"])
             temp.append(trace["temp"])
-            battery_current_voltage = trace["batt"]
-            # batt.append(calculate_battery_percentage(battery_current_voltage, battery_max_voltage, battery_lower_limit))
             batt.append(trace["batt"])
             packets.append(len(trace["raw_data"][component_to_display]))
             delay.append(sec_delay)
@@ -1060,11 +1086,12 @@ def main_run(run=True):
             min_tangential_acceleration.append(trace["acceleration"]["tangential"]["min"])
             min_radial_acceleration.append(trace["acceleration"]["radial"]["min"])
             disk_usage.append(trace["disk_usage"])
+            drift.append(fflush.drift)
             counterchanges = trace["counter_changes"]
             health = [rssi, packets, delay, temp, batt, counterchanges, tracetime, now, sec_delay,
                       comport.corrupt_packets, fflush.tx_status, max_axial_acceleration, min_axial_acceleration,
                       max_tangential_acceleration, min_tangential_acceleration,
-                      max_radial_acceleration, min_radial_acceleration, disk_usage]
+                      max_radial_acceleration, min_radial_acceleration, disk_usage, drift]
             system_healthQ.put(health)
             np.save(os.path.join(RAM_PATH, 'system_health.npy'), np.asarray(health))
             display.update_system_health()
@@ -1109,7 +1136,8 @@ def main_run(run=True):
                                           last_tracetime, counterchanges, comport.corrupt_packets, fflush.tx_status,
                                           max_axial_acceleration, min_axial_acceleration,
                                           max_tangential_acceleration, min_tangential_acceleration,
-                                          max_radial_acceleration, min_radial_acceleration, disk_usage)
+                                          max_radial_acceleration, min_radial_acceleration, disk_usage,
+                                          drift, fflush.drift)
             display.update_system_health()
         except:
             m = "{}\n".format(sys.exc_info())
@@ -1140,30 +1168,16 @@ def write_data_to_h5_files(h5f_path,trace_data,trace):
     df["min_radial_acceleration"] = np.asarray([np.min(radial_calibrated_trace)],)
     df["axial_trace"]=list([trace_data["trace_data"]["axial"]["axial_auto_correlated"],])
     df["tangential_trace"]=list([trace_data["trace_data"]["tangential"]["tangential_auto_correlated"],])
-    df["radial_trace"]=list([trace_data["trace_data"]["radial"]["radial_auto_correlated"],])
+    df["radial_trace"]=list([trace_data["trace_data"]["radial"]["radial_auto_correlated"], ])
     trace.dataframe=df
     trace.realtime_append_to_h5(h5f_path)
 
-# def normalize_array(array):
-#     value = np.max(np.absolute(array))
-#     if value == 0:
-#         value=1
-#     return array/value
-
-
-# def calculate_battery_percentage(current_voltage,battery_max_voltage,battery_lower_limit):
-#     battery_plot_display_percentage = config.getboolean("SYSTEM_HEALTH_PLOTS","battery_plot_display_percentage")
-#     if battery_plot_display_percentage:
-#         value = 100 - (battery_max_voltage - current_voltage)/(battery_max_voltage - battery_lower_limit)*100
-#     else:
-#         value = current_voltage
-#     return value
 
 def add_empty_health_row_to_Q(rssi, temp, batt, packets, delay, trace_time_array, now_array, system_healthQ,
                               last_tracetime, last_counterchanges, corrupt_packets, tx_status,
                               max_axial_acceleration, min_axial_acceleration, max_tangential_acceleration,
                               min_tangential_acceleration, max_radial_acceleration, min_radial_acceleration,
-                              disk_usage):
+                              disk_usage, drift_list, current_drift):
     now = time.time()
     rssi.pop(0)
     temp.pop(0)
@@ -1179,6 +1193,7 @@ def add_empty_health_row_to_Q(rssi, temp, batt, packets, delay, trace_time_array
     min_tangential_acceleration.pop(0)
     min_radial_acceleration.pop(0)
     disk_usage.pop(0)
+    drift_list.pop(0)
 
     if tx_status == 1:
         rssi.append(np.nan)
@@ -1204,6 +1219,7 @@ def add_empty_health_row_to_Q(rssi, temp, batt, packets, delay, trace_time_array
         min_tangential_acceleration.append(min_tangential_acceleration[-1])
         min_radial_acceleration.append(min_radial_acceleration[-1])
         disk_usage.append(disk_usage[-1])
+    drift_list.append(current_drift)
 
     sec_delay = round(now-last_tracetime, 2)
     delay.append(sec_delay)

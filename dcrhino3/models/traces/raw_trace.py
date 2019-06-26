@@ -13,7 +13,8 @@ from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.helpers.h5_helper import H5Helper
 from dcrhino3.helpers.general_helper_functions import init_logging, interpolate_data, calibrate_data, fft_data
 from dcrhino3.process_flow.modules.trace_processing.autocorrelate import autocorrelate_trace
-
+from dcrhino3.signal_processing.filters import butter_bandpass, butter_highpass, butter_lowpass
+import scipy.signal as ssig
 
 logger = init_logging(__name__)
 
@@ -173,20 +174,30 @@ class RawTraceData(TraceData):
         #Extrapolation capabilities>
         # interp_data = np.interp(ideal_timestamps, raw_timestamps,component_array)
         #</numpy function>
-        return interpolate_data(raw_timestamps, component_array, ideal_timestamps, kind)
+        interp_data = interpolate_data(raw_timestamps, component_array, ideal_timestamps, kind)
+        return interp_data
 
-    def calibrate_1d_component_array(self, component_array, global_config, sensitivity):
-        output = component_array
+    def calibrate_1d_component_array(self, component_array, global_config, sensitivity, remove_mean=False):
         is_ide_file = not int(global_config.sensor_type) == 2 or global_config.rhino_version is None
-
         if global_config.rhino_version == None:
             global_config.rhino_version = 0
-        return calibrate_data(component_array, sensitivity, float(global_config.accelerometer_max_voltage),
-                              float(global_config.rhino_version), is_ide_file)
+        output = calibrate_data(component_array, sensitivity, float(global_config.accelerometer_max_voltage),
+                                float(global_config.rhino_version), is_ide_file, remove_mean=remove_mean)
+        return output
 
+    def filter_1d_component_array(self,component_array, sampling_rate, filter="highpass", low=10, high=999):
+        if filter == "highpass":
+            b, a = butter_highpass(low, sampling_rate)
+        elif filter == "lowpass":
+            b, a = butter_lowpass(high, sampling_rate)
+        else:
+            b, a = butter_bandpass(low, high, sampling_rate)
+        filt_data = ssig.filtfilt(b, a, component_array)
+        return filt_data
 
-    def autocorrelate_1d_component_array(self,input_trace, samples_per_trace):
-        return autocorrelate_trace(input_trace, samples_per_trace)
+    def autocorrelate_1d_component_array(self, input_trace, samples_per_trace, copy_input):
+        acorr = autocorrelate_trace(input_trace, samples_per_trace, copy_input)
+        return acorr
 
     def raw_trace_fft(self, global_config, sensitivity):
 
@@ -208,7 +219,25 @@ class RawTraceData(TraceData):
         logger.info("Took %s seconds to create FFT of %s traces" % (time_interval, num_traces))
         return output_dict
 
-    def autocorrelate_l1h5(self,df, global_config):
+    def filter_l1h5(self, df, global_config, filter="highpass"):
+        sampling_rate = global_config.output_sampling_rate
+        t0 = time.time()
+        output_dict = {}
+        num_traces = len(df['timestamp'])
+        for component_id in global_config.components_to_process:
+            output_dict[component_id] = np.full((num_traces, int(sampling_rate)), np.nan) #Allocate
+            # Memory
+            for i_trace in range(len(df['timestamp'])):
+                input_trace = df[component_id].iloc[i_trace]
+                filtered_trace = self.filter_1d_component_array(input_trace, sampling_rate, filter)
+                output_dict[component_id][i_trace, :] = filtered_trace  # [0:samples_per_trace]
+            output_dict[component_id] = list(output_dict[component_id])
+        time_interval = time.time() - t0
+        logger.info("Took %s seconds to create Filter of %s traces" % (time_interval, num_traces))
+        df[component_id] = output_dict[component_id]
+        return df
+
+    def autocorrelate_l1h5(self, df, global_config):
         """
         @note 20190114: since we are not going all the way to final lag, we could
         speed this up slightly by only calculating lads we want ... but for now is OK
