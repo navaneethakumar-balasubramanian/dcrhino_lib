@@ -14,10 +14,9 @@ CREATE TABLE IF NOT EXISTS `sensor_files` (
 	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`file_changed_at` FLOAT NOT NULL,
-	`file_size` INT NOT NULL,
-
+	`file_size` INT(11) NOT NULL,
+	`file_checksum` VARCHAR(50) NOT NULL COLLATE 'utf8_bin',
 	PRIMARY KEY (`sensor_file_id`),
-	UNIQUE INDEX `file_path` (`file_path`),
 	INDEX `rig_id` (`rig_id`),
 	INDEX `sensor_id` (`sensor_id`),
 	INDEX `digitizer_id` (`digitizer_id`),
@@ -25,7 +24,8 @@ CREATE TABLE IF NOT EXISTS `sensor_files` (
 	INDEX `max_ts` (`max_ts`),
 	INDEX `type` (`type`),
 	INDEX `status` (`status`),
-	INDEX `file_name` (`file_name`)
+	INDEX `file_name` (`file_name`),
+	INDEX `file_path` (`file_path`)
 )
 COLLATE='utf8_bin'
 ENGINE=InnoDB
