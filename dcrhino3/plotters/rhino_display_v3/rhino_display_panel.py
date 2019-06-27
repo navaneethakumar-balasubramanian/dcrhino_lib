@@ -126,7 +126,7 @@ class RhinoDisplayPanel(object):
     def depth(self):
         """
         """
-        depth = self.trace_data.dataframe['depth']
+        depth = self.trace_data.dataframe['measured_depth']
         return depth
 
     def x_from_depth(self):
@@ -172,7 +172,7 @@ class Curve(object):
         self.data = kwargs.get('data', None)
         #self.x_axis_label = kwargs.get('x_axis_label', '')
         #self.x_axis = kwargs.get('x_axis', None)
-        self.x_axis_label = kwargs.get('x_axis_label', 'depth')
+        self.x_axis_label = kwargs.get('x_axis_label', 'measured_depth')
         self.x_axis_values = kwargs.get('x_axis_values', None)
         self.y_limits = kwargs.get('y_limits', None)
         self.color = kwargs.get('color', None)
@@ -488,7 +488,7 @@ class Wiggle(RhinoDisplayPanel):
         ax.invert_yaxis()
         ax.set_title('Wiggle Trace for ' + column_label)
         ax.set_ylabel('Time (ms)')
-        ax.set_xlabel('Depth (m)')
+        ax.set_xlabel('Measured Depth (m)')
 
         #Downsample to Number of Lines and Pick in even fashion
         X_down = np.linspace(min(X), max(X), num_lines)

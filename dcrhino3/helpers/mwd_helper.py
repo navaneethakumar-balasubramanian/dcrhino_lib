@@ -30,7 +30,7 @@ class MWDHelper():
         self.env_config = env_config
 
 
-        self.required_columns = ['easting','northing','elevation','hole_id','hole_name','pattern_name','bench_name','start_time','collar_elevation','rig_id']
+        self.required_columns = ['easting','northing','hole_id','hole_name','pattern_name','bench_name','start_time','rig_id','measured_depth']
         self.optional_columns = ['tob','rop','wob','mse','air_pressure','rpm']
 
 
@@ -303,7 +303,7 @@ class MWDHelper():
         df['hole_name'] = df['hole_name'].astype(str)
         df['hole_id'] = df['hole_id'].astype(str)
         df['rig_id'] = df['rig_id'].astype(str)
-        df['depth'] = (df['collar_elevation'] - df['elevation']).astype(float)
+        #df['depth'] = (df['collar_elevation'] - df['elevation']).astype(float)
 
         sorted_by_start_time = df.sort_values(by=['start_time'])
         return sorted_by_start_time
