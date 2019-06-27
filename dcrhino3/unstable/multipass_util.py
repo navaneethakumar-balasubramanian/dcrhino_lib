@@ -30,49 +30,51 @@ import numpy as np
 import os
 import pdb
 
+from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.models.interval import Interval
 from dcrhino3.models.trace_dataframe import TraceData
-from dcrhino3.helpers.general_helper_functions import init_logging
-from dcrhino3.models.metadata import Measurement
-
-#from dcrhino3.unstable.multipass.drill_string_component import DrillStringComponent
 from dcrhino3.unstable.multipass.drill_rig import DrillRig
 
 logger = init_logging(__name__)
 
 
-
-
+def interval_from_stopped_indices(reference_array, stopped_indices, df):
+    """
+    helper function, kindof abstract but was being used twice so i factored it out
+    """
+    lower_bound_index = stopped_indices[reference_array[0]]
+    upper_bound_index = stopped_indices[reference_array[-1]]
+    lower_bound_time = df.timestamp.iloc[lower_bound_index]
+    upper_bound_time = df.timestamp.iloc[upper_bound_index]
+    unix_time_interval = Interval(lower_bound=lower_bound_time, upper_bound=upper_bound_time)
+    #pin the depth to the interval
+    approximate_depth = np.mean(df.measured_depth.iloc[lower_bound_index:upper_bound_index])
+    unix_time_interval.depth = approximate_depth
+    return unix_time_interval
 
 def drill_stops(df, minimum_stop_duration=60.0, basically_zero_m=0.0017):
     """
-    units of minimum_stop_duration are seconds.  Anything of shorter duration than
+    minimum_stop_duration: units are seconds.  Anything of shorter duration than
     this will not be interpretted as a potential steels-change
 
-    .. Note:: This should actually be calculated from MWD... there is no RHINO
+    .. ::todo:: This should actually be calculated from MWD... there is no RHINO
     data being used in this algorithm.
     """
     qualifying_time_intervals = []
-    dzdt = np.diff(df.depth) #assumption of 1s trace again! :(
-    #d2zdt2 = np.diff(dzdt)
+    dzdt = np.diff(df.measured_depth) #assumption of 1s trace again! :(
+    logger.warning('assuming 1s traces')
     stopped_indices = np.where(dzdt <= basically_zero_m)[0]
-
 
     if len(stopped_indices) == 0:
         return qualifying_time_intervals
+
     d_indices = np.diff(stopped_indices)
     discontinuity_indices = np.where(np.abs(d_indices) > 1)[0]
-    reference_array = np.split(np.arange(len(stopped_indices)), discontinuity_indices+1)
-    for i_stopped_region in range(len(reference_array)):
-        lower_bound_index = stopped_indices[reference_array[i_stopped_region][0]]
-        upper_bound_index = stopped_indices[reference_array[i_stopped_region][-1]]
-        lower_bound_time = df.timestamp.iloc[lower_bound_index]
-        upper_bound_time = df.timestamp.iloc[upper_bound_index]
-        unix_time_interval = Interval(lower_bound=lower_bound_time,
-                                      upper_bound=upper_bound_time)
-        #pin the depth to the interval
-        approximate_depth = np.mean(df.depth.iloc[lower_bound_index:upper_bound_index])
-        unix_time_interval.depth = approximate_depth
+    reference_index_array = np.split(np.arange(len(stopped_indices)), discontinuity_indices+1)
+    for i_stopped_region in range(len(reference_index_array)):
+        reference_array = reference_index_array[i_stopped_region]
+        unix_time_interval = interval_from_stopped_indices(reference_array,
+                                                           stopped_indices, df)
         if unix_time_interval.duration > minimum_stop_duration:
             print("this could be a steels change")
             print('check that the diff(dzdt)==0')
@@ -103,10 +105,11 @@ def drill_stops_2(df, mwd_granularity, minimum_stop_duration=60.0):
     .. Note:: This should actually be calculated from MWD... there is no RHINO
     data being used in this algorithm.
     """
-    columns_which_have_zero_second_derivative_during_stop = ['weight_on_bit', 'torque', 'rpm', 'depth']
+    columns_which_have_zero_second_derivative_during_stop = ['weight_on_bit', 'torque', 'rpm', 'measured_depth']
     very_slow = mwd_granularity / minimum_stop_duration
     qualifying_time_intervals = []
-    dzdt = np.diff(df.depth) #assumption of 1s trace again! :(
+    dzdt = np.diff(df.measured_depth) #assumption of 1s trace again! :(
+    logger.warning('assuming 1s traces')
 #    plt.plot(dzdt);
 #    plt.plot(np.arange(len(df)), .2*np.ones(len(df))/60);plt.show()
     stopped_indices = np.where(dzdt <= very_slow)[0]
@@ -115,17 +118,11 @@ def drill_stops_2(df, mwd_granularity, minimum_stop_duration=60.0):
 
     d_indices = np.diff(stopped_indices)
     discontinuity_indices = np.where(np.abs(d_indices) > 1)[0]
-    reference_array = np.split(np.arange(len(stopped_indices)), discontinuity_indices+1)
-    for i_stopped_region in range(len(reference_array)):
-        lower_bound_index = stopped_indices[reference_array[i_stopped_region][0]]
-        upper_bound_index = stopped_indices[reference_array[i_stopped_region][-1]]
-        lower_bound_time = df.timestamp.iloc[lower_bound_index]
-        upper_bound_time = df.timestamp.iloc[upper_bound_index]
-        unix_time_interval = Interval(lower_bound=lower_bound_time,
-                                      upper_bound=upper_bound_time)
-        #pin the depth to the interval
-        approximate_depth = np.mean(df.depth.iloc[lower_bound_index:upper_bound_index])
-        unix_time_interval.depth = approximate_depth
+    reference_index_array  = np.split(np.arange(len(stopped_indices)), discontinuity_indices+1)
+    for i_stopped_region in range(len(reference_index_array)):
+        reference_array = reference_index_array[i_stopped_region]
+        unix_time_interval = interval_from_stopped_indices(reference_array,
+                                                           stopped_indices, df)
         if unix_time_interval.duration > minimum_stop_duration:
             is_a_drill_stop = True
             print("this could be a steels change")
@@ -159,7 +156,7 @@ def get_approximate_transitions(df, installed_steels_length, variable_steels_len
             transition_depths.append(transition_depths[-1] + variable_steels_lengths[i_steel])
         transition_times = []
         for depth in transition_depths:
-            loc = np.argmin(np.abs(df.depth-depth))
+            loc = np.argmin(np.abs(df.measured_depth - depth))
             transition_times.append(df.timestamp.iloc[loc])
             #print("transition index ={}".format(loc))
 
@@ -248,14 +245,14 @@ def nearest_time_to_transition_depth(dataframe,
         if len(candidate_times) == 0:
             logger.warning("no candidate times are earlier than theoretical time")
             candidate_times = drill_stop_interval_center_times
-        approximate_transition_depth_index = np.argmin(np.abs(approximate_transition_depth - dataframe.depth))
+        approximate_transition_depth_index = np.argmin(np.abs(approximate_transition_depth - dataframe.measured_depth))
         approximate_transition_depth_row = dataframe.loc[approximate_transition_depth_index]
         delta_times = candidate_times - approximate_transition_depth_row.timestamp
         # index of steel change time to use
         closest_drill_stop_time = drill_stop_interval_center_times[np.argmin(np.abs(delta_times))]
 
         # Gather Depth Data from Time + Dataframe
-        closest_drill_stop_depth = dataframe.depth[np.argmin(np.abs(closest_drill_stop_time - dataframe.timestamp))]
+        closest_drill_stop_depth = dataframe.measured_depth[np.argmin(np.abs(closest_drill_stop_time - dataframe.timestamp))]
 
         closest_drill_stop_times.append(closest_drill_stop_time)
         closest_drill_stop_depths.append(closest_drill_stop_depth)
@@ -309,7 +306,7 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
                                                          variable_steels_lengths,
                                                          transition_depth_offset_m)
 
-    transition_times, transition_depths = reject_transitions_near_bottom_of_hole(df.depth.max(),
+    transition_times, transition_depths = reject_transitions_near_bottom_of_hole(df.measured_depth.max(),
                                                                                  transition_times,
                                                                                  transition_depths,
                                                                                  significant_excess=2.0)
@@ -327,7 +324,7 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
 
 #    plt.figure(1)
 #    color_cyc = 'rgbcmk'
-#    plt.plot(acorr_trace.dataframe.timestamp, acorr_trace.dataframe.depth)
+#    plt.plot(acorr_trace.dataframe.timestamp, acorr_trace.dataframe.measured_depth)
 #    for i, ivl in enumerate(potential_steels_change_time_intervals):
 #        plt.vlines(ivl.lower_bound, 0, 34, color=color_cyc[i])
 #        plt.vlines(ivl.upper_bound, 0, 34, color=color_cyc[i])
@@ -339,7 +336,7 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
     resonant_length = installed_resonant_length
     for i,transition_depth in enumerate(transition_depths):
         resonant_length += variable_steels_lengths[i]
-        rows_to_update = df['depth'] > transition_depth
+        rows_to_update = df['measured_depth'] > transition_depth
         df.loc[rows_to_update, 'drill_string_resonant_length'] = resonant_length
 
     return acorr_trace
@@ -352,7 +349,7 @@ def get_depths_at_which_steels_change(df):
     resonant_lengths_array = df.drill_string_resonant_length.unique()
     resonant_lengths = [x for x in resonant_lengths_array]
     sub_dfs = [df[df.drill_string_resonant_length==x] for x in resonant_lengths]
-    splits = [x.depth.max() +0.0001 for x in sub_dfs]
+    splits = [x.measured_depth.max() +0.0001 for x in sub_dfs]
     #add a titch so that last split is after hole ... there should be N-1 splits where N is the number of sub_dfs
     splits = splits[:-1]
     splits.sort()
