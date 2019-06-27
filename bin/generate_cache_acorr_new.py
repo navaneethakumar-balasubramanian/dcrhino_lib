@@ -60,7 +60,7 @@ def merge_mwd_with_trace(hole_mwd, trace_data, merger):
         (DataFrame): dataframe combining the two dataframes' columns
     """
 
-    mwd_depth_spacing = np.median(np.diff(hole_mwd.depth))
+    mwd_depth_spacing = np.median(np.diff(hole_mwd.measured_depth))
     for key, global_config in trace_data._global_configs.items():
         global_config.mwd_depth_spacing = mwd_depth_spacing
 
