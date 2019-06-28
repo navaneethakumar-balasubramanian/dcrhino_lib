@@ -21,7 +21,8 @@ from dcrhino3.helpers.h5_helper import H5Helper
 from dcrhino3.helpers.sensor_file_manager import SensorFileManager
 from dcrhino3.models.traces.raw_trace import RawTraceData
 from dcrhino3.models.env_config import EnvConfig
-from dcrhino3.helpers.general_helper_functions import init_logging,splitDataFrameIntoSmaller,init_logging_to_file
+from dcrhino3.helpers.general_helper_functions import init_logging,splitDataFrameIntoSmaller,init_logging_to_file,file_as_bytes
+import hashlib
 import os
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
 from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
@@ -78,7 +79,7 @@ def process(list_of_args):
 
         min_ts = sensor_file_manager.min_ts(h5f)
         max_ts = sensor_file_manager.max_ts(h5f)
-        # raw_trace_h5_to_db(file,env_config,min_ts,max_ts)
+
 
         if sensor_file_manager.is_h5_level0(h5f):
             h5f.close()
@@ -95,7 +96,7 @@ def process(list_of_args):
         return
 
 
-def save_to_db(sql_db_helper,h5_file_path,min_ts_df,global_config,min_ts,max_ts,conn,autcorrelated_dataframe,file_type):
+def save_to_db(sql_db_helper,h5_file_path,min_ts_df,global_config,min_ts,max_ts,conn,autcorrelated_dataframe,file_type,file_checksum):
     logger.info("Adding this file to sensor_files_table")
     original_file_record_day = int(time.strftime("%Y%m%d", time.gmtime(min_ts_df)))
     file_changed_at = os.path.getmtime(h5_file_path)
@@ -109,7 +110,8 @@ def save_to_db(sql_db_helper,h5_file_path,min_ts_df,global_config,min_ts,max_ts,
                                              file_name=os.path.basename(h5_file_path),
                                              original_file_record_day=original_file_record_day,
                                              file_changed_at=file_changed_at,
-                                             file_size = file_size)
+                                             file_size = file_size,
+                                             file_checksum=file_checksum)
 
     logger.info("Adding this file traces to clickhouse sensor_file_acorr_traces")
     clickhouse_helper = ClickhouseHelper(conn=conn)
@@ -129,17 +131,19 @@ def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000)
 
     #file_exists = sql_db_helper.sensor_files.file_name_exists(os.path.basename(h5_file_path))
     #file_exists = sql_db_helper.sensor_files.relative_path_exists(h5_file_path)
-
+    file_checksum = hashlib.md5(file_as_bytes(open(h5_file_path, 'rb'))).hexdigest()
     file_with_path = sql_db_helper.sensor_files.get_file_by_relative_path(h5_file_path)
     file_exists = (len(file_with_path)>0)
     if file_exists:
-        file_same_size = os.path.getsize(h5_file_path) in file_with_path.file_size.values.astype(np.int)
-        if file_same_size:
-            logger.warning("IGNORED THIS FILE: DUPLICATED with same file size : " + str(os.path.getsize(h5_file_path)) )
+        if file_checksum in file_with_path.file_checksum.values.astype(np.str):
+            logger.warning("IGNORED THIS FILE: DUPLICATED with same file checksum : " + str(os.path.getsize(h5_file_path)) )
             return False
         else:
-            logger.info("Update")
-            return False
+
+            for row in file_with_path.iterrows():
+                logger.info("Setting sensor files as invalid " + str(row[1].sensor_file_id))
+                sql_db_helper.sensor_files.set_status(row[1].sensor_file_id,"invalid")
+            #return False
 
     raw_trace_data.load_from_h5(h5_file_path)
     l1h5_dataframe = raw_trace_data.dataframe
@@ -194,7 +198,7 @@ def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000)
         if column in autcorrelated_dataframe.columns:
             autcorrelated_dataframe.rename({column:column+"_trace"},axis=1,inplace=True)
 
-    save_to_db(sql_db_helper,h5_file_path,min_ts_df,global_config,min_ts,max_ts,conn,autcorrelated_dataframe,1)
+    save_to_db(sql_db_helper,h5_file_path,min_ts_df,global_config,min_ts,max_ts,conn,autcorrelated_dataframe,1,file_checksum)
 
 
     return autcorrelated_dataframe
@@ -217,16 +221,18 @@ def acorr_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
     sql_db_helper = RhinoSqlHelper(host=sql_conn['host'], user=sql_conn['user'], passwd=sql_conn['password'],
                                    database=sql_conn['database'])
 
+    file_checksum = hashlib.md5(file_as_bytes(open(h5_file_path, 'rb'))).hexdigest()
     file_with_path = sql_db_helper.sensor_files.get_file_by_relative_path(h5_file_path)
     file_exists = (len(file_with_path) > 0)
     if file_exists:
-        file_same_size = os.path.getsize(h5_file_path) in file_with_path.file_size.values.astype(np.int)
-        if file_same_size:
-            logger.warning("IGNORED THIS FILE: DUPLICATED with same file size : " + str(os.path.getsize(h5_file_path)) )
+        if file_checksum in file_with_path.file_checksum.values.astype(np.str):
+            logger.warning("IGNORED THIS FILE: DUPLICATED with same file checksum : " + str(file_checksum) )
             return False
         else:
-            logger.info("Update")
-            return False
+
+            for row in file_with_path.iterrows():
+                logger.info("Setting sensor files as invalid " + str(row[1].sensor_file_id))
+                sql_db_helper.sensor_files.set_status(row[1].sensor_file_id,"invalid")
 
 
     td = TraceData()
@@ -248,7 +254,7 @@ def acorr_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
 
     min_ts_df = l1h5_dataframe['timestamp'].min()
     l1h5_dataframe['timestamp'] = l1h5_dataframe['timestamp'] - min_ts_df
-    save_to_db(sql_db_helper, h5_file_path, min_ts_df, global_config, min_ts, max_ts, conn, l1h5_dataframe,2)
+    save_to_db(sql_db_helper, h5_file_path, min_ts_df, global_config, min_ts, max_ts, conn, l1h5_dataframe,2,file_checksum)
 
 
     return

@@ -1,6 +1,10 @@
 from dcrhino3.helpers.db.base_db_model import BaseDbModel
 import mysql
 import os
+
+
+
+
 class SensorFiles(BaseDbModel):
     def __init__(self,conn):
         BaseDbModel.__init__(self, conn, table_name="sensor_files")
@@ -31,9 +35,10 @@ class SensorFiles(BaseDbModel):
     def get_all_valid(self):
         return self.query_to_df("select * from " + self.table_name + " where status='valid'")
 
-    def add(self,file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name,original_file_record_day,file_changed_at,file_size):
-        sql = "INSERT INTO "+self.table_name+" (file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name,original_file_record_day,file_changed_at,file_size) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s)"
-        val = (file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name,original_file_record_day,file_changed_at,file_size)
+    def add(self,file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name,original_file_record_day,file_changed_at,file_size,file_checksum):
+
+        sql = "INSERT INTO "+self.table_name+" (file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name,original_file_record_day,file_changed_at,file_size,file_checksum) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s, %s)"
+        val = (file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name,original_file_record_day,file_changed_at,file_size,file_checksum)
         try:
             cursor = self.conn.cursor()
             cursor.execute(sql, val)

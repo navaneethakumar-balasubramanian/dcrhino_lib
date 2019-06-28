@@ -25,6 +25,10 @@ from scipy.interpolate import interp1d
 import logging
 
 
+def file_as_bytes(file):
+    with file:
+        return file.read()
+
 def is_string(val):
     if (sys.version_info > (3, 0)):
         return isinstance(val, str)
