@@ -4,11 +4,13 @@
 """
 import matplotlib.pyplot as plt
 import numpy as np
-#import pdb
+import pdb
 
 from dcrhino3.models.interval import TimePeriod
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
+
+MISSED_ZERO_CROSSING_THRESHOLD = np.sqrt(2)
 
 def initialize_jazz2_dict():
     tmp = {}
@@ -17,6 +19,11 @@ def initialize_jazz2_dict():
     tmp['center_peak_integral'] = np.nan
     return tmp
 
+def semi_theoretical_tick_times(tick_times, expected_trough_duration):
+    tick_times_theoretical = np.zeros(4)
+    tick_times_theoretical[0] = tick_times[1] - expected_trough_duration
+    tick_times_theoretical[3] = tick_times[2] + expected_trough_duration
+    return tick_times_theoretical
 
 def estimate_trough_width(wavelet_period, component_id):
     """
@@ -34,20 +41,32 @@ def sanity_check_plot_jazz2(left_trough, positive_peak, right_trough,
                             t_left_trough, t_positive_peak, t_right_trough,
                             expected_trough_duration, tick_times, ttl_string):
     wiggly_wiggle = np.hstack((left_trough, positive_peak, right_trough))
-    #wiggly_wiggle = np.hstack((left_trough, positive_peak, right_trough))
     tick_heights = 0.1 * np.ptp(wiggly_wiggle)
-    plt.plot(t_left_trough, left_trough, label='left');
-    plt.plot(t_positive_peak, positive_peak, label='peak');
-    plt.plot(t_right_trough, right_trough, label='right');
-    plt.hlines(0, t_left_trough[0], t_right_trough[-1], color='black');
-    plt.vlines(tick_times, -tick_heights/2, tick_heights/2)
-    plt.vlines([tick_times[1]-expected_trough_duration, tick_times[2]+expected_trough_duration], -tick_heights / 2, tick_heights / 2, color='purple')
-    plt.xlabel(('Time (s)'))
-    plt.ylabel('Wavelet Amplitude')
-    plt.legend();
-    plt.title(ttl_string)
+    fig, ax = plt.subplots(1, 1)
+
+    tick_times_semi_theoretical = semi_theoretical_tick_times(tick_times, expected_trough_duration)
+    ax.plot(t_left_trough, left_trough, label='left');
+    ax.plot(t_positive_peak, positive_peak, label='peak');
+    ax.plot(t_right_trough, right_trough, label='right');
+    ax.hlines(0, t_left_trough[0], t_right_trough[-1], color='black');
+    ax.vlines(tick_times, -tick_heights/2, tick_heights/2)
+    ax.vlines([tick_times[1]-expected_trough_duration, tick_times[2]+expected_trough_duration],
+              -tick_heights / 2, tick_heights / 2, color='purple')
+    ax.set_xlabel(('Time (s)'))
+    ax.set_xlabel('Wavelet Amplitude')
+    ax.legend();
+    ax.set_title(ttl_string)
+    ax.fill_between(t_left_trough, left_trough, where=t_left_trough> tick_times_semi_theoretical[0],
+                    facecolor='green', interpolate=True)
+    ax.fill_between(t_right_trough, right_trough, where=t_right_trough < tick_times_semi_theoretical[3],
+                    facecolor='red', interpolate=True)
     plt.show(block=True)
 
+def missing_zero_crossing(tick_time, expected_trough_duration):
+    ratio = np.abs(tick_time / expected_trough_duration)
+    if ratio > MISSED_ZERO_CROSSING_THRESHOLD:
+        return True
+    return False
 
 def jazz2(symmetric_trace, center_time, expected_trough_duration, wavelet_id='', sanity_check_plot=False):
     """
@@ -70,7 +89,8 @@ def jazz2(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
     keep_lhs = lhs[-n_keep:]
     keep_rhs = rhs[:n_keep]
     mini_trace_data = np.hstack((keep_lhs, symmetric_trace.data[center_index], keep_rhs))
-    mini_trace = SymmetricTrace(mini_trace_data, symmetric_trace.sampling_rate)
+    mini_trace = SymmetricTrace(mini_trace_data, symmetric_trace.sampling_rate,
+                                component_id=symmetric_trace.component_id)
     mini_trace_time = mini_trace.time_vector
     #align this by center-time offset
     # <method of symmetric_trace: chop-to-center-time>
@@ -111,10 +131,18 @@ def jazz2(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
     t_bridge = [t_positive_peak[-1], t_right_trough[0]]
     tick_times[2] = t_bridge[np.argmin(np.abs(bridge))]
     tick_times[3] = t_right_trough[-1]
+
+    tick_times_theoretical = np.zeros(4)
+    tick_times_theoretical[0] - tick_times[1] - expected_trough_duration
+    tick_times_theoretical[3] - tick_times[2] + expected_trough_duration
     left_trough_interval = TimePeriod(lower_bound=tick_times[0], upper_bound=tick_times[1])
     positive_peak_interval = TimePeriod(lower_bound=tick_times[1], upper_bound=tick_times[2])
     right_trough_interval = TimePeriod(lower_bound=tick_times[2], upper_bound=tick_times[3])
 
+    if missing_zero_crossing(tick_times[0], expected_trough_duration):
+        print("Missed a zero-crossing")
+        sanity_check_plot = True
+    #pdb.set_trace()
     if sanity_check_plot:
         ttl_string = '{} {}'.format(symmetric_trace.component_id, wavelet_id)
         sanity_check_plot_jazz2(left_trough, positive_peak, right_trough,
@@ -131,7 +159,7 @@ def jazz2(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
     output_dict['center_peak_integral'] = center_integral
     output_dict['jazz2_tick0'] = tick_times[0]
     output_dict['jazz2_tick1'] = tick_times[1]
-    output_dict['jazz2_tick2'] = tick_times[3]
+    output_dict['jazz2_tick2'] = tick_times[2]
     output_dict['jazz2_tick3'] = tick_times[3]
     return output_dict
 
@@ -140,18 +168,22 @@ def jazz2_test(acorr_trace):
     sampling_rate = acorr_trace.dataframe.sampling_rate.iloc[0]
     sample_trace = acorr_trace.dataframe.axial_trace.iloc[10]
     sample_trace = acorr_trace.dataframe.axial_trace.iloc[11]
+    center_frequency = np.mean([acorr_trace.first_global_config.trapezoidal_bpf_corner_2,
+                                acorr_trace.first_global_config.trapezoidal_bpf_corner_3])
+    expected_trough_duration = 1./(2*center_frequency)
     #sample_trace = sample_trace[:-300]
     #center_index = np.argmax(sample_trace)
-    symmeteric_trace = SymmetricTrace(sample_trace, sampling_rate)
+    symmeteric_trace = SymmetricTrace(sample_trace, sampling_rate, component_id='axial')
     time_vector = symmeteric_trace.time_vector
     center_time = time_vector[np.argmax(symmeteric_trace.data)] #not center index!
-    jazz_dict = jazz2(symmeteric_trace, center_time)
+    jazz_dict = jazz2(symmeteric_trace, center_time, expected_trough_duration)
 
 
 def main():
     acorr_h5_file_path = '/home/kkappler/.cache/datacloud/line_creek/processed/1855_NS93_14_17822T_17822T_6172_6172/20190612-125430_QC0/5_trim_0.h5'
     acorr_trace = TraceData()
     acorr_trace.load_from_h5(acorr_h5_file_path)
+    pdb.set_trace()
     jazz2_test(acorr_trace)
 
 
