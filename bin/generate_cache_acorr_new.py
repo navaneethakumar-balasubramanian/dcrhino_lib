@@ -117,17 +117,18 @@ def generate_cache_acorr(matches_line,files,mwd_df,mwd_helper,env_config,mine_na
             # pdb.set_trace()
         file_id = file[1].sensor_file_id
         output_df['acorr_file_id'] = file_id
+        if 'remap_columns' in json.loads(file[1].config_str).keys():
+            td_remmaped = pd.DataFrame()
+            for column in output_df.columns:
+                if column in json.loads(file[1].config_str)['remap_columns'].keys():
+                    td_remmaped[column] = output_df[json.loads(file[1].config_str)['remap_columns'][column]]
+                else:
+                    td_remmaped[column] = output_df[column]
+            td.dataframe = td_remmaped
         td.dataframe = pd.concat([td.dataframe, output_df])
 
         td._global_configs[str(file_id)] = global_config
-        if 'remap_columns' in json.loads(file[1].config_str).keys():
-            td_remmaped = pd.DataFrame()
-            for column in td.dataframe.columns:
-                    if column in json.loads(file[1].config_str)['remap_columns'].keys():
-                        td_remmaped[column] = td.dataframe[json.loads(file[1].config_str)['remap_columns'][column]]
-                    else:
-                        td_remmaped[column] = td.dataframe[column]
-            td.dataframe = td_remmaped
+
 
 
     td.dataframe = td.dataframe.sort_values('timestamp').reset_index().drop('index', 1)
