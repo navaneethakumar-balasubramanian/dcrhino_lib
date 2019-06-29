@@ -124,7 +124,7 @@ def generate_cache_acorr(matches_line,files,mwd_df,mwd_helper,env_config,mine_na
                     td_remmaped[column] = output_df[json.loads(file[1].config_str)['remap_columns'][column]]
                 else:
                     td_remmaped[column] = output_df[column]
-            td.dataframe = td_remmaped
+            output_df = td_remmaped
         td.dataframe = pd.concat([td.dataframe, output_df])
 
         td._global_configs[str(file_id)] = global_config
