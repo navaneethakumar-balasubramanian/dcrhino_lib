@@ -21,9 +21,9 @@ logger = init_logging(__name__)
 
 class SymmetricTrace(object):
     """
-    .. :NOTE: 20190528: this would actually make a note bad base class for a TimeSeries, 
+    .. :NOTE: 20190528: this would actually make a note bad base class for a TimeSeries,
     SymmetricTrace could then extend TimeSeries. to do this I would need:
-    - the t0 method to be overwritten 
+    - the t0 method to be overwritten
     """
     def __init__(self, data, sampling_rate, **kwargs):
         #BaseTraceModule.__init__(self, json, output_path)
@@ -42,7 +42,7 @@ class SymmetricTrace(object):
     def _clone(self, **kwargs):
         """
         Create a new instance of same type.
-        
+
         Keyword Arguments:
             :Duplicate symmetric trace to be copy.deepcopy()
         """
@@ -83,7 +83,7 @@ class SymmetricTrace(object):
 
     def trim_to_num_points_lr(self, n_points):
         """
-        Trim to index with width = 2 * n_points + 1, centered around 
+        Trim to index with width = 2 * n_points + 1, centered around
         center_index.
         """
         self.data = self.data[self.center_index-n_points:self.center_index+n_points + 1]
@@ -98,25 +98,31 @@ class SymmetricTrace(object):
         self._time_vector = self._time_vector[indices]
 
 
-    def plot(self):
+    def plot(self, ticks=[]):
         """
         Plot time_vector vs. data, title, label, and show.
         """
-        plt.plot(self.time_vector, self.data, 'bs');
-        plt.title('{} component'.format(self.component_id))
-        plt.xlabel('Time (s)')
+        fig, ax = plt.subplots(1,1)
+        ax.plot(self.time_vector, self.data, 'bs');
+        ax.plot(self.time_vector, self.data, 'r');
+        ax.hlines(0, self.time_vector[0], self.time_vector[-1], color='k');
+        ax.set_title('{} component'.format(self.component_id))
+        ax.set_xlabel('Time (s)')
+        if len(ticks)>0:
+            tick_heights = 0.1 * np.ptp(self.data)
+            ax.vlines(ticks, -tick_heights/2, tick_heights/2)
         plt.show()
 
     def rotate_recenter_and_trim(self, phi):
         """
-        Use :func:`phase_rotation.rotate_phase` to rotate data by phi degrees. Find 
+        Use :func:`phase_rotation.rotate_phase` to rotate data by phi degrees. Find
         new center index of rotated data, and shift the trimmings to new center
-        index using `Numpy roll. <https://docs.scipy.org/doc/numpy/reference/generated/numpy.roll.html>`_ 
+        index using `Numpy roll. <https://docs.scipy.org/doc/numpy/reference/generated/numpy.roll.html>`_
         Revise data to reflect these changes.
-        
+
         Parameters:
             phi (float): angle, in degrees, to shift data
-        
+
         .. note:: 20140214: Initially this method trimmed the trace.  BUT that could result in
             different length traces within a blasthole.  Theoretically this is not a
             problem,but practically it will cause problems if we wanted to use the
