@@ -30,6 +30,7 @@ from dcrhino3.models.interval import Interval
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.helpers.general_helper_functions import init_logging, add_inverse_dictionary
 from dcrhino3.models.metadata import Measurement
+from dcrhino3.models.metadata import LENGTH_SCALE_FACTORS, LENGTH_UNITS
 
 logger = init_logging(__name__)
 
@@ -53,13 +54,6 @@ DRILL_STRING_COMPONENT_INSTALLATIONS[0] = 'variable'
 DRILL_STRING_COMPONENT_INSTALLATIONS[1] = 'installed'
 DRILL_STRING_COMPONENT_INSTALLATIONS = add_inverse_dictionary(DRILL_STRING_COMPONENT_INSTALLATIONS)
 
-LENGTH_UNITS = {}
-LENGTH_UNITS[1] = 'ft'
-LENGTH_UNITS[2] = 'in'
-LENGTH_UNITS[3] = 'm'
-LENGTH_UNITS[4] = 'cm'
-LENGTH_UNITS[5] = 'mm'
-LENGTH_UNITS = add_inverse_dictionary(LENGTH_UNITS)
 
 NUM_DRILL_STRING_COMPONENTS_SUPPORTED = 10
 ORDERED_GUI_STRING_ELEMENTS = ['component_type', 'installation', 'length',
