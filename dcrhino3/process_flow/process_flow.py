@@ -318,7 +318,7 @@ class ProcessFlow:
             process_json['vars'].append(subset['process_json']['vars'])
             df = pd.concat([df,subset['acorr_trace'].dataframe])
 
-        trace_data.dataframe = df.sort_values('depth')
+        trace_data.dataframe = df.sort_values('measured_depth')
 
         return trace_data , process_json
 
@@ -326,12 +326,12 @@ class ProcessFlow:
     def split_subsets(self,process_json,subsets,trace_data):
         subsets_objs = []
         start_depth = 0
-        max_depth = trace_data.dataframe.depth.max()
+        max_depth = trace_data.dataframe.measured_depth.max()
         for i,subset in enumerate(subsets):
             if (start_depth < max_depth):
                 subset_obj = {}
                 subset_obj['acorr_trace'] = copy.deepcopy(trace_data)
-                subset_obj['acorr_trace'].dataframe = subset_obj['acorr_trace'].dataframe[(subset_obj['acorr_trace'].dataframe.depth > start_depth) & (subset_obj['acorr_trace'].dataframe.depth <= subset)].reset_index(drop=True)
+                subset_obj['acorr_trace'].dataframe = subset_obj['acorr_trace'].dataframe[(subset_obj['acorr_trace'].dataframe.measured_depth > start_depth) & (subset_obj['acorr_trace'].dataframe.measured_depth <= subset)].reset_index(drop=True)
                 subset_obj['process_json'] = copy.deepcopy(process_json)
 
                 if 'vars' in subset_obj['process_json'].keys() and isinstance(subset_obj['process_json']['vars'],list) :
@@ -346,7 +346,7 @@ class ProcessFlow:
         if (start_depth < max_depth):
             subset_obj = {}
             subset_obj['acorr_trace'] = copy.deepcopy(trace_data)
-            subset_obj['acorr_trace'].dataframe = subset_obj['acorr_trace'].dataframe[(subset_obj['acorr_trace'].dataframe.depth > start_depth)].reset_index(drop=True)
+            subset_obj['acorr_trace'].dataframe = subset_obj['acorr_trace'].dataframe[(subset_obj['acorr_trace'].dataframe.measured_depth > start_depth)].reset_index(drop=True)
             subset_obj['process_json'] = copy.deepcopy(process_json)
             if 'vars' in subset_obj['process_json'].keys() and isinstance(subset_obj['process_json']['vars'], list):
                 try:
