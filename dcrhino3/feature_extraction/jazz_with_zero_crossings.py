@@ -141,7 +141,7 @@ def jazz2(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
 
     if missing_zero_crossing(tick_times[0], expected_trough_duration):
         print("Missed a zero-crossing")
-        sanity_check_plot = True
+        #sanity_check_plot = True
     #pdb.set_trace()
     if sanity_check_plot:
         ttl_string = '{} {}'.format(symmetric_trace.component_id, wavelet_id)
