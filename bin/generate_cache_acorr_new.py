@@ -207,7 +207,6 @@ if __name__ == '__main__':
         argparser.add_argument("-m", '--matches_output_path', help="Path to optional matches file", default=False)
         argparser.add_argument('-mp', '--mp-processes', help="MULTIPROCESSING PROCESSES", default=False)
         argparser.add_argument('-mid', '--match-id', help="Match id", default=False)
-        argparser.add_argument('-f', '--match-id', help="Match id", default=False)
         argparser.add_argument("-force", "--force-regen", action="store_true",help="Force to regenerate files")
         args = argparser.parse_args()
         mine_name = args.mine_name
