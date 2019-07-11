@@ -115,7 +115,9 @@ class MWDHelper():
 
                 #mwd_data_df = mwd_data_df.loc[:, ~mwd_data_df.columns.duplicated()]
 
-        return df_column_uniquify(mwd_data_df)
+        original_mwd_df = df_column_uniquify(mwd_data_df)
+        original_mwd_df.to_csv('original_mwd.csv')
+        return original_mwd_df
 
     def query_result_to_pd(self,result,columns):
             """
