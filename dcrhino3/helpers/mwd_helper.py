@@ -12,7 +12,7 @@ import pdb
 import requests
 from clickhouse_driver import Client
 from dcrhino3.models.env_config import MwdType
-from dcrhino3.helpers.general_helper_functions import init_logging
+from dcrhino3.helpers.general_helper_functions import init_logging,df_column_uniquify
 
 logger = init_logging(__name__)
 
@@ -112,7 +112,10 @@ class MWDHelper():
                     columns_table_name.append(renamed[col])
 
                 mwd_data_df = pd.DataFrame(mwd_data_from_db,columns=columns_table_name)
-        return mwd_data_df
+
+                #mwd_data_df = mwd_data_df.loc[:, ~mwd_data_df.columns.duplicated()]
+
+        return df_column_uniquify(mwd_data_df)
 
     def query_result_to_pd(self,result,columns):
             """
@@ -289,7 +292,7 @@ class MWDHelper():
         Returns:
             (DataFrame): DataFrame *df* with values rows sorted by start_time.
         """
-        if df.start_time.dtype == 'int64':
+        if df.start_time.dtype == 'int64' or df.start_time.dtype == "float64":
             df['start_time'] = pd.to_datetime(df['start_time'],unit='s')
         else:
             df['start_time'] = pd.to_datetime(df['start_time'])
