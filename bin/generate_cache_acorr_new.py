@@ -207,6 +207,8 @@ if __name__ == '__main__':
         argparser.add_argument("-m", '--matches_output_path', help="Path to optional matches file", default=False)
         argparser.add_argument('-mp', '--mp-processes', help="MULTIPROCESSING PROCESSES", default=False)
         argparser.add_argument('-mid', '--match-id', help="Match id", default=False)
+        argparser.add_argument('-f', '--match-id', help="Match id", default=False)
+        argparser.add_argument("-force", "--force-regen", action="store_true",help="Force to regenerate files")
         args = argparser.parse_args()
         mine_name = args.mine_name
         env_config_path = args.env_config_path
@@ -222,7 +224,10 @@ if __name__ == '__main__':
         merger = MWDRhinoMerger(None,None,False)
         sqlconn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
         sql_db_helper = RhinoSqlHelper(host=sqlconn['host'], user=sqlconn['user'], passwd=sqlconn['password'],database=sqlconn['database'])
-        matches_df = sql_db_helper.blasthole_observations.get_bo_to_update_acorr()
+        if args.force_regen:
+            matches_df = sql_db_helper.blasthole_observations.get_all_with_solution()
+        else:
+            matches_df = sql_db_helper.blasthole_observations.get_bo_to_update_acorr()
         files_df = sql_db_helper.sensor_files.get_all()
         #generate_cache_acorr(mine_name, env_config_path,args.matches_output_path)
         processes_queue = []

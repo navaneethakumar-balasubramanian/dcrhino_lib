@@ -18,6 +18,10 @@ class BlastholeObservations(BaseDbModel):
         sql = "SELECT bo.*,af.filename,af.created_at FROM blasthole_observations bo LEFT OUTER JOIN acorr_files af ON (af.bo_id = bo.bo_id) WHERE bo.solution != '' AND (af.created_at is NULL OR af.created_at < bo.updated_at)"
         return self.query_to_df(sql)
 
+    def get_all_with_solution(self):
+        sql = "SELECT bo.*,af.filename,af.created_at FROM blasthole_observations bo LEFT OUTER JOIN acorr_files af ON (af.bo_id = bo.bo_id) WHERE bo.solution != ''"
+        return self.query_to_df(sql)
+
 
 
     def add(self,bo_id,files_ids,bench_name,pattern_name,hole_id,hole_name,rig_id,sensor_id,digitizer_id,start_time_max,start_time_min,solution,solution_label):
