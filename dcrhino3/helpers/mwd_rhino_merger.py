@@ -192,7 +192,7 @@ class MWDRhinoMerger():
             else:
                 missing_data_percentage = 100
 
-            if missing_data_percentage > 10:
+            if missing_data_percentage > 99:
                 #print line[1]['hole_id'] + " MISSING DATA " +str(int(missing_data_percentage)) + "%"
                 solution_label_array.append("Missing data")
                 solution_array.append('')
