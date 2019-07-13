@@ -31,7 +31,7 @@ from multiprocessing import Process
 
 logger = init_logging(__name__)
 
-MISSING_DATA_PERCENTAGE = 50
+MISSING_DATA_PERCENTAGE = 99
 
 def plot(files_in_match, line, solutions_ids, pdf=None):
     line = line[1]
