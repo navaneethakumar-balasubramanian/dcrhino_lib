@@ -31,6 +31,7 @@ from multiprocessing import Process
 
 logger = init_logging(__name__)
 
+MISSING_DATA_PERCENTAGE = 50
 
 def plot(files_in_match, line, solutions_ids, pdf=None):
     line = line[1]
@@ -143,7 +144,7 @@ def get_solution_arrays(matches, files):
             missing_data_percentage = float(len(missing_data) / float(ts_in_file)) * 100
         else:
             missing_data_percentage = 100
-        if missing_data_percentage > 10:
+        if missing_data_percentage > MISSING_DATA_PERCENTAGE:
             # print line[1]['hole_id'] + " MISSING DATA " +str(int(missing_data_percentage)) + "%"
             solution_label_array.append("Missing data")
             solution_array.append('')
