@@ -1,7 +1,7 @@
 import pandas as pd
 from dcrhino3.models.trace_dataframe import TraceData
 import os
-import glob
+import glob2
 import argparse
 from dcrhino3.helpers.general_helper_functions import init_logging
 
@@ -11,8 +11,22 @@ logger = init_logging(__name__)
 def main(args):
     # path = "/home/natal/toconvert/v3_cache/swc/acorr/100_100_S220_S220_S1031_S1031.h5"
     path = args.path
-    files = glob.glob(path)
+    base_path = os.path.dirname(path)
+    raw_files = glob2.glob(path)
+    files = list()
+
+    for raw_file in raw_files:
+        if ".txt" in raw_file:
+            rf = open(raw_file, "r")
+            lines = rf.read().split("\n")
+            for line in lines:
+                if len(line):
+                    files.append(os.path.join(base_path, line))
+        elif ".h5" in raw_file:
+            files.append(line)
+
     logger.info("{} Files Found".format(len(files)))
+
     for f in files:
         logger.info("Updating file {}".format(f))
         td = TraceData()
@@ -48,6 +62,7 @@ def main(args):
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="RTA column updater - Copyright (c) 2018 DataCloud")
-    argparser.add_argument('-p', '--path', help="Path to RTA files", default=None)
+    argparser.add_argument('-p', '--path',
+                           help="Path of RTA files or path to Text file with relative paths to RTA files", default=None)
     args = argparser.parse_args()
     main(args)
