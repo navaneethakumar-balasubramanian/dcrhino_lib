@@ -135,7 +135,7 @@ def get_zipped_plots():
     uuid_folder_name = uuid.uuid1()
     temp_folder_path = "/tmp/" + str(uuid_folder_name)
     create_folders_if_needed(temp_folder_path)
-    pdb.set_trace()
+    #pdb.set_trace()
     processed_csv_list = []
     for processed_hole in processed_holes:
         processed_folder = os.path.join(env_config.get_hole_h5_processed_cache_folder(mine_name),  processed_hole['output_folder_name'])
