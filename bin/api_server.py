@@ -155,7 +155,8 @@ def get_zipped_plots():
     #resp.headers["Content-Disposition"] = "attachment; filename=processed_holes_plots.zip"
     #resp.headers["Content-Type"] = "application/octet-stream"
     #return resp
-    return send_file(zip_file_path)
+    print zip_file_path
+    return send_file(zip_file_path,attachment_filename="processed_holes.zip")
 
 
 
