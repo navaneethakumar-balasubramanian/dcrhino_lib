@@ -148,7 +148,9 @@ def get_zipped_plots():
             counter += 1
             os.popen(command).read()
 
-    zip_file_path = "/tmp/" + str(uuid_folder_name) + ".zip"
+    zip_file_folder = "/tmp"
+    zip_file_name  =  str(uuid_folder_name) + ".zip"
+    zip_file_path = os.path.join(zip_file_folder,zip_file_name)
     zip_cmd = "zip " + str(zip_file_path) + " " + str(temp_folder_path) + "/*"
     os.popen(zip_cmd).read()
     #resp = make_response(df.to_csv())
@@ -156,7 +158,7 @@ def get_zipped_plots():
     #resp.headers["Content-Type"] = "application/octet-stream"
     #return resp
     print zip_file_path
-    return send_from_directory(zip_file_path)
+    return send_from_directory(zip_file_folder +"/", zip_file_path)
 
 
 
