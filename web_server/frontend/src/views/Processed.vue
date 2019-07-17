@@ -83,6 +83,7 @@
       
     </v-data-table>
     <v-btn flat color='light-blue' v-on:click="compare_selection()" >Compare selection</v-btn>
+    <v-btn flat color='light-blue' v-on:click="get_zipped_plots()" >Download selection plots</v-btn>
       <v-btn flat color='light-blue' v-on:click="get_processed_selection" > <v-icon left dark>cloud_download</v-icon>Selection csv</v-btn>
     <HoleCard :key="clicked_processed_hole_id" :clicked_processed_hole_id="clicked_processed_hole_id" :mine_name="mine_name" v-model="show_dialog" ></HoleCard>
     <ComparisonHoleCard  :processed_hole_selection="selected" v-model="show_dialog_comparison" :mine_name="mine_name"></ComparisonHoleCard>
@@ -132,17 +133,12 @@
       moment:function(unix){
         return window.moment.unix(unix);
       },
-      get_processed_selection: function(){
+      get_zipped_plots: function(){
           if (this.selected.length > 1) {
             let payload = {mine_name:this.mine_name,processed_holes:this.selected,responseType: 'arraybuffer'}
-            Axios.post('http://localhost:5000/get_processed_csv', payload).then((response) => {
+            Axios.post('http://localhost:5000/get_zipped_plots', payload).then((response) => {
    
-              const url = window.URL.createObjectURL(new Blob([response.data]));
-              const link = document.createElement('a');
-              link.href = url;
-              link.setAttribute('download', 'processed.csv'); //or any other extension
-              document.body.appendChild(link);
-              link.click();
+              window.location.href = response.data.url;
             })
           }
           else {
@@ -159,6 +155,24 @@
           this.warning = true
           this.warning_text = "Select a few holes to compare."
         }
+      },
+      download_selection_plots:function(){
+         if (this.selected.length > 1) {
+            let payload = {mine_name:this.mine_name,processed_holes:this.selected,responseType: 'arraybuffer'}
+            Axios.post('http://localhost:5000/get_processed_csv', payload).then((response) => {
+   
+              const url = window.URL.createObjectURL(new Blob([response.data]));
+              const link = document.createElement('a');
+              link.href = url;
+              link.setAttribute('download', 'processed.csv'); //or any other extension
+              document.body.appendChild(link);
+              link.click();
+            })
+          }
+          else {
+            this.warning = true
+            this.warning_text = "Select a few holes to download."
+          }
       },
       searchWeb:function(){
         this.$store.dispatch('GET_PROCESSED',{mine_name:this.mine_name,search:this.search})

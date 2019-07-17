@@ -1,0 +1,505 @@
+body {
+    font-family: "Roboto", Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    width: 100%;
+    height: 100%;
+    background: inherit;
+}
+
+html {
+    display: block;
+    height: 100%;
+    width: 100%;
+    /*background: url('bkg.png') repeat;*/
+    background: white;
+}
+
+canvas {
+    display: block;
+    -ms-touch-action: none;
+    touch-action: none;
+}
+
+h3 a {
+    text-decoration: none !important;
+    color: #525252 !important;
+}
+
+h2 {
+    color: #525252 !important;
+}
+
+a:visited {
+    color: #3372b9;
+
+}
+
+a:link {
+    text-decoration: none;
+    color: #3372b9;
+    letter-spacing: .01em;
+}
+
+ol {
+    padding-left: 20px;
+}
+
+ol.main-tree {
+    border-left: 4px solid #3372b9;
+    margin-left: 7%;
+    line-height: 2em;
+    padding-left: 2em;
+}
+
+@media (min-width: 1060px) {
+    .navigation-container {
+        text-align: left;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        /*left: calc(100% / 2 + 400px);*/
+        right: 0;
+        padding-top: 3em;
+        width: 260px;
+    }
+    .modal-open
+    .navigation-container {
+        right:17px;
+    }
+
+    .body-container {
+        width: calc(100% - 260px);
+        display: inline-block;
+        /*margin-left: auto;*/
+        /*margin-right: auto;*/
+        position: absolute;
+        left: 0;
+        /*right: 20%;*/
+        /* left: 10%; */
+    }
+    .modal-open
+    .body-container {
+        padding-right:17px;
+    }
+
+
+    .body-content {
+        width: 800px;
+        height: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        text-align: center;
+    }
+}
+
+@media (max-width: 1060px) {
+    ol.main-tree {
+        border-left: 0;
+        margin-left: 0;
+    }
+
+    .navigation-container {
+        text-align: left;
+        position: relative;
+        top: auto;
+        bottom: auto;
+        left: auto;
+        width: 100%;
+        right: auto;
+        padding-top: auto;
+    }
+    .modal-open
+    .navigation-container {
+        right:17px;
+    }
+
+    .body-container {
+        width: 100%;
+        display: inline-block;
+        position: absolute;
+        left: 0;
+    }
+    .modal-open
+    .body-container {
+        padding-right:17px;
+    }
+
+
+    .body-content {
+        width: 800px;
+        height: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        text-align: center;
+    }
+}
+
+@media (max-width: 810px) {
+    ol.main-tree {
+        border-left: 0;
+        margin-left: 0;
+    }
+
+    .navigation-container {
+        text-align: left;
+        position: relative;
+        top: auto;
+        bottom: auto;
+        left: auto;
+        width: 100%;
+        right: auto;
+        padding-top: auto;
+    }
+    .modal-open
+    .navigation-container {
+        right:17px;
+    }
+
+    .body-container {
+        width: 100%;
+        display: inline-block;
+        /*margin-left: auto;*/
+        /*margin-right: auto;*/
+        position: relative;
+        left: 0;
+        /*right: 20%;*/
+        /* left: 10%; */
+    }
+    .modal-open
+    .body-container {
+        padding-right:17px;
+    }
+
+    .body-content {
+        width: 100%;
+        height: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        text-align: center;
+    }
+
+    p.introtext {
+        width: 95% !important;
+        white-space: normal; /* CSS3 */
+        white-space: -moz-normal; /* Firefox */
+        white-space: -normal; /* Opera <7 */
+        white-space: -o-normal; /* Opera 7 */
+        text-wrap: normal;
+        -ms-word-wrap: normal;
+        word-wrap: normal;
+        position: relative;
+    }
+}
+
+table.dtTABLE {
+    width: 100%; /* Forces tables to have correct right margin */
+    margin-top: .6em;
+    margin-bottom: .3em;
+    border-width: 1px 1px 0px 0px;
+    border-style: none;
+    border-color: #999999;
+    background-color: #fbfbfb;
+    font-size: 100%; /* Text in Table is same size as text outside table */
+    width: 800px;
+}
+
+/*
+TODO it is better to use class name instead of overriding default behaviour
+tr:nth-child(even) {
+    background-color: white;
+}*/
+
+li {
+    text-align: left;
+    color: #525252;
+}
+
+table.dtTABLE th {
+    border-width: 0px 0px 1px 1px;
+    border-bottom-style: solid;
+    border-bottom-color: #E4E4E4;
+    border-left-style: none;
+    text-align: center;
+}
+
+table.dtTABLE td {
+    border-style: none;
+    border-color: #999999;
+    padding-left: 2px;
+    text-align: left;
+}
+
+table.livepaneltable td {
+    text-align: left;
+    border-width: 1px 1px 1px 1px;
+    border-style: solid;
+    border-color: #D3D3D3;
+}
+
+.top {
+    position: fixed;
+    margin-top: -10px;
+    margin-left: -10px;
+    padding-bottom: 0px;
+    width: 100%;
+    top: 0;
+    text-align: center;
+
+    background-color: #3372b9 /*rgb(25, 64, 131)*/;
+}
+
+.banner {
+    background-color: #3372b9 /*rgb(25, 64, 131)*/;
+    padding: 0;
+    margin: -10px;
+}
+
+p.c2 {
+    color: #525252;
+    width: 800px;
+}
+
+p.introtext2 {
+    background-color: #E4E4E4;
+    padding-bottom: .25cm;
+    padding-top: .25cm;
+    padding-left: .15cm;
+    padding-right: .15cm;
+    white-space: wrap;
+    color: #525252;
+    width: 100%;
+}
+
+.c3 {
+    text-align: center;
+}
+
+h3 {
+    color: #525252;
+}
+
+.row h3:after {
+    background: #ddd;
+    border: 0;
+    content: "";
+    display: block;
+    height: 1px;
+    overflow: auto;
+    width: 800px;
+    margin-left: -1em;
+}
+
+div.demotitle {
+    color: #757575;
+    font-size: 18px;
+    font-family: "Roboto", Arial, sans-serif;
+    text-align: center;
+}
+
+div.c1 {
+    color: #525252;
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: -.01em;
+    line-height: 1.3;
+    margin: 25px 0 25px;
+    border: none;
+
+    /*font-family: Arial, sans-serif;
+    font-size: 150%;
+    font-weight: bolder;
+    background-color: rgb(25, 64, 131);*/
+    width: 100%;
+
+    /*padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 10px;
+    margin: -10px;*/
+}
+
+div.code {
+    width: 800px;
+    padding: 0;
+    text-align: left;
+}
+
+pre code {
+    padding-left: 2em !important;
+}
+
+div.code2 {
+    width: 800px;
+    padding-left: 1px;
+    padding-top: 20px;
+    vertical-align: top;
+}
+
+.simpletutorialtabletitle {
+    /* padding-left:15px;*/
+    color: black;
+}
+
+.noselection {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+div.navbar {
+    position: fixed;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    height: 47px;
+    background-color: rgb(25, 64, 131);
+    color: white;
+    z-index: 1030;
+}
+
+.afix {
+    position: fixed;
+}
+
+.pin-at-top {
+    position: fixed;
+    left: 5px;
+    top: 52px;
+    width: 198px;
+}
+
+.border {
+    border: 1px solid #aaa;
+    border-radius: 4px;
+
+}
+
+.header {
+    background-color: #000000;
+    height: 100px;
+}
+
+.header1:after {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+h1.content {
+    border-bottom: 1px solid #eeeeee;
+}
+
+h2.content {
+    border-bottom: 1px solid #eeeeee;
+}
+
+pre {
+    display: block;
+    padding: 0px;
+    margin: 0 0 00px;
+    font-size: 13px;
+    line-height: 20px;
+    word-break: break-all;
+    word-wrap: break-word;
+    white-space: pre;
+    white-space: pre-wrap;
+    background-color: #fbfbfb;
+    border: 1px solid #ccc;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+
+pre:after {
+
+}
+
+div.execute {
+    float: right;
+    display: inline-block;
+    top: 0px;
+    right: 0px;
+    height: 20px;
+    background-color: rgb(25, 64, 131);
+    color: white;
+    color: #000000;
+    width: 100px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    padding: 4px;
+    padding-left: 8px;
+
+}
+
+button {
+    /*background-color: rgb(35,74,141);
+    color:white;
+    font-weight: bold;*/
+    padding: 5px;
+    padding-left: 15px;
+    padding-right: 15px;
+
+}
+
+.codeblock {
+    vertical-align: top;
+    width: 950px;
+
+}
+
+.livepaneltitle {
+    background-color: #525252;
+    color: white;
+    padding: 2px;
+}
+
+.livepanel {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    background-color: #FFFFFF;
+}
+
+.livepaneltable {
+    border: 1px solid black;
+    width: 100%;
+    height: 100%;
+}
+
+.code.collapsed {
+    overflow: hidden;
+    height: 100px;
+    -webkit-mask-image: -webkit-gradient(
+            linear, left 50%, left bottom,
+            from(rgba(0, 0, 0, 1)),
+            to(rgba(0, 0, 0, 0))
+    );
+}
+
+.see-more-container, .see-less-container {
+    cursor: pointer;
+    text-align: right;
+    color: #0a6aa1;
+    font-weight: bold;
+}
+
+.hidden {
+    display: none;
+}
+/* Default setting for tooltip*/
+.cg-tooltip-container {
+    position: absolute;
+    padding: 2px 12px 3px 7px;
+    margin-left: 5px;
+    background: #f6f6f6;
+    background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#f7f7f7),
+    to(#f8f8f8), color-stop(.5, #e3e3e3));
+    border: solid 1px gray;
+    opacity: 0.8;
+    text-align: left;
+    color: #494949;
+}
