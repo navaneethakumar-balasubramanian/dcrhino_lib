@@ -23,7 +23,7 @@ def main(args):
                 if len(line):
                     files.append(os.path.join(base_path, line))
         elif ".h5" in raw_file:
-            files.append(line)
+            files.append(raw_file)
 
     logger.info("{} Files Found".format(len(files)))
 
