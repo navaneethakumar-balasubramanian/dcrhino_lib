@@ -158,7 +158,7 @@ def get_zipped_plots():
     #resp.headers["Content-Type"] = "application/octet-stream"
     #return resp
     print zip_file_path
-    return send_from_directory(zip_file_folder +"/", zip_file_path)
+    return send_from_directory(zip_file_folder, zip_file_name)
 
 
 
