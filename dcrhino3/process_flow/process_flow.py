@@ -9,6 +9,7 @@ import pdb
 import time
 import os
 import pandas as pd
+import socket
 
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
 from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
@@ -54,10 +55,12 @@ from dcrhino3.process_flow.modules.hybrid.upsample_hybrid import UpsampleModuleH
 from dcrhino3.process_flow.modules.hybrid.phase_balance_trace_hybrid import PhaseBalanceHybridModule
 
 from dcrhino3.unstable.multipass_util import update_acorr_with_resonance_info
-
-
+from dcrhino3.unstable.hacks.bma_hack import bma_hack_20190606
+from dcrhino3.unstable.multipass_util import get_depths_at_which_steels_change
+from dcrhino3.unstable.multipass.drill_rig import DrillRig
 
 logger = init_logging(__name__)
+
 
 
 class ProcessFlow:
@@ -69,7 +72,7 @@ class ProcessFlow:
         self.id = "process_flow"
         self.now = datetime.now()
         self.datetime_str = self.now.strftime("%Y%m%d-%H%M%S")
-
+        self.env_config = None
         self.modules = {
             "binning": BinningModule,
             "rhino_physics": RhinoPhysicsModule,
@@ -158,7 +161,20 @@ class ProcessFlow:
                 module._components_to_process = self.components_to_process
                 self.modules_flow.append(module)
 
+    def make_database_connection(self, mine_name):
 
+        machine_id = socket.gethostname()
+        if machine_id=='thales4' or self.output_to_db is False:
+            pass
+        else:
+            conn = self.env_config.get_rhino_db_connection_from_mine_name(mine_name)
+
+            self.rhino_db_helper = RhinoDBHelper(conn=conn)
+            sql_conn = self.env_config.get_rhino_sql_connection_from_mine_name(mine_name)
+            if sql_conn:
+                self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'], sql_conn['user'], sql_conn['password'],
+                                                       str(sql_conn['database']).lower())
+        return
 
     def process(self, trace_data,subset_index=False):
 
@@ -187,6 +203,8 @@ class ProcessFlow:
             module = self.modules_flow[self.actual_module]
             t0 = time.time()
             logger.info("Applying " + str(module.id) + " with: " + str(module.args))
+            #if module.id == 'rhino_plotter':
+            #    pdb.set_trace()
             output_trace = module.process_trace(output_trace)
             delta_t = time.time() - t0
             logger.info("{} ran in {}s ".format(module.id, delta_t))
@@ -232,43 +250,50 @@ class ProcessFlow:
         acorr_trace.load_from_h5(acorr_h5_file_path)
 
         #<NEW>
-        acorr_trace = update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0)
-        resonant_lengths_array = acorr_trace.dataframe.drill_string_resonant_length.unique()
-        resonant_lengths = [x for x in resonant_lengths_array]
-        df = acorr_trace.dataframe
-        sub_dfs = [df[df.drill_string_resonant_length==x] for x in resonant_lengths]
-        splits = [x.depth.max() for x in sub_dfs]
-        splits.sort()
+        print("EMERGENCY HACK FOR BMA. FIELD CONFIG NEEDS VARAIBLE STEELS CORRECT ON DB" )
+        try:
+            hack = process_json['vars'][0]['hack_multipass_bma']
+            first_global_config_index = acorr_trace.dataframe['acorr_file_id'].values[0]
+            corrected_global_config = bma_hack_20190606(acorr_trace.first_global_config)
+            acorr_trace._global_configs[first_global_config_index] = corrected_global_config
+            hack = False
+        except KeyError:
+            hack = False
+        #pdb.set_trace()
         if 'subsets' not in process_json.keys():
+            acorr_trace = update_acorr_with_resonance_info(acorr_trace,
+                                                       transition_depth_offset_m=-1.0,
+                                                       hack=hack)
+            splits = get_depths_at_which_steels_change(acorr_trace.dataframe)
+            print("splits = {}".format(splits))
             process_json['subsets'] = splits
-
         #</NEW>
 
         self.output_path = self.output_folder(acorr_trace,process_json,env_config)
 
         if seconds_to_process is not False:
             acorr_trace.dataframe = acorr_trace.dataframe[:seconds_to_process]
-
         splitted_subsets = self.split_subsets(process_json,process_json['subsets'],acorr_trace)
-        logger.info("Found " + str(len(splitted_subsets)) + " subsets")
-        for i,subset in enumerate(splitted_subsets):
+        print("FoUnD {} subsets".format(len(splitted_subsets))  )
 
-            self.set_process_flow(subset['process_json'],subset_index=i)
-
+        if len(splitted_subsets) == 0:
+            self.set_process_flow(process_json)
             self.env_config = env_config
-            conn = env_config.get_rhino_db_connection_from_mine_name(subset['acorr_trace'].mine_name)
+            self.make_database_connection(acorr_trace.mine_name)
+            acorr_trace = self.process(acorr_trace)
 
-            self.rhino_db_helper = RhinoDBHelper(conn=conn)
-            sql_conn = env_config.get_rhino_sql_connection_from_mine_name(subset['acorr_trace'].mine_name)
-            if sql_conn:
-                self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'], sql_conn['user'], sql_conn['password'],
-                                                       str(sql_conn['database']).lower())
+        else:
+            for i,subset in enumerate(splitted_subsets):
 
-            subset['acorr_trace'] = self.process(subset['acorr_trace'],subset_index=i)
+                self.set_process_flow(subset['process_json'],subset_index=i)
+                self.env_config = env_config
+                self.make_database_connection(subset['acorr_trace'].mine_name)
+                subset['acorr_trace'] = self.process(subset['acorr_trace'],subset_index=i)
 
-        acorr_trace , process_json =  self.merge_results(splitted_subsets)
-        return_dict["acorr_trace"] = acorr_trace
-        return_dict["process_json"] = process_json
+            acorr_trace , process_json =  self.merge_results(splitted_subsets)
+            return_dict["acorr_trace"] = acorr_trace
+            return_dict["process_json"] = process_json
+            return_dict["output_path"] = self.output_path
 
         acorr_trace.save_to_h5(os.path.join(self.output_path,'processed.h5'))
         acorr_trace.save_to_csv(os.path.join(self.output_path,'processed.csv'))
@@ -288,7 +313,7 @@ class ProcessFlow:
                                                       process_id=process_id)
             # self.rhino_db_helper.save_processed_trace(trace_data, self.id, json.dumps(self.process_json),process_flow_output_path, int(now.strftime("%s")),99999)
 
-        return acorr_trace, process_json
+        return acorr_trace, process_json, return_dict
 
 
     def merge_results(self,subsets):
@@ -301,7 +326,7 @@ class ProcessFlow:
             process_json['vars'].append(subset['process_json']['vars'])
             df = pd.concat([df,subset['acorr_trace'].dataframe])
 
-        trace_data.dataframe = df.sort_values('depth')
+        trace_data.dataframe = df.sort_values('measured_depth')
 
         return trace_data , process_json
 
@@ -309,12 +334,12 @@ class ProcessFlow:
     def split_subsets(self,process_json,subsets,trace_data):
         subsets_objs = []
         start_depth = 0
-        max_depth = trace_data.dataframe.depth.max()
+        max_depth = trace_data.dataframe.measured_depth.max()
         for i,subset in enumerate(subsets):
             if (start_depth < max_depth):
                 subset_obj = {}
                 subset_obj['acorr_trace'] = copy.deepcopy(trace_data)
-                subset_obj['acorr_trace'].dataframe = subset_obj['acorr_trace'].dataframe[(subset_obj['acorr_trace'].dataframe.depth > start_depth) & (subset_obj['acorr_trace'].dataframe.depth <= subset)].reset_index(drop=True)
+                subset_obj['acorr_trace'].dataframe = subset_obj['acorr_trace'].dataframe[(subset_obj['acorr_trace'].dataframe.measured_depth > start_depth) & (subset_obj['acorr_trace'].dataframe.measured_depth <= subset)].reset_index(drop=True)
                 subset_obj['process_json'] = copy.deepcopy(process_json)
 
                 if 'vars' in subset_obj['process_json'].keys() and isinstance(subset_obj['process_json']['vars'],list) :
@@ -322,13 +347,14 @@ class ProcessFlow:
                         subset_obj['process_json']['vars'] = subset_obj['process_json']['vars'][i]
                     except:
                         subset_obj['process_json']['vars'] = {}
+
                 subsets_objs.append(subset_obj)
                 start_depth = subset
 
         if (start_depth < max_depth):
             subset_obj = {}
             subset_obj['acorr_trace'] = copy.deepcopy(trace_data)
-            subset_obj['acorr_trace'].dataframe = subset_obj['acorr_trace'].dataframe[(subset_obj['acorr_trace'].dataframe.depth > start_depth)].reset_index(drop=True)
+            subset_obj['acorr_trace'].dataframe = subset_obj['acorr_trace'].dataframe[(subset_obj['acorr_trace'].dataframe.measured_depth > start_depth)].reset_index(drop=True)
             subset_obj['process_json'] = copy.deepcopy(process_json)
             if 'vars' in subset_obj['process_json'].keys() and isinstance(subset_obj['process_json']['vars'], list):
                 try:

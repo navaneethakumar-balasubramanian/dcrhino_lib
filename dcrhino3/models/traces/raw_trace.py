@@ -269,7 +269,7 @@ class RawTraceData(TraceData):
                 #pdb.set_trace()
 
                 input_trace = df[component_id].iloc[i_trace]
-                acorr_trace = self.autocorrelate_1d_component_array(input_trace, samples_per_trace)
+                acorr_trace = self.autocorrelate_1d_component_array(input_trace, samples_per_trace,False)
 
                 output_dict[component_id][i_trace, :] = acorr_trace#[0:samples_per_trace]
             output_dict[component_id] = list(output_dict[component_id])

@@ -27,6 +27,7 @@ class Config( object ):
         self.sensor_serial_number = ''
         self.rig_id = ''
         self.client_name = ''
+        self.mwd_depth_spacing = None
 
         self.base_output_path = 'output_data'
         self.accelerometer_max_voltage = 0

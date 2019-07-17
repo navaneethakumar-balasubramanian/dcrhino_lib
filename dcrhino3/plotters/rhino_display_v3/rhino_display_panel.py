@@ -40,7 +40,7 @@ class RhinoDisplayPanel(object):
             return ax
         #pdb.set_trace()
         #print(curve.scale)
-        #
+
         if curve.scale == "current" or  curve.scale == "new":
             if curve.scale == "current":
                 ax1 = ax
@@ -49,8 +49,11 @@ class RhinoDisplayPanel(object):
             #ax1.set_ylabel(curve.label).set_color("k")
             curve.data = np.nan_to_num(curve.data)
 
-            ax1.set_ylim(axis_lims_method_1(curve.data,'buffer'))
-            ax1.set_ylabel(curve.label)
+            try:
+                ax1.set_ylim(min(curve.y_limits), max(curve.y_limits))
+            except:
+                ax1.set_ylim(axis_lims_method_1(curve.data, 'buffer'))
+
             if curve.color is not None:
                 ax1.set_ylabel(curve.label).set_color(curve.color)
                 ax1.spines[curve.spine_side].set_color(curve.color)
@@ -123,7 +126,7 @@ class RhinoDisplayPanel(object):
     def depth(self):
         """
         """
-        depth = self.trace_data.dataframe['depth']
+        depth = self.trace_data.dataframe['measured_depth']
         return depth
 
     def x_from_depth(self):
@@ -169,8 +172,9 @@ class Curve(object):
         self.data = kwargs.get('data', None)
         #self.x_axis_label = kwargs.get('x_axis_label', '')
         #self.x_axis = kwargs.get('x_axis', None)
-        self.x_axis_label = kwargs.get('x_axis_label', 'depth')
+        self.x_axis_label = kwargs.get('x_axis_label', 'measured_depth')
         self.x_axis_values = kwargs.get('x_axis_values', None)
+        self.y_limits = kwargs.get('y_limits', None)
         self.color = kwargs.get('color', None)
         self.formula = kwargs.get('formula', None)
         self.label = kwargs.get('label', '')
@@ -189,9 +193,10 @@ class Curve(object):
         try:
             self.data = np.asarray(df[self.column_label])
         except:
-            print('problem accessing data from dataframe in Curve()')
-            print('column label = {}'.format(self.column_label))
-            print('df_type = {}'.format(type(df)))
+            logger.warn('problem accessing data from dataframe in Curve()')
+            logger.warn('column label = {}'.format(self.column_label))
+            logger.warn('df_type = {}'.format(type(df)))
+            logger.warn(df.columns)
             raise Exception
         if self.x_axis_values is None:
             if self.x_axis_label:
@@ -221,7 +226,7 @@ class Header(RhinoDisplayPanel):
         #super(RhinoDisplayPanel, .__init__(self).__init__(**kwargs)
         self.plot_style = "header"
         self.curves= kwargs.get('curves', [])
-
+        self.component = kwargs.get('component', '')
         self.trace_data = kwargs.get('trace_data', None)
         self.load_curve_data_from_dataframe()
 
@@ -230,11 +235,12 @@ class Header(RhinoDisplayPanel):
     def plot(self, ax, **kwargs):
         """
         .. todo: make a legend method that draws the legend box below like in
-        the v3 plotter.  Also add handling for stripping off label or useing synonyns
+            the v3 plotter.  Also add handling for stripping off label or useing synonyns
         .. todo: handle case of "depth"
         """
         for curve in self.curves:
             curve_ax = self.plot_curve(curve,ax)
+            ax.set_title(str(self.component).capitalize(), loc="left")
             #curve_ax.legend()
             #curve_ax.set_xlabel(curve.x_axis_label)
 
@@ -341,7 +347,6 @@ class Heatmap(RhinoDisplayPanel):
             heatmap = ax.pcolormesh(X, Y, Z, cmap=self.cmap_string,
                                     vmin=self.v_min, vmax=self.v_max)
         locs,labs = plt.xticks()
-        #pdb.set_trace()
         ax.set_ylabel('time (ms)')
 
 
@@ -483,7 +488,7 @@ class Wiggle(RhinoDisplayPanel):
         ax.invert_yaxis()
         ax.set_title('Wiggle Trace for ' + column_label)
         ax.set_ylabel('Time (ms)')
-        ax.set_xlabel('Depth (m)')
+        ax.set_xlabel('Measured Depth (m)')
 
         #Downsample to Number of Lines and Pick in even fashion
         X_down = np.linspace(min(X), max(X), num_lines)

@@ -17,7 +17,7 @@ from dcrhino3.physics.util import get_resonance_period
 from dcrhino3.signal_processing.phase_rotation import rotate_phase
 from dcrhino3.signal_processing.phase_rotation import determine_phase_state
 
-def identify_primary_neighbourhood(symmetric_trace_in, global_config):
+def identify_primary_neighbourhood(symmetric_trace_in, resonance_period):
     """
     This can be done with zero-crossings ... or with max-min ...
     1. Trim to expected multiple time, left and right of input trace
@@ -25,11 +25,16 @@ def identify_primary_neighbourhood(symmetric_trace_in, global_config):
 
     @note 20190209: need to decide to keep +1 or +2 regions to either side of zero_crossing
     @note 20190228: could make this a method of SymmetricTrace()
+
+    @note: this expects a mean-centered trace as it requires several zero-crossings
+    be present in the trace.
+    @change 20190604: removed dependance on transformed args, now takes resonance
+    period explicitly.
     """
     n_regions = 2 #2 number of same-sign regions to keep L and R of center
     symmetric_trace = symmetric_trace_in._clone()
-    resonance_period = get_resonance_period('axial', global_config.sensor_distance_to_source,
-                              global_config.sensor_distance_to_shocksub, global_config.ACOUSTIC_VELOCITY)
+    #resonance_period = get_resonance_period('axial', global_config.sensor_distance_to_source,
+    #                          global_config.sensor_distance_to_shocksub, global_config.ACOUSTIC_VELOCITY)
 
     n_steps_keep = int(resonance_period / symmetric_trace.dt)
     symmetric_trace.trim_to_num_points_lr(n_steps_keep)

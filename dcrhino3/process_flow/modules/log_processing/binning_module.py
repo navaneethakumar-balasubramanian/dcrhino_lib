@@ -14,7 +14,7 @@ class BinningModule(BaseLogProcessingModule):
 
     def process_df(self, df,transformed_args):
         df = df.drop([c for c in df.columns if 'trace' in c], axis=1)
-        log = LogCollection(data=df, hole_length_column='depth')
+        log = LogCollection(data=df, hole_length_column='measured_depth')
 
         # Bin to 5 cm with 10 nearest neighbors (_refresh will be dropped in next versions)
         log._refresh(

@@ -1,4 +1,5 @@
-*pyc
+*.pyc
+*.png
 dcrhino.egg-info/*
 dcrhino3/acquisition/logs/*.log
 dcrhino3/acquisition/logs/*.err
@@ -15,10 +16,14 @@ bin/scratch
 
 bin/test\.py
 
-\.ipynb_checkpoints/Untitled-checkpoint\.ipynb
+bin/\.ipynb_checkpoints/
 
-bin/\.ipynb_checkpoints/Untitled-checkpoint\.ipynb
+\.ipynb_checkpoints/
 
-bin/\.ipynb_checkpoints/Untitled1-checkpoint\.ipynb
+bin/dr0345_minus_8_hrs\.csv
+
+bin/temp\.csv
+
+*.log
 
 dcrhino3/acquisition/external/dimmer/traindata/

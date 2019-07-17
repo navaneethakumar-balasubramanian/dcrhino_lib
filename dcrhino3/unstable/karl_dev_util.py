@@ -29,12 +29,14 @@ mont_wright_processed_folder = os.path.join(dc_cache_path, 'mont_wright/processe
 
 line_creek_data_cache_path = os.path.join(dc_cache_path, 'line_creek')
 line_creek_acorr_folder = os.path.join(line_creek_data_cache_path, 'acorr')
+line_creek_mwd_filehandle = os.path.join(line_creek_data_cache_path, 'mwd.csv')
 
-eastern_ridge_folder = os.path.join(dc_cache_path, 'eastern_ridge')
-eastern_ridge_acorr_folder = os.path.join(eastern_ridge_folder, 'acorr')
-eastern_processed_folder = os.path.join(eastern_ridge_folder, 'processed')
+bma_data_cache_path = os.path.join(dc_cache_path, 'bma')
+bma_acorr_folder = os.path.join(bma_data_cache_path, 'acorr')
 
-
+bmc_data_cache_path = os.path.join(dc_cache_path, 'bmc')
+south_walker_creek_data_cache_path = os.path.join(bmc_data_cache_path, 'south_walker_creek')
+south_walker_creek_acorr_folder = os.path.join(south_walker_creek_data_cache_path, 'acorr')
 
 def my_function():
     """

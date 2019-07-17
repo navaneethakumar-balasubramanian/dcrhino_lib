@@ -19,9 +19,9 @@ class AcorrFiles(BaseDbModel):
         return self.query_to_df("select * from " + self.table_name + " order by acorr_file_id DESC limit " + str(limit))
 
 
-    def add(self,hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,filename,min_ts,max_ts):
-        sql = "INSERT INTO "+self.table_name+" (hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,filename,min_ts,max_ts) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-        val = (hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,filename,min_ts,max_ts)
+    def add(self,hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,filename,min_ts,max_ts,bo_id):
+        sql = "INSERT INTO "+self.table_name+" (hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,filename,min_ts,max_ts,bo_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        val = (hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,filename,min_ts,max_ts,bo_id)
         try:
             cursor = self.conn.cursor()
             cursor.execute(sql, val)

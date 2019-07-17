@@ -107,6 +107,9 @@ class RhinoDisplay(object):
             plt.savefig(output_path,dpi=300)
         if show:
             plt.show(block=True)
+        #plt.close()
+        #del fig
+        #del ax
         return fig,ax
 
 

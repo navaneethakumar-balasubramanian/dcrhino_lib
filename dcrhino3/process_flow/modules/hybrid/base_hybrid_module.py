@@ -44,7 +44,7 @@ class BaseHybridModule(BaseModule):
         df = pd.DataFrame()
         for splitted_trace_part in reversed(splitted_trace):
             df = pd.concat([df,splitted_trace_part.dataframe])
-        trace.dataframe = df.sort_values('depth')
+        trace.dataframe = df.sort_values('measured_depth')
         return trace
 
     def before_process_start(self,trace):
@@ -68,7 +68,7 @@ class BaseHybridModule(BaseModule):
 
         if self.output_to_file:
             trace.save_to_h5(self.output_file_basepath(extension=".h5"))
-            
+
         return trace
 
     def split_trace_by_acor_file_id(self,trace):

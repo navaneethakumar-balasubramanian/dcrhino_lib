@@ -23,9 +23,24 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 logger = init_logging(__name__)
 
 
+def h5_filename_from_match(line_of_df):
+    """
+    .. :TODO: file_name_columns should be made global
 
+    this replaces really long line and should be more maintainable
+    """
+    file_name_columns = ['bench_name', 'pattern_name', 'hole_name',
+                          'hole_id', 'sensor_id', 'digitizer_id']
+    file_name_values = [line_of_df.__getattribute__(x) for x in file_name_columns]
+    file_name_strings = ['{}'.format(x) for x in file_name_values]
+    file_name = '_'.join(file_name_strings) + '.h5'
+    #str(line.bench_name) + "_" + str(line.pattern_name) + "_" + str(line.hole_name) + "_" + str(line.hole_id)+"_"+str(line.sensor_id)+"_"+str(line.digitizer_id) + ".h5"
+    return file_name
 
 def generate_cache_acorr(mine_name, env_config_path=False,output_matches_csv=False):
+    """
+    matches is type dataframe
+    """
 
     envConfig = EnvConfig(env_config_path)
     holes_cached_folder = envConfig.get_hole_h5_interpolated_cache_folder(mine_name)
@@ -52,15 +67,18 @@ def generate_cache_acorr(mine_name, env_config_path=False,output_matches_csv=Fal
 
         for line in matches.itertuples():
 
-            h5_filename = str(line.bench_name) + "_" + str(line.pattern_name) + "_" + str(line.hole_name) + "_" + str(line.hole_id)+"_"+str(line.sensor_id)+"_"+str(line.digitizer_id) + ".h5"
+            #h5_filename = str(line.bench_name) + "_" + str(line.pattern_name) + "_" + str(line.hole_name) + "_" + str(line.hole_id)+"_"+str(line.sensor_id)+"_"+str(line.digitizer_id) + ".h5"
+            h5_filename = h5_filename_from_match(line)
+            #if h5_filename != 'OB_DR:R14N:41:GMS:OB:A:T_B218_286780_6332_6332.h5':
+            #    continue
 
-
+            #pdb.set_trace()
             h5_path = os.path.join(holes_cached_folder, h5_filename)
             temp_h5_path = h5_path.replace(".h5","temp.h5")
-            acor_trace = TraceData()
+            acorr_trace = TraceData()
 
             if os.path.exists(h5_path) and os.path.isfile(h5_path):
-                #acor_trace.load_from_h5(h5_path)
+                #acorr_trace.load_from_h5(h5_path)
                 #pdb.set_trace()
                 logger.info("Already have this file :" + h5_path)
             else:
@@ -73,15 +91,21 @@ def generate_cache_acorr(mine_name, env_config_path=False,output_matches_csv=Fal
                 max_ts = int((hole_mwd['start_time'].astype(int)/1000000000).max())
 
                 try:
-                    acor_trace.load_from_db(db_helper, files_ids, min_ts, max_ts)
+                    acorr_trace.load_from_db(db_helper, files_ids, min_ts, max_ts)
                 except:
                     logger.warn("ERROR LOADING FILES IDS: " + ','.join(files_ids.astype(str)))
                     continue;
 
 
                 #pdb.set_trace()
-                acor_trace.dataframe = merger.merge_mwd_with_trace(hole_mwd,acor_trace)
-                acor_trace.save_to_h5(temp_h5_path)
+                acorr_trace.dataframe = merger.merge_mwd_with_trace(hole_mwd,acorr_trace)
+                #pdb.set_trace()
+                mwd_depth_spacing = np.median(np.diff(hole_mwd.depth))
+                for key, global_config in acorr_trace._global_configs.items():
+                    global_config.mwd_depth_spacing = mwd_depth_spacing
+
+
+                acorr_trace.save_to_h5(temp_h5_path)
                 try:
                     os.rename(temp_h5_path,h5_path)
                 except:
