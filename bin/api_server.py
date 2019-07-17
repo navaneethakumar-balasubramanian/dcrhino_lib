@@ -96,7 +96,7 @@ def send_image(path):
     return send_from_directory(CACHE_IMAGE_FOLDER, path)
 
 @app.route('/zipped_plots/<path:path>')
-def send_image(path):
+def send_zipped_plots(path):
     return send_from_directory("/tmp/", path)
 
 @app.route('/get_processed_csv',methods=['GET', 'POST'])
