@@ -138,12 +138,7 @@
             let payload = {mine_name:this.mine_name,processed_holes:this.selected,responseType: 'arraybuffer'}
             Axios.post('http://localhost:5000/get_zipped_plots', payload).then((response) => {
    
-              const url = window.URL.createObjectURL(new Blob([response.data]));
-              const link = document.createElement('a');
-              link.href = url;
-              link.setAttribute('download', 'processed_plots.zip'); //or any other extension
-              document.body.appendChild(link);
-              link.click();
+              window.location.href = response.data.url;
             })
           }
           else {
