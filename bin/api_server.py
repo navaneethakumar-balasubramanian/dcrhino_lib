@@ -95,6 +95,10 @@ def acorr_files():
 def send_image(path):
     return send_from_directory(CACHE_IMAGE_FOLDER, path)
 
+@app.route('/zipped_plots/<path:path>')
+def send_image(path):
+    return send_from_directory("/tmp/", path)
+
 @app.route('/get_processed_csv',methods=['GET', 'POST'])
 def get_processed_csv():
     req_json = request.get_json()
@@ -153,12 +157,7 @@ def get_zipped_plots():
     zip_file_path = os.path.join(zip_file_folder,zip_file_name)
     zip_cmd = "zip " + str(zip_file_path) + " " + str(temp_folder_path) + "/*"
     os.popen(zip_cmd).read()
-    #resp = make_response(df.to_csv())
-    #resp.headers["Content-Disposition"] = "attachment; filename=processed_holes_plots.zip"
-    #resp.headers["Content-Type"] = "application/octet-stream"
-    #return resp
-    print zip_file_path
-    return send_file(zip_file_path,attachment_filename=zip_file_name, as_attachment=True)
+    return make_response({"url":"/zipped_plots/" + str(zip_file_name)})
 
 
 
