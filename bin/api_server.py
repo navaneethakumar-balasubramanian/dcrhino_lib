@@ -155,7 +155,7 @@ def get_zipped_plots():
     zip_file_folder = "/tmp"
     zip_file_name  =  str(uuid_folder_name) + ".zip"
     zip_file_path = os.path.join(zip_file_folder,zip_file_name)
-    zip_cmd = "zip " + str(zip_file_path) + " " + str(temp_folder_path) + "/*"
+    zip_cmd = "zip -j " + str(zip_file_path) + " " + str(temp_folder_path) + "/*"
     os.popen(zip_cmd).read()
     return jsonify({"url":"/zipped_plots/" + str(zip_file_name)})
 
