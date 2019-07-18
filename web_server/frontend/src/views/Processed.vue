@@ -252,7 +252,7 @@
                     {text:"Sensor", value:'sensor_id',sortable: false, values:to_unique_obj(sensor_ids), allChecked:true},
                     {text:"Digitizer", value:'digitizer_id',sortable: false, values:to_unique_obj(digitizer_ids), allChecked:true },
                     {text:"Flow", value:'flow_id',sortable: false ,values:to_unique_obj(flow_ids), allChecked:true},
-                    {text:"MP", value:'to_mp',sortable: false, values:{0:{label:"True",checked:true},1:{label:"False",checked:true}}, allChecked:true },
+                    {text:"MP", value:'to_mp',sortable: false, values:{1:{label:"True",checked:true},0:{label:"False",checked:true}}, allChecked:true },
                     {text:"Actions",sortable: false}
         ]
       },
