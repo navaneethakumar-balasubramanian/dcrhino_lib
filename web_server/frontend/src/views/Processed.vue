@@ -21,7 +21,7 @@
       v-model="selected"
       :pagination.sync="pagination"
       :headers="headers"
-      :items="processed"
+      :items="filtered_data"
       item-key="processed_hole_id"
       select-all
       class="elevation-1"
@@ -29,27 +29,39 @@
       v-if="!show_dialog_comparison"
     >
     <template slot="headerCell" slot-scope="props">
-      <v-dialog v-model='props.header.dialog' scrollable max-width="300px">
+      <v-dialog v-model='props.header.dialog'  max-width="300px">
         <template v-slot:activator="{ on }">
-          <div v-on="on">
-            <span >{{props.header.text}}</span>
-            <div v-if='props.header.values' class='font-weight-light font-italic' >{{ props.header.selected }}</div>
-          </div>
+  
+            <span v-on="on" ripple>{{props.header.text}}</span>
+
         </template>
-        <v-card>
-        <v-card-title>Select Country</v-card-title>
+        <v-card >
+        <v-card-title>Select {{ props.header.text }}</v-card-title>
         <v-divider></v-divider>
         <v-card-text style="height: 300px;" class='pa-0 pm-0'>
+
           <v-list class='pa-0 pm-0'>
-            <v-list-tile v-for="(item, i) in props.header.values" :key="i" @click="">
-              <v-list-tile-title>{{ item }}</v-list-tile-title>
+            <v-list-tile  ripple>
+              <v-list-tile-action>
+                <v-checkbox v-model="props.header.allChecked" @change="togleAllOnList(props.header)" ></v-checkbox>
+              </v-list-tile-action>
+              <v-list-tile-title>Select all</v-list-tile-title>
+            </v-list-tile>
+            <v-divider></v-divider>
+            <v-list-tile v-for="(item, i) in props.header.values" :key="i" ripple>
+              <v-list-tile-action>
+                <v-checkbox v-model="item.checked" @change="changed_filter(item,props.header)" ></v-checkbox>
+              </v-list-tile-action>
+  
+              <v-list-tile-content>
+                <v-list-tile-title >{{ item.label }} </v-list-tile-title>
+              </v-list-tile-content>
             </v-list-tile>
         </v-list>
         </v-card-text>
         <v-divider></v-divider>
         <v-card-actions>
-          <v-btn color="blue darken-1" flat @click="dialog = false">Close</v-btn>
-          <v-btn color="blue darken-1" flat @click="dialog = false">Save</v-btn>
+          <v-btn color="blue darken-1" flat v-on:click="props.header.dialog = false">Close</v-btn>
         </v-card-actions>
       </v-card>
         
@@ -84,7 +96,7 @@
     </v-data-table>
     <v-btn flat color='light-blue' v-on:click="compare_selection()" >Compare selection</v-btn>
     <v-btn flat color='light-blue' v-on:click="get_zipped_plots()" >Download selection plots</v-btn>
-      <v-btn flat color='light-blue' v-on:click="get_processed_selection" > <v-icon left dark>cloud_download</v-icon>Selection csv</v-btn>
+      <v-btn flat color='light-blue' v-on:click="get_processed_selection()" > <v-icon left dark>cloud_download</v-icon>Selection csv</v-btn>
     <HoleCard :key="clicked_processed_hole_id" :clicked_processed_hole_id="clicked_processed_hole_id" :mine_name="mine_name" v-model="show_dialog" ></HoleCard>
     <ComparisonHoleCard  :processed_hole_selection="selected" v-model="show_dialog_comparison" :mine_name="mine_name"></ComparisonHoleCard>
     <v-snackbar v-model="warning" color='error' bottom  right multi-line    :timeout='3000'  >{{ warning_text }}</v-snackbar>
@@ -102,6 +114,7 @@
       ComparisonHoleCard
     },
     data: () => ({
+        notifications : false,
         search: null,
         clicked_processed_hole_id : false, 
         show_dialog:false,
@@ -110,19 +123,8 @@
         pagination: {rowsPerPage:-1},
         warning: null,
         warning_text: null,
-        headers : [
-                  {text:"Id", value:'processed_hole_id',sortable: false},
-                    {text:"Processed date", value:'date',sortable: false, values:[`All`,"True","False"], selected:'All'},
-                    {text:"Bench", value:'bench_name',sortable: false, values:[`All`,"True","False"], selected:'All' },
-                    {text:"Pattern", value:'pattern_name',sortable: false, values:[`All`,"True","False"], selected:'All' },
-                    {text:"Hole_name", value:'hole_name',sortable: false, values:[`All`,"True","False"], selected:'All' },
-                    {text:"Hole_id", value:'hole_id',sortable: false, values:[`All`,"True","False"], selected:'All' }, 
-                    {text:"Rig", value:'rig_id',sortable: false, values:[`All`,"True","False"], selected:'All' },
-                    {text:"Sensor", value:'sensor_id',sortable: false, values:[`All`,"True","False"], selected:'All' },
-                    {text:"Digitizer", value:'digitizer_id',sortable: false, values:[`All`,"True","False"], selected:'All' },
-                    {text:"Flow", value:'flow_id',sortable: false },
-                    {text:"MP", value:'to_mp',sortable: false, values:[`All`,"True","False"], selected:'All' },
-                    {text:"Actions",sortable: false}]
+        headers : [],
+        filtered_data:[]
     }),
     created(){  
         this.$store.dispatch('GET_PROCESSED',{mine_name:this.mine_name})
@@ -130,6 +132,45 @@
     props:['mine_name'],
     
     methods:{
+      changed_filter:function(){
+        let temp = []
+        for (let item in this.server_data){
+          item = this.server_data[item]
+          let canPush = true;
+          for (let header in this.headers){
+            header = this.headers[header]
+            
+            if (Object.keys(header).includes("values") && Object.keys(header.values).includes(item[header.value]) && header.values[item[header.value]].checked == false){
+              //console.log("cannot push ", item,header,header.values[item[header.value]].checked)
+              canPush = false
+            } 
+          }
+          if (canPush){
+            temp.push(item)
+          }
+        }
+        this.filtered_data = temp
+        for (let header in this.headers){
+          header = this.headers[header]
+          header.allChecked = this.allChecked(header.values)
+        }
+        
+      },
+      togleAllOnList:function(header){ 
+        for (let item in header.values){
+          header.values[item].checked = header.allChecked
+        }
+        this.changed_filter()
+      },
+      allChecked:function(list){
+        for (let item in list){
+          if (list[item].checked == false){
+          return false
+          }
+        }
+        return true
+
+      },
       moment:function(unix){
         return window.moment.unix(unix);
       },
@@ -138,7 +179,7 @@
             let payload = {mine_name:this.mine_name,processed_holes:this.selected,responseType: 'arraybuffer'}
             Axios.post('http://localhost:5000/get_zipped_plots', payload).then((response) => {
    
-              window.location.href = response.data.url;
+              window.location.href = response.data.url
             })
           }
           else {
@@ -156,7 +197,7 @@
           this.warning_text = "Select a few holes to compare."
         }
       },
-      download_selection_plots:function(){
+      get_processed_selection:function(){
          if (this.selected.length > 1) {
             let payload = {mine_name:this.mine_name,processed_holes:this.selected,responseType: 'arraybuffer'}
             Axios.post('http://localhost:5000/get_processed_csv', payload).then((response) => {
@@ -183,32 +224,49 @@
         this.$store.dispatch('GET_HOLE_INFO',{mine_name:this.mine_name,processed_hole_id:processed_hole_id})    
       }
     },
-    computed : {
-      processed () {
-        let processed_list = this.$store.state.processed_holes.processed_list
+    watch:{
+      server_data:function(_new,old){
+        function to_unique_obj(list){
+          let temp_list = {}
+          for (let item in list){
+            temp_list[list[item]] =  {label:list[item],a:"AA",checked:true}
+          }
+          return temp_list 
+        }
+        let processed_list = _new
         let flow_ids = [...new Set(processed_list.map(a => a.flow_id))]
         let bench_names = [...new Set(processed_list.map(a => a.bench_name))]
-        let pattern_names = [...new Set(processed_list.map(a => a.pattern_name))]
-        let hole_names = [...new Set(processed_list.map(a => a.hole_name))]
-        let hole_ids = [...new Set(processed_list.map(a => a.hole_id))]
-        let rig_ids = [...new Set(processed_list.map(a => a.rig_id))]
-        let sensor_ids = [...new Set(processed_list.map(a => a.sensor_id))]
-        let digitizer_ids = [...new Set(processed_list.map(a => a.digitizer_id))]
+        let pattern_names = [...new Set(processed_list.map(a =>  a.pattern_name))]
+        let hole_names = [...new Set(processed_list.map(a =>  a.hole_name))]
+        let hole_ids = [...new Set(processed_list.map(a =>  a.hole_id))]
+        let rig_ids = [...new Set(processed_list.map(a =>  a.rig_id))]
+        let sensor_ids = [...new Set(processed_list.map(a =>  a.sensor_id))] 
+        let digitizer_ids = [...new Set(processed_list.map(a =>  a.digitizer_id))]
+
         this.headers = [
-                  {text:"Id", value:'processed_hole_id',sortable: false},
-                    {text:"Processed date", value:'date',sortable: false, values:[`All`,"True","False"], selected:'All'},
-                    {text:"Bench", value:'bench_name',sortable: false, values:bench_names, selected:'All' },
-                    {text:"Pattern", value:'pattern_name',sortable: false, values:pattern_names, selected:'All' },
-                    {text:"Hole_name", value:'hole_name',sortable: false, values:hole_names, selected:'All' },
-                    {text:"Hole_id", value:'hole_id',sortable: false, values:hole_ids, selected:'All' }, 
-                    {text:"Rig", value:'rig_id',sortable: false, values:rig_ids, selected:'All' },
-                    {text:"Sensor", value:'sensor_id',sortable: false, values:sensor_ids, selected:'All' },
-                    {text:"Digitizer", value:'digitizer_id',sortable: false, values:digitizer_ids, selected:'All' },
-                    {text:"Flow", value:'flow_id',sortable: false ,values:flow_ids, selected:'All'},
-                    {text:"MP", value:'to_mp',sortable: false, values:[`All`,"True","False"], selected:'All' },
-                    {text:"Actions",sortable: false}]
-        return processed_list
+                    {text:"Id", value:'processed_hole_id',sortable: false},
+                    {text:"Processed date", value:'date',sortable: false, values:[{label:"True",checked:true},{label:"False",checked:true}], allChecked:true},
+                    {text:"Bench", value:'bench_name',sortable: false, values:to_unique_obj(bench_names), allChecked:true },
+                    {text:"Pattern", value:'pattern_name',sortable: false, values:to_unique_obj(pattern_names), allChecked:true},
+                    {text:"Hole_name", value:'hole_name',sortable: false, values:to_unique_obj(hole_names), allChecked:true},
+                    {text:"Hole_id", value:'hole_id',sortable: false, values:to_unique_obj(hole_ids), allChecked:true }, 
+                    {text:"Rig", value:'rig_id',sortable: false, values:to_unique_obj(rig_ids), allChecked:true },
+                    {text:"Sensor", value:'sensor_id',sortable: false, values:to_unique_obj(sensor_ids), allChecked:true},
+                    {text:"Digitizer", value:'digitizer_id',sortable: false, values:to_unique_obj(digitizer_ids), allChecked:true },
+                    {text:"Flow", value:'flow_id',sortable: false ,values:to_unique_obj(flow_ids), allChecked:true},
+                    {text:"MP", value:'to_mp',sortable: false, values:[{label:"True",checked:true},{label:"False",checked:true}], allChecked:true },
+                    {text:"Actions",sortable: false}
+        ]
       },
+      headers:function (_new, _old) {
+        this.changed_filter()
+      }
+    },
+    computed : {
+      server_data () {    
+        return  this.$store.state.processed_holes.processed_list
+      },
+      
       loading () {
         return this.$store.state.processed_holes.loading
       }
