@@ -1,8 +1,9 @@
 <template>
   <div class="about">
  <v-toolbar flat color="white">
-      <v-toolbar-title>Processed files from : {{mine_name}} </v-toolbar-title>
+      <v-toolbar-title>Processed files from : {{mine_name}}<br><span class='body-2 font-weight-light'>{{ filtered_data.length }} results found.</span> </v-toolbar-title>
 
+      
       <v-spacer></v-spacer>
       
       <v-text-field
@@ -16,7 +17,7 @@
         v-on:keyup.enter="searchWeb" 
         :loading="loading"
       ></v-text-field>
-      <span>{{ filtered_data.length }} results found.</span>
+      
     </v-toolbar>
     
     <v-data-table
