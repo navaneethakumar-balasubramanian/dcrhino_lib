@@ -6,7 +6,7 @@ import pandas as pd
 from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
-from holes_to_mp import holes_to_mp
+#from holes_to_mp import holes_to_mp
 from dcrhino3.helpers.general_helper_functions import create_folders_if_needed
 from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.models.trace_dataframe import TraceData
@@ -46,11 +46,11 @@ def send_css(path):
 def send_js(path):
     return send_from_directory('../web_server/frontend/dist/js/', path)
 
-@app.route('/holes_to_mp')
-def holes_to_mp_page():
-    if holes_to_mp('mont_wright', 'env_config.json') :
-        return "Updated"
-    return "Error"
+#@app.route('/holes_to_mp')
+#def holes_to_mp_page():
+#    if holes_to_mp('mont_wright', 'env_config.json') :
+#        return "Updated"
+#    return "Error"
 
 @app.route('/api/processed_holes',methods=['GET', 'POST'])
 def processed_holes():
