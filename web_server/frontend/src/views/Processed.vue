@@ -29,7 +29,8 @@
       v-if="!show_dialog_comparison"
     >
     <template slot="headerCell" slot-scope="props">
-      <v-dialog v-model='props.header.dialog'  max-width="300px">
+      <span v-if="props.header.clickable" v-on="on" ripple>{{props.header.text}}</span>
+      <v-dialog v-else v-model='props.header.dialog'  max-width="300px">
         <template v-slot:activator="{ on }">
   
             <span v-on="on" ripple>{{props.header.text}}</span>
@@ -59,10 +60,7 @@
             </v-list-tile>
         </v-list>
         </v-card-text>
-        <v-divider></v-divider>
-        <v-card-actions>
-          <v-btn color="blue darken-1" flat v-on:click="props.header.dialog = false">Close</v-btn>
-        </v-card-actions>
+        
       </v-card>
         
       </v-dialog>
@@ -244,8 +242,8 @@
         let digitizer_ids = [...new Set(processed_list.map(a =>  a.digitizer_id))]
 
         this.headers = [
-                    {text:"Id", value:'processed_hole_id',sortable: false},
-                    {text:"Processed date", value:'date',sortable: false, values:[{label:"True",checked:true},{label:"False",checked:true}], allChecked:true},
+                    {text:"Id", value:'processed_hole_id',sortable: false,clickable:false,},
+                    {text:"Processed date", value:'date',sortable: true,clickable:false, values:[{label:"True",checked:true},{label:"False",checked:true}], allChecked:true},
                     {text:"Bench", value:'bench_name',sortable: false, values:to_unique_obj(bench_names), allChecked:true },
                     {text:"Pattern", value:'pattern_name',sortable: false, values:to_unique_obj(pattern_names), allChecked:true},
                     {text:"Hole_name", value:'hole_name',sortable: false, values:to_unique_obj(hole_names), allChecked:true},
