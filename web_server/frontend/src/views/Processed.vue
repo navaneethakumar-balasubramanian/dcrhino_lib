@@ -17,6 +17,7 @@
         :loading="loading"
       ></v-text-field>
     </v-toolbar>
+    <span>{{ filtered_data.length }} results found.</span>
     <v-data-table
       v-model="selected"
       :pagination.sync="pagination"
