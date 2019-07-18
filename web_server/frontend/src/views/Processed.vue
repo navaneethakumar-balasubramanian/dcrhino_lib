@@ -16,8 +16,9 @@
         v-on:keyup.enter="searchWeb" 
         :loading="loading"
       ></v-text-field>
+      <span>{{ filtered_data.length }} results found.</span>
     </v-toolbar>
-    <span>{{ filtered_data.length }} results found.</span>
+    
     <v-data-table
       v-model="selected"
       :pagination.sync="pagination"
