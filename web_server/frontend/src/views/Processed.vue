@@ -30,7 +30,7 @@
     >
     <template slot="headerCell" slot-scope="props">
       <span v-if="!props.header.clickable" v-on="on" ripple>{{props.header.text}}</span>
-      <v-dialog v-else v-model='props.header.dialog'  max-width="300px">
+      <v-dialog v-if="props.header.clickable" v-model='props.header.dialog'  max-width="300px">
         <template v-slot:activator="{ on }">
   
             <span v-on="on" ripple>{{props.header.text}}</span>
@@ -227,7 +227,7 @@
         function to_unique_obj(list){
           let temp_list = {}
           for (let item in list){
-            temp_list[list[item]] =  {label:list[item],a:"AA",checked:true}
+            temp_list[list[item]] =  {label:list[item],checked:true}
           }
           return temp_list 
         }
@@ -243,7 +243,7 @@
 
         this.headers = [
                     {text:"Id", value:'processed_hole_id',sortable: false,clickable:false,},
-                    {text:"Processed date", value:'date',sortable: true,clickable:false, values:[{label:"True",checked:true},{label:"False",checked:true}], allChecked:true},
+                    {text:"Processed date", value:'date',sortable: true,clickable:false},
                     {text:"Bench", value:'bench_name',sortable: false, values:to_unique_obj(bench_names), allChecked:true },
                     {text:"Pattern", value:'pattern_name',sortable: false, values:to_unique_obj(pattern_names), allChecked:true},
                     {text:"Hole_name", value:'hole_name',sortable: false, values:to_unique_obj(hole_names), allChecked:true},
@@ -252,7 +252,7 @@
                     {text:"Sensor", value:'sensor_id',sortable: false, values:to_unique_obj(sensor_ids), allChecked:true},
                     {text:"Digitizer", value:'digitizer_id',sortable: false, values:to_unique_obj(digitizer_ids), allChecked:true },
                     {text:"Flow", value:'flow_id',sortable: false ,values:to_unique_obj(flow_ids), allChecked:true},
-                    {text:"MP", value:'to_mp',sortable: false, values:[{label:"True",checked:true},{label:"False",checked:true}], allChecked:true },
+                    {text:"MP", value:'to_mp',sortable: false, values:{0:{label:"True",checked:true},1:{label:"False",checked:true}}, allChecked:true },
                     {text:"Actions",sortable: false}
         ]
       },
