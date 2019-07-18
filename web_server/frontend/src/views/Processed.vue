@@ -29,7 +29,7 @@
       v-if="!show_dialog_comparison"
     >
     <template slot="headerCell" slot-scope="props">
-      <span v-if="props.header.clickable" v-on="on" ripple>{{props.header.text}}</span>
+      <span v-if="!props.header.clickable" v-on="on" ripple>{{props.header.text}}</span>
       <v-dialog v-else v-model='props.header.dialog'  max-width="300px">
         <template v-slot:activator="{ on }">
   
