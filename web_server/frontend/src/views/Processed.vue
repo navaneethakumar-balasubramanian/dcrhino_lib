@@ -242,8 +242,8 @@
         let digitizer_ids = [...new Set(processed_list.map(a =>  a.digitizer_id))]
 
         this.headers = [
-                    {text:"Id", value:'processed_hole_id',sortable: false},
-                    {text:"Processed date", value:'date',sortable: true},
+                    {text:"Id", value:'processed_hole_id',sortable: true},
+                    {text:"Processed date", value:'date'},
                     {text:"Bench", value:'bench_name',sortable: false, values:to_unique_obj(bench_names), allChecked:true },
                     {text:"Pattern", value:'pattern_name',sortable: false, values:to_unique_obj(pattern_names), allChecked:true},
                     {text:"Hole_name", value:'hole_name',sortable: false, values:to_unique_obj(hole_names), allChecked:true},
