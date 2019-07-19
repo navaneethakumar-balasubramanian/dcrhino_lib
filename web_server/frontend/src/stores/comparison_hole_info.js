@@ -26,7 +26,7 @@ const actions = {
   GET_HOLES_INFO : async (context,payload) => {
     context.commit('SET_LOADING',true)
     context.commit('SET_HOLES_INFO',false)
-    let { data } = await Axios.post('http://localhost:5000/api/processed_hole',payload)
+    let { data } = await Axios.post('/api/processed_hole',payload)
     context.commit('SET_HOLES_INFO',data)
     context.commit('SET_LOADING',false)
   }

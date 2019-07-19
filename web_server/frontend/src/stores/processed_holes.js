@@ -31,7 +31,7 @@ const actions = {
   GET_PROCESSED : async (context,payload) => {
       context.commit('SET_LOADING',true)
       context.commit('SET_PROCESSED_LIST',[])
-      let { data } = await Axios.post('http://localhost:5000/api/processed_holes', payload)
+      let { data } = await Axios.post('/api/processed_holes', payload)
       context.commit('SET_PROCESSED_LIST',data)
       context.commit('SET_LOADING',false)
   }

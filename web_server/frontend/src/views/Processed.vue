@@ -178,7 +178,7 @@
       get_zipped_plots: function(){
           if (this.selected.length > 1) {
             let payload = {mine_name:this.mine_name,processed_holes:this.selected,responseType: 'arraybuffer'}
-            Axios.post('http://localhost:5000/get_zipped_plots', payload).then((response) => {
+            Axios.post('/get_zipped_plots', payload).then((response) => {
    
               window.location.href = response.data.url
             })
@@ -201,7 +201,7 @@
       get_processed_selection:function(){
          if (this.selected.length > 1) {
             let payload = {mine_name:this.mine_name,processed_holes:this.selected,responseType: 'arraybuffer'}
-            Axios.post('http://localhost:5000/get_processed_csv', payload).then((response) => {
+            Axios.post('/get_processed_csv', payload).then((response) => {
    
               const url = window.URL.createObjectURL(new Blob([response.data]));
               const link = document.createElement('a');
