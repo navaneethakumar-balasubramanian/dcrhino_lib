@@ -108,7 +108,6 @@ class SimpleUpdater(object):
             sys.stdout.flush()
 
 
-
 def ideExport(ideFileObj, config, channels=None,resampling_rate=3200, time_offset=0, **kwargs):
     """ The main function that handles generating exported files from an IDE file.
     """
@@ -119,17 +118,19 @@ def ideExport(ideFileObj, config, channels=None,resampling_rate=3200, time_offse
 
     doc = importer.importFile(ideFileObj.AbsPath)
     sensor_serial_number = doc.recorderInfo["RecorderSerial"]
+    skip_channels = [32, 59]
 
     if channels is None:
-        exportChannels = doc.channels.values()
+        exportChannels = [c for c in doc.channels.values() if c.id not in skip_channels]
     else:
-        exportChannels = [c for c in doc.channels.values() if c.id in map(int, channels)]
+        exportChannels = [c for c in doc.channels.values() if c.id in map(int, channels) and c.id not in skip_channels]
 
     numSamples = 0
     for ch in exportChannels:
        #Ch 8 = Main Acceleration
        #Ch 32 = MEMS Acceleration
-       #Ch 59.0 = Pressure Data
+       #Ch 36/59 = Pressure Data
+       #Ch 70 = Quaternions
         try:
             print("  Exporting Channel %d (%s) to %s..." % (ch.id, ch.name, "H5 file"))
             events = ch.getSession()#This gets a session that already exists, so it won't change the noBivariates flag at all
@@ -145,11 +146,8 @@ if __name__ == "__main__":
     import argparse
 
     argparser = argparse.ArgumentParser(description="IDE to H5 Converter v%d.%d.%d - Copyright (c) 2019 DataCloud")
-#     argparser.add_argument('-c', '--channel', action='append', type=int,
-#                            help="Export the specific channel. Can be used multiple times. If not used, all channels will export.")
-#     argparser.add_argument('-b', '--bvr', choices=('True', 'False'), help="Remove Bivariate references", default='True')
-#    argparser.add_argument('-l', '--trace_length', help="Trace Length", default='1')
-    # argparser.add_argument('-s', '--sample_rate', help="Expected Sample Rate", default = '3200')
+    argparser.add_argument('-c', '--channel', action='append', type=int,
+                           help="Export the specific channel. Can be used multiple times. If not used, all channels will export.")
     argparser.add_argument('-p', '--path', help="Path for the input files", default='~/Downloads')
     argparser.add_argument('-TO', '--time_offset', help="Time Offset for clock differences", default=0)
     argparser.add_argument('-fl', '--file_list', help='List of files to be used with the same config file',
@@ -157,8 +155,8 @@ if __name__ == "__main__":
     argparser.add_argument('-cfg', '--config_file', help='Path to the config file to be used', default=None)
     args = argparser.parse_args()
 
-    # channel_list = args.channel
-    channel_list = [8]
+    channel_list = args.channel
+    # channel_list = [8]
     time_offset = float(args.time_offset)
     # if args.bvr == 'True':
     noBvr = True
