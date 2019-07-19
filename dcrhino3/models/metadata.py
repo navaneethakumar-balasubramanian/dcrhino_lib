@@ -98,20 +98,7 @@ class Measurement():
         scale_factor = LENGTH_SCALE_FACTORS[units_string]
         length_in_meters = self._value * scale_factor
         return length_in_meters
-#<remove during housekeeping>
-#        units = self._units
-#        value = self._value
-#
-#        if units == 1:
-#            value = value * 0.3048
-#        elif units == 2:
-#            value = value * 0.0254
-#        #this is cute but more sophisticated than we want to support (too tough change)
-#        #elif units > 2:
-#        #    value = value * (10 ** (units - 3))
-#
-#        return value
-#</remove during housekeeping>
+
 
 
 

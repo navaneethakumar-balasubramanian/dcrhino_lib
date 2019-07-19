@@ -98,7 +98,7 @@ class SymmetricTrace(object):
         self._time_vector = self._time_vector[indices]
 
 
-    def plot(self, ticks=[]):
+    def plot(self, ticks=[], block=True):
         """
         Plot time_vector vs. data, title, label, and show.
         """

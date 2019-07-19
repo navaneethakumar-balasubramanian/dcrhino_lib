@@ -39,6 +39,7 @@ from dcrhino3.helpers.general_helper_functions import init_logging,init_logging_
 from dcrhino3.helpers.process_flow_helper_functions import handle_supplied_txt_file
 from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.process_flow.process_flow import ProcessFlow
+
 #from dcrhino3.process_flow.hole_selector import HoleSelector
 #from dcrhino3.models.trace_dataframe import TraceData
 
@@ -52,9 +53,11 @@ file_logger = init_logging_to_file(__name__)
 def process(list_of_args):
     try:
         process_flow = list_of_args[0]
-        qq, ww, results_dict = process_flow.process_file(list_of_args[1], list_of_args[2], env_config=list_of_args[3],
-                                           seconds_to_process=list_of_args[4],
-                                           return_dict=dict())
+        qq, ww, results_dict = process_flow.process_file(list_of_args[1], 
+                                                         list_of_args[2], 
+                                                         env_config=list_of_args[3],
+                                                         seconds_to_process=list_of_args[4],
+                                                         return_dict=dict())
 
         return results_dict
     except:
@@ -63,7 +66,12 @@ def process(list_of_args):
 
 
 def process_glob(default_process_json, glob_str,
-                 env_config_path="env_config.json", seconds_to_process=False, processes=False, photo_folder = False):
+                 env_config_path="env_config.json", seconds_to_process=False, 
+                 processes=False, photo_folder=False, DEBUG=True):
+    """
+    repairing redundant logic, 20190718
+    process_queue: 
+    """
 
     env_config = EnvConfig(env_config_path)
     logger.info("Using env_config : {}".format(env_config_path))
@@ -80,56 +88,46 @@ def process_glob(default_process_json, glob_str,
         logger.warning('File does not exist: {}'.format(glob_str))
         return
     files_list = [x for x in files_list if not env_config.is_file_blacklisted(x)]
+    
+    
+    la_lista = []
     for ffile in files_list:
         if ".txt" in ffile:
             json_path = os.path.join(os.path.abspath('.'), 'process_flows')
             txt_folder_path = os.path.dirname(ffile)#see questionfor thiago in comments
-            el_listo = handle_supplied_txt_file(ffile, json_path,
+            todo_list = handle_supplied_txt_file(ffile, json_path,
                                                 txt_folder_path,
                                                 default_process_json)
-
-
-            #lets generate a list of h5 and json pairs
-            for h5_json_pair in el_listo:
-                h5_file_path = h5_json_pair[0]
-                process_json = h5_json_pair[1]
-                print('Processing ' + h5_file_path + ' using ' + process_json['id'])
-
-                if processes is not False:
-                    temp = [process_flow,process_json, h5_file_path, env_config, seconds_to_process,return_dict]
-                    process_queue.append(temp)
-
-                else:
-                   # qq, ww = process_flow.process_file(process_json, h5_file_path, env_config=env_config,
-                   #                                    seconds_to_process=seconds_to_process,
-                   #                                    return_dict = dict())
-                   # process_json = ww
-                    p = Process(target=process_flow.process_file,
-                                args=(process_json, h5_file_path,
-                                     env_config, seconds_to_process,return_dict))
-                    p.start()
-                    p.join()
-                    process_json = return_dict["process_json"]
-
+            la_lista += todo_list
         elif '.h5' in os.path.splitext(ffile)[1]:
-            process_json = default_process_json
-            if env_config.is_file_blacklisted(ffile):
-                continue
-            if processes is not False:
-                temp = [process_flow,process_json, ffile, env_config, seconds_to_process, return_dict]
-                process_queue.append(temp)
-            else:
-                #qq, ww = process_flow.process_file(process_json, ffile,
-                #                                   env_config=env_config,
-                #                                   seconds_to_process=seconds_to_process,
-                #                                   return_dict = {})
-                #process_json = ww
-                p = Process(target=process_flow.process_file,
-                            args=(process_json, ffile, env_config, seconds_to_process,return_dict))
-                p.start()
-                p.join()
-                process_json = return_dict["process_json"]
+            h5_json_pair = [ffile, process_json]
+            la_lista.append(h5_json_pair)
 
+        #lets generate a list of h5 and json pairs
+    for h5_json_pair in la_lista:
+        h5_file_path = h5_json_pair[0]
+        process_json = h5_json_pair[1]
+        print('Processing ' + h5_file_path + ' using ' + process_json['id'])
+
+        if processes is not False:
+            temp = [process_flow,process_json, h5_file_path, env_config, 
+                    seconds_to_process, return_dict]
+            process_queue.append(temp)            
+        else:
+            if DEBUG:
+                qq, ww, ee = process_flow.process_file(process_json, h5_file_path,
+                                                       env_config=env_config,
+                                                       seconds_to_process=seconds_to_process,
+                                                       return_dict = {})
+                process_json = ww
+            
+            p = Process(target=process_flow.process_file,
+                        args=(process_json, h5_file_path,
+                             env_config, seconds_to_process,return_dict))
+            p.start()
+            p.join()
+            process_json = return_dict["process_json"]
+        
     if processes is not False:
         p = Pool(int(processes))
         results = p.map(process, process_queue)
