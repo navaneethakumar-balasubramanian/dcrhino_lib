@@ -2864,16 +2864,45 @@ class EventList(Transformable):
 
         outFile = ideFileObj.Path
         outFile = outFile.replace("level_0", "level_1")
-        output_path = os.path.join(outFile, "piezo")
+        data_type = "piezo"
+        row_keys_type_dict = {"ts":numpy.float64,
+                              "seq":numpy.int32,
+                              "ticks":numpy.int32,
+                              "x_data":numpy.float32,
+                              "y_data":numpy.float32,
+                              "z_data":numpy.float32}
 
         if str(sensor_serial_number) in fname:
-            fname ="{}_{}".format(fname, resampling_rate)
+            fname = "{}_{}".format(fname, resampling_rate)
         else:
-            fname ="{}_{}_{}".format(fname, sensor_serial_number,resampling_rate)
+            fname = "{}_{}_{}".format(fname, sensor_serial_number, resampling_rate)
+
+        if _self.channelId == 70:
+            data_type = "quaternions"
+            fname = "{}_{}".format(fname, data_type)
+            row_keys_type_dict = {"ts":numpy.float64,
+                                  "qt_x":numpy.float32,
+                                  "qt_y":numpy.float32,
+                                  "qt_z":numpy.float32,
+                                  "qt_w":numpy.float32}
+        elif _self.channelId in [36, 59]:
+            data_type = "pressure"
+            fname = "{}_{}_ch{}".format(fname, data_type,_self.channelId)
+            row_keys_type_dict = {"ts":numpy.float64,
+                                  "pressure":numpy.float32,
+                                  "temperature":numpy.float32}
+        elif _self.channelId == 32:
+            data_type = "mems"
+            row_keys_type_dict = {"ts": numpy.float64,
+                                  "x_data": numpy.float32,
+                                  "y_data": numpy.float32,
+                                  "z_data": numpy.float32}
+
+        output_path = os.path.join(outFile, data_type)
 
         if os.path.exists(output_path):
             if os.path.exists(os.path.join(output_path, "{}.h5".format(fname))):
-                output_path = os.path.join(output_path, "{}_{}.h5".format(fname,datetime.now().strftime(
+                output_path = os.path.join(output_path, "{}_{}.h5".format(fname, datetime.now().strftime(
                     "%Y%m%d%H%M%S")))
             else:
                 output_path = os.path.join(output_path, "{}.h5".format(fname))
@@ -2896,31 +2925,30 @@ class EventList(Transformable):
                 sample_ts = (evt[0]/1000000)+_self.session.utcStartTime + time_offset
                 if first_timestamp is None:
                     first_timestamp = sample_ts
-                x = evt[1][0]
-                y = evt[1][1]
-                z = 0
-                if len(evt) > 2:
-                    z = evt[1][2]
-                row = [sample_ts, counter, counter, x, y, z]
-                buffer.append(row)
+
+                if _self.channelId == 8:
+                    x = evt[1][0]
+                    y = evt[1][1]
+                    z = 0
+                    if len(evt) > 2:
+                        z = evt[1][2]
+                    row = [sample_ts, counter, counter, x, y, z]
+                    buffer.append(row)
+                else:
+                    row = list()
+                    row.append(sample_ts)
+                    for measurement in evt[1]:
+                        row.append(measurement)
+                    buffer.append(row)
                 counter += 1
                 if counter % buffer_size == 0:
                     print ("{} samples procesed".format(counter))
-                    #pdb.set_trace()
                     buffer = numpy.asarray(buffer)
-                    digitizer_timestamps = numpy.asarray(buffer[:, 0], dtype=numpy.float64)
-                    seq = numpy.asarray(buffer[:, 1], dtype=numpy.int32)
-                    ticks = numpy.asarray(buffer[:, 2], dtype=numpy.int32)
-                    x_data = numpy.asarray(buffer[:, 3], dtype=numpy.float32)
-                    y_data = numpy.asarray(buffer[:, 4], dtype=numpy.float32)
-                    z_data = numpy.asarray(buffer[:, 5], dtype=numpy.float32)
 
-                    self.saveNumpyToFile(h5f, "ts", digitizer_timestamps)
-                    self.saveNumpyToFile(h5f, "seq", seq)
-                    self.saveNumpyToFile(h5f, "cticks", ticks)
-                    self.saveNumpyToFile(h5f, "x", x_data)
-                    self.saveNumpyToFile(h5f, "y", y_data)
-                    self.saveNumpyToFile(h5f, "z", z_data)
+                    for i, key in enumerate(row_keys_type_dict):
+                        buffer_data = numpy.asarray(buffer[:, i], dtype=row_keys_type_dict[key])
+                        self.saveNumpyToFile(h5f, key, buffer_data)
+
                     buffer = list()
                 if callback is not None:
                     if getattr(callback, 'cancelled', False):
@@ -2931,20 +2959,10 @@ class EventList(Transformable):
             print ("{} samples procesed".format(counter))
             if callback is not None:
                 callback(done=True)
-            #pdb.set_trace()
             buffer = numpy.asarray(buffer)
-            digitizer_timestamps = numpy.asarray(buffer[:, 0], dtype=numpy.float64)
-            seq = numpy.asarray(buffer[:, 1], dtype=numpy.int32)
-            ticks = numpy.asarray(buffer[:, 2], dtype=numpy.int32)
-            x_data = numpy.asarray(buffer[:, 3], dtype=numpy.float32)
-            y_data = numpy.asarray(buffer[:, 4], dtype=numpy.float32)
-            z_data = numpy.asarray(buffer[:, 5], dtype=numpy.float32)
-            self.saveNumpyToFile(h5f, "ts", digitizer_timestamps)
-            self.saveNumpyToFile(h5f, "seq", seq)
-            self.saveNumpyToFile(h5f, "cticks", ticks)
-            self.saveNumpyToFile(h5f, "x", x_data)
-            self.saveNumpyToFile(h5f, "y", y_data)
-            self.saveNumpyToFile(h5f, "z", z_data)
+            for i, key in enumerate(row_keys_type_dict):
+                buffer_data = numpy.asarray(buffer[:, i], dtype=row_keys_type_dict[key])
+                self.saveNumpyToFile(h5f, key, buffer_data)
 
             h5f.close()
 
