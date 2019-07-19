@@ -71,7 +71,7 @@ import Axios from 'axios'
   export default {
     mounted(){
       const temp = this
-      Axios.get('http://localhost:5000/mines').then((response) => {
+      Axios.get('/mines').then((response) => {
             response.data.forEach(element => {
               temp.items.push({title:element,items:[
                 { title:"Processed files"  , link:"/processed/" + element },
