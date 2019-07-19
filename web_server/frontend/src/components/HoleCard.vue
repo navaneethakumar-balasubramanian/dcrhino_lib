@@ -163,7 +163,7 @@
             return window.moment.unix(unix);
         },
         get_image:function(image_file_name){
-            return "http://localhost:5000/images/" + this.mine_name + "/" + this.processed.processed_hole_id + "/"+image_file_name
+            return "/images/" + this.mine_name + "/" + this.processed.processed_hole_id + "/"+image_file_name
         },
         to_mp:function(to_mp){
             this.$store.dispatch('UPDATE_HOLE_TO_MP',{mine_name:this.mine_name,processed_hole_id:this.processed.processed_hole_id,to_mp:to_mp})
