@@ -60,7 +60,7 @@ def merge_mwd_with_trace(hole_mwd, trace_data, merger):
         (DataFrame): dataframe combining the two dataframes' columns
     """
 
-    mwd_depth_spacing = np.median(np.diff(hole_mwd.depth))
+    mwd_depth_spacing = np.median(np.diff(hole_mwd.measured_depth))
     for key, global_config in trace_data._global_configs.items():
         global_config.mwd_depth_spacing = mwd_depth_spacing
 
@@ -80,12 +80,14 @@ def load_acorr_db(sensor_file_id, timestamp_min, timestamp_max,config_str, file_
     global_config = Config()
     global_config.set_data_from_json(json.loads(config_str))
 
-    upsample_factor = 1.25
-    try:
-        print(global_config.upsample_factor)
-    except AttributeError:
-        logger.warning("this warning will be removed once the upsample factor is coming from the global cfg")
-        global_config.output_sampling_rate *= upsample_factor
+    #upsample_factor = 1.25
+    #try:
+    #    print(global_config.upsample_factor)
+    #except AttributeError:
+    #    logger.warning("this warning will be removed once the upsample factor is coming from the global cfg")
+    #    global_config.output_sampling_rate *= upsample_factor
+
+
 
 
     relative_timestamp_min = int(timestamp_min) - int(file_min_ts)
@@ -117,9 +119,19 @@ def generate_cache_acorr(matches_line,files,mwd_df,mwd_helper,env_config,mine_na
             # pdb.set_trace()
         file_id = file[1].sensor_file_id
         output_df['acorr_file_id'] = file_id
+        if 'remap_columns' in json.loads(file[1].config_str).keys():
+            td_remmaped = pd.DataFrame()
+            for column in output_df.columns:
+                if column in json.loads(file[1].config_str)['remap_columns'].keys():
+                    td_remmaped[column] = output_df[json.loads(file[1].config_str)['remap_columns'][column]]
+                else:
+                    td_remmaped[column] = output_df[column]
+            output_df = td_remmaped
         td.dataframe = pd.concat([td.dataframe, output_df])
 
         td._global_configs[str(file_id)] = global_config
+
+
 
     td.dataframe = td.dataframe.sort_values('timestamp').reset_index().drop('index', 1)
     hole_mwd = mwd_helper.get_hole_mwd_from_mine_mwd(mwd_df, matches_line.bench_name,
@@ -127,9 +139,11 @@ def generate_cache_acorr(matches_line,files,mwd_df,mwd_helper,env_config,mine_na
                                                      matches_line.hole_id)
     hole_mwd.reset_index(drop=True,inplace=True)
     td.dataframe = merge_mwd_with_trace(hole_mwd, td, merger)
+
+
     return td
 
-def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper):
+def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper,sql_db_helper):
 
     if line.solution_label == 'Non Conflict' or line.solution_label== 'Conflict Solved':
         td = generate_cache_acorr(line,files_df,mwd_df,mwd_helper,env_config,mine_name)
@@ -154,8 +168,8 @@ def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper):
             else:
                 if '_trace' in column:
                     have_data_on_line = False
-                    for line in data_array:
-                        if ((np.array(line) == 0).all() or (np.array(line) == None).all() or np.isnan(np.array(line)).all()) == False:
+                    for data_line in data_array:
+                        if ((np.array(data_line) == 0).all() or (np.array(data_line) == None).all() or np.isnan(np.array(data_line)).all()) == False:
                             have_data_on_line = True
                             break
                     if have_data_on_line is False:
@@ -166,7 +180,10 @@ def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper):
             td.save_to_h5(temp_h5_path)
         except:
             pass
-        logger.info("File saved at " + temp_h5_path)
+        logger.info("File saved at " + h5_path)
+        sql_db_helper.acorr_files.add(td.hole_id, td.sensor_id, td.bench_name,
+                                  td.pattern_name, td.hole_name, td.rig_id,
+                                  td.digitizer_id, h5_path, int(td.min_ts), int(td.max_ts),line.bo_id)
         try:
             os.rename(temp_h5_path, h5_path)
 
@@ -177,7 +194,7 @@ def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper):
 
 def process(list_of_args):
     try:
-        process_match_line(list_of_args[0], list_of_args[1], list_of_args[2], list_of_args[3],list_of_args[4], list_of_args[5])
+        process_match_line(list_of_args[0], list_of_args[1], list_of_args[2], list_of_args[3],list_of_args[4], list_of_args[5],list_of_args[6])
     except:
         logger.warn("FAILED TO PROCESS THIS " + str(list_of_args[2]))
         file_logger.warn("FAILED TO PROCESS THIS " + str(list_of_args[2]))
@@ -192,11 +209,12 @@ if __name__ == '__main__':
         argparser.add_argument("-m", '--matches_output_path', help="Path to optional matches file", default=False)
         argparser.add_argument('-mp', '--mp-processes', help="MULTIPROCESSING PROCESSES", default=False)
         argparser.add_argument('-mid', '--match-id', help="Match id", default=False)
+        argparser.add_argument("-force", "--force-regen", action="store_true",help="Force to regenerate files")
         args = argparser.parse_args()
         mine_name = args.mine_name
         env_config_path = args.env_config_path
         processes = args.mp_processes
-        match_id = args.match_id
+        bo_id = args.match_id
     else:
         mine_name = ''
 
@@ -207,17 +225,20 @@ if __name__ == '__main__':
         merger = MWDRhinoMerger(None,None,False)
         sqlconn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
         sql_db_helper = RhinoSqlHelper(host=sqlconn['host'], user=sqlconn['user'], passwd=sqlconn['password'],database=sqlconn['database'])
-        matches_df = sql_db_helper.matches.get_all()
+        if args.force_regen:
+            matches_df = sql_db_helper.blasthole_observations.get_all_with_solution()
+        else:
+            matches_df = sql_db_helper.blasthole_observations.get_bo_to_update_acorr()
         files_df = sql_db_helper.sensor_files.get_all()
         #generate_cache_acorr(mine_name, env_config_path,args.matches_output_path)
         processes_queue = []
         for line in matches_df.iterrows():
-            if match_id is False or str(line[1].match_id) == match_id:
+            if bo_id is False or str(line[1].bo_id) == bo_id:
                 line = line[1]
                 if processes is not False:
-                    processes_queue.append([line,env_config,args.mine_name,files_df,mwd_df,mwd_helper])
+                    processes_queue.append([line,env_config,args.mine_name,files_df,mwd_df,mwd_helper,sql_db_helper])
                 else:
-                    process_match_line(line, env_config, args.mine_name, files_df, mwd_df, mwd_helper)
+                    process_match_line(line, env_config, args.mine_name, files_df, mwd_df, mwd_helper,sql_db_helper)
 
         if processes is not False:
             p = Pool(int(processes))

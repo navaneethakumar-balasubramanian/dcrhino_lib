@@ -3,6 +3,7 @@ from dcrhino3.helpers.db.processed_holes import ProcessedHoles
 from dcrhino3.helpers.db.acorr_files     import AcorrFiles
 from dcrhino3.helpers.db.sensor_files    import SensorFiles
 from dcrhino3.helpers.db.matches         import Matches
+from dcrhino3.helpers.db.blasthole_observations import BlastholeObservations
 
 class MyConverter(mysql.connector.conversion.MySQLConverter):
 
@@ -28,4 +29,5 @@ class RhinoSqlHelper:
         self.processed_holes = ProcessedHoles(self.conn)
         self.acorr_files = AcorrFiles(self.conn)
         self.sensor_files = SensorFiles(self.conn)
-        self.matches = Matches(self.conn)
+        #self.matches = Matches(self.conn)
+        self.blasthole_observations = BlastholeObservations(self.conn)

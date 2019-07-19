@@ -67,6 +67,12 @@ class H5Helper:
         """
         return [self.load_axis('x'), self.load_axis('y'), self.load_axis('z')]
 
+    def shift_time(self, time_offset=0):
+        self._ts += time_offset
+        del self.h5f["ts"]
+        self.h5f["ts"] = self._ts
+
+
     def load_axis(self,axis):
         """
         Load single axis as a Numpy array.
@@ -156,7 +162,8 @@ class H5Helper:
 
     def _extract_global_config_from_h5_file(self):
         global_config_json = json.loads(self.h5f.attrs["global_config_jsons"])
-        first_config = json.loads(global_config_json["0"])
+        keys = global_config_json.keys()
+        first_config = json.loads(global_config_json[keys[0]])
         c = Config()
         c.set_data_from_json(first_config)
         return c

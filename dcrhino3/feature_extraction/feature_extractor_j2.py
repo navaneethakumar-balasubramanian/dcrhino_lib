@@ -16,6 +16,13 @@ i.e. primary, integrated_absolute_amplitude, is centered on the time_pick,
 multiple_1, integrated_absolute_amplitude, is centered on the zero_crossing time_pick, with data -90deg rotated
 but in general we should have a tree of {time_pick_type, amplitude_pick_type} --> algortihm description
 
+.. note:: Originally this was picking values on windows based on multiple, theoretical times
+and then picks based on manual windows.  Then we switched to jazz1 (originally called
+"additional_pick_based" features).  Then jazz2 was requested, this is basically a way
+to non-manually pick the windows for jazz1 but rather to select them based on zero-crossings.
+This was implemented but before it ran we we changed it again to jazz3.  This is like jazz2
+but we only consider the region between the peak of the primary and the first trough to the left and right.
+
 .. todo:: factor the additional_pick_based_amplitude_windows (original manual jazz hack out)
 Example json control block:
 
@@ -104,6 +111,7 @@ from dcrhino3.signal_processing.time_picker import TimePicker
 from dcrhino3.signal_processing.phase_rotation import rotate_phase
 from dcrhino3.feature_extraction.jazz_with_zero_crossings import jazz2
 from dcrhino3.feature_extraction.jazz_with_zero_crossings import estimate_trough_width
+from dcrhino3.feature_extraction.jazz3 import jazz3
 #from feature_extractor_j1a import calculate_boolean_features
 
 
@@ -153,6 +161,7 @@ class FeatureExtractorJ2(object):
                                                               amplitude_picks)
 
         self.jazz2_wavelets = []
+        self.jazz3_wavelets = []
         try:
             self.jazz1_amplitude_windows = getattr(transformed_args.jazz1_amplitude_windows, component_id)
         except:
@@ -162,6 +171,11 @@ class FeatureExtractorJ2(object):
             self.jazz2_wavelets = getattr(transformed_args.jazz2_wavelets, component_id)
         except:
             self.jazz2_wavelets = []
+        try:
+            self.jazz3_wavelets = getattr(transformed_args.jazz3_wavelets, component_id)
+        except:
+            self.jazz3_wavelets = []#['primary',]
+            
         #</fix this up>
 
     
@@ -204,12 +218,14 @@ class FeatureExtractorJ2(object):
                 integral, absolute_integral = self.extract_integrated_amplitudes(window_center,
                                                     window_half_width,
                                                     rotate_angle=False)
-                output_label = '{}-{}-{}'.format(self.trace.component_id, wavelet_id,
-                                                 'jazz1_{}_integrated_amplitude'.format(lr))
+                
+                feature_label = 'jazz1_{}_integrated_amplitude'.format(lr)
+                output_label = full_feature_label(self.trace.component_id, wavelet_id, feature_label)
                 extracted_features_dict[output_label] = integral
-                output_label = '{}-{}-{}'.format(self.trace.component_id, wavelet_id,
-                                                 'jazz1_{}_integrated_absolute_amplitude'.format(lr))
+                feature_label = 'jazz1_{}_integrated_absolute_amplitude'.format(lr)
+                output_label = full_feature_label(self.trace.component_id, wavelet_id, feature_label)
                 extracted_features_dict[output_label] = absolute_integral
+
 
             #<jazz_center>
             lower_bound_offset = getattr(bounds, 'left_upper_bound_offset')
@@ -221,11 +237,11 @@ class FeatureExtractorJ2(object):
             integral, absolute_integral = self.extract_integrated_amplitudes(window_center,
                                                                              window_half_width,
                                                                              rotate_angle=False)
-            output_label = '{}-{}-{}'.format(self.trace.component_id, wavelet_id,
-                            'jazz1_center_integrated_amplitude')
+            feature_label = 'jazz1_center_integrated_amplitude'
+            output_label = full_feature_label(self.trace.component_id, wavelet_id, feature_label)
             extracted_features_dict[output_label] = integral
-            output_label = '{}-{}-{}'.format(self.trace.component_id, wavelet_id,
-                'jazz1_center_integrated_absolute_amplitude')
+            feature_label = 'jazz1_center_integrated_absolute_amplitude'
+            output_label = full_feature_label(self.trace.component_id, wavelet_id, feature_label)
             extracted_features_dict[output_label] = absolute_integral
             #</jazz_center>
         return extracted_features_dict
@@ -266,6 +282,18 @@ class FeatureExtractorJ2(object):
             wavelet_center_time = extracted_features_dict[center_time_key]
             jazz2_dict = jazz2(self.trace, wavelet_center_time, expected_trough_duration, wavelet_id=wavelet_id)
             for feature_id, feature_value in jazz2_dict.items():
+                output_label = full_feature_label(self.trace.component_id, wavelet_id, feature_id)
+                extracted_features_dict[output_label] = feature_value
+
+        for wavelet_id in self.jazz3_wavelets:
+            bpf_center_frequency = np.mean([self.transformed_args.trapezoidal_bpf_corner_2,
+                                        self.transformed_args.trapezoidal_bpf_corner_3])
+            bpf_period = 1./bpf_center_frequency
+            expected_trough_duration = estimate_trough_width(bpf_period, self.trace.component_id)
+            center_time_key = '{}-{}-maximum_time'.format(self.trace.component_id, wavelet_id)
+            wavelet_center_time = extracted_features_dict[center_time_key]
+            jazz3_dict = jazz3(self.trace, wavelet_center_time, expected_trough_duration, wavelet_id=wavelet_id)
+            for feature_id, feature_value in jazz3_dict.items():
                 output_label = full_feature_label(self.trace.component_id, wavelet_id, feature_id)
                 extracted_features_dict[output_label] = feature_value
 

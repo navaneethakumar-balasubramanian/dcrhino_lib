@@ -162,8 +162,9 @@ class ProcessFlow:
                 self.modules_flow.append(module)
 
     def make_database_connection(self, mine_name):
+
         machine_id = socket.gethostname()
-        if machine_id=='thales4':
+        if machine_id=='thales4' or self.output_to_db is False:
             pass
         else:
             conn = self.env_config.get_rhino_db_connection_from_mine_name(mine_name)

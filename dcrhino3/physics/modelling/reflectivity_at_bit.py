@@ -71,8 +71,10 @@ def my_function():
     rock = Rock(alpha, rho) # maybe init as needed
     #pdb.set_trace()
     print(rock)
+    #<USER DEFINED>
     sampling_rate = 5000.0
     df = 0.5; frequency_resolution = df;  # Hz
+    #</USER DEFINED>
 
     #<derived>
     nyquist = sampling_rate / 2.0 # hertz

@@ -12,7 +12,7 @@ import pdb
 import requests
 from clickhouse_driver import Client
 from dcrhino3.models.env_config import MwdType
-from dcrhino3.helpers.general_helper_functions import init_logging
+from dcrhino3.helpers.general_helper_functions import init_logging,df_column_uniquify
 
 logger = init_logging(__name__)
 
@@ -30,7 +30,7 @@ class MWDHelper():
         self.env_config = env_config
 
 
-        self.required_columns = ['easting','northing','elevation','hole_id','hole_name','pattern_name','bench_name','start_time','collar_elevation','rig_id']
+        self.required_columns = ['easting','northing','hole_id','hole_name','pattern_name','bench_name','start_time','rig_id','measured_depth']
         self.optional_columns = ['tob','rop','wob','mse','air_pressure','rpm']
 
 
@@ -112,7 +112,12 @@ class MWDHelper():
                     columns_table_name.append(renamed[col])
 
                 mwd_data_df = pd.DataFrame(mwd_data_from_db,columns=columns_table_name)
-        return mwd_data_df
+
+                #mwd_data_df = mwd_data_df.loc[:, ~mwd_data_df.columns.duplicated()]
+
+        original_mwd_df = df_column_uniquify(mwd_data_df)
+        original_mwd_df.to_csv('original_mwd.csv')
+        return original_mwd_df
 
     def query_result_to_pd(self,result,columns):
             """
@@ -289,7 +294,7 @@ class MWDHelper():
         Returns:
             (DataFrame): DataFrame *df* with values rows sorted by start_time.
         """
-        if df.start_time.dtype == 'int64':
+        if df.start_time.dtype == 'int64' or df.start_time.dtype == "float64":
             df['start_time'] = pd.to_datetime(df['start_time'],unit='s')
         else:
             df['start_time'] = pd.to_datetime(df['start_time'])
@@ -303,7 +308,7 @@ class MWDHelper():
         df['hole_name'] = df['hole_name'].astype(str)
         df['hole_id'] = df['hole_id'].astype(str)
         df['rig_id'] = df['rig_id'].astype(str)
-        df['depth'] = (df['collar_elevation'] - df['elevation']).astype(float)
+        #df['depth'] = (df['collar_elevation'] - df['elevation']).astype(float)
 
         sorted_by_start_time = df.sort_values(by=['start_time'])
         return sorted_by_start_time

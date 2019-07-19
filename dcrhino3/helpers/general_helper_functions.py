@@ -25,6 +25,23 @@ from scipy.interpolate import interp1d
 import logging
 
 
+def df_column_uniquify(df):
+    df_columns = df.columns
+    new_columns = []
+    for item in df_columns:
+        counter = 0
+        newitem = item
+        while newitem in new_columns:
+            counter += 1
+            newitem = "{}_{}".format(item, counter)
+        new_columns.append(newitem)
+    df.columns = new_columns
+    return df
+
+def file_as_bytes(file):
+    with file:
+        return file.read()
+
 def is_string(val):
     if (sys.version_info > (3, 0)):
         return isinstance(val, str)
@@ -311,7 +328,7 @@ def interpolate_data(raw_timestamps, data, ideal_timestamps, kind="quadratic"):
     return np.asarray(interp_data, dtype=np.float32)
 
 
-def calibrate_data(data,sensitivity, accelerometer_max_voltage=3.0, rhino_version=1.0, is_ide_file=False,
+def calibrate_data(data, sensitivity, accelerometer_max_voltage=3.0, rhino_version=1.0, is_ide_file=False,
                    remove_mean=False):
     output = data
 
@@ -350,6 +367,10 @@ def fft_data(data_array, sampling_rate):
     return {"content": np.abs(sp.real[0:np.int(N / 2)]),
             "frequency": freq,
             "calibrated": data_array}
+
+def calculate_battery_percentage(max_voltage, min_voltage, current_voltage):
+    value = 100 - (max_voltage - current_voltage) / (max_voltage - min_voltage) * 100
+    return round(value, 2)
 
 
 

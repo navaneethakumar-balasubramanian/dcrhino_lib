@@ -54,7 +54,7 @@ class PhaseBalanceHybridModule(BaseHybridModule):
 
     def process_splitted_trace(self, splitted_traces):
         transformed_args = splitted_traces.transformed_args
-    	sampling_rate = splitted_traces.dataframe.sampling_rate.iloc[0]
+        sampling_rate = splitted_traces.dataframe.sampling_rate.iloc[0]
 
         for component_id in self.components_to_process:
             phase_column_label = '{}-primary_phase_correction'.format(component_id)

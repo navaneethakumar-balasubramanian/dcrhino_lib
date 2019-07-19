@@ -18,7 +18,10 @@ import scipy.signal as ssig
 import sys
 import warnings
 
-from ConfigParser import ConfigParser
+if sys.version_info > (2, 7):
+    import configparser as ConfigParser
+else:
+    from ConfigParser import ConfigParser
 from datetime import datetime
 from functools import partial
 from operator import is_not
@@ -566,13 +569,13 @@ def main():
         if 'ts.npy' in os.listdir(temppath):
             previous_ts_array = np.load(os.path.join(temppath,'ts.npy'))
             previous_end_ts = previous_ts_array[-1]
-            print "File in folder",previous_end_ts,end_ts
+            print("File in folder",previous_end_ts,end_ts)
             if end_ts > previous_end_ts+1:
                 append_mode = True
-                print "changed start ts to ",previous_end_ts+1
+                print("changed start ts to ",previous_end_ts+1)
                 start_ts = previous_end_ts+1
             else:
-                print "File in the output folder have more time than the input file"
+                print("File in the output folder have more time than the input file")
                 sys.exit(1)
 
 
@@ -671,11 +674,11 @@ def main():
 
                 for i,hole in enumerate(holes_array):
                     bph_string = str(hole[bench_column].values[0]) + "-" + str(hole[pattern_column].values[0])  + "-" + str(hole[hole_column].values[0])
-                    print str(i) + " - " + bph_string
+                    print(str(i) + " - " + bph_string)
                 try:
                     hole_index=int(raw_input('Chose one hole number to be processed:'))
                 except ValueError:
-                    print "Not a number"
+                    print("Not a number")
                     exit()
 
 
