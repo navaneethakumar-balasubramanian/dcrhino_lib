@@ -45,7 +45,7 @@
             this.$emit('input', false)
         },
         get_image:function(image_file_name,processed_hole_id){
-            return "http://localhost:5000/images/" + this.mine_name + "/" + processed_hole_id + "/"+image_file_name
+            return "/images/" + this.mine_name + "/" + processed_hole_id + "/"+image_file_name
         },
     },
    
