@@ -142,7 +142,8 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
     right_trough_interval = TimePeriod(lower_bound=tick_times[2], upper_bound=tick_times[3])
 
     if missing_zero_crossing(tick_times[0], expected_trough_duration):
-        print("Missed a zero-crossing")
+        #print("Missed a zero-crossing")
+        pass
         #sanity_check_plot = True
     #pdb.set_trace()
     
@@ -155,9 +156,9 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
     left_jazz3_trough_ndx += 1 #off by 1 from derivative
     t_left_half_trough = t_left_trough[left_jazz3_trough_ndx:]
     left_half_trough = left_trough[left_jazz3_trough_ndx:]
-    print(left_jazz3_trough_ndx)
-    print(t_left_trough[left_jazz3_trough_ndx])
-    print(left_trough[left_jazz3_trough_ndx])
+    #print(left_jazz3_trough_ndx)
+    #print(t_left_trough[left_jazz3_trough_ndx])
+    #print(left_trough[left_jazz3_trough_ndx])
     
     # up to here its all jazz2, now:
     d_right_trough = np.diff(right_trough)  # slopes
@@ -167,9 +168,9 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
     right_jazz3_trough_ndx += 1 #off by 1 from derivative
     t_right_half_trough = t_right_trough[:right_jazz3_trough_ndx]
     right_half_trough = right_trough[:right_jazz3_trough_ndx]
-    print(right_jazz3_trough_ndx)
-    print(t_right_trough[right_jazz3_trough_ndx])
-    print(right_trough[right_jazz3_trough_ndx])
+    #print(right_jazz3_trough_ndx)
+    #print(t_right_trough[right_jazz3_trough_ndx])
+    #print(right_trough[right_jazz3_trough_ndx])
     #</END JAZZ2 START JAZZ3>
     if sanity_check_plot:
         ttl_string = '{} {}'.format(symmetric_trace.component_id, wavelet_id)
