@@ -24,8 +24,9 @@ env_path = os.path.join(bin_dir, 'env_config.json')
 
 process_flow_dir = os.path.join(bin_dir, 'process_flows')
 
-mont_wright_acorr_folder = os.path.join(dc_cache_path, 'arcelor_mittal/mont_wright/acorr')
-mont_wright_processed_folder = os.path.join(dc_cache_path, 'arcelor_mittal/mont_wright/processed')
+mont_wright_data_cache_path = os.path.join(dc_cache_path, 'arcelor_mittal/mont_wright')
+mont_wright_acorr_folder = os.path.join(mont_wright_data_cache_path, 'acorr')
+mont_wright_processed_folder = os.path.join(mont_wright_data_cache_path, 'processed')
 
 line_creek_data_cache_path = os.path.join(dc_cache_path, 'line_creek')
 line_creek_acorr_folder = os.path.join(line_creek_data_cache_path, 'acorr')
