@@ -46,11 +46,14 @@ def send_css(path):
 def send_js(path):
     return send_from_directory('../web_server/frontend/dist/js/', path)
 
-#@app.route('/holes_to_mp')
-#def holes_to_mp_page():
-#    if holes_to_mp('mont_wright', 'env_config.json') :
-#        return "Updated"
-#    return "Error"
+
+@app.route('/api/mwd',methods=['GET', 'POST'])
+def mwd():
+    req_json = request.get_json()
+    env_config = EnvConfig()
+    mine_name = req_json['mine_name']
+
+    return
 
 @app.route('/api/processed_holes',methods=['GET', 'POST'])
 def processed_holes():
@@ -58,12 +61,14 @@ def processed_holes():
     env_config = EnvConfig()
     mine_name = req_json['mine_name']
     db_conn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
-    db_helper = RhinoSqlHelper(db_conn['host'], db_conn['user'], db_conn['password'], db_conn['database'])
+    db_helper = RhinoSqlHelper(**db_conn)
+
     if 'search' in req_json.keys():
-        processed_holes = db_helper.processed_holes.get_search_string(req_json['search'])
+        processed_holes = db_helper.processed_holes.get_search_string(req_json['search'],1000,req_json['from'],req_json['to'])
     else:
         processed_holes = db_helper.processed_holes.get_latests()
-    processed_holes = processed_holes[processed_holes['archived'] == '0']
+    if len(processed_holes) > 0:
+        processed_holes = processed_holes[processed_holes['archived'] == '0']
     return processed_holes.to_json(orient='records')
 
 @app.route('/api/hole_to_mp',methods=['GET', 'POST'])

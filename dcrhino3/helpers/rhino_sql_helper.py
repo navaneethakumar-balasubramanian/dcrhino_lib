@@ -4,6 +4,7 @@ from dcrhino3.helpers.db.acorr_files     import AcorrFiles
 from dcrhino3.helpers.db.sensor_files    import SensorFiles
 from dcrhino3.helpers.db.matches         import Matches
 from dcrhino3.helpers.db.blasthole_observations import BlastholeObservations
+import pdb
 
 class MyConverter(mysql.connector.conversion.MySQLConverter):
 
@@ -18,13 +19,15 @@ class MyConverter(mysql.connector.conversion.MySQLConverter):
         return[str(to_unicode(col)) for col in row]
 
 class RhinoSqlHelper:
-    def __init__(self,host,user,passwd,database):
+    def __init__(self,host,user,password,database,port=3306):
+
         self.conn = mysql.connector.connect(
           converter_class=MyConverter,
           host=host,
           user=user,
-          passwd=passwd,
-          database=database
+          passwd=password,
+          database=database,
+          port= port
         )
         self.processed_holes = ProcessedHoles(self.conn)
         self.acorr_files = AcorrFiles(self.conn)
