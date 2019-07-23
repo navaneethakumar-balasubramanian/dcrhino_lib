@@ -1,5 +1,6 @@
 const state = {
   processed_list: [],
+  processed_at_ts: [],
   loading: false
 };
 const getters = {
@@ -12,7 +13,8 @@ const getters = {
 };
 const mutations = {
   SET_PROCESSED_LIST: (state, payload) => {
-    state.processed_list = payload;
+    state.processed_list = payload.data;
+    state.processed_at_ts = payload.processed_at_ts;
   },
   SET_LIST_PROCESS_TO_MP: (state, payload) => {
     let processed_hole = state.processed_list.find(

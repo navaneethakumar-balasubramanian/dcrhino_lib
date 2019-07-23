@@ -56,6 +56,10 @@ class ProcessedHoles(BaseDbModel):
         print query
         return self.query_to_df(query)
 
+    def get_processed_at_ts(self):
+        query = "SELECT DISTINCT(processed_at_ts) FROM processed_holes"
+        return list(self.query_to_df(query)['processed_at_ts'].values)
+
     def add(self,processed_at_ts,seconds_processed,hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,sensor_accelerometer_type,sensor_saturation_g,flow_id,output_folder_name,process_id=-1):
         sql = "INSERT INTO "+self.table_name+" (processed_at_ts,seconds_processed,hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,sensor_accelerometer_type,sensor_saturation_g,flow_id,output_folder_name,process_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s , %s)"
         val = (processed_at_ts,seconds_processed,hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,sensor_accelerometer_type,sensor_saturation_g,flow_id,output_folder_name,process_id)

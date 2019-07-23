@@ -15,7 +15,7 @@
       <v-layout align-right justify-end column fill-height>
       <v-flex xs12 md6>
       <date-range-picker
-            ref="picker" v-model="dateRange" @update="updated_date_picker" :locale-data="{ firstDay: 1, format: 'YYYY-MM-DD' }" opens="left" style="width:240px; float:right;z-index:1000">
+            ref="picker" v-model="dateRange" @update="updated_date_picker" :locale-data="{ firstDay: 1, format: 'YYYY-MM-DD' }" opens="left" style="width:240px; float:right;z-index:1000" :dateFormat="format_available_dates">
         <div slot="input" slot-scope="picker" style="min-width: 200px; text-align:center;">
             From : {{ dateRange.startDate.substring(0,10) }}  To: {{ dateRange.endDate.substring(0,10) }} 
         </div>
@@ -188,8 +188,8 @@ export default {
     warning_text: null,
     headers: [],
     filtered_data: [],
-    dateRange: { startDate: null,
-                endDate: null}
+    dateRange: { startDate: "",
+                endDate: ""}
   }),
   created() {
     this.$store.dispatch("GET_PROCESSED", { mine_name: this.mine_name });
@@ -197,6 +197,14 @@ export default {
   props: ["mine_name"],
 
   methods: {
+    format_available_dates:function(classes,date){
+      
+      if (this.processed_at_ts.includes(moment(date).format("YYYY-MM-DD"))){
+        classes.today = true;
+      }
+      return classes
+      
+    },
     updated_date_picker:function(e){
       e.startDate = moment(e.startDate).format("YYYY-MM-DD") + " 00:00:00";
       e.endDate = moment(e.endDate).format("YYYY-MM-DD")+ " 23:59:59";
@@ -331,11 +339,11 @@ export default {
         let rig_ids = [...new Set(processed_list.map(a => a.rig_id))];
         let sensor_ids = [...new Set(processed_list.map(a => a.sensor_id))];
         let digitizer_ids = [...new Set(processed_list.map(a => a.digitizer_id))];
-        if (processed_list.length >0 && this.dateRange.endDate == null){
+        if (processed_list.length >0 && this.dateRange.endDate == ""){
           this.dateRange.endDate = moment(processed_list[0].processed_at_ts,"X").format("YYYY-MM-DD") + " 23:59:59";
           this.dateRange.startDate = moment(processed_list[processed_list.length-1].processed_at_ts,"X").format("YYYY-MM-DD") + " 00:00:00";
         }
-        console.log(this.dateRange)
+        
 
         this.headers = [
           { text: "Id", value: "processed_hole_id", sortable: true },
@@ -417,6 +425,9 @@ export default {
   computed: {
     server_data() {
       return this.$store.state.processed_holes.processed_list;
+    },
+    processed_at_ts(){
+      return this.$store.state.processed_holes.processed_at_ts.map(a => moment(a,"X").format("YYYY-MM-DD"));
     },
 
     loading() {

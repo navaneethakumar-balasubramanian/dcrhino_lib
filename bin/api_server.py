@@ -69,7 +69,7 @@ def processed_holes():
         processed_holes = db_helper.processed_holes.get_latests()
     if len(processed_holes) > 0:
         processed_holes = processed_holes[processed_holes['archived'] == '0']
-    return processed_holes.to_json(orient='records')
+    return jsonify({"data":processed_holes.to_dict(orient='records'),"processed_at_ts":db_helper.processed_holes.get_processed_at_ts()})
 
 @app.route('/api/hole_to_mp',methods=['GET', 'POST'])
 def hole_to_mp():
