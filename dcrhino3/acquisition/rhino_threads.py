@@ -1,11 +1,13 @@
 import threading
-import urllib2
+from urllib2 import urlopen,URLError
+# from urllib.request import urlopen, URLError
 import time
 import sys
 from gps3 import gps3
 import pyudev
 import subprocess
-from dcrhino3.acquisition.external.dimmer import dimmer
+# from dcrhino3.acquisition.external.dimmer import dimmer
+import Queue
 
 
 class NetworkThread(threading.Thread):
@@ -18,9 +20,9 @@ class NetworkThread(threading.Thread):
         while True:
             try:
                 # self._counter += 1
-                urllib2.urlopen('http://www.google.com', timeout=1)
+                urlopen('http://www.google.com', timeout=1)
                 self._network_status = "OK"
-            except urllib2.URLError as err:
+            except URLError as err:
                 self._network_status = "No Connection"
             time.sleep(10)
 
@@ -91,12 +93,29 @@ class USBportThread(threading.Thread):
                 self.rhino_disconnected = True
                 print(sys.exc_info())
 
-class DimmerThread(threading.Thread):
+# class DimmerThread(threading.Thread):
+#     def __init__(self):
+#         threading.Thread.__init__(self)
+#
+#     def run(self):
+#         dimmer.main()
+
+
+class IDEConverterThread(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
+        self.files_q = Queue()
+
+    def add_file_to_q(self,file_name):
+        self.files_q.put(file_name)
 
     def run(self):
-        dimmer.main()
+        while True:
+            if not self.files_q.empty():
+                next_file = self.files_q.get()
+                print("we are about to process file {}".format(next_file))
+            else:
+                time.sleep(10)
 
 
 if __name__ == "__main__":
