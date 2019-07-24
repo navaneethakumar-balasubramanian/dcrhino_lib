@@ -10,6 +10,7 @@ import subprocess
 import Queue
 from bin.ide2h5 import ideExport, SimpleUpdater
 import dcrhino3.ide_utilities.path_manager as pm
+import dcrhino3.ide_utilities.data_formats as df
 from dcrhino3.acquisition.constants import ACQUISITION_PATH
 import os
 import ConfigParser
@@ -119,6 +120,8 @@ class IDEConverterThread(threading.Thread):
 
     def run(self):
         updater = SimpleUpdater()
+        df.initBivariates(True)
+        config = ConfigParser.ConfigParser()
         while True:
             if not self.files_q.empty():
                 next_file = self.files_q.get()
@@ -129,7 +132,6 @@ class IDEConverterThread(threading.Thread):
                 channel_list = [8]
                 resampling_rate = 4000
                 time_offset = 0
-                config = ConfigParser.ConfigParser()
                 config.read(os.path.join(ACQUISITION_PATH, "collection_daemon.cfg"))
                 numSamples, file_Rhino = ideExport(source_file,
                                                    channels=channel_list,
