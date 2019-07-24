@@ -20,7 +20,7 @@ class Config(object):
         .. todo:: change output_sampling_rate to sampling_rate or all resampled data
         """
         if acquisition_config:
-            config_files_json = json.load(os.path.join(ACQUISITION_PATH, "acquisition_config.cfg"))
+            config_files_json = json.load(open(os.path.join(ACQUISITION_PATH, "acquisition_config.cfg")))
             for config_file in config_files_json["files"]:
                 config_file_json = json.load(open(os.path.join(ACQUISITION_PATH, config_file)))
                 self.set_data_from_json(config_file_json)
