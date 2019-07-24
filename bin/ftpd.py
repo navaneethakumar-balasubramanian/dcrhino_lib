@@ -5,7 +5,7 @@ import json
 from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.handlers import FTPHandler
 from pyftpdlib.servers import FTPServer
-from dcrhino3.models.config import Config
+from dcrhino3.models.config2 import Config
 from dcrhino3.acquisition.rhino_threads import IDEConverterThread
 
 global_config = Config(acquisition_config=True)
