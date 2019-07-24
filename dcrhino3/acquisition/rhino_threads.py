@@ -8,6 +8,11 @@ import pyudev
 import subprocess
 # from dcrhino3.acquisition.external.dimmer import dimmer
 import Queue
+from dcrhino3.ide_utilities.ide2segy import ideExport, SimpleUpdater
+import dcrhino3.ide_utilities.path_manager as pm
+from dcrhino3.acquisition.constants import ACQUISITION_PATH
+import os
+import ConfigParser
 
 
 class NetworkThread(threading.Thread):
@@ -110,10 +115,24 @@ class IDEConverterThread(threading.Thread):
         self.files_q.put(file_name)
 
     def run(self):
+        updater = SimpleUpdater()
         while True:
             if not self.files_q.empty():
                 next_file = self.files_q.get()
-                print("we are about to process file {}".format(next_file))
+                source_file = pm.FileObject(next_file)
+                updater.precision = max(0, min(2, (len(next_file) / 2) - 1))
+                updater(starting=True)
+                channel_list = [8]
+                resampling_rate = 4000
+                time_offset = 0
+                config = ConfigParser.ConfigParser()
+                config.read(os.path.join(ACQUISITION_PATH, "collection_daemon.cfg"))
+                numSamples, file_Rhino = ideExport(source_file,
+                                                   channels=channel_list,
+                                                   resampling_rate=resampling_rate,
+                                                   config=config,
+                                                   time_offset=time_offset,
+                                                   updater=updater)
             else:
                 time.sleep(10)
 
