@@ -114,6 +114,9 @@ class IDEConverterThread(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.files_q = Queue.Queue()
+        thread = threading.Thread(target=self.run, args=())
+        thread.daemon = True
+        thread.start()
 
     def add_file_to_q(self,file_name):
         self.files_q.put(file_name)
