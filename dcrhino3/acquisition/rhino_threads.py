@@ -8,11 +8,14 @@ import pyudev
 import subprocess
 # from dcrhino3.acquisition.external.dimmer import dimmer
 import Queue
-from dcrhino3.ide_utilities.ide2segy import ideExport, SimpleUpdater
+from bin.ide2h5 import ideExport, SimpleUpdater
 import dcrhino3.ide_utilities.path_manager as pm
 from dcrhino3.acquisition.constants import ACQUISITION_PATH
 import os
 import ConfigParser
+from dcrhino3.helpers.general_helper_functions import init_logging,init_logging_to_file
+logger = init_logging(__name__)
+file_logger = init_logging_to_file(__name__)
 
 
 class NetworkThread(threading.Thread):
@@ -119,6 +122,7 @@ class IDEConverterThread(threading.Thread):
         while True:
             if not self.files_q.empty():
                 next_file = self.files_q.get()
+                logger.info("ABOUT TO CONVERT FILE {}".format(next_file))
                 source_file = pm.FileObject(next_file)
                 updater.precision = max(0, min(2, (len(next_file) / 2) - 1))
                 updater(starting=True)
