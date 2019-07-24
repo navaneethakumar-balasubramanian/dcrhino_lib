@@ -203,8 +203,7 @@ def get_matches_list(mine_name,env_config):
 def update_matches_list(mine_name,env_config):
     conn = env_config.get_rhino_db_connection_from_mine_name(mine_name)
     sql_conn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
-    sql_db_helper = RhinoSqlHelper(host=sql_conn['host'], user=sql_conn['user'], passwd=sql_conn['password'],
-                                   database=sql_conn['database'])
+    sql_db_helper = RhinoSqlHelper(**sql_conn)
 
 
     matches_list = get_matches_list(mine_name,env_config)
