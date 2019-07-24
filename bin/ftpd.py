@@ -8,6 +8,10 @@ from pyftpdlib.servers import FTPServer
 from dcrhino3.models.config import Config
 from dcrhino3.acquisition.rhino_threads import IDEConverterThread
 
+global_config = Config(acquisition_config=True)
+ide_converter_thread = IDEConverterThread()
+ide_converter_thread.start()
+
 
 class ESPHandler(FTPHandler):
     """FTP Handler with some preconfiguration, and behavior to stop the server after a certain number of files are xferred"""
@@ -16,11 +20,6 @@ class ESPHandler(FTPHandler):
     # Define an anonymous user with write-only perms
     authorizer.add_anonymous(os.getcwd(), perm='w')
     banner = "pyftpdlib based ftpd ready."
-    
-    def dc_init(self):
-        self.global_config = Config(acquisition_config=True)
-        self.ide_converter_thread = IDEConverterThread()
-        self.ide_converter_thread.start()
 
     def set_total_files(self, files):
         print("Self: %s"%self)
@@ -39,7 +38,6 @@ class ESPHandler(FTPHandler):
 
 def ESP_FTPD_serve_forever(address, count):
     handler = ESPHandler
-    handler.dc_init()
     with FTPServer(address, handler) as server:
         server.serve_forever()
 
