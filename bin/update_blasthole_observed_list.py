@@ -184,8 +184,7 @@ def get_matches_list(mine_name,env_config):
     mwd_df = mwd_helper.get_rhino_mwd_from_mine_name(mine_name)
     mine_config = env_config.get_mp_config(mine_name)
     sqlconn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
-    sql_db_helper = RhinoSqlHelper(host=sqlconn['host'], user=sqlconn['user'], passwd=sqlconn['password'],
-                                   database=sqlconn['database'])
+    sql_db_helper = RhinoSqlHelper(**sqlconn)
     files = sql_db_helper.sensor_files.get_all_valid()
     files.min_ts = files.min_ts.astype(float)
     files.max_ts = files.max_ts.astype(float)
