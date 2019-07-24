@@ -16,9 +16,11 @@ class ESPHandler(FTPHandler):
     # Define an anonymous user with write-only perms
     authorizer.add_anonymous(os.getcwd(), perm='w')
     banner = "pyftpdlib based ftpd ready."
-    self.global_config = Config(acquisition_config=True)
-    self.ide_converter_thread = IDEConverterThread()
-    self.ide_converter_thread.start()
+    
+    def dc_init(self):
+        self.global_config = Config(acquisition_config=True)
+        self.ide_converter_thread = IDEConverterThread()
+        self.ide_converter_thread.start()
 
     def set_total_files(self, files):
         print("Self: %s"%self)
@@ -37,6 +39,7 @@ class ESPHandler(FTPHandler):
 
 def ESP_FTPD_serve_forever(address, count):
     handler = ESPHandler
+    handler.dc_init()
     with FTPServer(address, handler) as server:
         server.serve_forever()
 
