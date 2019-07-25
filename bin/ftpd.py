@@ -7,6 +7,7 @@ from pyftpdlib.handlers import FTPHandler
 from pyftpdlib.servers import FTPServer
 from dcrhino3.models.config2 import Config
 from dcrhino3.acquisition.rhino_threads import IDEConverterThread
+import time
 
 global_config = Config(acquisition_config=True)
 ide_converter_thread = IDEConverterThread(global_config)
@@ -37,6 +38,7 @@ class ESPHandler(FTPHandler):
             if self.server.total_files == 0:
                 self.server.close()
         print("RECEIVED FILE {}")
+        time.sleep(.1)
         ide_converter_thread.add_file_to_q(file)
 
 

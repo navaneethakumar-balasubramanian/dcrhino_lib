@@ -126,6 +126,7 @@ class IDEConverterThread(threading.Thread):
         updater = SimpleUpdater()
         df.initBivariates(True)
         config = ConfigParser.ConfigParser()
+        to_convert = list()
         while True:
             if not self.files_q.empty():
                 next_file = self.files_q.get()
@@ -138,13 +139,17 @@ class IDEConverterThread(threading.Thread):
                 time_offset = self.global_config.ide2h5_converter_time_offset
                 max_file_size_in_sec = self.global_config.file_change_interval_in_min * 60
                 config.read(os.path.join(ACQUISITION_PATH, "collection_daemon.cfg"))
-                numSamples, file_Rhino = ideExport(source_file,
-                                                   channels=channel_list,
-                                                   resampling_rate=resampling_rate,
-                                                   config=config,
-                                                   time_offset=time_offset,
-                                                   max_file_size_in_sec=max_file_size_in_sec,
-                                                   updater=updater)
+                try:
+                    numSamples, file_Rhino = ideExport(source_file,
+                                                       channels=channel_list,
+                                                       resampling_rate=resampling_rate,
+                                                       config=config,
+                                                       time_offset=time_offset,
+                                                       max_file_size_in_sec=max_file_size_in_sec,
+                                                       updater=updater)
+                except:
+                    self.files_q.put(next_file)
+                    time.sleep(0.1)
             else:
                 time.sleep(10)
 
