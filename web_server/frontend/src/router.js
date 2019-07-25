@@ -26,6 +26,12 @@ export default new Router({
       component: () => import("./views/Processed.vue")
     },
     {
+      path: "/mwd/:mine_name",
+      name: "mwd",
+      props: true,
+      component: () => import("./views/Mwd.vue")
+    },
+    {
       path: "/acorr_files/:mine_name",
       name: "acorr_files",
       props: true,
