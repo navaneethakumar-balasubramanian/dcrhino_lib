@@ -2775,7 +2775,7 @@ class EventList(Transformable):
         data_type = "piezo"
         row_keys_type_dict = collections.OrderedDict()
         row_keys_type_dict["ts"] = numpy.float64
-        if str(sensor_serial_number) in fname:
+        if "_{}_".format(sensor_serial_number) in fname:
             fname = "{}_{}_{}".format(session_date_string, fname, resampling_rate)
         else:
             fname = "{}_{}_{}_{}".format(session_date_string, fname, sensor_serial_number, resampling_rate)
