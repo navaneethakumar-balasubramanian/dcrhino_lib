@@ -131,7 +131,7 @@ def full_feature_label(component_id, wavelet_id, feature_id):
 class FeatureExtractorJ2(object):
     """
     """
-    def __init__(self, component_id, trimmed_trace, transformed_args, timestamp):
+    def __init__(self, component_id, trimmed_trace, transformed_args, timestamp, sampling_rate):
         """
         .. todo:: window_boundaries time should just have a .to_index() method
         .. note:: given this is run component-by-component we can simplify window_boundaries
@@ -142,10 +142,11 @@ class FeatureExtractorJ2(object):
             pick_time(start, end, pick_type).  Also, these can be methods of SymmetricTrace()
         """
 
-        try:
-            self.sampling_rate = transformed_args.upsample_sampling_rate
-        except AttributeError:
-            self.sampling_rate = transformed_args.output_sampling_rate
+#        try:
+#            self.sampling_rate = transformed_args.upsample_sampling_rate
+#        except AttributeError:
+#            self.sampling_rate = transformed_args.output_sampling_rate
+        self.sampling_rate = sampling_rate
         self.trace = TimePicker(trimmed_trace, self.sampling_rate, component_id=component_id)
         self.transformed_args = transformed_args
         manual_windows = getattr(transformed_args.manual_time_windows, component_id)

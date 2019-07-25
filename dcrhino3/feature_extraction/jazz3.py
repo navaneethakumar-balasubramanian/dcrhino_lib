@@ -79,6 +79,7 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
         the trough times left and right from the jazz trace, 
         the zero-crossing times left and right of peak (these are common to jazz2)
     """
+    missed_zero_crossing = False
     #sanity_check_plot = True
     #jazz2_dict = jazz2(symmetric_trace, center_time, expected_trough_duration, 
     #                   wavelet_id=wavelet_id, sanity_check_plot=sanity_check_plot)
@@ -142,9 +143,7 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
     right_trough_interval = TimePeriod(lower_bound=tick_times[2], upper_bound=tick_times[3])
 
     if missing_zero_crossing(tick_times[0], expected_trough_duration):
-        #print("Missed a zero-crossing")
-        pass
-        #sanity_check_plot = True
+        missed_zero_crossing = True
     #pdb.set_trace()
     
     #<END JAZZ2 START JAZZ3>
@@ -198,6 +197,8 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
     output_dict['jazz2_tick2'] = tick_times[2]
     output_dict['jazz2_tick3'] = tick_times[3]
 
+    output_dict['jazz2_missed_zero_crossing'] = missed_zero_crossing
+    
     output_dict['jazz3_center_peak_integral'] = center_integral
     output_dict['jazz3_left_half_trough_integral'] = left_half_integral
     output_dict['jazz3_right_trough_integral'] = right_half_integral
@@ -206,7 +207,8 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
     output_dict['jazz3_tick1'] = tick_times[1]
     output_dict['jazz3_tick2'] = tick_times[2]
     output_dict['jazz3_tick3'] = t_right_half_trough[-1]
-
+    
+    
     return output_dict
 
 

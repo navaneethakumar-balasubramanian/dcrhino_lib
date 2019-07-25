@@ -53,6 +53,7 @@ from dcrhino3.process_flow.modules.hybrid.trim_trace import TrimTraceModuleHybri
 from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import UnfoldAutocorrelationModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.upsample_hybrid import UpsampleModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.phase_balance_trace_hybrid import PhaseBalanceHybridModule
+from dcrhino3.process_flow.modules.hybrid.feature_extract_hybrid import FeatureExtractJ2Hybrid
 
 from dcrhino3.unstable.multipass_util import update_acorr_with_resonance_info
 from dcrhino3.unstable.hacks.bma_hack import bma_hack_20190606
@@ -78,7 +79,7 @@ class ProcessFlow:
             "rhino_physics": RhinoPhysicsModule,
             "j0": J0FeaturesModule,
             "j1": J1FeaturesModule,
-            "j2": J2FeaturesModule,
+            "j2": FeatureExtractJ2Hybrid,#J2FeaturesModule,
             "k0": K0FeaturesModule,
             "b0": B0FeaturesModule,
             "qc_log_v1": QCPlotterModule,
