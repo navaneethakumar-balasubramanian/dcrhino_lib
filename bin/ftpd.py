@@ -18,7 +18,9 @@ class ESPHandler(FTPHandler):
     # Set some defaults for our specific use case
     authorizer = DummyAuthorizer()
     # Define an anonymous user with write-only perms
-    authorizer.add_anonymous(os.getcwd(), perm='w')
+    if not os.path.exists(global_config.local_folder):
+        os.makedirs(global_config.local_folder)
+    authorizer.add_anonymous(global_config.local_folder, perm='w')
     banner = "pyftpdlib based ftpd ready."
 
 
@@ -40,9 +42,7 @@ class ESPHandler(FTPHandler):
 
 def ESP_FTPD_serve_forever(address, count):
     handler = ESPHandler
-    if not os.path.exists(global_config.local_folder):
-        os.makedirs(global_config.local_folder)
-    path = handler.ftp_CWD(global_config.local_folder)
+
     print("Saving files to: {}".format(path))
     with FTPServer(address, handler) as server:
         server.serve_forever()
@@ -50,7 +50,7 @@ def ESP_FTPD_serve_forever(address, count):
 
 if __name__ == "__main__":
     # Instantiate FTP server class and listen on 10.0.5.5:2121
-    print("Saving files to: {}".format(os.getcwd()))
+    print("Saving files to: {}".format(global_config.local_folder))
     address = ('10.0.5.188', 2121)
 
     ESP_FTPD_serve_forever(address, 2)
