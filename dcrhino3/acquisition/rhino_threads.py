@@ -14,6 +14,7 @@ import dcrhino3.ide_utilities.data_formats as df
 from dcrhino3.acquisition.constants import ACQUISITION_PATH
 import os
 import ConfigParser
+import shutil
 from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
 dc_logger = init_logging(__name__)
 dc_file_logger = init_logging_to_file(__name__)
@@ -148,8 +149,12 @@ class IDEConverterThread(threading.Thread):
                                                        max_file_size_in_sec=max_file_size_in_sec,
                                                        updater=updater)
                 except:
-                    self.files_q.put(next_file)
-                    time.sleep(0.1)
+                    path = os.path.dirname(next_file)
+                    path = os.path.join(path, "FAILED")
+                    failed_file = os.path.join(path, os.path.basename(next_file))
+                    if not os.path.exists(path):
+                        os.makedirs(path)
+                    shutil.move(next_file, failed_file)
             else:
                 time.sleep(10)
 
