@@ -21,7 +21,10 @@ class Config(object):
         """
         if acquisition_config:
             config_files_json = json.load(open(os.path.join(ACQUISITION_PATH, "acquisition_config.cfg")))
-            for config_file in config_files_json["files"]:
+            for config_file in config_files_json["field_files"]:
+                config_file_json = json.load(open(os.path.join(ACQUISITION_PATH, config_file)))
+                self.set_data_from_json(config_file_json)
+            for config_file in config_files_json["pipeline_files"]:
                 config_file_json = json.load(open(os.path.join(ACQUISITION_PATH, config_file)))
                 self.set_data_from_json(config_file_json)
         if json_data is not None:
