@@ -1,5 +1,5 @@
 import threading
-from urllib2 import urlopen,URLError
+from urllib2 import urlopen, URLError
 # from urllib.request import urlopen, URLError
 import time
 import sys
@@ -14,9 +14,9 @@ import dcrhino3.ide_utilities.data_formats as df
 from dcrhino3.acquisition.constants import ACQUISITION_PATH
 import os
 import ConfigParser
-from dcrhino3.helpers.general_helper_functions import init_logging,init_logging_to_file
-logger = init_logging(__name__)
-file_logger = init_logging_to_file(__name__)
+from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
+dc_logger = init_logging(__name__)
+dc_file_logger = init_logging_to_file(__name__)
 
 
 class NetworkThread(threading.Thread):
@@ -111,14 +111,15 @@ class USBportThread(threading.Thread):
 
 
 class IDEConverterThread(threading.Thread):
-    def __init__(self):
+    def __init__(self, global_config):
         threading.Thread.__init__(self)
         self.files_q = Queue.Queue()
+        self.global_config = global_config
         thread = threading.Thread(target=self.run, args=())
         thread.daemon = True
         thread.start()
 
-    def add_file_to_q(self,file_name):
+    def add_file_to_q(self, file_name):
         self.files_q.put(file_name)
 
     def run(self):
@@ -128,25 +129,27 @@ class IDEConverterThread(threading.Thread):
         while True:
             if not self.files_q.empty():
                 next_file = self.files_q.get()
-                logger.info("ABOUT TO CONVERT FILE {}".format(next_file))
+                dc_logger.info("ABOUT TO CONVERT FILE {}".format(next_file))
                 source_file = pm.FileObject(next_file)
                 updater.precision = max(0, min(2, (len(next_file) / 2) - 1))
                 updater(starting=True)
-                channel_list = [8]
-                resampling_rate = 4000
-                time_offset = 0
+                channel_list = self.global_config.ide_channel_list_to_convert_realtime
+                resampling_rate = self.global_config.output_sampling_rate
+                time_offset = self.global_config.ide2h5_converter_time_offset
+                max_file_size_in_sec = self.global_config.file_change_interval_in_min * 60
                 config.read(os.path.join(ACQUISITION_PATH, "collection_daemon.cfg"))
                 numSamples, file_Rhino = ideExport(source_file,
                                                    channels=channel_list,
                                                    resampling_rate=resampling_rate,
                                                    config=config,
                                                    time_offset=time_offset,
+                                                   max_file_size_in_sec=max_file_size_in_sec,
                                                    updater=updater)
             else:
                 time.sleep(10)
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     # network = NetworkThread()
     # network.start()
     #
@@ -156,9 +159,9 @@ if __name__ == "__main__":
     # usb_port = USBportThread()
     # usb_port.start()
 
-    dim = DimmerThread()
-    dim.start()
+    # dim = DimmerThread()
+    # dim.start()
 
-    while True:
-        # print network.network_status,network._counter,  gps.satellite_count, gps._counter
-        time.sleep(1)
+    # while True:
+    #     # print network.network_status,network._counter,  gps.satellite_count, gps._counter
+    #     time.sleep(1)

@@ -9,7 +9,7 @@ from dcrhino3.models.config2 import Config
 from dcrhino3.acquisition.rhino_threads import IDEConverterThread
 
 global_config = Config(acquisition_config=True)
-ide_converter_thread = IDEConverterThread()
+ide_converter_thread = IDEConverterThread(global_config)
 ide_converter_thread.start()
 
 
@@ -20,6 +20,7 @@ class ESPHandler(FTPHandler):
     # Define an anonymous user with write-only perms
     authorizer.add_anonymous(os.getcwd(), perm='w')
     banner = "pyftpdlib based ftpd ready."
+
 
     def set_total_files(self, files):
         print("Self: %s"%self)
@@ -33,17 +34,23 @@ class ESPHandler(FTPHandler):
             self.server.total_files -= 1
             if self.server.total_files == 0:
                 self.server.close()
-        self.ide_converter_thread.add_file_to_q(file)
+        print("RECEIVED FILE {}")
+        ide_converter_thread.add_file_to_q(file)
 
 
 def ESP_FTPD_serve_forever(address, count):
     handler = ESPHandler
+    if not os.path.exists(global_config.local_folder):
+        os.makedirs(global_config.local_folder)
+    path = ESPHandler.ftp_CWD(global_config.local_folder)
+    print("Saving files to: {}".format(path))
     with FTPServer(address, handler) as server:
         server.serve_forever()
+
 
 if __name__ == "__main__":
     # Instantiate FTP server class and listen on 10.0.5.5:2121
     print("Saving files to: {}".format(os.getcwd()))
-    address = ('10.0.5.188', 2121)
+    address = ('192.168.86.30', 2121)
 
     ESP_FTPD_serve_forever(address, 2)
