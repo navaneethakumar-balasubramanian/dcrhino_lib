@@ -164,10 +164,11 @@ class FeatureExtractorJ2(object):
         self.jazz3_wavelets = []
         try:
             self.jazz1_amplitude_windows = getattr(transformed_args.jazz1_amplitude_windows, component_id)
-        except:
-            self.jazz1_amplitude_windows = getattr(transformed_args.additional_pick_based_amplitude_windows, component_id)
-        except:
-            self.jazz1_amplitude_windows = None
+        except AttributeError:
+            try:
+                self.jazz1_amplitude_windows = getattr(transformed_args.additional_pick_based_amplitude_windows, component_id)
+            except:
+                self.jazz1_amplitude_windows = None
 
         try:
             self.jazz2_wavelets = getattr(transformed_args.jazz2_wavelets, component_id)
