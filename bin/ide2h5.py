@@ -123,6 +123,7 @@ def ideExport(ideFileObj, config, channels=None, resampling_rate=3200, time_offs
 
     doc = importer.importFile(ideFileObj.AbsPath)
     sensor_serial_number = doc.recorderInfo["RecorderSerial"]
+    logger.info("Sensor Serial Number is {}".format(sensor_serial_number))
     skip_channels = [32, 59]
 
     if channels is None:
