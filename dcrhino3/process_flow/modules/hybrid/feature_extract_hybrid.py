@@ -116,7 +116,10 @@ class FeatureExtractJ2Hybrid(BaseHybridModule):
                 
                 feature_dict = self.extract_feature_component(component_id, trace_data, transformed_args,
                                        timestamp, sampling_rate)
-                features_dict_list[i_trace].update(feature_dict)
+                tmp = {}
+                tmp.update(features_dict_list[i_trace])
+                tmp.update(feature_dict)
+                features_dict_list[i_trace] = tmp
 
         features_df = pd.DataFrame(features_dict_list)
 
