@@ -51,6 +51,6 @@ def ESP_FTPD_serve_forever(address, count):
 if __name__ == "__main__":
     # Instantiate FTP server class and listen on 10.0.5.5:2121
     print("Saving files to: {}".format(os.getcwd()))
-    address = ('192.168.86.30', 2121)
+    address = ('10.0.5.188', 2121)
 
     ESP_FTPD_serve_forever(address, 2)
