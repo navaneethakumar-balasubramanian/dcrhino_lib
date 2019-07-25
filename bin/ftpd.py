@@ -42,8 +42,6 @@ class ESPHandler(FTPHandler):
 
 def ESP_FTPD_serve_forever(address, count):
     handler = ESPHandler
-
-    print("Saving files to: {}".format(path))
     with FTPServer(address, handler) as server:
         server.serve_forever()
 
