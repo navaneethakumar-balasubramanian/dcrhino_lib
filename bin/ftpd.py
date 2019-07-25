@@ -42,7 +42,7 @@ def ESP_FTPD_serve_forever(address, count):
     handler = ESPHandler
     if not os.path.exists(global_config.local_folder):
         os.makedirs(global_config.local_folder)
-    path = ESPHandler.ftp_CWD(global_config.local_folder)
+    path = handler.ftp_CWD(global_config.local_folder)
     print("Saving files to: {}".format(path))
     with FTPServer(address, handler) as server:
         server.serve_forever()
