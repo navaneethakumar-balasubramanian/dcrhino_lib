@@ -179,11 +179,11 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
                                 t_left_half_trough, left_half_trough, 
                                 t_right_half_trough, right_half_trough )
 
-    left_integral = np.sum(np.abs(left_trough))
-    right_integral = np.sum(np.abs(right_trough))
-    center_integral = np.sum(np.abs(positive_peak))
-    left_half_integral = np.sum(np.abs(left_half_trough))
-    right_half_integral = np.sum(np.abs(right_half_trough))
+    left_integral = np.sum(np.abs(left_trough)) * symmetric_trace.dt
+    right_integral = np.sum(np.abs(right_trough)) * symmetric_trace.dt
+    center_integral = np.sum(np.abs(positive_peak)) * symmetric_trace.dt
+    left_half_integral = np.sum(np.abs(left_half_trough)) * symmetric_trace.dt
+    right_half_integral = np.sum(np.abs(right_half_trough)) * symmetric_trace.dt
 
 
     #count the negative vlaues at the rhs of this vector
