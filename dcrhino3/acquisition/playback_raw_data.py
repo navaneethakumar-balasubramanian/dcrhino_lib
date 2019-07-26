@@ -5,17 +5,20 @@ import matplotlib.pyplot as plt
 import os
 import argparse
 import calendar
-import pdb
 import time
 from datetime import datetime
 from dcrhino3.models.config import Config
 from dcrhino3.acquisition.config_file_utilities import extract_metadata_from_h5_file
-from dcrhino3.helpers.general_helper_functions import init_logging, interpolate_data, calibrate_data
-from dcrhino3.models.traces.raw_trace import RawTraceData
+from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
+from dcrhino3.helpers.general_helper_functions import interpolate_data, calibrate_data
 from test_spectral_qc_plot import make_spectral_qc_plot
 from dcrhino3.helpers.h5_helper import H5Helper
 import shutil
 import scipy.signal as ssig
+
+logger = init_logging(__name__)
+file_logger = init_logging_to_file(__name__)
+
 
 
 def main(args):
@@ -103,15 +106,6 @@ def main(args):
         ts.drop(bad_indices, inplace=True)
         time_indices = (ts.ts >= start_time) & (ts.ts < end_time)
 
-
-    # counter = 0
-    # for i in range(1, len(ts)):
-    #     if ts[i] < ts[i-1]:
-    #         print(ts[i-1],ts[i],counter)
-    #         counter += 1
-    #         time_indices[i] = False
-    # ts = h5_helper.load_axis_mask("ts", time_indices)
-
     print("Loading Raw Data")
     x_raw = h5_helper.load_axis_mask("x", time_indices)
     y_raw = h5_helper.load_axis_mask("y", time_indices)
@@ -135,21 +129,7 @@ def main(args):
 
     print(sensitivity)
     print(file_axis)
-    # print (hf.keys())
 
-    # IDE File
-    # sensitivity = [1000000.0]
-    # file_axis = [1,2]
-
-    # Rhino File
-    # sensitivity = [2.5,2.5,2.5]#500g
-    # sensitivity = [12.5,12.5,12.5]#500g
-    # file_axis = [2,1]
-
-
-    # pdb.set_trace()
-
-    # seq = np.asarray(hf.get('seq'), dtype=np.uint32)
     tx_sequence = h5_helper.load_axis_mask("cticks", time_indices)
 
 

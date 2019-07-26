@@ -19,17 +19,89 @@ class Config(object):
 
         .. todo:: change output_sampling_rate to sampling_rate or all resampled data
         """
+        self.acquisition_config = acquisition_config
+        self.files_keys = dict()
         if acquisition_config:
             config_files_json = json.load(open(os.path.join(ACQUISITION_PATH, "acquisition_config.cfg")))
-            for config_file in config_files_json["field_files"]:
-                config_file_json = json.load(open(os.path.join(ACQUISITION_PATH, config_file)))
-                self.set_data_from_json(config_file_json)
-            for config_file in config_files_json["pipeline_files"]:
-                config_file_json = json.load(open(os.path.join(ACQUISITION_PATH, config_file)))
-                self.set_data_from_json(config_file_json)
+            for key in config_files_json.keys():
+                self.files_keys[key] = dict()
+                for config_file in config_files_json[key]:
+                    config_file_json = json.load(open(os.path.join(ACQUISITION_PATH, config_file)))
+                    self.files_keys[key][config_file] = config_file_json.keys()
+                    self.set_data_from_json(config_file_json)
         if json_data is not None:
             self.set_data_from_json(json_data)
         return
+
+    def _config_files_to_dict(self, files_type):
+        if files_type in self.files_keys[files_type].keys():
+            pipeline_files = self.files_keys[files_type].keys()
+            pipeline_json = dict()
+            for pipeline_file in pipeline_files:
+                for key in self.files_keys[files_type][pipeline_file]:
+                    pipeline_json[key] = self.__dict__[key]
+            return pipeline_json
+        else:
+            return None
+
+    @property
+    def pipeline_files_to_dict(self):
+        return self._config_files_to_dict("pipeline_files")
+
+    @property
+    def field_files_to_dict(self):
+        return self._config_files_to_dict("field_files")
+
+    def _field_base_path(self):
+        """
+        Returns:
+            Path to specific field data using a standardized directory structure
+        """
+        return os.path.join(self.company, self.mine_name, "field_data", self.rig_id, self.digitizer_serial_number,
+                            self.sensor_serial_number).lower()
+
+    @property
+    def level_0_path(self):
+        """
+                Returns:
+                    Path from :func:`field_base_path` joined by level_0
+                """
+        return os.path.join(self.field_base_path(), "level_0").lower()
+
+    @property
+    def sensor_distance_to_source(self):
+        return
+
+    @property
+    def sensor_distance_to_shocksub(self):
+        return
+
+    @property
+    def two_way_resonance_distance(self):
+        return
+
+    def _get_channel_sensitivity(self, channel):
+        return self.sensor_sensitivity["{}_sensitivity".format(channel)]
+
+    @property
+    def x_sensitivity(self):
+        return self._get_channel_sensitivity("x")
+
+    @property
+    def y_sensitivity(self):
+        return self._get_channel_sensitivity("y")
+
+    @property
+    def z_sensitivity(self):
+        return self._get_channel_sensitivity("z")
+
+    @property
+    def sensitivity_list_xyz(self):
+        return[self.x_sensitivity, self.y_sensitivity, self.z_sensitivity]
+
+    def sensor_sensitivity(self, axis):
+        component_index = self.get_component_index(axis)
+        return self.sensitivity_list_xyz[component_index]
 
     def component_index(self, component_id):
         """
@@ -56,7 +128,6 @@ class Config(object):
             return 5 - self.sensor_axial_axis - self.sensor_tangential_axis #Depending on the physical installation, radial is not always 2
         else:
             pass
-            #logger.critical("unknown componet requested {} DNE".format(component_id))
 
     @property
     def components_to_process(self):
@@ -70,7 +141,7 @@ class Config(object):
 
     @property
     def dt(self):
-        return 1./self.sampling_rate
+        return 1./self.output_sampling_rate
 
     @property
     def num_taps_in_decon_filter(self):
@@ -122,7 +193,32 @@ class Config(object):
         json_str = json.dumps(vars(self), indent=4)
         return json_str
 
-    def _get_num_decon_taps(self,deconvolution_filter_duration,sampling_rate):
+    @property
+    def pipeline_json_string(self):
+        json_string = json.dumps(self.pipeline_files_to_dict, indent=4)
+        return json_string
+
+    @property
+    def field_json_string(self):
+        json_string = json.dumps(self.field_files_to_dict, indent=4)
+        return json_string
+
+    def export_config_for_h5_files(self, path):
+        with open(path, 'w') as fp:
+            json.dump(self.pipeline_json_string, fp)
+        return
+
+    def load_from_config_for_h5_files(self, path):
+        with open(path, 'r') as fp:
+            data = json.load(self.pipeline_json_string, fp)
+        config_files_json = json.load(open(os.path.join(ACQUISITION_PATH, "acquisition_config.cfg")))
+        self.files_keys["pipeline_files"] = dict()
+        for config_file in config_files_json["pipeline_files"]:
+            config_file_json = json.load(open(os.path.join(ACQUISITION_PATH, config_file)))
+            self.files_keys["pipeline_files"][config_file] = config_file_json.keys()
+            self.set_data_from_json(data)
+
+    def _get_num_decon_taps(self, deconvolution_filter_duration, sampling_rate):
         """
         Get number of coefficients needed for the filter.
 
@@ -131,8 +227,8 @@ class Config(object):
         """
         dt = 1. / sampling_rate
         decon_filter_length_taps = int(deconvolution_filter_duration / dt)
-        if np.remainder(decon_filter_length_taps, 2)==1:
-            decon_filter_length_taps+=1
+        if np.remainder(decon_filter_length_taps, 2) == 1:
+            decon_filter_length_taps += 1
         return decon_filter_length_taps
 
     @property
@@ -156,7 +252,6 @@ class Config(object):
             (float): duration of trimmed trace
         """
         duration = self.max_lag_trimmed_trace - self.min_lag_trimmed_trace
-        #duration = np.abs(self.max_lag_trimmed_trace) + np.abs(self.min_lag_trimmed_trace)
         return duration
 
     @property
@@ -165,3 +260,10 @@ class Config(object):
         this is the distance from the bottom of the shocksub to the bottom of the bit
         """
         return self.sensor_distance_to_shocksub + self.sensor_distance_to_source
+
+
+if __name__ == "__main__":
+    try:
+        c = Config(acquisition_config=True)
+    except:
+        pass

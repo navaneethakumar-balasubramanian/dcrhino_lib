@@ -1,8 +1,8 @@
-import glob
+import glob2
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 import numpy as np
 import argparse
 from dcrhino3.acquisition.constants import LOGS_PATH
@@ -13,7 +13,7 @@ def main(start_date=None, end_date=None):
     # path = "/home/natal/toconvert/bma/tablet_logs/*health.log"
     path = os.path.join(LOGS_PATH, "*health.log")
 
-    files = glob.glob(path)
+    files = glob2.glob(path)
 
     # latest_file = max(files, key=os.path.getctime)
     latest_file = sorted(files)[-1]
@@ -80,14 +80,12 @@ def main(start_date=None, end_date=None):
     plt.subplots_adjust(hspace=1.0, wspace=0.5)
     rssi_plot = plt.subplot2grid((8, 1), (0, 0), colspan=1)
     packets_plot = plt.subplot2grid((8, 1), (1, 0), colspan=1, sharex=rssi_plot)
-    corrupt_plot = plt.subplot2grid((8,1), (2, 0), colspan=1, sharex=rssi_plot)
+    corrupt_plot = plt.subplot2grid((8, 1), (2, 0), colspan=1, sharex=rssi_plot)
     battery_plot = plt.subplot2grid((8, 1), (3, 0), colspan=1, sharex=rssi_plot)
     temperature_plot = plt.subplot2grid((8, 1), (4, 0), colspan=1, sharex=rssi_plot)
     drift_plot = plt.subplot2grid((8, 1), (5, 0), colspan=1, sharex=rssi_plot)
     tx_status_plot = plt.subplot2grid((8, 1), (6, 0), colspan=1, sharex=rssi_plot)
     real_delay_plot = plt.subplot2grid((8, 1), (7, 0), colspan=1, sharex=rssi_plot)
-
-
 
     rssi_plot.plot(time_axis, df.rssi, linestyle="none", marker=".")
     rssi_plot.set_title("RSSI")
@@ -134,7 +132,6 @@ def main(start_date=None, end_date=None):
     tablet_battery_plot = plt.subplot2grid((6, 1), (2, 0), colspan=1, sharex=rssi_plot)
     tablet_battery_status_plot = plt.subplot2grid((6, 1), (3, 0), colspan=1, sharex=rssi_plot)
 
-
     ssd_plot.plot(time_axis, df.disk_usage, linestyle="none", marker=".")
     ssd_plot.set_title("Disk Usage")
     ram_plot.plot(time_axis, df.ram_usage, linestyle="none", marker=".")
@@ -153,6 +150,6 @@ def main(start_date=None, end_date=None):
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
     argparser.add_argument('-sd', '--start_date', help="Start Date To Plot", default=None)
-    argparser.add_argument('-ed', '--end_date',help="End Date To Plot", default=None)
+    argparser.add_argument('-ed', '--end_date', help="End Date To Plot", default=None)
     args = argparser.parse_args()
     main(args.start_date, args.end_date)

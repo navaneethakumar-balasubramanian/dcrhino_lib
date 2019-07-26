@@ -30,9 +30,14 @@ COMPRESS_MIN_SIZE = 500
 
 
 @app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
+@app.route('/<path:path>', methods=['GET', 'POST'])
 def index(path):
     return render_template("index.html")
+
+@app.route('/open_settings', methods=['GET'])
+def settings(path):
+    return render_template("settings.html")
+
 
 @app.route('/css/<path:path>')
 def send_css(path):
@@ -51,4 +56,17 @@ def send_3rd(path):
 def start_acquisition():
     os.popen("gedit").read()
     return jsonify("oaaaaaaaa")
+
+@app.route('/hello', methods=['GET', 'POST'])
+def hello():
+    # pdb.set_trace()
+    # return render_template('settings.html', country=request.form['country'], company=request.form['company'])
+    with open("/home/natal/toconvert/test.txt",'w') as f:
+        f.write("it worked {} {}".format(request.form['country'], request.form['company']))
+    f.close()
+    return "Ok"
+
+@app.route('/get_config', methods=['GET', 'POST'])
+def get_config():
+    return jsonify({"country":"Brazil","company":"Thiago"})
 

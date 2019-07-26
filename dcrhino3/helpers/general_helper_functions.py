@@ -606,3 +606,9 @@ def add_inverse_dictionary(my_map):
     inv_map = {v: k for k, v in my_map.items()}
     my_map = merge_two_dicts(my_map, inv_map)
     return my_map
+
+def add_leading_zeors_to_timestamp_for_file_names(elapsed):
+    leading_zeros = ""
+    if len(elapsed) < 5:
+        leading_zeros = "0" * (5 - len(elapsed))
+    return("{}{}".format(leading_zeros,elapsed))
