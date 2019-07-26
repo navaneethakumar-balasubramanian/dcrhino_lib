@@ -24,6 +24,28 @@ from scipy.interpolate import interp1d
 #<temporary logging>
 import logging
 
+def StandardString(s):
+    """
+    historical method from SEGY-land
+    Parameters:
+        s (str): string to be standardized
+
+    Returns:
+        (str): cleaned, standardized string with underscores instead of spaces
+    """
+    s = str(s).replace("_"," ")
+    components = s.split(" ")
+    clean_components=[]
+    string=""
+    for ch in components:
+        word = ''.join(e for e in ch if (e.isalnum() or (e in ['&','.'])))
+        clean_components.append(word)
+    for i,c in enumerate(clean_components):
+        string += c
+        if i<len(clean_components)-1:
+            string+= "_"
+    return string.upper()
+
 
 def df_column_uniquify(df):
     df_columns = df.columns

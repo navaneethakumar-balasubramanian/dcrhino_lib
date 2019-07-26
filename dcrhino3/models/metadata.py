@@ -13,154 +13,16 @@ import pdb
 import sys
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.helpers.general_helper_functions import add_inverse_dictionary
+from dcrhino3.helpers.general_helper_functions import StandardString
 
-#<this should be somewhere more general>
-#..:todo: we should review the units stuff and start using pint or similar package
-
-LENGTH_UNITS = {}
-LENGTH_UNITS[1] = 'ft'
-LENGTH_UNITS[2] = 'in'
-LENGTH_UNITS[3] = 'm'
-LENGTH_UNITS[4] = 'cm'
-LENGTH_UNITS[5] = 'mm'
-LENGTH_UNITS = add_inverse_dictionary(LENGTH_UNITS)
-
-LENGTH_SCALE_FACTORS = {}
-LENGTH_SCALE_FACTORS['ft'] = 0.3048
-LENGTH_SCALE_FACTORS['in'] = 0.0254
-LENGTH_SCALE_FACTORS['m'] = 1.0
-LENGTH_SCALE_FACTORS['cm'] = 0.010
-LENGTH_SCALE_FACTORS['mm'] = 0.001
-#</this should be somewhere more general>
 
 logger = init_logging(__name__)
 #==============================================================================
 #FUNCTIONS
 #==============================================================================
 
-def StandardString(s):
-    """
-    Parameters:
-        s (str): string to be standardized
-
-    Returns:
-        (str): cleaned, standardized string with underscores instead of spaces
-    """
-    s = str(s).replace("_"," ")
-    components = s.split(" ")
-    clean_components=[]
-    string=""
-    for ch in components:
-        word = ''.join(e for e in ch if (e.isalnum() or (e in ['&','.'])))
-        clean_components.append(word)
-    for i,c in enumerate(clean_components):
-        string += c
-        if i<len(clean_components)-1:
-            string+= "_"
-    return string.upper()
 
 
-class Measurement():
-    """
-    """
-    def __init__(self,tuple):
-        (value,units) = tuple
-        self._value = float(value)
-        self._units = int(units)
-
-    def __str__(self):
-        return "{},{}".format(self._value,self._units)
-
-    def value_in_meters(self):
-        """
-        See :func:`metadata.convert_to_meters`
-
-        TJW: This returns the rounded value (to 2 dec places) for GUI purposes
-
-        """
-        return round(self.convert_to_meters(),2)
-
-    def convert_to_meters(self):
-        """
-        Parameters:
-            value (float): value to be converted
-            units (int): current units of value represented by an integer
-            see mappings: LENGTH_SCALE_FACTORS, LENGTH_UNITS
-                + 1 for feet
-                + 2 for inches
-                + 3 for Meters
-                + 4 for centimeters
-                + 5 for millimeters
-        Returns:
-            (float): converted value
-        """
-        units_string = LENGTH_UNITS[self._units]
-        scale_factor = LENGTH_SCALE_FACTORS[units_string]
-        length_in_meters = self._value * scale_factor
-        return length_in_meters
-#<remove during housekeeping>
-#        units = self._units
-#        value = self._value
-#
-#        if units == 1:
-#            value = value * 0.3048
-#        elif units == 2:
-#            value = value * 0.0254
-#        #this is cute but more sophisticated than we want to support (too tough change)
-#        #elif units > 2:
-#        #    value = value * (10 ** (units - 3))
-#
-#        return value
-#</remove during housekeeping>
-
-
-
-class Drill_String_Component():
-    def __init__(self,tuple):
-        (type,status,length,length_units,od,od_units) = tuple
-        self._type = int(type)
-        self._status =int(status)
-        self._length = float(length)
-        self._length_units = int(length_units)
-        self._od = float(od)
-        self._od_units = int(od_units)
-
-    def __str__(self):
-        value = "{},{},{},{},{},{}".format(self._type,self._status,self._length,self._length_units,self._od,self._od_units)
-        return value
-
-    @property
-    def type(self):
-        return self._type
-
-    @property
-    def status(self):
-        return self._status
-
-    @property
-    def length_in_meters(self):
-        measurement = Measurement([self._length, self._length_units])
-        return measurement.value_in_meters()
-
-
-    #@property
-    #def drill_string_compnent_length_untis(self):
-    #    return measurement_units_options[self._length_units-1]
-
-    @property
-    def od_in_mm(self):
-        for m in range(2,5):
-            if self._length_units == self.measurement_units_options[m]:
-                return self._length * (10**(m-2))
-        if self._length_units == self.measurement_units_options[0]:
-            return self._length * 304.8
-        elif self._length_units == self.measurement_units_options[1]:
-            return self._length * 25.4
-        return None
-
-    #@property
-    #def drill_string_compnent_od_untis(self):
-    #    return measurement_units_options[self._od_units-1]
 
 
 

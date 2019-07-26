@@ -80,12 +80,14 @@ def load_acorr_db(sensor_file_id, timestamp_min, timestamp_max,config_str, file_
     global_config = Config()
     global_config.set_data_from_json(json.loads(config_str))
 
-    upsample_factor = 1.25
-    try:
-        print(global_config.upsample_factor)
-    except AttributeError:
-        logger.warning("this warning will be removed once the upsample factor is coming from the global cfg")
-        global_config.output_sampling_rate *= upsample_factor
+    #upsample_factor = 1.25
+    #try:
+    #    print(global_config.upsample_factor)
+    #except AttributeError:
+    #    logger.warning("this warning will be removed once the upsample factor is coming from the global cfg")
+    #    global_config.output_sampling_rate *= upsample_factor
+
+
 
 
     relative_timestamp_min = int(timestamp_min) - int(file_min_ts)

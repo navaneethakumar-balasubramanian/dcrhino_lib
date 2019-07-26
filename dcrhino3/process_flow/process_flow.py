@@ -31,7 +31,7 @@ from dcrhino3.process_flow.modules.trace_processing.upsample_sinc import Upsampl
 
 from dcrhino3.process_flow.modules.features_extraction.j0 import J0FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.j1 import J1FeaturesModule
-from dcrhino3.process_flow.modules.features_extraction.j2 import J2FeaturesModule
+from dcrhino3.process_flow.modules.features_extraction.j2 import J2FeaturesModule #replaced by hybrid, July 2019
 from dcrhino3.process_flow.modules.features_extraction.k0 import K0FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.b0 import B0FeaturesModule
 
@@ -44,20 +44,21 @@ from dcrhino3.process_flow.modules.plotters.rhino_boundaries_picker import Rhino
 from dcrhino3.process_flow.modules.plotters.rhino_plotter_repicker import RhinoPlotterRepickerModule
 
 from dcrhino3.models.trace_dataframe import TraceData
+
 from dcrhino3.process_flow.modules.hybrid.band_pass_filter_hybrid import BandPassFilterModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.columns_to_dataframe_module import ColumnsToDataframeModule
 from dcrhino3.process_flow.modules.hybrid.lead_channel_deconvolution import LeadChannelDeconvolutionModuleHybrid
-from dcrhino3.process_flow.modules.hybrid.band_pass_filter_hybrid import BandPassFilterModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.template_hybrid import TemplateModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.trim_trace import TrimTraceModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import UnfoldAutocorrelationModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.upsample_hybrid import UpsampleModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.phase_balance_trace_hybrid import PhaseBalanceHybridModule
+from dcrhino3.process_flow.modules.hybrid.feature_extract_hybrid import FeatureExtractJ2Hybrid
 
 from dcrhino3.unstable.multipass_util import update_acorr_with_resonance_info
 from dcrhino3.unstable.hacks.bma_hack import bma_hack_20190606
 from dcrhino3.unstable.multipass_util import get_depths_at_which_steels_change
-from dcrhino3.unstable.multipass.drill_rig import DrillRig
+
 
 logger = init_logging(__name__)
 
@@ -78,7 +79,7 @@ class ProcessFlow:
             "rhino_physics": RhinoPhysicsModule,
             "j0": J0FeaturesModule,
             "j1": J1FeaturesModule,
-            "j2": J2FeaturesModule,
+            "j2": FeatureExtractJ2Hybrid,#J2FeaturesModule,
             "k0": K0FeaturesModule,
             "b0": B0FeaturesModule,
             "qc_log_v1": QCPlotterModule,
@@ -276,24 +277,17 @@ class ProcessFlow:
         splitted_subsets = self.split_subsets(process_json,process_json['subsets'],acorr_trace)
         print("FoUnD {} subsets".format(len(splitted_subsets))  )
 
-        if len(splitted_subsets) == 0:
-            self.set_process_flow(process_json)
+        for i,subset in enumerate(splitted_subsets):
+
+            self.set_process_flow(subset['process_json'],subset_index=i)
             self.env_config = env_config
-            self.make_database_connection(acorr_trace.mine_name)
-            acorr_trace = self.process(acorr_trace)
+            self.make_database_connection(subset['acorr_trace'].mine_name)
+            subset['acorr_trace'] = self.process(subset['acorr_trace'],subset_index=i)
 
-        else:
-            for i,subset in enumerate(splitted_subsets):
-
-                self.set_process_flow(subset['process_json'],subset_index=i)
-                self.env_config = env_config
-                self.make_database_connection(subset['acorr_trace'].mine_name)
-                subset['acorr_trace'] = self.process(subset['acorr_trace'],subset_index=i)
-
-            acorr_trace , process_json =  self.merge_results(splitted_subsets)
-            return_dict["acorr_trace"] = acorr_trace
-            return_dict["process_json"] = process_json
-            return_dict["output_path"] = self.output_path
+        acorr_trace , process_json =  self.merge_results(splitted_subsets)
+        return_dict["acorr_trace"] = acorr_trace
+        return_dict["process_json"] = process_json
+        return_dict["output_path"] = self.output_path
 
         acorr_trace.save_to_h5(os.path.join(self.output_path,'processed.h5'))
         acorr_trace.save_to_csv(os.path.join(self.output_path,'processed.csv'))

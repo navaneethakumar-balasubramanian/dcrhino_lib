@@ -1,8 +1,8 @@
 from dcrhino3.process_flow.modules.base_module import BaseModule
 from dcrhino3.plotters.rhino_display_v3.rhino_display import RhinoDisplay
 from dcrhino3.plotters.rhino_display_v3.rhino_display_panel import Header, Heatmap, Curve, Wiggle
-from dcrhino3.models.drill_types import DrillTypes
-from dcrhino3.models.bit_types import BitTypes
+from dcrhino3.models.drill.drill_types import DrillTypes
+from dcrhino3.models.drill.bit_types import BitTypes
 from dcrhino3.models.sensor_installation_locations import SensorInstallationLocations
 import matplotlib.pyplot as plt
 import pandas as pd
