@@ -187,7 +187,7 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
 
 
     #count the negative vlaues at the rhs of this vector
-    output_dict = initialize_jazz3_dict()
+    output_dict = {}#initialize_jazz3_dict()
     output_dict['jazz2_left_trough_integral'] = left_integral
     output_dict['jazz2_right_trough_integral'] = right_integral
     output_dict['jazz2_center_peak_integral'] = center_integral
