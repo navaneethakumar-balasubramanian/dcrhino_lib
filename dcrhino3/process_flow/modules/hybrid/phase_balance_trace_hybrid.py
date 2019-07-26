@@ -13,9 +13,8 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.process_flow.modules.hybrid.base_hybrid_module import BaseHybridModule
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
 from dcrhino3.unstable.phase_algorithm_helpers import identify_phase_rotation
-from dcrhino3.unstable.phase_algorithm_helpers import identify_primary_neighbourhood
+#from dcrhino3.unstable.phase_algorithm_helpers import identify_primary_neighbourhood
 #from dcrhino3.physics.util import get_resonance_period
-#from dcrhino3.unstable.multipass.drill_rig import DrillRig
 #import matplotlib.pyplot as plt
 
 def calculate_resonance_period(installed_resonant_length, velocity_steel):

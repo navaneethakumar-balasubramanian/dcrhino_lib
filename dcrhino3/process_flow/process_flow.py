@@ -31,7 +31,7 @@ from dcrhino3.process_flow.modules.trace_processing.upsample_sinc import Upsampl
 
 from dcrhino3.process_flow.modules.features_extraction.j0 import J0FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.j1 import J1FeaturesModule
-from dcrhino3.process_flow.modules.features_extraction.j2 import J2FeaturesModule
+from dcrhino3.process_flow.modules.features_extraction.j2 import J2FeaturesModule #replaced by hybrid, July 2019
 from dcrhino3.process_flow.modules.features_extraction.k0 import K0FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.b0 import B0FeaturesModule
 
@@ -44,10 +44,10 @@ from dcrhino3.process_flow.modules.plotters.rhino_boundaries_picker import Rhino
 from dcrhino3.process_flow.modules.plotters.rhino_plotter_repicker import RhinoPlotterRepickerModule
 
 from dcrhino3.models.trace_dataframe import TraceData
+
 from dcrhino3.process_flow.modules.hybrid.band_pass_filter_hybrid import BandPassFilterModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.columns_to_dataframe_module import ColumnsToDataframeModule
 from dcrhino3.process_flow.modules.hybrid.lead_channel_deconvolution import LeadChannelDeconvolutionModuleHybrid
-from dcrhino3.process_flow.modules.hybrid.band_pass_filter_hybrid import BandPassFilterModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.template_hybrid import TemplateModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.trim_trace import TrimTraceModuleHybrid
 from dcrhino3.process_flow.modules.hybrid.unfold_autocorrelation import UnfoldAutocorrelationModuleHybrid
@@ -58,7 +58,7 @@ from dcrhino3.process_flow.modules.hybrid.feature_extract_hybrid import FeatureE
 from dcrhino3.unstable.multipass_util import update_acorr_with_resonance_info
 from dcrhino3.unstable.hacks.bma_hack import bma_hack_20190606
 from dcrhino3.unstable.multipass_util import get_depths_at_which_steels_change
-from dcrhino3.unstable.multipass.drill_rig import DrillRig
+
 
 logger = init_logging(__name__)
 

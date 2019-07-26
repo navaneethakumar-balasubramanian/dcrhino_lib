@@ -21,16 +21,16 @@ https://datacloudintl.atlassian.net/wiki/spaces/RHINO/pages/139526154/Configurat
 
 from __future__ import absolute_import, division, print_function
 import datetime
-import matplotlib.pyplot as plt #for debugging
-import numpy as np
+#import matplotlib.pyplot as plt #for debugging
+#import numpy as np
 import os
 import pdb
 
-from dcrhino3.models.interval import Interval
+#from dcrhino3.models.interval import Interval
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.helpers.general_helper_functions import init_logging, add_inverse_dictionary
-from dcrhino3.models.metadata import Measurement
-from dcrhino3.models.metadata import LENGTH_SCALE_FACTORS, LENGTH_UNITS
+from dcrhino3.models.drill.drill_helper_functions import LengthMeasurement as Measurement
+from dcrhino3.models.drill.drill_helper_functions import LENGTH_UNITS
 
 logger = init_logging(__name__)
 
@@ -79,9 +79,14 @@ class DrillStringComponent(object):
         self._outer_diameter_units = None
         self.gui_number = None
         self.gui_string = gui_string
+        self.label = None# collar, bit_sub
         if attributes_list is not None:
             self.populate_from_attributes_list(attributes_list)
-
+    
+    @property
+    def od(self):
+        return self._outer_diameter
+    
     def populate_from_attributes_list(self, attributes_list):
         """
         """
@@ -98,6 +103,15 @@ class DrillStringComponent(object):
         self._outer_diameter = float(attributes_list[4])
         self._outer_diameter_units = int(attributes_list[5])
         return
+    
+    def _to_json(self):
+        return
+    def from_json(self, jsonthingy):
+        """
+        probably getting a list of dicts as input
+        """
+        print('unpacks a json obj and populates')
+        return
 
     def populate_from_gui_string(self):
         """
@@ -108,6 +122,10 @@ class DrillStringComponent(object):
 
 
     def as_gui_string(self):
+        """
+        historical method for populating from list of floats/ints, etc
+        to be deprecated once json is being used for field config
+        """
         gui_values = len(ORDERED_GUI_STRING_ELEMENTS) * [None]
         #component_type = self.component_type
         #gui_value = DRILL_STRING_COMPONENT_TYPES[component_type]

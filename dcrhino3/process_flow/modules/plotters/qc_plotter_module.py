@@ -10,8 +10,8 @@ import numpy as np
 #import json
 from dcrhino3.process_flow.modules.base_module import BaseModule
 from dcrhino3.plotters.qc_plotter import QCLogPlotter
-from dcrhino3.models.drill_types import DrillTypes
-from dcrhino3.models.bit_types import BitTypes
+from dcrhino3.models.drill.drill_types import DrillTypes
+from dcrhino3.models.drill.bit_types import BitTypes
 from dcrhino3.models.sensor_installation_locations import SensorInstallationLocations
 from dcrhino3.physics.util import get_resonance_period
 
