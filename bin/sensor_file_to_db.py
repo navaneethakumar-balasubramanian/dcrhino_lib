@@ -126,8 +126,7 @@ def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000)
     conn = env_config.get_rhino_db_connection_from_mine_name(global_config.mine_name)
     sql_conn = env_config.get_rhino_sql_connection_from_mine_name(global_config.mine_name)
     db_helper = RhinoDBHelper(conn=conn)
-    sql_db_helper = RhinoSqlHelper(host=sql_conn['host'], user=sql_conn['user'], passwd=sql_conn['password'],
-                                   database=sql_conn['database'])
+    sql_db_helper = RhinoSqlHelper(**sql_conn)
 
     #file_exists = sql_db_helper.sensor_files.file_name_exists(os.path.basename(h5_file_path))
     #file_exists = sql_db_helper.sensor_files.relative_path_exists(h5_file_path)
@@ -218,8 +217,7 @@ def acorr_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
 
     conn = env_config.get_rhino_db_connection_from_mine_name(global_config.mine_name)
     sql_conn = env_config.get_rhino_sql_connection_from_mine_name(global_config.mine_name)
-    sql_db_helper = RhinoSqlHelper(host=sql_conn['host'], user=sql_conn['user'], passwd=sql_conn['password'],
-                                   database=sql_conn['database'])
+    sql_db_helper = RhinoSqlHelper(**sql_conn)
 
     file_checksum = hashlib.md5(file_as_bytes(open(h5_file_path, 'rb'))).hexdigest()
     file_with_path = sql_db_helper.sensor_files.get_file_by_relative_path(h5_file_path)

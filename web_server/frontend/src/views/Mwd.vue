@@ -1,27 +1,42 @@
 <template>
   <div class="about">
+    <v-card color="blue lighten-4" >
+              <v-layout row>
+                <v-flex xs12>
+                  <v-card-title primary-title>
+                    <div>
+                      <div class="headline">MWD: {{ mine_name }} </div>
+                      <div>Type: CSV</div>
+                      <div>Path: "/data/arcelor_mittal/mwds/201992.csv"</div>
+                    </div>
+                  </v-card-title>
+                </v-flex>
+              </v-layout>
+              <v-divider light></v-divider>
+              <v-card-actions class="pa-3" >
+                <v-btn>Mapping</v-btn>
+                <v-btn>Download</v-btn>
 
+                <v-spacer></v-spacer>
+                <date-range-picker
+                ref="picker" v-model="dateRange" @update="updated_date_picker" :locale-data="{ firstDay: 1, format: 'YYYY-MM-DD' }" opens="left" style="width:240px; float:right;z-index:1000" :dateFormat="format_available_dates">
+            <div slot="input" slot-scope="picker" style="min-width: 200px; text-align:center;font-color:'#000'">
+                From : {{ dateRange.startDate.substring(0,10) }}  To: {{ dateRange.endDate.substring(0,10) }} 
+            </div>
+        </date-range-picker>
+              </v-card-actions>
+            </v-card>
      
     <v-toolbar flat color="white" style="z-index:1">
    
-      <v-toolbar-title
-        >Processed files from : {{ mine_name }}<br /><span
-          class="body-2 font-weight-light"
-          >{{ filtered_data.length }} results found.</span
-        >
+      <v-toolbar-title>
+        <span class="body-2 font-weight-light"
+          >{{ filtered_data.length }} results found.</span>
       </v-toolbar-title>
 
       <v-spacer></v-spacer>
-      <v-layout align-right justify-end column fill-height>
-      <v-flex xs12 md6>
-      <date-range-picker
-            ref="picker" v-model="dateRange" @update="updated_date_picker" :locale-data="{ firstDay: 1, format: 'YYYY-MM-DD' }" opens="left" style="width:240px; float:right;z-index:1000" :dateFormat="format_available_dates">
-        <div slot="input" slot-scope="picker" style="min-width: 200px; text-align:center;">
-            From : {{ dateRange.startDate.substring(0,10) }}  To: {{ dateRange.endDate.substring(0,10) }} 
-        </div>
-    </date-range-picker>
-      </v-flex>
-      <v-flex xs12 md6>
+      
+      
       <v-text-field
       style="min-width: 240px; float:right;"
         v-model.lazy="search"
@@ -33,8 +48,7 @@
         v-on:keyup.enter="searchWeb"
         :loading="loading"
       ></v-text-field>
-      </v-flex>
-      </v-layout>
+      
     </v-toolbar>
     </v-layout>
 
@@ -192,18 +206,16 @@ export default {
                 endDate: ""}
   }),
   created() {
-    this.$store.dispatch("GET_PROCESSED", { mine_name: this.mine_name });
+    this.$store.dispatch("GET_MWD", { mine_name: this.mine_name });
   },
   props: ["mine_name"],
 
   methods: {
     format_available_dates:function(classes,date){
-      
       if (this.processed_at_ts.includes(moment(date).format("YYYY-MM-DD"))){
         classes.today = true;
       }
       return classes
-      
     },
     updated_date_picker:function(e){
       e.startDate = moment(e.startDate).format("YYYY-MM-DD") + " 00:00:00";
@@ -424,10 +436,7 @@ export default {
   },
   computed: {
     server_data() {
-      return this.$store.state.processed_holes.processed_list;
-    },
-    processed_at_ts(){
-      return this.$store.state.processed_holes.processed_at_ts.map(a => moment(a,"X").format("YYYY-MM-DD"));
+      return this.$store.state.mwd.mwd;
     },
 
     loading() {
