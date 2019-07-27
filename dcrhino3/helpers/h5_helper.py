@@ -11,7 +11,7 @@ import ConfigParser
 from datetime import datetime
 from dcrhino3.models.metadata import Metadata
 import json
-from dcrhino3.models.config import Config
+from dcrhino3.models.config2 import Config
 
 
 def save_np_array_to_h5_file(h5file, key, np_array):
@@ -168,6 +168,16 @@ class H5Helper:
         c = Config()
         c.set_data_from_json(first_config)
         return c
+
+    def extract_metadata_from_h5_file_as_json(self):
+        return json.dumps(self.extract_metadata_from_h5_file_as_dict(), indent=4)
+
+    def extract_metadata_from_h5_file_as_dict(self):
+        config_dict = dict()
+        for key, value in self.h5f.attrs.items():
+            param_name = key.split("/")[1]
+            config_dict[param_name] = value
+        return config_dict
 
     def _extract_metadata_from_h5_file(self):
         try:

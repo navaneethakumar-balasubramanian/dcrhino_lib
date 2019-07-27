@@ -2605,10 +2605,10 @@ class EventList(Transformable):
             fname = "{}_{}_{}_{}".format(session_date_string, fname, sensor_serial_number, resampling_rate)
         if _self.channelId == 8:
             row_keys_type_dict["seq"] = numpy.int32
-            row_keys_type_dict["ticks"] = numpy.int32
-            row_keys_type_dict["x_data"] = numpy.float32
-            row_keys_type_dict["y_data"] = numpy.float32
-            row_keys_type_dict["z_data"] = numpy.float32
+            row_keys_type_dict["cticks"] = numpy.int32
+            row_keys_type_dict["x"] = numpy.float32
+            row_keys_type_dict["y"] = numpy.float32
+            row_keys_type_dict["z"] = numpy.float32
         if _self.channelId == 70:
             data_type = "quaternions"
             fname = "{}_{}".format(fname, data_type)
@@ -2623,9 +2623,9 @@ class EventList(Transformable):
             row_keys_type_dict["temperature"] = numpy.float32
         elif _self.channelId == 32:
             data_type = "mems"
-            row_keys_type_dict["x_data"] = numpy.float32
-            row_keys_type_dict["y_data"] = numpy.float32
-            row_keys_type_dict["z_data"] = numpy.float32
+            row_keys_type_dict["x"] = numpy.float32
+            row_keys_type_dict["y"] = numpy.float32
+            row_keys_type_dict["z"] = numpy.float32
 
         output_path = os.path.join(outFile, data_type)
 

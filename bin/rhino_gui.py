@@ -103,18 +103,18 @@ class GUI():
         master.title("DataCloud Rhino Version 3")
         master.resizable(width=False, height=False)
         Label(master, text="Rhino Configuration").grid(row=row)
-        Button(master, text='Settings', command=self.rhino_installation_settings).grid(row=row, column=1,
-                                                                                       sticky="ew", pady=4,
-                                                                                       columnspan=1)
+        # Button(master, text='Settings', command=self.rhino_installation_settings).grid(row=row, column=1,
+        #                                                                                sticky="ew", pady=4,
+        #                                                                                columnspan=1)
         row += 1
 
         Label(master, text="Acquisition").grid(row=row)
-        Button(master, text='Go', command=self.acquisition_daemon).grid(row=row, column=1, sticky="ew", pady=4)
-        Button(master, text='Stop', command=self.acquisition_daemon_stop).grid(row=row, column=2, sticky="ew", pady=4)
+        # Button(master, text='Go', command=self.acquisition_daemon).grid(row=row, column=1, sticky="ew", pady=4)
+        # Button(master, text='Stop', command=self.acquisition_daemon_stop).grid(row=row, column=2, sticky="ew", pady=4)
         row += 1
 
         Label(master, text="Merge Files").grid(row=row)
-        Button(master, text='Go', command=self.merge_files).grid(row=row, column=1, sticky="ew", pady=4)
+        # Button(master, text='Go', command=self.merge_files).grid(row=row, column=1, sticky="ew", pady=4)
         row += 1
 
         Label(master, text="Playback").grid(row=row)
@@ -123,12 +123,12 @@ class GUI():
         row += 1
 
         Label(master, text="Upload Files").grid(row=row)
-        Button(master, text='Go', command=self.rsync_daemon).grid(row=row, column=1, sticky="ew", pady=4)
-        Button(master, text='Stop', command=self.rsync_daemon_stop).grid(row=row, column=2, sticky="ew", pady=4)
+        # Button(master, text='Go', command=self.rsync_daemon).grid(row=row, column=1, sticky="ew", pady=4)
+        # Button(master, text='Stop', command=self.rsync_daemon_stop).grid(row=row, column=2, sticky="ew", pady=4)
         row += 1
 
         Label(master, text="Fix Headers").grid(row=row)
-        Button(master, text='Go', command=self.update_h5_headers).grid(row=row, column=1, sticky="ew", pady=4)
+        # Button(master, text='Go', command=self.update_h5_headers).grid(row=row, column=1, sticky="ew", pady=4)
         row += 1
 
         Button(master, text='Exit', command=self.exit).grid(row=row, column=1, sticky="ew", pady=4)
@@ -215,8 +215,8 @@ class GUI():
             return
 
         sampling_rate = self.config.output_sampling_rate
-        cmd = "python {} -source {} -sr {} -plot {}".format(os.path.abspath(os.path.join(PATH, 'playback_raw_data.py')),
-                                                            fname, sampling_rate)
+        cmd = "python {} -source {} -sr {}".format(os.path.abspath(os.path.join(PATH, 'playback_raw_data.py')),
+                                                   fname, sampling_rate)
         logging.debug(cmd)
         self.playback_daemon_process = Popen(cmd, shell=True)
         logging.info("Played back file {}".format(fname))

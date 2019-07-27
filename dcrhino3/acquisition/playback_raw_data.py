@@ -7,14 +7,14 @@ import argparse
 import calendar
 import time
 from datetime import datetime
-from dcrhino3.models.config import Config
-from dcrhino3.acquisition.config_file_utilities import extract_metadata_from_h5_file
+from dcrhino3.models.config2 import Config
 from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
 from dcrhino3.helpers.general_helper_functions import interpolate_data, calibrate_data
 from test_spectral_qc_plot import make_spectral_qc_plot
 from dcrhino3.helpers.h5_helper import H5Helper
 import shutil
 import scipy.signal as ssig
+import json
 
 logger = init_logging(__name__)
 file_logger = init_logging_to_file(__name__)
@@ -107,12 +107,18 @@ def main(args):
         time_indices = (ts.ts >= start_time) & (ts.ts < end_time)
 
     print("Loading Raw Data")
-    x_raw = h5_helper.load_axis_mask("x", time_indices)
-    y_raw = h5_helper.load_axis_mask("y", time_indices)
-    z_raw = h5_helper.load_axis_mask("z", time_indices)
-
+    try:
+        x_raw = h5_helper.load_axis_mask("x", time_indices)
+        y_raw = h5_helper.load_axis_mask("y", time_indices)
+        z_raw = h5_helper.load_axis_mask("z", time_indices)
+    except:
+        logger.warning("File has _data in the column names")
+        x_raw = h5_helper.load_axis_mask("x_data", time_indices)
+        y_raw = h5_helper.load_axis_mask("y_data", time_indices)
+        z_raw = h5_helper.load_axis_mask("z_data", time_indices)
     print("Extracting Metadata")
-    metadata = extract_metadata_from_h5_file(hf)
+    config = Config()
+    config.set_data_from_json(json.loads(h5_helper.extract_metadata_from_h5_file_as_json()))
     sensitivity = np.asarray(hf.get('sensitivity'), dtype=np.float32)
     print (hf.get('axis'))
     if hf.get('axis') is None:
@@ -122,7 +128,7 @@ def main(args):
         file_axis = np.asarray(hf.get('axis'), dtype=np.int32)
 
     if args.sampling_rate is None:
-        output_sampling_rate = metadata.output_sampling_rate
+        output_sampling_rate = config.output_sampling_rate
         print ("Using metadata sampling rate of {}".format(output_sampling_rate))
     else:
         output_sampling_rate = int(args.sampling_rate)
@@ -156,9 +162,8 @@ def main(args):
 
     print("Applying calibration")
 
-    global_config = Config(metadata)
-    accelerometer_max_voltage = float(global_config.accelerometer_max_voltage)
-    rhino_version = global_config.rhino_version
+    accelerometer_max_voltage = config.accelerometer_max_voltage
+    rhino_version = config.rhino_version
 
     if len(sensitivity) > 1:
         is_ide_file = False
@@ -425,34 +430,40 @@ def main(args):
 
     if repeat is not None:
         rh5f = h5py.File(repeat, "r")
-        rsensitivity = np.asarray(rh5f.get('sensitivity'), dtype=np.float32)
+        rh5_helper = H5Helper(rh5f)
+        r_config = Config()
+        r_config.set_data_from_json(json.loads(rh5_helper.extract_metadata_from_h5_file_as_json()))
+        r_rhino_version = float(r_config.rhino_version)
+        r_accelerometer_max_voltage = float(r_config.accelerometer_max_voltage)
+        rsensitivity = np.asarray(rh5_helper.h5f.get('sensitivity'), dtype=np.float32)
         if rh5f.get('axis') is None:
             print ("NO AXIS ON METADATA ASSUMING IT'S AN IDE FILE")
             rfile_axis = [1, 2]
         else:
-            rfile_axis = np.asarray(rh5f.get('axis'), dtype=np.int32)
+            rfile_axis = np.asarray(rh5_helper.h5f.get('axis'), dtype=np.int32)
         if len(rsensitivity) > 1:
             ris_ide_file = False
         else:
             ris_ide_file = True
-        rts = np.asarray(rh5f["ts"])
+        rts = np.asarray(rh5_helper.ts)
         rts_indices = (rts >= start_time) & (rts < end_time)
         rts = rts[rts_indices]
-        rx_raw = np.asarray(rh5f["x"])[rts_indices]
-        ry_raw = np.asarray(rh5f["y"])[rts_indices]
-        rz_raw = np.asarray(rh5f["z"])[rts_indices]
+        rx_raw = rh5_helper.load_axis_mask("x", rts_indices)
+        ry_raw = rh5_helper.load_axis_mask("y", rts_indices)
+        rz_raw = rh5_helper.load_axis_mask("z", rts_indices)
+        rh5f.close()
 
         if ris_ide_file:
             rx_data = calibrate_data(rx_raw, rsensitivity[0], is_ide_file, remove_mean=remove_mean)
             ry_data = calibrate_data(ry_raw, rsensitivity[0], is_ide_file, remove_mean=remove_mean)
             rz_data = calibrate_data(rz_raw, rsensitivity[0], is_ide_file, remove_mean=remove_mean)
         else:
-            rx_data = calibrate_data(rx_raw, rsensitivity[0], accelerometer_max_voltage,
-                                    rhino_version, remove_mean=remove_mean)
-            ry_data = calibrate_data(ry_raw, rsensitivity[1], accelerometer_max_voltage,
-                                    rhino_version, remove_mean=remove_mean)
-            rz_data = calibrate_data(rz_raw, rsensitivity[2], accelerometer_max_voltage,
-                                    rhino_version, remove_mean=remove_mean)
+            rx_data = calibrate_data(rx_raw, rsensitivity[0], r_accelerometer_max_voltage,
+                                     r_rhino_version, remove_mean=remove_mean)
+            ry_data = calibrate_data(ry_raw, rsensitivity[1], r_accelerometer_max_voltage,
+                                     r_rhino_version, remove_mean=remove_mean)
+            rz_data = calibrate_data(rz_raw, rsensitivity[2], r_accelerometer_max_voltage,
+                                     r_rhino_version, remove_mean=remove_mean)
 
         rfig = plt.figure("DataCloud Rhino Raw Data Repeat", figsize=(10, 5))
         plt.subplots_adjust(hspace=0.5)
@@ -555,4 +566,3 @@ if __name__ == "__main__":
 
     main(args)
 
-    #main()
