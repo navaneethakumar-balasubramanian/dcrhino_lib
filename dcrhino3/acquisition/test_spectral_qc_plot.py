@@ -16,8 +16,9 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-import pdb
+import json
 import scipy.signal as ssig
+from dcrhino3.models.config2 import Config
 
 from dcrhino3.helpers.h5_helper import H5Helper
 from dcrhino3.helpers.general_helper_functions import calibrate_data
@@ -44,12 +45,13 @@ def make_spectral_qc_plot(h5_helper, components_to_plot=['x', 'y'],
     header_color_scheme['y'] = 'red'
     header_color_scheme['z'] = 'green'
     h5h = h5_helper
+    global_config = Config()
+    global_config.set_data_from_json(json.loads(h5h.extract_metadata_from_h5_file_as_json()))
     h5_basename = os.path.basename(h5h.h5f.filename)
-    meta_dict = h5_helper.metadata.metadata_to_dictionary()
     header_frequency_band_str = '{}-{}Hz'.format(header_frequency_band[0], header_frequency_band[1])
 
     num_pcolor_plot_panels = len(components_to_plot)
-    samples_per_second = float(h5h.metadata.output_sampling_rate)
+    samples_per_second = float(global_config.output_sampling_rate)
     trace_duration_in_seconds = 1.0
     samples_per_trace = int(trace_duration_in_seconds * samples_per_second)
     if mask is None:
@@ -59,11 +61,11 @@ def make_spectral_qc_plot(h5_helper, components_to_plot=['x', 'y'],
         y_data = h5h.load_axis_mask("y", mask)
         z_data = h5h.load_axis_mask("z", mask)
     x_data = calibrate_data(x_data, h5_helper._get_sensitivity_xyz()[0],
-                            h5_helper.metadata.accelerometer_max_voltage,
+                            global_config.accelerometer_max_voltage,
                             rhino_version=rhino_version,
                             is_ide_file=ide_file)
     y_data = calibrate_data(y_data, h5_helper._get_sensitivity_xyz()[0],
-                            h5_helper.metadata.accelerometer_max_voltage,
+                            global_config.accelerometer_max_voltage,
                             rhino_version=rhino_version,
                             is_ide_file=ide_file)
 
@@ -136,7 +138,7 @@ def make_spectral_qc_plot(h5_helper, components_to_plot=['x', 'y'],
     ax[0].legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
        ncol=3, mode="expand", borderaxespad=0.)
 
-    ttl_str = '{}, orientation={}'.format(h5_basename[:-3], meta_dict['orientation'] )
+    ttl_str = '{}, Axial axis={}'.format(h5_basename[:-3], global_config.sensor_axial_axis)
     ttl_str = '{}, band = {}'.format(ttl_str, header_frequency_band_str)
     #ax[0].set_title(ttl_str)
     plt.suptitle(ttl_str)

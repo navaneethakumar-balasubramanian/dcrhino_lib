@@ -13,7 +13,22 @@ from dcrhino3.models.metadata import Metadata
 import pandas as pd
 import pdb
 import json
-from dcrhino3.models.config import Config
+from dcrhino3.models.config2 import Config
+
+
+def save_np_array_to_h5_file(h5file, key, np_array):
+    np_length = len(np_array)
+    my_key = key
+    if my_key in h5file.keys():
+        ds = h5file[my_key]
+        ds.resize((h5file[my_key].shape[0] + np_array.shape[0]), axis=0)
+        ds[-np_length:] = np_array
+    else:
+        ds = h5file.create_dataset(my_key, data=np_array, chunks=True, dtype=np_array.dtype, maxshape=(None,),
+                                   compression="gzip",
+                                   compression_opts=9)
+        ds[:] = np_array
+
 class H5Helper:
     """
     Facilitates extraction of data from .h5 files.
@@ -168,6 +183,15 @@ class H5Helper:
         c.set_data_from_json(first_config)
         return c
 
+    def extract_metadata_from_h5_file_as_json(self):
+        return json.dumps(self.extract_metadata_from_h5_file_as_dict(), indent=4)
+
+    def extract_metadata_from_h5_file_as_dict(self):
+        config_dict = dict()
+        for key, value in self.h5f.attrs.items():
+            param_name = key.split("/")[1]
+            config_dict[param_name] = value
+        return config_dict
 
     def _extract_metadata_from_h5_file(self):
         try:

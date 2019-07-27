@@ -115,20 +115,19 @@ class GUI():
 
 
         Label(master, text="Rhino Configuration").grid(row=row)
-        Button(master, text='Settings', command=self.rhino_installation_settings).grid(row=row, column=1,
-                                                                                       sticky="ew", pady=4, columnspan=1)
+        # Button(master, text='Settings', command=self.rhino_installation_settings).grid(row=row, column=1,
+        #                                                                                sticky="ew", pady=4,
+        #                                                                                columnspan=1)
         row += 1
 
         Label(master, text="Acquisition").grid(row=row)
-        Button(master, text='Go', command=self.acquisition_daemon).grid(row=row, column=1, sticky="ew", pady=4)
-        Button(master, text='Stop', command=self.acquisition_daemon_stop).grid(row=row, column=2, sticky="ew", pady=4)
-        #Button(master, text='Settings', command=self.real_time_acquisition_settings).grid(row=row, column=3, sticky=W, pady=4)
+        # Button(master, text='Go', command=self.acquisition_daemon).grid(row=row, column=1, sticky="ew", pady=4)
+        # Button(master, text='Stop', command=self.acquisition_daemon_stop).grid(row=row, column=2, sticky="ew", pady=4)
         row += 1
 
 
         Label(master, text="Merge Files").grid(row=row)
-        Button(master, text='Go', command=self.merge_files).grid(row=row, column=1, sticky="ew", pady=4)
-        #Button(master, text='Settings', command="").grid(row=row, column=2, sticky=W, pady=4)
+        # Button(master, text='Go', command=self.merge_files).grid(row=row, column=1, sticky="ew", pady=4)
         row += 1
 
         Label(master, text="Playback").grid(row=row)
@@ -137,13 +136,12 @@ class GUI():
         row += 1
 
         Label(master, text="Upload Files").grid(row=row)
-        Button(master, text='Go', command=self.rsync_daemon).grid(row=row, column=1, sticky="ew", pady=4)
-        Button(master, text='Stop', command=self.rsync_daemon_stop).grid(row=row, column=2, sticky="ew", pady=4)
+        # Button(master, text='Go', command=self.rsync_daemon).grid(row=row, column=1, sticky="ew", pady=4)
+        # Button(master, text='Stop', command=self.rsync_daemon_stop).grid(row=row, column=2, sticky="ew", pady=4)
         row += 1
 
         Label(master, text="Fix Headers").grid(row=row)
-        Button(master, text='Go', command=self.update_h5_headers).grid(row=row, column=1, sticky="ew", pady=4)
-        #Button(master, text='Settings', command="").grid(row=row, column=2, sticky=W, pady=4)
+        # Button(master, text='Go', command=self.update_h5_headers).grid(row=row, column=1, sticky="ew", pady=4)
         row += 1
 
         Button(master, text='Exit', command=self.exit).grid(row=row, column=1, sticky="ew", pady=4)
@@ -238,15 +236,10 @@ class GUI():
             return
         fname = f # starts from `1.0`, not `0.0`
 
-        sampling_rate = config.get("COLLECTION","output_sampling_rate")
-        show_plots = config.get("PLAYBACK","show_plots")
-        #pdb.set_trace()
-        #self.playback_daemon_process = Popen(['python', os.path.abspath(os.path.join(PATH,'playback_raw_data.py')),'-source {} -sr {} -plot {}'.format(fname,sampling_rate,show_plots)])
-        cmd = "python {} -source {} -sr {} -plot {}".format(os.path.abspath(os.path.join(PATH,
-                                                                                         'playback_raw_data.py')),
-                                                            fname, sampling_rate, show_plots)
-        #self.playback_daemon_process = Popen(['python', os.path.abspath(os.path.join(PATH,'playback_raw_data.py'))])
-        print cmd
+        sampling_rate = self.config.output_sampling_rate
+        cmd = "python {} -source {} -sr {}".format(os.path.abspath(os.path.join(PATH, 'playback_raw_data.py')),
+                                                   fname, sampling_rate)
+        logging.debug(cmd)
         self.playback_daemon_process = Popen(cmd, shell=True)
         logging.info("Played back file {}".format(fname))
 
