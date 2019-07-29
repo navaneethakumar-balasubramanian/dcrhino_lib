@@ -144,7 +144,7 @@ class GUI():
         # load_config_file()
         if self.acquisition_process is None:
             timestamp = datetime.now().strftime('%Y_%m_%d_%H')
-            acq_script = 'real_time_acquisition_v3.py'
+            acq_script = 'real_time_acquisition_v4.py'
             health_script = 'system_health_plotter.py'
             sensor_stats = 'sensor_stats_plotter.py'
             if debug:
