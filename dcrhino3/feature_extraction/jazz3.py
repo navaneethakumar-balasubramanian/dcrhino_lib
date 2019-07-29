@@ -13,22 +13,22 @@ import pdb
 from dcrhino3.models.interval import TimePeriod
 from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
-from dcrhino3.feature_extraction.jazz_with_zero_crossings import  initialize_jazz2_dict
+#from dcrhino3.feature_extraction.jazz_with_zero_crossings import  initialize_jazz2_dict
 from dcrhino3.feature_extraction.jazz_with_zero_crossings import  jazz2
 from dcrhino3.feature_extraction.jazz_with_zero_crossings import missing_zero_crossing
 from dcrhino3.feature_extraction.jazz_with_zero_crossings import MISSED_ZERO_CROSSING_THRESHOLD
 from dcrhino3.feature_extraction.jazz_with_zero_crossings import semi_theoretical_tick_times
 
-def initialize_jazz3_dict():
-    """
-    merge jazz2 and jazz3 dicts, 
-    :return:
-    """
-    tmp = initialize_jazz2_dict()
-    tmp['left_half_trough_integral'] = np.nan
-    tmp['right_half_trough_integral'] = np.nan
-    tmp['center_peak_integral'] = np.nan
-    return tmp
+#def initialize_jazz3_dict():
+#    """
+#    merge jazz2 and jazz3 dicts, 
+#    :return:
+#    """
+#    tmp = initialize_jazz2_dict()
+#    tmp['left_half_trough_integral'] = np.nan
+#    tmp['right_half_trough_integral'] = np.nan
+#    tmp['center_peak_integral'] = np.nan
+#    return tmp
 
 
 
@@ -74,6 +74,8 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
     to the jazz2.
     :param symmetric_trace: dcrhino3.signal_processing.symmetric_trace.SymmetricTrace()
     :param center_time: time in seconds of the peak we wish to reference
+    
+    mini_trace: this is a trace, recentered on the max_time input
     :return:
         outputs of jazz3 are 
         the trough times left and right from the jazz trace, 
@@ -84,21 +86,16 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
     #jazz2_dict = jazz2(symmetric_trace, center_time, expected_trough_duration, 
     #                   wavelet_id=wavelet_id, sanity_check_plot=sanity_check_plot)
     
-    center_index = np.where(symmetric_trace.time_vector == center_time)[0][0]
-    #<method of symmetric_trace: chop-to-center-time>
-    lhs = symmetric_trace.data[:center_index]   # everything up to the max
-    rhs = symmetric_trace.data[center_index + 1:]
-    n_keep = min(len(lhs), len(rhs))
-    keep_lhs = lhs[-n_keep:]
-    keep_rhs = rhs[:n_keep]
-    mini_trace_data = np.hstack((keep_lhs, symmetric_trace.data[center_index], keep_rhs))
-    mini_trace = SymmetricTrace(mini_trace_data, symmetric_trace.sampling_rate,
-                                component_id=symmetric_trace.component_id)
+    mini_center_index = np.where(symmetric_trace.time_vector == center_time)[0][0]
+    mini_trace = symmetric_trace.trim_to_new_center_index(mini_center_index)
+    
+
     mini_trace_time = mini_trace.time_vector
     #align this by center-time offset
     # <method of symmetric_trace: chop-to-center-time>
+    mini_trace_time = mini_trace.time_vector
     mini_center_index = mini_trace.center_index
-    signs = np.sign(mini_trace_data)
+    signs = np.sign(mini_trace.data)
     d_signs = np.diff(signs)
     #plt.plot(d_signs);plt.plot(mini_trace_data);plt.show(block=True)
 
@@ -113,15 +110,15 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
     # lhs trough is a neg_slope then a pos slope (headed to max)
     start_left_trough = negative_slope_zx_indices_left[negative_slope_zx_indices_left < mini_center_index][-1]
     end_left_trough = positive_slope_zx_indices_left[positive_slope_zx_indices_left < mini_center_index][-1]
-    left_trough = mini_trace_data[start_left_trough:end_left_trough + 1]  # add +1 twice to get positve value at last sample
+    left_trough = mini_trace.data[start_left_trough:end_left_trough + 1]  # add +1 twice to get positve value at last sample
     t_left_trough = mini_trace_time[start_left_trough:end_left_trough + 1]  # add +1 twice to get positve value at last sample
 
     start_right_trough = negative_slope_zx_indices_left[negative_slope_zx_indices_left > mini_center_index][0]
     end_right_trough = positive_slope_zx_indices_left[positive_slope_zx_indices_left > mini_center_index][0]
-    right_trough = mini_trace_data[start_right_trough+1:end_right_trough + 1]  # add +1 twice to get positve value at last sample
+    right_trough = mini_trace.data[start_right_trough+1:end_right_trough + 1]  # add +1 twice to get positve value at last sample
     t_right_trough = mini_trace_time[start_right_trough+1:end_right_trough+ 1]  # add +1 twice to get positve value at last sample
 
-    positive_peak = mini_trace_data[end_left_trough + 1:start_right_trough+1]
+    positive_peak = mini_trace.data[end_left_trough + 1:start_right_trough+1]
     t_positive_peak = mini_trace_time[end_left_trough + 1:start_right_trough+1]
 
 
@@ -223,8 +220,9 @@ def jazz3_test(acorr_trace):
     #center_index = np.argmax(sample_trace)
     symmeteric_trace = SymmetricTrace(sample_trace, sampling_rate, component_id='axial')
     time_vector = symmeteric_trace.time_vector
-    center_time = time_vector[np.argmax(symmeteric_trace.data)] #not center index!
-    jazz_dict = jazz3(symmeteric_trace, center_time, expected_trough_duration)
+    #max_time = time_vector[np.argmax(symmeteric_trace.data)] #not center index!
+    max_time_index = np.argmax(symmeteric_trace.data)
+    jazz_dict = jazz3(symmeteric_trace, max_time_index, expected_trough_duration)
 
 
 def main():
@@ -232,7 +230,7 @@ def main():
     acorr_trace = TraceData()
     acorr_trace.load_from_h5(acorr_h5_file_path)
     pdb.set_trace()
-    jazz2_test(acorr_trace)
+    jazz3_test(acorr_trace)
 
 
 if __name__ == '__main__':
