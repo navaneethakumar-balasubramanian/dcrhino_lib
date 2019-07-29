@@ -53,7 +53,7 @@ class ProcessedHoles(BaseDbModel):
         if _from != 0 and _to != 0:
             query += " processed_at_ts >= " + str(_from) + " and processed_at_ts <= " + str(_to) + " and "
         query += "1 = 1 order by processed_hole_id DESC limit " + str(limit)
-        print query
+        print(query)
         return self.query_to_df(query)
 
     def get_processed_at_ts(self,archived = 0):
