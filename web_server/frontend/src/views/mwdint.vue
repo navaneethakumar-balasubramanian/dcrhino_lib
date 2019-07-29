@@ -53,78 +53,7 @@
     </v-layout>
 
 
-    <v-data-table
-      v-model="selected"
-      :pagination.sync="pagination"
-      :headers="headers"
-      :items="filtered_data"
-      item-key="processed_hole_id"
-      select-all
-      class="elevation-1"
-      hide-actions
-      v-if="!show_dialog_comparison"
-    >
-      <template slot="headerCell" slot-scope="props">
-        <span v-if="!props.header.values" v-on="on" ripple>{{
-          props.header.text
-        }}</span>
-        <v-dialog
-          v-if="props.header.values"
-          v-model="props.header.dialog"
-          max-width="300px"
-        >
-          <template v-slot:activator="{ on }">
-            <span style="cursor: pointer" v-on="on" ripple>{{ props.header.text }}</span>
-          </template>
-          <v-card>
-            <v-card-title>Select {{ props.header.text }}</v-card-title>
-            <v-divider></v-divider>
-            <v-card-text style="height: 300px;" class="pa-0 pm-0">
-              <v-list class="pa-0 pm-0">
-                <v-list-tile ripple>
-                  <v-list-tile-action>
-                    <v-checkbox
-                      v-model="props.header.allChecked"
-                      @change="togleAllOnList(props.header)"
-                    ></v-checkbox>
-                  </v-list-tile-action>
-                  <v-list-tile-title>Select all</v-list-tile-title>
-                </v-list-tile>
-                <v-divider></v-divider>
-                <v-list-tile
-                  v-for="(item, i) in props.header.values"
-                  :key="i"
-                  ripple
-                >
-                  <v-list-tile-action>
-                    <v-checkbox
-                      v-model="item.checked"
-                      @change="changed_filter(item, props.header)"
-                    ></v-checkbox>
-                  </v-list-tile-action>
-
-                  <v-list-tile-content>
-                    <v-list-tile-title>{{ item.label }} </v-list-tile-title>
-                  </v-list-tile-content>
-                </v-list-tile>
-              </v-list>
-            </v-card-text>
-          </v-card>
-        </v-dialog>
-      </template>
-      <template v-slot:items="items">
-        <td>
-          <v-checkbox
-            v-model="items.selected"
-            primary
-            hide-details
-          ></v-checkbox>
-        </td>
-        <td v-for="value in Object.keys(items.item)" class="text-xs-right">{{ items.item[value] }}</td>
-        
-        
-      </template>
-    </v-data-table>
+    <canvas id='data_table' style="height:100%;width:100%"></canvas>
     <v-btn flat color="light-blue" v-on:click="compare_selection()"
       >Compare selection</v-btn
     >

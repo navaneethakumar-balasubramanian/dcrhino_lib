@@ -29,7 +29,7 @@ export default new Router({
       path: "/mwd/:mine_name",
       name: "mwd",
       props: true,
-      component: () => import("./views/Mwd.vue")
+      component: () => import("./views/mwdint.vue")
     },
     {
       path: "/acorr_files/:mine_name",

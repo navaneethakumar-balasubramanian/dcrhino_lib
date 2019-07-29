@@ -13,6 +13,10 @@ from dcrhino3.models.trace_dataframe import TraceData
 import glob2
 import uuid
 import os
+import datetime
+import calendar
+from dcrhino3.helpers.mwd_helper import MWDHelper
+
 import pdb
 CACHE_IMAGE_FOLDER = "/tmp/image_cache_rhino_api/"
 
@@ -51,9 +55,15 @@ def send_js(path):
 def mwd():
     req_json = request.get_json()
     env_config = EnvConfig()
-    mine_name = req_json['mine_name']
+    mine_name = str(req_json['mine_name'])
 
-    return
+    mwd_helper = MWDHelper(env_config)
+    start_date_00_timestamp = False
+    #start_date =  datetime.date.today() - datetime.timedelta(30)
+    #start_date_00_timestamp = calendar.timegm(start_date.timetuple())
+    mwd_df = mwd_helper.get_rhino_mwd_from_mine_name(mine_name,date_start=start_date_00_timestamp,limit=100)
+    mwd_df = mwd_df.fillna(-999999)
+    return jsonify({"data":mwd_df.to_dict(orient="records"),"props":{}})
 
 @app.route('/api/processed_holes',methods=['GET', 'POST'])
 def processed_holes():

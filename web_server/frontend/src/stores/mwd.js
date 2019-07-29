@@ -1,5 +1,6 @@
 const state = {
-  mwd: [],
+  mwd: {},
+  props: {},
   loading: false
 };
 const getters = {
@@ -12,7 +13,7 @@ const getters = {
 };
 const mutations = {
   SET_MWD: (state, payload) => {
-    state.mwd = payload.data;
+      state.mwd = payload;
   },
   
   SET_LOADING: (state, payload) => {
@@ -22,7 +23,7 @@ const mutations = {
 const actions = {
   GET_MWD: async (context, payload) => {
     context.commit("SET_LOADING", true);
-    context.commit("SET_MWD", []);
+    context.commit("SET_MWD", {});
     let { data } = await axios.post("/api/mwd", payload);
     context.commit("SET_MWD", data);
     context.commit("SET_LOADING", false);
