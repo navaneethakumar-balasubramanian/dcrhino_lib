@@ -14,7 +14,7 @@ import numpy as np
 import os
 import pdb
 
-from dcrhino3.unstable.multipass.drill_rig import DrillRig
+from dcrhino3.models.drill.drill_rig import DrillRig
 
 def bma_hack_20190606(first_global_config):
     """

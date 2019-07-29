@@ -22,15 +22,14 @@ import pdb
 
 from dcrhino3.models.trace_dataframe import TraceData
 
-from dcrhino3.unstable.multipass.drill_string_component import DrillStringComponent
-from dcrhino3.unstable.multipass.drill_string_component import DRILL_STRING_COMPONENT_TYPES
+from dcrhino3.models.drill.drill_string_component import DrillStringComponent
+from dcrhino3.models.drill.drill_string_component import DRILL_STRING_COMPONENT_TYPES
 
 NUM_DRILL_STRING_COMPONENTS_SUPPORTED = 10
 
 class DrillRig(object):
     """
-    20190529: this is needed to unkerfunk the metadata and gui stuff
-    THis class is intended to be initialized with the DIRECT field data info
+    This class is intended to be initialized with the DIRECT field data info
     N.B. THis can be from client .pdf in the case of some drill string component
     measurements or from manual measurements e.g. in the case of sensor position
 
@@ -44,8 +43,12 @@ class DrillRig(object):
 
 
     """
-    def __init__(self, field_config=None):
+    def __init__(self, field_config=None, jsonthingy=None):
+        """
+        make all drill string component attributes of type [] on init.
+        """
         self.id = None
+        #self.drill_string_components = []
         self.drill_string_components = []
         self.field_config = field_config
         self.installed_steels = []

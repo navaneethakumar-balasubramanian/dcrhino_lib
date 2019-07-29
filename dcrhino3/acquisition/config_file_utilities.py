@@ -2,7 +2,7 @@ import ConfigParser
 import argparse
 import os, sys
 import numpy as np
-import pdb
+import json
 from dcrhino3.models.metadata import Metadata
 
 def update_structure(old,reference):
@@ -72,20 +72,27 @@ def extract_config_file_from_h5_file(h5f):
             config.set(section,param_name,value)
     return config
 
-def extract_metadata_from_h5_file(h5f):
-    config = ConfigParser.ConfigParser()
-    for key,value in h5f.attrs.items():
-        #print(key,value)
-        section = key.split("/")[0]
+def extract_config_file_from_h5_file_as_json(h5f):
+    config_dict = dict()
+    for key, value in h5f.attrs.items():
         param_name = key.split("/")[1]
-        #pdb.set_trace()
-        if config.has_section(section):
-            config.set(section,param_name,value)
-        else:
-            config.add_section(section)
-            config.set(section,param_name,value)
-    m =Metadata(config)
-    return m
+        config_dict[param_name] = value
+    return json.dumps(config_dict, indent=4)
+
+# def extract_metadata_from_h5_file(h5f):
+#     config = ConfigParser.ConfigParser()
+#     for key,value in h5f.attrs.items():
+#         #print(key,value)
+#         section = key.split("/")[0]
+#         param_name = key.split("/")[1]
+#         #pdb.set_trace()
+#         if config.has_section(section):
+#             config.set(section,param_name,value)
+#         else:
+#             config.add_section(section)
+#             config.set(section,param_name,value)
+#     m =Metadata(config)
+#     return m
 
 
 def config_file_to_attrs(config_parser,_h5f):
