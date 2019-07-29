@@ -99,7 +99,7 @@ class Config(object):
     def sensitivity_list_xyz(self):
         return[self.x_sensitivity, self.y_sensitivity, self.z_sensitivity]
 
-    def sensor_sensitivity(self, axis):
+    def get_sensor_sensitivity_by_axis(self, axis):
         component_index = self.get_component_index(axis)
         return self.sensitivity_list_xyz[component_index]
 
@@ -265,5 +265,6 @@ class Config(object):
 if __name__ == "__main__":
     try:
         c = Config(acquisition_config=True)
+        print("done")
     except:
         pass

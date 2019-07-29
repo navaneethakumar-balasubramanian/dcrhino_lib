@@ -12,6 +12,7 @@ import h5py
 from datetime import datetime
 import subprocess
 import re
+import pdb
 from shutil import copyfile, move
 from dcrhino3.models.config2 import Config
 from dcrhino3.models.traces.raw_trace import RawTraceData
@@ -419,12 +420,12 @@ class SerialThread(threading.Thread):
                         self._corrupt_packets += 1
                         if len(a) >= self.pktlen:
                             m = '{}: CORRUPT {} BYTE PACKET>>>>>>>>>>>>>>>>>>>>>{}\n'.format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),len(a),counter)
-                            logger.warning(m)
+                            # logger.warning(m)
                             self.logQ.put(m)
                             self.displayQ.put(m)
                         else:
                             m = '{}: TRUNCATED {} BYTE PACKET>>>>>>>>>>>>>>>>>>>>>{}\n'.format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),len(a),counter)
-                            logger.warning(m)
+                            # logger.warning(m)
                             self.logQ.put(m)
                             self.displayQ.put(m)
 
@@ -524,8 +525,8 @@ class CollectionDaemonThread(threading.Thread):
                         self.lastSecond = int(row[0])
 
                         # dotheprocessing
+                        # pdb.set_trace()
                         if len(self.bufferThisSecond) >= 1:
-                            self.bufferThisSecond = np.asarray(self.bufferThisSecond)
                             utc_dt = datetime.utcfromtimestamp(temp_lastSecond)
                             if lastFileName is None or (utc_dt.minute % file_change_interval_in_min == 0 and
                                                         look_for_time):
@@ -536,7 +537,7 @@ class CollectionDaemonThread(threading.Thread):
                                 delta = utc_dt - datetime(year=utc_dt.year, month=utc_dt.month, day=utc_dt.day)
                                 elapsed = str(int(delta.total_seconds()))
                                 elapsed = add_leading_zeors_to_timestamp_for_file_names(elapsed)
-                                filename = "{}{}{}_{}.tmp".format(prefix, elapsed, rhino_serial_number)
+                                filename = "{}{}_{}.tmp".format(prefix, elapsed, rhino_serial_number)
                                 filename = os.path.join(run_folder_path, filename)
                                 lastFileName = utc_dt
                                 first = True
@@ -548,9 +549,9 @@ class CollectionDaemonThread(threading.Thread):
                             if first:
                                 disk_usage = psutil.disk_usage('/')[3]
                                 first = False
-                                h5f, m = config_file_to_attrs(config, h5f)
-                                self.displayQ.put(m)
-                                self.logQ.put(m)
+                                # h5f, m = config_file_to_attrs(config, h5f)
+                                # self.displayQ.put(m)
+                                # self.logQ.put(m)
                                 sensitivity = np.array(config.sensitivity_list_xyz, dtype=np.float32)
                                 save_np_array_to_h5_file(h5f, 'sensitivity', sensitivity)
                                 axis = np.array([config.sensor_axial_axis, config.sensor_tangential_axis],
@@ -571,16 +572,17 @@ class CollectionDaemonThread(threading.Thread):
                             # 9=packet.batt,
                             # 10=self.counter_changes,
                             # 11=self.rhino_serial_number)
-                            ts = np.asarray(self.bufferThisSecond[:, 0], dtype=np.float64)
-                            seq = np.asarray(self.bufferThisSecond[:, 6], dtype=np.uint32)
-                            cticks = np.asarray(self.bufferThisSecond[:, 1], dtype=np.uint32)
-                            x = np.asarray(self.bufferThisSecond[:, 2], dtype=np.uint32)
-                            y = np.asarray(self.bufferThisSecond[:, 3], dtype=np.uint32)
-                            z = np.asarray(self.bufferThisSecond[:, 4], dtype=np.uint32)
-                            rssi = np.asarray(self.bufferThisSecond[:, 7], dtype=np.float32)
-                            temp = np.asarray([self.bufferThisSecond[-1, 8], ], dtype=np.float32)
-                            batt = np.asarray([self.bufferThisSecond[-1, 9], ], dtype=np.float32)
-                            counterchanges = np.asarray(self.bufferThisSecond[:, 10], dtype=np.int32)[-1]
+                            # self.bufferThisSecond = np.asarray(self.bufferThisSecond)
+                            ts = np.asarray(self.bufferThisSecond, dtype=np.float64)[:, 0]
+                            seq = np.asarray(self.bufferThisSecond, dtype=np.uint32)[:, 6]
+                            cticks = np.asarray(self.bufferThisSecond, dtype=np.uint32)[:, 1]
+                            x = np.asarray(self.bufferThisSecond, dtype=np.uint32)[:, 2]
+                            y = np.asarray(self.bufferThisSecond, dtype=np.uint32)[:, 3]
+                            z = np.asarray(self.bufferThisSecond, dtype=np.uint32)[:, 4]
+                            rssi = np.asarray(self.bufferThisSecond, dtype=np.float32)[:, 7]
+                            # temp = np.asarray([self.bufferThisSecond[-1, 8], ], dtype=np.float32)
+                            # batt = np.asarray([self.bufferThisSecond[-1, 9], ], dtype=np.float32)
+                            counterchanges = np.asarray(self.bufferThisSecond, dtype=np.int32)[:, 10][-1]
 
                             rssi_avg = np.average(rssi) #Only need the average of RSSI because it's the only value that gets reported on every packet
 
@@ -593,8 +595,8 @@ class CollectionDaemonThread(threading.Thread):
                             save_np_array_to_h5_file(h5f, 'y', y)
                             save_np_array_to_h5_file(h5f, 'z', z)
                             save_np_array_to_h5_file(h5f, 'rssi', rssi)
-                            save_np_array_to_h5_file(h5f, 'temp', temp)
-                            save_np_array_to_h5_file(h5f, 'batt', batt)
+                            # save_np_array_to_h5_file(h5f, 'temp', temp)
+                            # save_np_array_to_h5_file(h5f, 'batt', batt)
                             h5f.close()
 
                             m = "TIMESTAMP :{}, SAMPLES: {})\n".format(int(row[0]), len(self.bufferThisSecond))
@@ -632,7 +634,7 @@ class CollectionDaemonThread(threading.Thread):
                             for label in component_labels:
                                 calibrated_data = raw_trace_data.calibrate_1d_component_array(
                                     component_trace_raw_data[label], config,
-                                    config.sensor_sensitivity(label), remove_mean=False)
+                                    config.get_sensor_sensitivity_by_axis(label), remove_mean=False)
                                 interp_data = raw_trace_data.interpolate_1d_component_array(ts, calibrated_data,
                                                                                             ideal_timestamps,
                                                                                             kind=interp_kind)
@@ -648,15 +650,15 @@ class CollectionDaemonThread(threading.Thread):
                                 else:
                                     acceleration_dict[label] = {"max": np.max(calibrated_data),
                                                                 "min": np.min(calibrated_data)}
-                            #Send data to the Q so that it can be plotted
+                            # Send data to the Q so that it can be plotted
                             self.tracesQ.put({"timestamp": np.asarray([temp_lastSecond, ], dtype=np.float64),
                                               "raw_timestamps": ts,
                                               "ideal_timestamps": ideal_timestamps,
                                               "raw_data": component_trace_raw_data,
                                               "trace_data": component_trace_dict,
-                                              "rssi": rssi_avg, #np.asarray([rssi_avg, ], dtype=np.float32),
-                                              "temp": temp[0],
-                                              "batt": batt[0],
+                                              "rssi": rssi_avg,  # np.asarray([rssi_avg, ], dtype=np.float32),
+                                              "temp": 99,  # temp[0],
+                                              "batt": 99,  # batt[0],
                                               "acceleration": acceleration_dict,
                                               "counter_changes": counterchanges,
                                               "disk_usage": disk_usage,
@@ -667,12 +669,12 @@ class CollectionDaemonThread(threading.Thread):
                     # print("collection daemon buffer empty")
                     time.sleep(0.05)
             except AttributeError:
-                logger.error("Collection Daemon Exception:", sys.exc_info())
+                logger.error("Collection Daemon Exception: {}".format(sys.exc_info()))
                 logger.error("WEIRD ERROR TRYING TO APPEND TO BUFFER THIS SECOND AFTER IT WAS CONVERTED TO NUMPY ON CLOCK "
                       "ROLLOVER")
                 self.bufferThisSecond = list()
             except:
-                logger.error("Collection Daemon Exception:", sys.exc_info())
+                logger.error("Collection Daemon Exception: {}".format(sys.exc_info()))
 
 
 
@@ -848,7 +850,7 @@ def main_run(run=True):
             trace_plot.set_title("Channel {} - ".format(channels[channel_mapping[component_to_display]]) +"{} Component Trace".format(component_to_display.upper()))
 
             sec_delay = round(now - trace_second, 2)
-            plt.suptitle("Trace Time "+ tracetime.strftime('%Y-%m-%d %H:%M:%S' ) + " plotted at " +
+            plt.suptitle("Trace Time " + tracetime.strftime('%Y-%m-%d %H:%M:%S' ) + " plotted at " +
                          datetime.utcfromtimestamp(now).strftime('%Y-%m-%d %H:%M:%S') + " delay of " + str(
                 sec_delay)+"\nAnd a drift of " + str(fflush.drift), fontsize=10)
 
@@ -1050,8 +1052,10 @@ def add_empty_health_row_to_Q(rssi, temp, batt, packets, delay, trace_time_array
     system_healthQ.put(health)
     np.save(os.path.join(RAM_PATH, 'system_health.npy'), np.asarray(health))
 
+
 def do_nothing():
     pass
+
 
 if __name__ == "__main__":
     main_run()

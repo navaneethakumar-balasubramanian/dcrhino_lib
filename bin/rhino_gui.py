@@ -35,7 +35,7 @@ timestamp = datetime.now().strftime('%Y_%m_%d_%H')
 # config = Config(acquisition_config=True)
 BAUD_RATE = None
 LOCAL_FOLDER = None
-debug = False
+debug = True
 
 
 def goodbye():
@@ -109,8 +109,8 @@ class GUI():
         row += 1
 
         Label(master, text="Acquisition").grid(row=row)
-        # Button(master, text='Go', command=self.acquisition_daemon).grid(row=row, column=1, sticky="ew", pady=4)
-        # Button(master, text='Stop', command=self.acquisition_daemon_stop).grid(row=row, column=2, sticky="ew", pady=4)
+        Button(master, text='Go', command=self.acquisition_daemon).grid(row=row, column=1, sticky="ew", pady=4)
+        Button(master, text='Stop', command=self.acquisition_daemon_stop).grid(row=row, column=2, sticky="ew", pady=4)
         row += 1
 
         Label(master, text="Merge Files").grid(row=row)
