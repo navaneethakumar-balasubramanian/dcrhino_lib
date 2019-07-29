@@ -6,13 +6,17 @@ import pandas as pd
 from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
-from holes_to_mp import holes_to_mp
+#from holes_to_mp import holes_to_mp
 from dcrhino3.helpers.general_helper_functions import create_folders_if_needed
 from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.models.trace_dataframe import TraceData
 import glob2
 import uuid
 import os
+import datetime
+import calendar
+from dcrhino3.helpers.mwd_helper import MWDHelper
+
 import pdb
 CACHE_IMAGE_FOLDER = "/tmp/image_cache_rhino_api/"
 
@@ -46,11 +50,20 @@ def send_css(path):
 def send_js(path):
     return send_from_directory('../web_server/frontend/dist/js/', path)
 
-@app.route('/holes_to_mp')
-def holes_to_mp_page():
-    if holes_to_mp('mont_wright', 'env_config.json') :
-        return "Updated"
-    return "Error"
+
+@app.route('/api/mwd',methods=['GET', 'POST'])
+def mwd():
+    req_json = request.get_json()
+    env_config = EnvConfig()
+    mine_name = str(req_json['mine_name'])
+
+    mwd_helper = MWDHelper(env_config)
+    start_date_00_timestamp = False
+    #start_date =  datetime.date.today() - datetime.timedelta(30)
+    #start_date_00_timestamp = calendar.timegm(start_date.timetuple())
+    mwd_df = mwd_helper.get_rhino_mwd_from_mine_name(mine_name,date_start=start_date_00_timestamp,limit=100)
+    mwd_df = mwd_df.fillna(-999999)
+    return jsonify({"data":mwd_df.to_dict(orient="records"),"props":{}})
 
 @app.route('/api/processed_holes',methods=['GET', 'POST'])
 def processed_holes():
@@ -58,13 +71,15 @@ def processed_holes():
     env_config = EnvConfig()
     mine_name = req_json['mine_name']
     db_conn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
-    db_helper = RhinoSqlHelper(db_conn['host'], db_conn['user'], db_conn['password'], db_conn['database'])
+    db_helper = RhinoSqlHelper(**db_conn)
+
     if 'search' in req_json.keys():
-        processed_holes = db_helper.processed_holes.get_search_string(req_json['search'])
+        processed_holes = db_helper.processed_holes.get_search_string(req_json['search'],1000,req_json['from'],req_json['to'])
     else:
         processed_holes = db_helper.processed_holes.get_latests()
-    processed_holes = processed_holes[processed_holes['archived'] == '0']
-    return processed_holes.to_json(orient='records')
+    if len(processed_holes) > 0:
+        processed_holes = processed_holes[processed_holes['archived'] == '0']
+    return jsonify({"data":processed_holes.to_dict(orient='records'),"processed_at_ts":db_helper.processed_holes.get_processed_at_ts()})
 
 @app.route('/api/hole_to_mp',methods=['GET', 'POST'])
 def hole_to_mp():

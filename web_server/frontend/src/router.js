@@ -1,35 +1,41 @@
-import Vue from 'vue'
-import Router from 'vue-router'
-import Home from './views/Home.vue'
-import IntTest from './views/Inttest.vue'
+import Vue from "vue";
+import Router from "vue-router";
+import Home from "./views/Home.vue";
+import IntTest from "./views/Inttest.vue";
 
-Vue.use(Router)
+Vue.use(Router);
 
 export default new Router({
-  mode: 'history',
+  mode: "history",
   base: process.env.BASE_URL,
   routes: [
     {
-      path: '/',
-      name: 'home',
+      path: "/",
+      name: "home",
       component: Home
     },
     {
-      path: '/int',
-      name: 'int',
+      path: "/int",
+      name: "int",
       component: IntTest
     },
     {
-      path: '/processed/:mine_name',
-      name: 'processed',
+      path: "/processed/:mine_name",
+      name: "processed",
       props: true,
-      component: () => import('./views/Processed.vue')
+      component: () => import("./views/Processed.vue")
     },
     {
-      path: '/acorr_files/:mine_name',
-      name: 'acorr_files',
+      path: "/mwd/:mine_name",
+      name: "mwd",
       props: true,
-      component: () => import('./views/AcorrFiles.vue')
+      component: () => import("./views/mwdint.vue")
     },
+    {
+      path: "/acorr_files/:mine_name",
+      name: "acorr_files",
+      props: true,
+      component: () => import("./views/AcorrFiles.vue")
+    }
   ]
-})
+});
