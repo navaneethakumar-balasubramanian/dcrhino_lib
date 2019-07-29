@@ -11,7 +11,8 @@ from dcrhino3.acquisition.constants import LOGS_PATH
 def main(start_date=None, end_date=None):
     # path = "/home/natal/toconvert/waio/tablet_logs/Logs_83361/*health.log"
     # path = "/home/natal/toconvert/bma/tablet_logs/*health.log"
-    path = os.path.join(LOGS_PATH, "*health.log")
+    path = "/media/natal/256/BMC/logs/*health.log"
+    # path = os.path.join(LOGS_PATH, "*health.log")
 
     files = glob.glob(path)
 
