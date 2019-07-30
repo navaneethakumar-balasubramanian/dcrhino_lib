@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
 from dcrhino3.acquisition.constants import RAM_PATH
-from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
 from dcrhino3.helpers.general_helper_functions import calculate_battery_percentage
 if plt.get_backend() == "Qt4Agg":
     pass
@@ -15,6 +14,7 @@ from dcrhino3.models.config2 import Config
 from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
 logger = init_logging(__name__)
 file_logger = init_logging_to_file(__name__)
+
 
 # TODO: Factor this function into general helper functions as it is used in another class
 def get_min_max_values(config_value):
@@ -35,7 +35,7 @@ battery_min_voltage = config.battery_min_voltage
 health = [0] * length
 fig1 = plt.figure("DataCloud Rhino Health Plots",figsize=(6,4))
 fig1.canvas.manager.window.wm_geometry("+%d+%d" % (1300, 0))
-plt.subplots_adjust(hspace=1.0,wspace=0.5)
+plt.subplots_adjust(hspace=1.0, wspace=0.5)
 plt.pause(.05)
 # plt.show()
 fig1.canvas.draw()
@@ -216,7 +216,7 @@ while True:
 
         batt_plot.plot(np.flipud(batt_to_plot), 'g')#3
         batt_plot.hlines(config.battery_upper_limit, 0, length, "y","dashed")
-        batt_plot.hlines(config.battery_lower_limit,0 , length, "r", "dashed")
+        batt_plot.hlines(config.battery_lower_limit, 0 , length, "r", "dashed")
 
         fig1.canvas.draw()
         plt.pause(0.05)
