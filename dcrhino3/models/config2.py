@@ -34,7 +34,7 @@ class Config(object):
         return
 
     def _config_files_to_dict(self, files_type):
-        if files_type in self.files_keys[files_type].keys():
+        if files_type in self.files_keys.keys():
             pipeline_files = self.files_keys[files_type].keys()
             pipeline_json = dict()
             for pipeline_file in pipeline_files:
@@ -192,6 +192,10 @@ class Config(object):
         """
         json_str = json.dumps(vars(self), indent=4)
         return json_str
+
+    def map_component_to_axis(self, component):
+        axis = ["x", "y", "z"]
+        return axis[self.get_component_index(component)]
 
     @property
     def pipeline_json_string(self):

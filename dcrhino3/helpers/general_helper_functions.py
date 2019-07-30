@@ -346,7 +346,7 @@ def interpolate_data(raw_timestamps, data, ideal_timestamps, kind="quadratic"):
         interp_data = interp_function(ideal_timestamps)
     except:
         logger.error("Failed to interpolate this trace " + str(int(raw_timestamps[0])))
-        return False
+        return None
     return np.asarray(interp_data, dtype=np.float32)
 
 

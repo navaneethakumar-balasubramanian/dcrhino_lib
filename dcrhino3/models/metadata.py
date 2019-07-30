@@ -15,6 +15,7 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.helpers.general_helper_functions import add_inverse_dictionary
 from dcrhino3.helpers.general_helper_functions import StandardString
 from dcrhino3.models.drill.drill_helper_functions import LengthMeasurement as Measurement
+from dcrhino3.models.drill.drill_string_component import DrillStringComponent
 
 
 logger = init_logging(__name__)

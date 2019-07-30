@@ -12,9 +12,14 @@ from datetime import datetime
 from dcrhino3.models.metadata import Metadata
 import json
 from dcrhino3.models.config2 import Config
+import h5py
 
 
-def save_np_array_to_h5_file(h5file, key, np_array):
+def save_np_array_to_h5_file(h5, key, np_array, close_file=False):
+    if isinstance(h5, h5py._hl.files.File):
+        h5file = h5
+    else:
+        h5file = h5py.File(h5, "a")
     np_length = len(np_array)
     my_key = key
     if my_key in h5file.keys():
@@ -26,6 +31,19 @@ def save_np_array_to_h5_file(h5file, key, np_array):
                                    compression="gzip",
                                    compression_opts=9)
         ds[:] = np_array
+    if close_file:
+        h5file.close()
+
+def save_dataframe_to_h5_file(h5, dataframe, close_file=False):
+    if isinstance(h5, h5py._hl.files.File):
+        h5file = h5
+    else:
+        h5file = h5py.File(h5, "a")
+    for key in dataframe.columns:
+        data_array = np.asarray(dataframe[key])
+        save_np_array_to_h5_file(h5file, key, data_array)
+    if close_file:
+        h5file.close()
 
 class H5Helper:
     """
@@ -38,9 +56,15 @@ class H5Helper:
         load_xyz (boolean): true to load xyz data
     """
 
-    def __init__(self, h5f, load_xyz=True, load_ts=True):
+    def __init__(self, h5f, load_xyz=True, load_ts=True, config=None, actions="r+"):
+
         self.h5f = h5f
-        self.metadata = self._extract_metadata_from_h5_file()
+        # self.metadata = self._extract_metadata_from_h5_file()
+        if config is None:
+            self.config = self._extract_global_config_from_h5_file()
+        else:
+            self.config = config
+
         if load_ts:
             if "ts" in self.h5f.keys():
                 self._ts = np.asarray(self.h5f.get('ts'), dtype=np.float64)
@@ -101,11 +125,20 @@ class H5Helper:
     def load_axis_mask(self, axis, mask):
         return self.h5f[axis][mask]
 
-    def save_np_array_to_h5_file(self, key, np_array, h5file=None):
+    def save_np_array_to_h5_file(self, key, np_array, h5file=None, close_file=False):
         if h5file is None:
-            save_np_array_to_h5_file(self.h5f, key, np_array)
+            save_np_array_to_h5_file(self.h5f, key, np_array, close_file)
         else:
-            save_np_array_to_h5_file(h5file, key, np_array)
+            save_np_array_to_h5_file(h5file, key, np_array, close_file)
+
+    def save_dataframe_to_h5_file(self, dataframe, h5file=None, close_file=False):
+        if h5file is None:
+            save_dataframe_to_h5_file(self.h5f, dataframe, close_file)
+        else:
+            save_dataframe_to_h5_file(h5file, dataframe, close_file)
+
+    def close_h5f(self):
+        self.h5f.close()
 
     @property
     def ts(self):

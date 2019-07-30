@@ -25,11 +25,10 @@ import pandas as pd
 from math import ceil
 from matplotlib.ticker import FormatStrFormatter
 from dcrhino3.acquisition.constants import DATA_PATH, LOGS_PATH, RAM_PATH
-from dcrhino3.acquisition.config_file_utilities import config_file_to_attrs
 from dcrhino3.acquisition.system_health_display_gui import GUI
 from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
 from dcrhino3.helpers.general_helper_functions import add_leading_zeors_to_timestamp_for_file_names
-from dcrhino3.helpers.h5_helper import save_np_array_to_h5_file
+from dcrhino3.helpers.h5_helper import H5Helper
 import matplotlib.pyplot as plt
 if plt.get_backend() == "Qt4Agg":
     pass
@@ -255,15 +254,11 @@ class FileFlusher(threading.Thread):
         return self._drift
 
     def save_row_to_processing_q(self, packet):
-        # row = (self.current_timestamp, packet.tx_sequence, packet.x, packet.y, packet.z, self.sequence,
-        #        packet.rx_sequence, packet.rssi, packet.temp, packet.batt, self.counter_changes,
-        #        self.rhino_serial_number, packet.valid_trace)
-        row = {"timestamp": self.current_timestamp,
+        row = {"timestamp": np.float64(self.current_timestamp),
                "packet": packet,
                "sequence": self.sequence,
                "counter_changes": self.counter_changes,
                "serial_number": self.rhino_serial_number}
-
         self.bufferQ.put(row)
 
     def stop(self):
@@ -484,7 +479,6 @@ class CollectionDaemonThread(threading.Thread):
         offset = int(fraction / delta_t)
         return timestamp - sampling_rate * offset
 
-
     def run(self):
         m = "Started Collection Daemon\n"
         logger.debug(m)
@@ -493,6 +487,8 @@ class CollectionDaemonThread(threading.Thread):
         lastFileName = None
         look_for_time = True
         file_change_interval_in_min = config.file_change_interval_in_min
+        df_columns = ["ts", "cticks", "seq", "x", "y", "z", "rssi", "temp", "batt"]
+        first = True
         while True:
             try:
                 if not self.bufferQ.empty():
@@ -502,33 +498,130 @@ class CollectionDaemonThread(threading.Thread):
                     sequence = buffer_entry["sequence"]
                     rhino_serial_number = buffer_entry["serial_number"]
                     counter_changes = buffer_entry["counter_changes"]
-                    dataframe_row = [entry_timestamp, packet.tx_sequence, packet.x, packet.y, packet.z, sequence,
-                                     packet.rssi, packet.temp, packet.batt, counter_changes]
+                    dataframe_row = [entry_timestamp, packet.tx_sequence, sequence, packet.x, packet.y, packet.z,
+                                     packet.rssi, packet.temp, packet.batt]
+                    # if the packet does not belong to the current trace we process the data and then append
+                    # the current packet to the freshly created bufferThisSecond
                     if self.lastSecond != int(entry_timestamp):
                         temp_lastSecond = self.lastSecond
                         self.lastSecond = int(entry_timestamp)
-                        # process bufferThisSecond
+
+                        # If there is data in the bufferThisSecond
+                        if len(self.bufferThisSecond) >= 1:
+
+                            utc_dt = datetime.utcfromtimestamp(temp_lastSecond)
+                            if lastFileName is None or (utc_dt.minute % file_change_interval_in_min == 0 and
+                                                        look_for_time):
+                                if lastFileName is not None:
+                                    sensitivity = np.array(config.sensitivity_list_xyz, dtype=np.float32)
+                                    h5_helper.save_np_array_to_h5_file('sensitivity', sensitivity)
+                                    axis = np.array([config.sensor_axial_axis, config.sensor_tangential_axis],
+                                                    dtype=np.float32)
+                                    h5_helper.save_np_array_to_h5_file('axis', axis)
+                                    h5_helper.close_h5f()
+                                    move(filename, filename.replace(".tmp", ".h5"))
+                                look_for_time = False
+                                prefix = utc_dt.strftime('%Y%m%d')+"_RTR"
+                                delta = utc_dt - datetime(year=utc_dt.year, month=utc_dt.month, day=utc_dt.day)
+                                elapsed = str(int(delta.total_seconds()))
+                                elapsed = add_leading_zeors_to_timestamp_for_file_names(elapsed)
+                                filename = "{}{}_{}.tmp".format(prefix, elapsed, rhino_serial_number)
+                                filename = os.path.join(run_folder_path, filename)
+                                h5f = h5py.File(filename, "a")
+                                h5_helper = H5Helper(h5f, config=config, load_ts=False)
+                                lastFileName = utc_dt
+                                first = True
+                            else:
+                                if lastFileName.minute != utc_dt.minute:
+                                    look_for_time = True
+                            if first:
+                                disk_usage = psutil.disk_usage('/')[3]
+                                first = False
+
+                            data_frame = pd.DataFrame(self.bufferThisSecond, columns=df_columns)
+                            h5_helper.save_dataframe_to_h5_file(data_frame)
+                            m = "TIMESTAMP :{}, SAMPLES: {})\n".format(int(entry_timestamp), len(self.bufferThisSecond))
+                            self.logQ.put(m)
+                            self.displayQ.put(m)
+
+                            if packet.valid_trace:
+                                interp_kind = "quadratic"
+                            else:
+                                interp_kind = "linear"
+
+                            raw_trace_data = RawTraceData()
+                            component_trace_dict = {}
+                            acceleration_dict = {}
+
+                            component_trace_raw_data = {"axial": data_frame[config.map_component_to_axis("axial")],
+                                                        "tangential": data_frame[config.map_component_to_axis(
+                                                            "tangential")],
+                                                        "radial": data_frame[config.map_component_to_axis(
+                                                            "radial")]}
+
+                            trace_t0 = data_frame.ts[0]
+                            initial_trace_timestamp = self.calculate_initial_tracetime_from_timestamp(trace_t0)
+                            ideal_timestamps = 1. / float(config.output_sampling_rate) * np.arange(0, int(
+                                config.output_sampling_rate)) + initial_trace_timestamp
+
+                            number_of_samples = int(config.auto_correlation_trace_duration *
+                                                    config.output_sampling_rate)
+                            component_labels = ["axial", "tangential", "radial"]
+                            for label in component_labels:
+                                calibrated_data = raw_trace_data.calibrate_1d_component_array(
+                                    component_trace_raw_data[label], config,
+                                    config.get_sensor_sensitivity_by_axis(label), remove_mean=False)
+                                interp_data = raw_trace_data.interpolate_1d_component_array(data_frame.ts,
+                                                                                            calibrated_data,
+                                                                                            ideal_timestamps,
+                                                                                            kind=interp_kind)
+                                acorr_data = raw_trace_data.autocorrelate_1d_component_array(interp_data,
+                                                                                             number_of_samples,
+                                                                                             copy_input=True)
+                                component_trace_dict[label] = {"{}_calibrated".format(label): calibrated_data,
+                                                               "{}_interpolated".format(label): interp_data,
+                                                               "{}_auto_correlated".format(label): acorr_data}
+                                if remove_mean:
+                                    acceleration_dict[label] = {"max": np.max(calibrated_data - np.mean(
+                                        calibrated_data)),
+                                                                "min": np.min(calibrated_data) - np.mean(
+                                                                    calibrated_data)}
+                                else:
+                                    acceleration_dict[label] = {"max": np.max(calibrated_data),
+                                                                "min": np.min(calibrated_data)}
+                            # Send data to the Q so that it can be plotted
+                            self.tracesQ.put({"timestamp": np.asarray([temp_lastSecond, ], dtype=np.float64),
+                                              "raw_timestamps": data_frame.ts,
+                                              "ideal_timestamps": ideal_timestamps,
+                                              "raw_data": component_trace_raw_data,
+                                              "trace_data": component_trace_dict,
+                                              "rssi": data_frame.rssi.mean(),
+                                              "temp": data_frame.temp.mean(),
+                                              "batt": data_frame.batt.mean(),
+                                              "acceleration": acceleration_dict,
+                                              "counter_changes": counter_changes,
+                                              "disk_usage": disk_usage,
+                                              "filename": filename})
+                        self.bufferThisSecond = list()
                     self.bufferThisSecond.append(dataframe_row)
-
-
-
                 else:
                     # print("collection daemon buffer empty")
                     time.sleep(0.05)
             except AttributeError:
                 logger.error("Collection Daemon Exception: {}".format(sys.exc_info()))
-                logger.error("WEIRD ERROR TRYING TO APPEND TO BUFFER THIS SECOND AFTER IT WAS CONVERTED TO NUMPY ON CLOCK "
-                      "ROLLOVER")
+                logger.error("WEIRD ERROR TRYING TO APPEND TO BUFFER THIS SECOND AFTER IT WAS CONVERTED TO NUMPY ON "
+                             "CLOCK ROLLOVER")
                 self.bufferThisSecond = list()
             except:
                 logger.error("Collection Daemon Exception: {}".format(sys.exc_info()))
+                self.bufferThisSecond = list()
 
 
 def main_run(run=True):
 
     if not os.path.exists(run_folder_path):
         os.makedirs(run_folder_path)
-    config.export_config_for_h5_files(os.path.join(run_folder_path, 'config.cfg'))
+    config.export_config_for_h5_files(os.path.join(run_folder_path, 'config.json'))
     # copyfile(config_collection_file_path, os.path.join(run_folder_path, 'config.cfg'))
     flushQ = Queue.Queue()
     traces = Queue.Queue()
@@ -628,12 +721,6 @@ def main_run(run=True):
     sensor_radial_axis = config.get_component_index("radial")
     channel_mapping = {"axial": sensor_axial_axis, "tangential": sensor_tangential_axis, "radial": sensor_radial_axis}
     component_to_display = config.component_to_display
-    # traces_for_plot = []
-    # pre_cut=config.getint("SYSTEM_HEALTH_PLOTS","trace_plot_pre_cut")
-    # post_add=config.getint("SYSTEM_HEALTH_PLOTS","trace_plot_post_add")
-    # output_sampling_rate=config.getfloat("COLLECTION","output_sampling_rate")
-    # traces_subsample = config.getint("SYSTEM_HEALTH_PLOTS","traces_subsample")
-    # number_of_traces_to_display=config.getint("SYSTEM_HEALTH_PLOTS","number_of_traces_to_display")
     second_plot_display = config.second_plot_display
 
     realtime_trace = RawTraceData()

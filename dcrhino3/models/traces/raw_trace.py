@@ -9,7 +9,7 @@ import time
 
 from dcrhino3.models.config import Config
 from dcrhino3.models.trace_dataframe import TraceData
-from dcrhino3.helpers.h5_helper import H5Helper
+from dcrhino3.helpers.h5_helper import H5Helper, save_np_array_to_h5_file, save_dataframe_to_h5_file
 from dcrhino3.helpers.general_helper_functions import init_logging, interpolate_data, calibrate_data, fft_data
 from dcrhino3.process_flow.modules.trace_processing.autocorrelate import autocorrelate_trace
 from dcrhino3.signal_processing.filters import butter_bandpass, butter_highpass, butter_lowpass
@@ -168,6 +168,8 @@ class RawTraceData(TraceData):
         # interp_data = np.interp(ideal_timestamps, raw_timestamps,component_array)
         # </numpy function>
         interp_data = interpolate_data(raw_timestamps, component_array, ideal_timestamps, kind)
+        if isinstance(interp_data,bool):
+            pass
         return interp_data
 
     def calibrate_1d_component_array(self, component_array, global_config, sensitivity, remove_mean=False):
