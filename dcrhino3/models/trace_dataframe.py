@@ -34,8 +34,9 @@ import pandas as pd
 import pdb
 import sys
 
-from dcrhino3.helpers.general_helper_functions import init_logging,create_folders_if_needed, df_component_as_array, is_string
-from dcrhino3.models.config import Config
+from dcrhino3.helpers.general_helper_functions import init_logging, create_folders_if_needed, df_component_as_array, \
+    is_string
+from dcrhino3.models.config2 import Config
 
 logger = init_logging(__name__)
 
@@ -164,7 +165,7 @@ class TraceData(object):
     @property
     def hole_h5_filename(self):
         line = self.dataframe.iloc[0]
-        return  str(line.bench_name) + "_" + str(line.pattern_name) + "_" + str(line.hole_name) + "_" + str(
+        return str(line.bench_name) + "_" + str(line.pattern_name) + "_" + str(line.hole_name) + "_" + str(
             line.hole_id) + "_" + str(self.sensor_id) + "_" + str(self.digitizer_id) + ".h5"
 
     @property
@@ -206,7 +207,7 @@ class TraceData(object):
     def append_to_dataframe(self, data):
         self.dataframe = pd.concat((self.dataframe, data))
 
-    def save_to_csv(self,path):
+    def save_to_csv(self, path):
         """
         Save dataframe (without trace data) to csv at location specified by "path"
         
@@ -224,7 +225,7 @@ class TraceData(object):
 
 
 
-    def save_to_h5(self, path,compress=False):
+    def save_to_h5(self, path, compress=False):
         """
         Save dataframe (without trace data) to h5 at location specified by "path"
         
@@ -361,7 +362,7 @@ class TraceData(object):
         configs_dict = {}
         if file_id in self._global_configs.keys():
             if not 'global_config_jsons' in h5f.attrs.keys():
-                unicode_string = self.global_config_by_index(file_id).json_string()
+                unicode_string = self.global_config_by_index(file_id)
                 configs_dict[file_id] = unicode_string
                 all_configs_as_a_string = json.dumps(configs_dict)
                 h5f.attrs['global_config_jsons'] = all_configs_as_a_string

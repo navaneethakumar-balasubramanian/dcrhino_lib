@@ -31,6 +31,7 @@ def save_np_array_to_h5_file(h5, key, np_array, close_file=False):
                                    compression="gzip",
                                    compression_opts=9)
         ds[:] = np_array
+    h5file.flush()
     if close_file:
         h5file.close()
 
@@ -140,6 +141,7 @@ class H5Helper:
     def close_h5f(self):
         self.h5f.close()
 
+
     @property
     def ts(self):
         """
@@ -201,6 +203,16 @@ class H5Helper:
         c = Config()
         c.set_data_from_json(first_config)
         return c
+
+    def save_field_config_to_h5(self, config=None):
+        if config is None:
+            config_to_save = self.config
+        else:
+            config_to_save = config
+
+        json_dict = {"0": config_to_save.pipeline_files_to_dict}
+        self.h5f.attrs['global_config_jsons'] = json.dumps(json_dict)
+        self.h5f.flush()
 
     def extract_metadata_from_h5_file_as_json(self):
         return json.dumps(self.extract_metadata_from_h5_file_as_dict(), indent=4)

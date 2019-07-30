@@ -209,8 +209,8 @@ class Config(object):
 
     def export_config_for_h5_files(self, path):
         with open(path, 'w') as fp:
-            json.dump(self.pipeline_json_string, fp)
-        return
+            json.dump(self.pipeline_files_to_dict, fp)
+        return True
 
     def load_from_config_for_h5_files(self, path):
         with open(path, 'r') as fp:

@@ -529,6 +529,7 @@ class CollectionDaemonThread(threading.Thread):
                                 filename = os.path.join(run_folder_path, filename)
                                 h5f = h5py.File(filename, "a")
                                 h5_helper = H5Helper(h5f, config=config, load_ts=False)
+                                h5_helper.save_field_config_to_h5()
                                 lastFileName = utc_dt
                                 first = True
                             else:
@@ -724,7 +725,7 @@ def main_run(run=True):
     second_plot_display = config.second_plot_display
 
     realtime_trace = RawTraceData()
-    realtime_trace.add_global_config(config, file_id='0')
+    realtime_trace.add_global_config(config.pipeline_files_to_dict, file_id='0')
 
     fig1 = plt.figure("DataCloud Rhino Real Time Data", figsize=(6, 4))
     plt.subplots_adjust(hspace=0.8, top=0.8)
