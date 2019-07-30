@@ -99,7 +99,7 @@ class MWDHelper():
 
         datasets = self.get_dc_datasets_configs(mine_domain)
         for i, dataset in enumerate(datasets):
-            if dataset['name'] == dataset_name:
+            if dataset['name'].lower() == dataset_name.lower():
                 columns_to_get = list()
                 renamed = {}
                 mappings = []
