@@ -27,7 +27,7 @@ import os
 import pdb
 
 #from dcrhino3.models.interval import Interval
-from dcrhino3.models.trace_dataframe import TraceData
+
 from dcrhino3.helpers.general_helper_functions import init_logging, add_inverse_dictionary
 from dcrhino3.models.drill.drill_helper_functions import LengthMeasurement as Measurement
 from dcrhino3.models.drill.drill_helper_functions import LENGTH_UNITS
@@ -86,6 +86,10 @@ class DrillStringComponent(object):
     @property
     def od(self):
         return self._outer_diameter
+
+    @property
+    def _type(self):
+        return self._component_type
     
     def populate_from_attributes_list(self, attributes_list):
         """
@@ -173,8 +177,8 @@ def test(acorr_filename=None):
         h5_basename = 'OB_DR:R14N:41:GMS:OB:A:T_B218_286780_6332_6332.h5'#OK
         acorr_filename = os.path.join(bma_acorr_folder, h5_basename)
 
-    acorr_trace = TraceData()
-    acorr_trace.load_from_h5(acorr_filename)
+    #acorr_trace = TraceData()
+    #acorr_trace.load_from_h5(acorr_filename)
 #    try:
 #        mwd_depth_spacing = acorr_trace.first_global_config.mwd_depth_spacing
 #    except AttributeError:

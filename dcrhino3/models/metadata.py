@@ -13,6 +13,7 @@ import pdb
 import sys
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.helpers.general_helper_functions import add_inverse_dictionary
+from dcrhino3.models.drill.drill_string_component import DrillStringComponent
 from dcrhino3.helpers.general_helper_functions import StandardString
 from dcrhino3.models.drill.drill_helper_functions import LengthMeasurement as Measurement
 
@@ -189,7 +190,8 @@ class Metadata(object):
                         value = m.value_in_meters()
                     elif key_type is DataType.DS_COMPONENT:
                         value =  cfg.get(section,key)
-                        component = Drill_String_Component(value.split(","))
+                        component = DrillStringComponent(gui_string=value)
+                        component.populate_from_gui_string()
                         if component._type == 5:
                             # pdb.set_trace()
                             if shocksub_length == 0:
