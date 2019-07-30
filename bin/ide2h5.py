@@ -9,8 +9,6 @@ Created on Jan 26, 2016
 Modified by NRN on May 22, 2018
 '''
 from __future__ import absolute_import, division, print_function
-
-import ConfigParser
 import locale
 import os.path
 import sys
@@ -22,6 +20,7 @@ import dcrhino3.ide_utilities.data_formats as df
 import dcrhino3.ide_utilities.path_manager as pm
 import dcrhino3.ide_utilities.rhino
 from dcrhino3.ide_utilities.mide_ebml import importer
+from dcrhino3.models.config2 import Config
 from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
 logger = init_logging(__name__)
 file_logger = init_logging_to_file(__name__)
@@ -207,10 +206,10 @@ if __name__ == "__main__":
                 config_name = f.replace(".IDE", ".cfg")
             else:
                 config_name = args.config_file
-            config = ConfigParser.ConfigParser()
+            config = Config()
             # print(config_name)
-            config.read(config_name)
-            resampling_rate = config.getint("COLLECTION", "output_sampling_rate")
+            config.load_from_config_for_h5_files(config_name)
+            resampling_rate = config.output_sampling_rate
             source_file = pm.FileObject(f)
             # print ('Converting "%s"...' % f)
             logger.info('Converting "%s"...' % f)

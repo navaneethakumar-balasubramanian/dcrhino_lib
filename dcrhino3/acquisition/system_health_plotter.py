@@ -1,40 +1,37 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
-import ConfigParser
 from dcrhino3.acquisition.constants import RAM_PATH
 from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
 from dcrhino3.helpers.general_helper_functions import calculate_battery_percentage
-# matplotlib.use('GTKAgg')
 if plt.get_backend() == "Qt4Agg":
     pass
 else:
     plt.switch_backend('TkAgg')
 plt.ioff()
-
-
-import os, sys
-import glob
-import pdb
+import os
 import time
+from dcrhino3.models.config2 import Config
+from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
+logger = init_logging(__name__)
+file_logger = init_logging_to_file(__name__)
 
+# TODO: Factor this function into general helper functions as it is used in another class
 def get_min_max_values(config_value):
-    min = float(config_value.split(",")[0])
-    max = float(config_value.split(",")[1])
-    return min,max
+    min = float(config_value[0])
+    max = float(config_value[1])
+    return min, max
 
-config_collection_file_path = os.path.join(PATH,'collection_daemon.cfg')
-config = ConfigParser.SafeConfigParser()
-config.read(config_collection_file_path)
 
-# pdb.set_trace()
-length = config.getint("SYSTEM_HEALTH_PLOTS","x_axis_length_in_seconds")
-rhino_version = config.getfloat("COLLECTION","rhino_version")
-accel_component = config.get("SYSTEM_HEALTH_PLOTS","accel_line_plot_component")
-sensor_saturation_g = config.getint("INSTALLATION", "sensor_saturation_g")
-accel_scale_multiplier = config.getfloat("SYSTEM_HEALTH_PLOTS","accel_scale_multiplier")
-battery_max_voltage = config.getfloat("INSTALLATION", "battery_max_voltage")
-battery_min_voltage = config.getfloat("INSTALLATION", "battery_min_voltage")
+config = Config(acquisition_config=True)
+
+length = config.x_axis_length_in_seconds
+rhino_version = config.rhino_version
+accel_component = config.accel_line_plot_component
+sensor_saturation_g = config.sensor_saturation_g
+accel_scale_multiplier = config.accel_scale_multiplier
+battery_max_voltage = config.battery_max_voltage
+battery_min_voltage = config.battery_min_voltage
 health = [0] * length
 fig1 = plt.figure("DataCloud Rhino Health Plots",figsize=(6,4))
 fig1.canvas.manager.window.wm_geometry("+%d+%d" % (1300, 0))
@@ -75,7 +72,7 @@ while True:
         title_font = {'fontname': 'Arial', 'size': '10'}
         tick_font_size = 8
 
-        step = config.getint("SYSTEM_HEALTH_PLOTS", "x_axis_tick_interval")
+        step = config.x_axis_tick_interval
         time_axis_values = np.arange(int(length / step) + 1) * step
 
         packets_plot = plt.subplot2grid((rows, columns), (row, column), colspan=1)
@@ -83,7 +80,7 @@ while True:
         packets_plot.set_title("Packets", **title_font)
         packets_plot.set_ylabel("samples", **axis_font)
         packets_plot.set_xlabel("Elapsed Time (sec)", **axis_font)
-        min, max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS", "packets_y_lim"))
+        min, max = get_min_max_values(config.packets_y_lim)
         packets_plot.set_ylim(min, max)
         packets_plot.yaxis.tick_right()
         packets_plot.yaxis.set_label_position("right")
@@ -96,7 +93,7 @@ while True:
         rssi_plot.tick_params(labelsize=tick_font_size)
         rssi_plot.set_title("RSSI", **title_font)
         rssi_plot.set_ylabel("Signal Strength", **axis_font)
-        min, max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS", "rssi_y_lim"))
+        min, max = get_min_max_values(config.rssi_y_lim)
         rssi_plot.set_ylim(min, max)
         rssi_plot.yaxis.tick_right()
         rssi_plot.yaxis.set_label_position("right")
@@ -110,7 +107,7 @@ while True:
         delay_plot.set_title("Plotting Delay", **title_font)
         delay_plot.set_xlabel("Elapsed Time (sec)", **axis_font)
         delay_plot.set_ylabel("seconds", color="C0", **axis_font)
-        min, max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS", "delay_y_lim"))
+        min, max = get_min_max_values(config.delay_y_lim)
         delay_plot.set_ylim(min, max, )
         delay_plot.yaxis.tick_right()
         delay_plot.yaxis.set_label_position("right")
@@ -121,7 +118,6 @@ while True:
         delay_plot_twin.set_ylabel("drift (sec)", color="C7", **axis_font)
         row += 1
 
-
         column = 1
         row = 0
 
@@ -130,7 +126,6 @@ while True:
         accel_plot.set_title("{} Acceleration".format(accel_component.capitalize()), **title_font)
         accel_plot.set_xlabel("time (sec)", **axis_font)
         accel_plot.set_ylabel("G", **axis_font)
-        # min,max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS","temperature_y_lim"))
         min, max = -accel_scale_multiplier * sensor_saturation_g, accel_scale_multiplier * sensor_saturation_g
         accel_plot.set_ylim(min, max)
         accel_plot.yaxis.tick_right()
@@ -142,7 +137,7 @@ while True:
         temp_plot.set_title("Board Temperature", **title_font)
         temp_plot.set_xlabel("time (sec)", **axis_font)
         temp_plot.set_ylabel("degC", **axis_font)
-        min, max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS", "temperature_y_lim"))
+        min, max = get_min_max_values(config.temperature_y_lim)
         temp_plot.set_ylim(min, max)
         temp_plot.yaxis.tick_right()
         temp_plot.yaxis.set_label_position("right")
@@ -152,7 +147,7 @@ while True:
         batt_plot.tick_params(labelsize=tick_font_size)
         batt_plot.set_title("Battery Status", **title_font)
         batt_plot.set_xlabel("time (sec)", **axis_font)
-        if config.getboolean("SYSTEM_HEALTH_PLOTS", "battery_plot_display_percentage"):
+        if config.battery_plot_display_percentage:
             batt_label = "%"
             batt_to_plot = np.asarray([calculate_battery_percentage(battery_max_voltage, battery_min_voltage,
                                                                     x) for x in batt])
@@ -160,7 +155,7 @@ while True:
             batt_label = "Volts"
             batt_to_plot = batt
         batt_plot.set_ylabel(batt_label, **axis_font)
-        min, max = get_min_max_values(config.get("SYSTEM_HEALTH_PLOTS", "battery_y_lim"))
+        min, max = get_min_max_values(config.battery_y_lim)
         batt_plot.set_ylim(min, max)
         batt_plot.yaxis.tick_right()
         batt_plot.yaxis.set_label_position("right")
@@ -177,21 +172,20 @@ while True:
         max_component_accel = health[accel_index]
         min_component_accel = health[accel_index+1]
 
-
         plt.suptitle(tracetime.strftime('%Y-%m-%d %H:%M:%S' ) + " plotted at " + datetime.utcfromtimestamp(
             now).strftime('%Y-%m-%d %H:%M:%S') + " delay of " + str(sec_delay), fontsize=10)
 
         # pdb.set_trace()
         packets_plot.plot(np.flipud(packets), "black", label="packets")
-        packets_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "packets_upper_limit"), 0, length, "y", "dashed",
+        packets_plot.hlines(config.packets_upper_limit, 0, length, "y", "dashed",
                             label="packets upper limit")
-        packets_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "packets_lower_limit"), 0, length, "r", "dashed",
+        packets_plot.hlines(config.packets_lower_limit, 0, length, "r", "dashed",
                             label="packets lower limit")
 
-        rssi_plot.plot(np.flipud(rssi),'gray',label="rssi")#2
-        rssi_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "rssi_upper_limit"), 0, length, "y", "dashed",
+        rssi_plot.plot(np.flipud(rssi), 'gray', label="rssi")
+        rssi_plot.hlines(config.rssi_upper_limit, 0, length, "y", "dashed",
                          label="rssi upper limit")
-        rssi_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "rssi_lower_limit"), 0, length, "r", "dashed",
+        rssi_plot.hlines(config.rssi_lower_limit, 0, length, "r", "dashed",
                          label="rssi lower limit")
 
         delay_plot.plot(np.flipud(delay + drift), 'C0')
@@ -206,23 +200,23 @@ while True:
         # else:
         #     delay_plot_twin.set_ylim(drift_mean - 3*drift_std, 1)
 
-        delay_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "delay_lower_limit"), 0, length, "y", "dashed")
-        delay_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "delay_upper_limit"), 0, length, "r", "dashed")
+        delay_plot.hlines(config.delay_lower_limit, 0, length, "y", "dashed")
+        delay_plot.hlines(config.delay_upper_limit, 0, length, "r", "dashed")
 
         accel_plot.plot(np.flipud(max_component_accel))
         accel_plot.plot(np.flipud(min_component_accel))
         accel_plot.hlines(sensor_saturation_g, 0, length, "r", "dashed")
         accel_plot.hlines(-sensor_saturation_g, 0, length, "r", "dashed")
 
-        temp_plot.plot(np.flipud(temp), 'r')#3
-        temp_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "temp_positive_upper_limit"),0,length,"y","dashed")
-        temp_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "temp_positive_lower_limit"),0,length,"r","dashed")
-        temp_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "temp_negative_upper_limit"),0,length,"y","dashed")
-        temp_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "temp_negative_lower_limit"),0,length,"r","dashed")
+        temp_plot.plot(np.flipud(temp), 'r')
+        temp_plot.hlines(config.temp_positive_upper_limit, 0, length, "y", "dashed")
+        temp_plot.hlines(config.temp_positive_lower_limit, 0, length, "r", "dashed")
+        temp_plot.hlines(config.temp_negative_upper_limit, 0, length, "y", "dashed")
+        temp_plot.hlines(config.temp_negative_lower_limit, 0, length, "r", "dashed")
 
         batt_plot.plot(np.flipud(batt_to_plot), 'g')#3
-        batt_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "battery_upper_limit"),0,length,"y","dashed")
-        batt_plot.hlines(config.getfloat("SYSTEM_HEALTH_PLOTS", "battery_lower_limit"),0,length,"r","dashed")
+        batt_plot.hlines(config.battery_upper_limit, 0, length, "y","dashed")
+        batt_plot.hlines(config.battery_lower_limit,0 , length, "r", "dashed")
 
         fig1.canvas.draw()
         plt.pause(0.05)

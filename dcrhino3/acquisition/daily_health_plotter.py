@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 import numpy as np
 import argparse
-from dcrhino3.acquisition.constants import LOGS_PATH
 
 
 def main(start_date=None, end_date=None):

@@ -13,8 +13,8 @@ import dcrhino3.ide_utilities.path_manager as pm
 import dcrhino3.ide_utilities.data_formats as df
 from dcrhino3.acquisition.constants import ACQUISITION_PATH
 import os
-import ConfigParser
 import shutil
+from dcrhino3.models.config2 import Config
 from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
 dc_logger = init_logging(__name__)
 dc_file_logger = init_logging_to_file(__name__)
@@ -126,8 +126,8 @@ class IDEConverterThread(threading.Thread):
     def run(self):
         updater = SimpleUpdater()
         df.initBivariates(True)
-        config = ConfigParser.ConfigParser()
-        to_convert = list()
+        ide_config = Config()
+        ide_config.set_data_from_json(self.global_config.pipeline_files_to_dict)
         while True:
             if not self.files_q.empty():
                 next_file = self.files_q.get()
@@ -139,15 +139,10 @@ class IDEConverterThread(threading.Thread):
                 resampling_rate = self.global_config.output_sampling_rate
                 time_offset = self.global_config.ide2h5_converter_time_offset
                 max_file_size_in_sec = self.global_config.file_change_interval_in_min * 60
-                config.read(os.path.join(ACQUISITION_PATH, "collection_daemon.cfg"))
                 try:
-                    numSamples, file_Rhino = ideExport(source_file,
-                                                       channels=channel_list,
-                                                       resampling_rate=resampling_rate,
-                                                       config=config,
-                                                       time_offset=time_offset,
-                                                       max_file_size_in_sec=max_file_size_in_sec,
-                                                       updater=updater)
+                    ideExport(source_file, channels=channel_list, resampling_rate=resampling_rate,
+                              config=ide_config, time_offset=time_offset, max_file_size_in_sec=max_file_size_in_sec,
+                              updater=updater)
                 except:
                     path = os.path.dirname(next_file)
                     path = os.path.join(path, "FAILED")

@@ -214,7 +214,7 @@ class Config(object):
 
     def load_from_config_for_h5_files(self, path):
         with open(path, 'r') as fp:
-            data = json.load(self.pipeline_json_string, fp)
+            data = json.load(fp)
         config_files_json = json.load(open(os.path.join(ACQUISITION_PATH, "acquisition_config.cfg")))
         self.files_keys["pipeline_files"] = dict()
         for config_file in config_files_json["pipeline_files"]:
