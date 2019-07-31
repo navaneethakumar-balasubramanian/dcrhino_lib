@@ -7,6 +7,7 @@ import json
 import numpy as np
 import os
 from dcrhino3.acquisition.constants import ACQUISITION_PATH
+from dcrhino3.models.drill.drill_string_component import DrillStringComponent
 
 
 class Config(object):
@@ -67,6 +68,14 @@ class Config(object):
                     Path from :func:`field_base_path` joined by level_0
                 """
         return os.path.join(self.field_base_path(), "level_0").lower()
+
+    @property
+    def drill_string_components_list(self):
+        components = list()
+        for component in self.drill_string_components:
+            c = DrillStringComponent(attributes_dict=component)
+            components.append(c)
+        return components
 
     @property
     def sensor_distance_to_source(self):
@@ -269,6 +278,7 @@ class Config(object):
 if __name__ == "__main__":
     try:
         c = Config(acquisition_config=True)
+        c_list = c.drill_string_components_list
         print("done")
     except:
         pass

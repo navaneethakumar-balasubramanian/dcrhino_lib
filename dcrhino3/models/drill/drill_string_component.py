@@ -27,7 +27,7 @@ import os
 import pdb
 
 #from dcrhino3.models.interval import Interval
-from dcrhino3.models.trace_dataframe import TraceData
+
 from dcrhino3.helpers.general_helper_functions import init_logging, add_inverse_dictionary
 from dcrhino3.models.drill.drill_helper_functions import LengthMeasurement as Measurement
 from dcrhino3.models.drill.drill_helper_functions import LENGTH_UNITS
@@ -58,6 +58,8 @@ DRILL_STRING_COMPONENT_INSTALLATIONS = add_inverse_dictionary(DRILL_STRING_COMPO
 NUM_DRILL_STRING_COMPONENTS_SUPPORTED = 10
 ORDERED_GUI_STRING_ELEMENTS = ['component_type', 'installation', 'length',
                                 'length_units', 'outer_diameter', 'outer_diameter_units']
+
+
 class DrillStringComponent(object):
     """
     ..:warning: there is possibility for error here as the length_in_meters
@@ -70,7 +72,7 @@ class DrillStringComponent(object):
         length
 
     """
-    def __init__(self, attributes_list=None, gui_string=None):
+    def __init__(self, attributes_list=None, gui_string=None, attributes_dict=None):
         self._component_type = None
         self._installation = None
         self._length = None
@@ -79,9 +81,11 @@ class DrillStringComponent(object):
         self._outer_diameter_units = None
         self.gui_number = None
         self.gui_string = gui_string
-        self.label = None# collar, bit_sub
+        self.label = None   # collar, bit_sub
         if attributes_list is not None:
             self.populate_from_attributes_list(attributes_list)
+        if attributes_dict is not None:
+            self.populate_from_attributes_dict(attributes_dict)
     
     @property
     def od(self):
@@ -98,14 +102,29 @@ class DrillStringComponent(object):
             raise Exception
         self._component_type = int(attributes_list[0])
         self._installation = int(attributes_list[1])
-        self._length= float(attributes_list[2])
-        self._length_units= int(attributes_list[3])
+        self._length = float(attributes_list[2])
+        self._length_units = int(attributes_list[3])
         self._outer_diameter = float(attributes_list[4])
         self._outer_diameter_units = int(attributes_list[5])
         return
-    
+
+    def populate_from_attributes_dict(self, attributes_dict):
+        self.gui_number = attributes_dict["id"]
+        self._component_type = attributes_dict["type"]
+        self._installation = attributes_dict["status"]
+        self._length = attributes_dict["length"]["value"]
+        self._length_units = attributes_dict["length"]["units"]
+        self._outer_diameter = attributes_dict["outer_diameter"]["value"]
+        self._outer_diameter_units = attributes_dict["outer_diameter"]["units"]
+        self.label = attributes_dict["label"]  # collar, bit_sub
+        self.gui_string = str([self._component_type, self._installation,
+                           self._length, self._length_units,
+                           self._outer_diameter, self._outer_diameter_units])
+        return
+
     def _to_json(self):
         return
+
     def from_json(self, jsonthingy):
         """
         probably getting a list of dicts as input
@@ -161,6 +180,7 @@ class DrillStringComponent(object):
 
 
 def test(acorr_filename=None):
+    from dcrhino3.models.trace_dataframe import TraceData
     """
     """
     if acorr_filename is None:
