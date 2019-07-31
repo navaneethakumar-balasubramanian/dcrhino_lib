@@ -72,6 +72,8 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
     20190621: This is working on a data driven method.  Still need to add the part where the approximate trough
     widths are estimated from the band pass filter.  This means that the bpf corners should probably be made as inputs
     to the jazz2.
+
+    Here the designations of left and right indicate the sample to the left and right of the zero-crossing
     :param symmetric_trace: dcrhino3.signal_processing.symmetric_trace.SymmetricTrace()
     :param center_time: time in seconds of the peak we wish to reference
     
@@ -83,23 +85,17 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
     """
     missed_zero_crossing = False
     #sanity_check_plot = True
-    #jazz2_dict = jazz2(symmetric_trace, center_time, expected_trough_duration, 
-    #                   wavelet_id=wavelet_id, sanity_check_plot=sanity_check_plot)
     
     mini_center_index = np.where(symmetric_trace.time_vector == center_time)[0][0]
     mini_trace = symmetric_trace.trim_to_new_center_index(mini_center_index)
-    
+    mini_trace_time = mini_trace.time_vector
 
-    mini_trace_time = mini_trace.time_vector
-    #align this by center-time offset
-    # <method of symmetric_trace: chop-to-center-time>
-    mini_trace_time = mini_trace.time_vector
     mini_center_index = mini_trace.center_index
     signs = np.sign(mini_trace.data)
     d_signs = np.diff(signs)
     #plt.plot(d_signs);plt.plot(mini_trace_data);plt.show(block=True)
 
-    # here the designations of left and right inidcate the sample to the
+    #These designations of left and right indicate the sample to the
     # left and right of the zero-crossing
     positive_slope_zx_indices_left = np.where(d_signs > 0)[0]
     #positive_slope_zx_indices_right = positive_slope_zx_indices_left + 1
