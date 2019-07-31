@@ -138,7 +138,6 @@ def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000)
             logger.warning("IGNORED THIS FILE: DUPLICATED with same file checksum : " + str(os.path.getsize(h5_file_path)) )
             return False
         else:
-
             for row in file_with_path.iterrows():
                 logger.info("Setting sensor files as invalid " + str(row[1].sensor_file_id))
                 sql_db_helper.sensor_files.set_status(row[1].sensor_file_id,"invalid")

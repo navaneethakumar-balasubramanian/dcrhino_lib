@@ -129,7 +129,10 @@ class MWDHelper():
                 if date_end is not False:
                     mwd_query += " and " + str(date_column_name) + " <= " + str(date_end)
 
-                mwd_query += " order by " + str(date_column_name) + " desc,  " + str(measured_depth_column_name) +  " asc limit " + str(limit)
+                mwd_query += " order by " + str(date_column_name) + " desc,  " + str(measured_depth_column_name)
+
+                if limit is not False:
+                    mwd_query +=  " asc limit " + str(limit)
 
                 mwd_data_from_db = client.execute(mwd_query)
                 columns_table_name = list()
@@ -343,7 +346,7 @@ class MWDHelper():
             mwd_df['hole_name'] = mwd_df.hole_id
         return mwd_df
 
-    def get_rhino_mwd_from_mine_name(self,mine_name,date_start = False,date_end = False,limit=1000):
+    def get_rhino_mwd_from_mine_name(self,mine_name,date_start = False,date_end = False,limit=False):
         """
         Retrieves mwd from .csv or database connection, remaps,
         adds columns, standardizes format/names for downstream functions.

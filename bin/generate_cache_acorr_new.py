@@ -224,7 +224,7 @@ if __name__ == '__main__':
     if mwd_df is not False:
         merger = MWDRhinoMerger(None,None,False)
         sqlconn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
-        sql_db_helper = RhinoSqlHelper(host=sqlconn['host'], user=sqlconn['user'], passwd=sqlconn['password'],database=sqlconn['database'])
+        sql_db_helper = RhinoSqlHelper(**sqlconn)
         if args.force_regen:
             matches_df = sql_db_helper.blasthole_observations.get_all_with_solution()
         else:
