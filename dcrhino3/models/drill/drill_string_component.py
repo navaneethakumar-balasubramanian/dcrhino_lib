@@ -58,6 +58,9 @@ DRILL_STRING_COMPONENT_INSTALLATIONS = add_inverse_dictionary(DRILL_STRING_COMPO
 NUM_DRILL_STRING_COMPONENTS_SUPPORTED = 10
 ORDERED_GUI_STRING_ELEMENTS = ['component_type', 'installation', 'length',
                                 'length_units', 'outer_diameter', 'outer_diameter_units']
+
+EMPTY_COMPONENT_GUI_STRING = "6,0,0,3,0,3"
+
 class DrillStringComponent(object):
     """
     ..:warning: there is possibility for error here as the length_in_meters
@@ -70,7 +73,7 @@ class DrillStringComponent(object):
         length
 
     """
-    def __init__(self, attributes_list=None, gui_string=None):
+    def __init__(self, attributes_list=None, gui_string=EMPTY_COMPONENT_GUI_STRING):
         self._component_type = None
         self._installation = None
         self._length = None
@@ -82,7 +85,7 @@ class DrillStringComponent(object):
         self.label = None# collar, bit_sub
         if attributes_list is not None:
             self.populate_from_attributes_list(attributes_list)
-    
+
     @property
     def od(self):
         return self._outer_diameter
@@ -107,7 +110,7 @@ class DrillStringComponent(object):
         self._outer_diameter = float(attributes_list[4])
         self._outer_diameter_units = int(attributes_list[5])
         return
-    
+
     def _to_json(self):
         return
     def from_json(self, jsonthingy):
