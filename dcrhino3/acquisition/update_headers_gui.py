@@ -23,7 +23,8 @@ config = Config(acquisition_config=True)
 
 
 class GUI():
-    def __init__(self, master):
+    def __init__(self, master, config):
+        self.config = config
         row = 0
         master.title("Update Headers")
         master.geometry("700x180+30+30")
@@ -40,14 +41,14 @@ class GUI():
 
         Label(master, text="H5 Path to Fix").grid(row=row)
         self.h5f_path = Entry(master)
-        self.h5f_path.insert(0,"/home/natal/toconvert/test/level_1/piezo/20180707_SSX35660_5452_3200.h5")
+        self.h5f_path.insert(0, "/home/natal/toconvert/test/level_1/piezo/20180707_SSX35660_5452_3200.h5")
         self.h5f_path.grid(row=row, column=1, columnspan=4, sticky="EW")
         Button(master, text='...', command=self.get_h5f_path).grid(row=row, column=5, sticky="W", pady=4)
         row += 1
 
         Label(master, text="Config File with New Values").grid(row=row)
         self.cfg_path = Entry(master)
-        self.cfg_path.insert(0,"/home/natal/toconvert/test/level_0/20180707_SSX32060_5452.cfg")
+        self.cfg_path.insert(0, "/home/natal/toconvert/test/level_0/20180707_SSX32060_5452.cfg")
         self.cfg_path.grid(row=row, column=1, columnspan=4, sticky="EW")
         Button(master, text='...', command=self.get_cfg_path).grid(row=row, column=5, sticky="W", pady=4)
         row += 1
@@ -65,8 +66,8 @@ class GUI():
         return
 
     def get_cfg_path(self):
-        initial_path = config.local_folder
-        extension = [('Old Config File', '*.cfg'), ('Config File', '*.json')]
+        initial_path = self.config.local_folder
+        extension = [('Config File', '*.json'), ('Old Config File', '*.cfg')]
         f = tkFileDialog.askopenfilename(initialdir=initial_path, title="Select file", filetypes=extension)
         if len(f) > 0:
             self.cfg_path.delete(0, len(self.cfg_path.get()))
@@ -75,7 +76,7 @@ class GUI():
         return
 
     def get_path(self, extension):
-        initial_path = config.local_folder
+        initial_path = self.config.local_folder
         if self.batch.get() == 1:
             f = tkFileDialog.askdirectory(initialdir=initial_path, title="Select Directory")
         else:
@@ -109,15 +110,14 @@ class GUI():
                 logger.info("Global config was not present so it was added")
             else:
                 h5_helper.update_global_config(replace_config)
-            axis = np.asarray([replace_config.sensor_axial_axis, replace_config.sensor_tangential_axis],dtype=np.int32)
+            axis = np.asarray([replace_config.sensor_axial_axis, replace_config.sensor_tangential_axis], dtype=np.int32)
             if replace_config.sensor_type == 2:
                 sensitivities = np.asarray(replace_config.sensitivity_list_xyz, dtype=np.float32)
             else:
                 sensitivities = np.asarray([1.], dtype=np.float32)
             h5_helper.replace_value_in_h5_key("sensitivity", sensitivities)
             h5_helper.replace_value_in_h5_key("axis", axis)
-            logger.info("sensitivity {}".format(np.asarray(h5_helper.h5f["sensitivity"])))
-            logger.info("axis {}".format(np.asarray(h5_helper.h5f["axis"])))
+            h5_helper.print_h5file_stats()
             h5_helper.close_h5f()
         logger.info("Finished updating files")
 

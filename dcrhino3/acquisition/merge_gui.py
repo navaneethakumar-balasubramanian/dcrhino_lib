@@ -17,7 +17,7 @@ class GUI():
         row = 0
 
         self.merge_process = None
-
+        self.config = config
         master.title("Merge Files")
         master.geometry("700x190+30+30")
         master.columnconfigure(1, weight=3)
@@ -76,18 +76,18 @@ class GUI():
         return
 
     def get_file_path(self, extension):
-        initial_path = config.local_folder
+        initial_path = self.config.local_folder
         f = tkFileDialog.askopenfilename(initialdir=initial_path, title="Select file", filetypes=extension)
         return f
 
     def get_dir_path(self):
-        initial_path = config.local_folder
+        initial_path = self.config.local_folder
         f = tkFileDialog.askdirectory(initialdir=initial_path, title="Select Directory")
         return f
 
     def save_as_path(self):
         extension = [('h5 File', '*.h5')]
-        initial_path = config.local_folder
+        initial_path = self.config.local_folder
         f = tkFileDialog.asksaveasfilename(initialdir=initial_path, title="Save As", filetypes=extension)
         return f
 
@@ -108,4 +108,4 @@ def main(config):
 
 if __name__ == "__main__":
     config = Config(acquisition_config=True)
-    main()
+    main(config)

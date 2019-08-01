@@ -69,6 +69,13 @@ def replace_value_in_h5_key(h5, key, array, close_file=False):
         h5file.close()
 
 
+def print_h5file_stats(h5):
+    for key in ["axis", "sensitivity"]:
+        if key in h5.keys():
+            ar = np.asarray(h5.get(key))
+            logger.info("{}: {}".format(key, ar))
+
+
 class H5Helper:
     """
     Facilitates extraction of data from .h5 files.
@@ -165,7 +172,13 @@ class H5Helper:
         if h5file is None:
             replace_value_in_h5_key(self.h5f, key, array, close_file)
         else:
-            replace_value_h5_key(h5file, key, array, close_file)
+            replace_value_in_h5_key(h5file, key, array, close_file)
+
+    def print_h5file_stats(self, h5file=None):
+        if h5file is None:
+            print_h5file_stats(self.h5f)
+        else:
+            print_h5file_stats(h5file)
 
     def close_h5f(self):
         self.h5f.close()

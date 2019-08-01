@@ -113,7 +113,7 @@ class GUI():
         row += 1
 
         Label(master, text="Merge Files").grid(row=row)
-        # Button(master, text='Go', command=self.merge_files).grid(row=row, column=1, sticky="ew", pady=4)
+        Button(master, text='Go', command=self.merge_files).grid(row=row, column=1, sticky="ew", pady=4)
         row += 1
 
         Label(master, text="Playback").grid(row=row)
@@ -196,7 +196,7 @@ class GUI():
             server = self.config.server
             stats_folder = self.config.stats_folder
             cmd = os.path.join(PATH, "sendfiles.sh {} {} {} {} {}".format(local_folder, server, remote_folder,
-                                                                      sleep_interval, stats_folder))
+                                                                          sleep_interval, stats_folder))
             logging.debug(cmd)
             self.rsync_daemon_process = Popen(args=["lxterminal", "--command={}".format(cmd)])
             logging.info("Rsync Started")
@@ -206,7 +206,6 @@ class GUI():
             os.system("pkill -f sendfiles.sh --signal SIGTERM")
             self.rsync_daemon_process = None
             logging.info("Rsync Stopped")
-
 
     def playback_daemon(self):
         fname = tkFileDialog.askopenfilename(initialdir=DATA_PATH, defaultextension=".h5")
@@ -229,7 +228,7 @@ class GUI():
         self.config = rig.main(self.config)
 
     def update_h5_headers(self):
-        uhg.main()
+        uhg.main(self.config)
 
     def merge_files(self):
         mfg.main(self.config)
