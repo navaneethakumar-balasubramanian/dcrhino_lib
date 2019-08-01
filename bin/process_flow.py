@@ -20,7 +20,7 @@ os.environ['OMP_NUM_THREADS'] = '1'
 
 ## HACK TO WORK ON SERVERS NON INTERACTIVE MODE
 import matplotlib
-matplotlib.use('TkAgg')
+matplotlib.use('Svg')
 
 
 
