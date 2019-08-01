@@ -179,10 +179,10 @@ class FeatureExtractorJ2(object):
             self.jazz3_wavelets = getattr(transformed_args.jazz3_wavelets, component_id)
         except:
             self.jazz3_wavelets = []#['primary',]
-            
+
         #</fix this up>
 
-    
+
 
     def extract_integrated_amplitudes(self, time_center, window_half_width, rotate_angle=False):
         trace_data = self.trace.data.copy()
@@ -222,7 +222,7 @@ class FeatureExtractorJ2(object):
                 integral, absolute_integral = self.extract_integrated_amplitudes(window_center,
                                                     window_half_width,
                                                     rotate_angle=False)
-                
+
                 feature_label = 'jazz1_{}_integrated_amplitude'.format(lr)
                 output_label = full_feature_label(self.trace.component_id, wavelet_id, feature_label)
                 extracted_features_dict[output_label] = integral

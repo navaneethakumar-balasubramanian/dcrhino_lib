@@ -198,6 +198,15 @@ class ProcessFlow:
         """
         output_trace = trace_data
 
+        #readability/clarity review:
+        # below we should be referencing self.num_modules_to_process,
+        #modules_to_process sounds like a list of modules, NOT an integer
+        #specifying how many are in the list.
+        #where as modules_flow is modules_to_process.
+        #also, lets make self.num_modules_to_process an @property of the class, thereby removing a line.
+        #moreover, I would suggest, for i_module, module in enumerate(self.modules_to_process):
+        #using i_module to denote an integer counter.  actual_module would hten be eliminated
+        #as a variable.
         self.modules_to_process = len(self.modules_flow)
         self.actual_module = 0
         while self.actual_module != self.modules_to_process:
@@ -250,21 +259,21 @@ class ProcessFlow:
         acorr_trace = TraceData()
         acorr_trace.load_from_h5(acorr_h5_file_path)
 
-        #<NEW>
-        print("EMERGENCY HACK FOR BMA. FIELD CONFIG NEEDS VARAIBLE STEELS CORRECT ON DB" )
-        try:
-            hack = process_json['vars'][0]['hack_multipass_bma']
-            first_global_config_index = acorr_trace.dataframe['acorr_file_id'].values[0]
-            corrected_global_config = bma_hack_20190606(acorr_trace.first_global_config)
-            acorr_trace._global_configs[first_global_config_index] = corrected_global_config
-            hack = False
-        except KeyError:
-            hack = False
+        #This comment replaces the chunk of code we used to use to hack the field config for BMA
+#        print("EMERGENCY HACK FOR BMA. FIELD CONFIG NEEDS VARAIBLE STEELS CORRECT ON DB" )
+#        try:
+#            hack = process_json['vars'][0]['hack_multipass_bma']
+#            first_global_config_index = acorr_trace.dataframe['acorr_file_id'].values[0]
+#            corrected_global_config = bma_hack_20190606(acorr_trace.first_global_config)
+#            acorr_trace._global_configs[first_global_config_index] = corrected_global_config
+#            hack = False
+#        except KeyError:
+#            hack = False
         #pdb.set_trace()
         if 'subsets' not in process_json.keys():
             acorr_trace = update_acorr_with_resonance_info(acorr_trace,
-                                                       transition_depth_offset_m=-1.0,
-                                                       hack=hack)
+                                                       transition_depth_offset_m=-1.0)#,
+                                                       #hack=hack)
             splits = get_depths_at_which_steels_change(acorr_trace.dataframe)
             print("splits = {}".format(splits))
             process_json['subsets'] = splits
