@@ -90,8 +90,6 @@ class DrillStringComponent(JSONEncoder):
         if attributes_dict is not None:
             self.populate_from_attributes_dict(attributes_dict)
 
-    def default(self):
-        return self.to_dict()
     
     @property
     def od(self):
