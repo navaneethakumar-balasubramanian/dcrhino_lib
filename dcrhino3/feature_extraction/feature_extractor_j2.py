@@ -177,12 +177,16 @@ class FeatureExtractorJ2(object):
             self.jazz2_wavelets = []
         try:
             self.jazz3_wavelets = getattr(transformed_args.jazz3_wavelets, component_id)
+            try:
+                self.jazz3_method = getattr(transformed_args.jazz3_wavelets, 'method')
+            except:
+                self.jazz3_method = 'discrete'
         except:
             self.jazz3_wavelets = []#['primary',]
-            
+
         #</fix this up>
 
-    
+
 
     def extract_integrated_amplitudes(self, time_center, window_half_width, rotate_angle=False):
         trace_data = self.trace.data.copy()
@@ -222,7 +226,7 @@ class FeatureExtractorJ2(object):
                 integral, absolute_integral = self.extract_integrated_amplitudes(window_center,
                                                     window_half_width,
                                                     rotate_angle=False)
-                
+
                 feature_label = 'jazz1_{}_integrated_amplitude'.format(lr)
                 output_label = full_feature_label(self.trace.component_id, wavelet_id, feature_label)
                 extracted_features_dict[output_label] = integral
@@ -277,17 +281,6 @@ class FeatureExtractorJ2(object):
         if self.jazz1_amplitude_windows is not None:
             extracted_features_dict = self.jazz1(extracted_features_dict)
 
-        for wavelet_id in self.jazz2_wavelets:
-            bpf_center_frequency = np.mean([self.transformed_args.trapezoidal_bpf_corner_2,
-                                        self.transformed_args.trapezoidal_bpf_corner_3])
-            bpf_period = 1./bpf_center_frequency
-            expected_trough_duration = estimate_trough_width(bpf_period, self.trace.component_id)
-            center_time_key = '{}-{}-maximum_time'.format(self.trace.component_id, wavelet_id)
-            wavelet_center_time = extracted_features_dict[center_time_key]
-            jazz2_dict = jazz2(self.trace, wavelet_center_time, expected_trough_duration, wavelet_id=wavelet_id)
-            for feature_id, feature_value in jazz2_dict.items():
-                output_label = full_feature_label(self.trace.component_id, wavelet_id, feature_id)
-                extracted_features_dict[output_label] = feature_value
 
         for wavelet_id in self.jazz3_wavelets:
             bpf_center_frequency = np.mean([self.transformed_args.trapezoidal_bpf_corner_2,
@@ -295,8 +288,11 @@ class FeatureExtractorJ2(object):
             bpf_period = 1./bpf_center_frequency
             expected_trough_duration = estimate_trough_width(bpf_period, self.trace.component_id)
             center_time_key = '{}-{}-maximum_time'.format(self.trace.component_id, wavelet_id)
-            wavelet_center_time = extracted_features_dict[center_time_key]
-            jazz3_dict = jazz3(self.trace, wavelet_center_time, expected_trough_duration, wavelet_id=wavelet_id)
+            wavelet_max_time = extracted_features_dict[center_time_key]
+            logger_message = "applying jazz3 to {} component by {} method".format(self.trace.component_id, self.jazz3_method)
+            print(logger_message)
+            jazz3_dict = jazz3(self.trace, wavelet_max_time, expected_trough_duration,
+                               wavelet_id=wavelet_id, method=self.jazz3_method)
             for feature_id, feature_value in jazz3_dict.items():
                 output_label = full_feature_label(self.trace.component_id, wavelet_id, feature_id)
                 extracted_features_dict[output_label] = feature_value

@@ -16,6 +16,8 @@ incehes, meters cm
 
 see
 https://datacloudintl.atlassian.net/wiki/spaces/RHINO/pages/139526154/Configuration+File+Definition
+
+@Natal: why do we need these integers codes? is this a gui thing?
 """
 
 
@@ -34,10 +36,6 @@ from dcrhino3.models.drill.drill_helper_functions import LENGTH_UNITS
 
 logger = init_logging(__name__)
 
-"""
-@Natal: why do we need these integers codes? is this a gui thing?
--
-"""
 DRILL_STRING_COMPONENT_TYPES = {}
 DRILL_STRING_COMPONENT_TYPES[1] = 'bit'
 DRILL_STRING_COMPONENT_TYPES[2] = 'collar'
@@ -61,7 +59,7 @@ ORDERED_GUI_STRING_ELEMENTS = ['component_type', 'installation', 'length',
 
 EMPTY_COMPONENT_GUI_STRING = "6,-1,0,3,0,3"
 
-class DrillStringComponent(JSONEncoder):
+class DrillStringComponent(object):
     """
     ..:warning: there is possibility for error here as the length_in_meters
     applies a roundoff on each component, the roundoff should happen after summation.
@@ -73,7 +71,8 @@ class DrillStringComponent(JSONEncoder):
         length
 
     """
-    def __init__(self, attributes_list=None, gui_string=EMPTY_COMPONENT_GUI_STRING, attributes_dict=None):
+    def __init__(self, attributes_list=None, gui_string=EMPTY_COMPONENT_GUI_STRING,
+                 attributes_dict=None):
         self._component_type = None
         self._installation = None
         self._length = None
@@ -95,7 +94,13 @@ class DrillStringComponent(JSONEncoder):
     def od(self):
         return self._outer_diameter
 
-    
+    @property
+    def _type(self):
+        """
+        HACK ALERT!  calls to _type should be replaced with calls to self.component_type() in future
+        """
+        return self._component_type
+
     def populate_from_attributes_list(self, attributes_list):
         """
         """
@@ -207,8 +212,8 @@ def test(acorr_filename=None):
         h5_basename = 'OB_DR:R14N:41:GMS:OB:A:T_B218_286780_6332_6332.h5'#OK
         acorr_filename = os.path.join(bma_acorr_folder, h5_basename)
 
-    acorr_trace = TraceData()
-    acorr_trace.load_from_h5(acorr_filename)
+    #acorr_trace = TraceData()
+    #acorr_trace.load_from_h5(acorr_filename)
 #    try:
 #        mwd_depth_spacing = acorr_trace.first_global_config.mwd_depth_spacing
 #    except AttributeError:

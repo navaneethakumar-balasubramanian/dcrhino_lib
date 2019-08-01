@@ -286,5 +286,7 @@ class H5Helper:
                     config.set(section, param_name, value)
             m = Metadata(config)
             return m
-        except:
+        except Exception as e:
+        #    print(e)
+            print("Error loading metadata" ,e)
             return None

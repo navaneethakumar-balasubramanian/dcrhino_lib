@@ -1,27 +1,42 @@
 <template>
   <div class="about">
+    <v-card color="blue lighten-4" >
+              <v-layout row>
+                <v-flex xs12>
+                  <v-card-title primary-title>
+                    <div>
+                      <div class="headline">MWD: {{ mine_name }} </div>
+                      <div>Type: CSV</div>
+                      <div>Path: "/data/arcelor_mittal/mwds/201992.csv"</div>
+                    </div>
+                  </v-card-title>
+                </v-flex>
+              </v-layout>
+              <v-divider light></v-divider>
+              <v-card-actions class="pa-3" >
+                <v-btn>Mapping</v-btn>
+                <v-btn>Download</v-btn>
 
+                <v-spacer></v-spacer>
+                <date-range-picker
+                ref="picker" v-model="dateRange" @update="updated_date_picker" :locale-data="{ firstDay: 1, format: 'YYYY-MM-DD' }" opens="left" style="width:240px; float:right;z-index:1000" :dateFormat="format_available_dates">
+            <div slot="input" slot-scope="picker" style="min-width: 200px; text-align:center;font-color:'#000'">
+                From : {{ dateRange.startDate.substring(0,10) }}  To: {{ dateRange.endDate.substring(0,10) }} 
+            </div>
+        </date-range-picker>
+              </v-card-actions>
+            </v-card>
      
     <v-toolbar flat color="white" style="z-index:1">
    
-      <v-toolbar-title
-        >Processed files from : {{ mine_name }}<br /><span
-          class="body-2 font-weight-light"
-          >{{ filtered_data.length }} results found.</span
-        >
+      <v-toolbar-title>
+        <span class="body-2 font-weight-light"
+          >{{ filtered_data.length }} results found.</span>
       </v-toolbar-title>
 
       <v-spacer></v-spacer>
-      <v-layout align-right justify-end column fill-height>
-      <v-flex xs12 md6>
-      <date-range-picker
-            ref="picker" v-model="dateRange" @update="updated_date_picker" :locale-data="{ firstDay: 1, format: 'YYYY-MM-DD' }" opens="left" style="width:240px; float:right;z-index:1000" :dateFormat="format_available_dates">
-        <div slot="input" slot-scope="picker" style="min-width: 200px; text-align:center;">
-            From : {{ dateRange.startDate.substring(0,10) }}  To: {{ dateRange.endDate.substring(0,10) }} 
-        </div>
-    </date-range-picker>
-      </v-flex>
-      <v-flex xs12 md6>
+      
+      
       <v-text-field
       style="min-width: 240px; float:right;"
         v-model.lazy="search"
@@ -33,8 +48,7 @@
         v-on:keyup.enter="searchWeb"
         :loading="loading"
       ></v-text-field>
-      </v-flex>
-      </v-layout>
+      
     </v-toolbar>
     </v-layout>
 
@@ -106,33 +120,9 @@
             hide-details
           ></v-checkbox>
         </td>
-        <td class="text-xs-right">{{ items.item.processed_hole_id }}</td>
-        <td class="text-xs-right">
-          {{ moment(items.item.processed_at_ts).format("YYYY-MM-DD hh:mm:ss") }}
-        </td>
-        <td class="text-xs-right">{{ items.item.bench_name }}</td>
-        <td class="text-xs-right">{{ items.item.pattern_name }}</td>
-        <td class="text-xs-right">{{ items.item.hole_name }}</td>
-        <td class="text-xs-right">{{ items.item.hole_id }}</td>
-        <td class="text-xs-right">{{ items.item.rig_id }}</td>
-        <td class="text-xs-right">{{ items.item.sensor_id }}</td>
-        <td class="text-xs-right">{{ items.item.digitizer_id }}</td>
-        <td class="text-xs-right">{{ items.item.flow_id }}</td>
-        <td class="text-xs-right">
-          <v-icon v-if="items.item.to_mp == 1" color="green"
-            >radio_button_checked</v-icon
-          ><v-icon v-else color="red">radio_button_unchecked</v-icon>
-        </td>
-        <td>
-          <v-btn
-            outline
-            icon
-            color="indigo"
-            @click="showProcessedHole(items.item.processed_hole_id)"
-          >
-            <v-icon>info</v-icon>
-          </v-btn>
-        </td>
+        <td v-for="value in Object.keys(items.item)" class="text-xs-right">{{ items.item[value] }}</td>
+        
+        
       </template>
     </v-data-table>
     <v-btn flat color="light-blue" v-on:click="compare_selection()"
@@ -192,18 +182,16 @@ export default {
                 endDate: ""}
   }),
   created() {
-    this.$store.dispatch("GET_PROCESSED", { mine_name: this.mine_name });
+    this.$store.dispatch("GET_MWD", { mine_name: this.mine_name });
   },
   props: ["mine_name"],
 
   methods: {
     format_available_dates:function(classes,date){
-      
       if (this.processed_at_ts.includes(moment(date).format("YYYY-MM-DD"))){
         classes.today = true;
       }
       return classes
-      
     },
     updated_date_picker:function(e){
       e.startDate = moment(e.startDate).format("YYYY-MM-DD") + " 00:00:00";
@@ -212,8 +200,9 @@ export default {
     },
     changed_filter: function() {
       let temp = [];
-      for (let item in this.server_data) {
-        item = this.server_data[item];
+    
+      for (let item in this.server_data.data) {
+        item = this.server_data.data[item];
         let canPush = true;
         for (let header in this.headers) {
           header = this.headers[header];
@@ -223,7 +212,6 @@ export default {
             Object.keys(header.values).includes(item[header.value]) &&
             header.values[item[header.value]].checked == false
           ) {
-            //console.log("cannot push ", item,header,header.values[item[header.value]].checked)
             canPush = false;
           }
         }
@@ -330,92 +318,16 @@ export default {
       }
 
       if (_new){
-        let processed_list = _new;
-        let flow_ids = [...new Set(processed_list.map(a => a.flow_id))];
-        let bench_names = [...new Set(processed_list.map(a => a.bench_name))];
-        let pattern_names = [...new Set(processed_list.map(a => a.pattern_name))];
-        let hole_names = [...new Set(processed_list.map(a => a.hole_name))];
-        let hole_ids = [...new Set(processed_list.map(a => a.hole_id))];
-        let rig_ids = [...new Set(processed_list.map(a => a.rig_id))];
-        let sensor_ids = [...new Set(processed_list.map(a => a.sensor_id))];
-        let digitizer_ids = [...new Set(processed_list.map(a => a.digitizer_id))];
-        if (processed_list.length >0 && this.dateRange.endDate == ""){
-          this.dateRange.endDate = moment(processed_list[0].processed_at_ts,"X").format("YYYY-MM-DD") + " 23:59:59";
-          this.dateRange.startDate = moment(processed_list[processed_list.length-1].processed_at_ts,"X").format("YYYY-MM-DD") + " 00:00:00";
-        }
+        let list = _new.data;
+        this.headers = []
+        Object.keys(list[0]).forEach(column => {
+          let values_list = [...new Set(list.map(a => a[column]))];
+          this.headers.push({ text: column, value: column, sortable: false, values: to_unique_obj(values_list), allChecked: true })
+        }); 
+       
         
 
-        this.headers = [
-          { text: "Id", value: "processed_hole_id", sortable: true },
-          { text: "Processed date", value: "date", sortable: false },
-          {
-            text: "Bench",
-            value: "bench_name",
-            sortable: false,
-            values: to_unique_obj(bench_names),
-            allChecked: true
-          },
-          {
-            text: "Pattern",
-            value: "pattern_name",
-            sortable: false,
-            values: to_unique_obj(pattern_names),
-            allChecked: true
-          },
-          {
-            text: "Hole_name",
-            value: "hole_name",
-            sortable: false,
-            values: to_unique_obj(hole_names),
-            allChecked: true
-          },
-          {
-            text: "Hole_id",
-            value: "hole_id",
-            sortable: false,
-            values: to_unique_obj(hole_ids),
-            allChecked: true
-          },
-          {
-            text: "Rig",
-            value: "rig_id",
-            sortable: false,
-            values: to_unique_obj(rig_ids),
-            allChecked: true
-          },
-          {
-            text: "Sensor",
-            value: "sensor_id",
-            sortable: false,
-            values: to_unique_obj(sensor_ids),
-            allChecked: true
-          },
-          {
-            text: "Digitizer",
-            value: "digitizer_id",
-            sortable: false,
-            values: to_unique_obj(digitizer_ids),
-            allChecked: true
-          },
-          {
-            text: "Flow",
-            value: "flow_id",
-            sortable: false,
-            values: to_unique_obj(flow_ids),
-            allChecked: true
-          },
-          {
-            text: "MP",
-            value: "to_mp",
-            sortable: false,
-            values: {
-              1: { label: "True", checked: true },
-              0: { label: "False", checked: true }
-            },
-            allChecked: true
-          },
-          { text: "Actions", sortable: false }
-        ];
+        
       }
     },
     headers: function(_new, _old) {
@@ -424,10 +336,7 @@ export default {
   },
   computed: {
     server_data() {
-      return this.$store.state.processed_holes.processed_list;
-    },
-    processed_at_ts(){
-      return this.$store.state.processed_holes.processed_at_ts.map(a => moment(a,"X").format("YYYY-MM-DD"));
+      return this.$store.state.mwd.mwd;
     },
 
     loading() {

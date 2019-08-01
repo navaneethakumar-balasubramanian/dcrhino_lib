@@ -43,14 +43,22 @@ class ProcessedHoles(BaseDbModel):
             print("Something went wrong: {}".format(err))
         return False
 
-    def get_search_string(self,search,limit=1000):
-        words = str(search).split(" ")
+    def get_search_string(self,search,limit=1000,_from=0,_to=0):
         query = "select * from " + self.table_name +" where "
-        for word in words:
-            query += 'LOWER(CONCAT(bench_name,pattern_name,hole_name,hole_id,rig_id,sensor_id,digitizer_id,flow_id)) LIKE LOWER("%'+str(word)+'%") and '
+        if search is not None:
+            words = str(search).split(" ")
+            for word in words:
+                if word is not None:
+                    query += 'LOWER(CONCAT(bench_name,pattern_name,hole_name,hole_id,rig_id,sensor_id,digitizer_id,flow_id)) LIKE LOWER("%'+str(word)+'%") and '
+        if _from != 0 and _to != 0:
+            query += " processed_at_ts >= " + str(_from) + " and processed_at_ts <= " + str(_to) + " and "
         query += "1 = 1 order by processed_hole_id DESC limit " + str(limit)
-        #print query
+        print(query)
         return self.query_to_df(query)
+
+    def get_processed_at_ts(self,archived = 0):
+        query = "SELECT DISTINCT(processed_at_ts) FROM processed_holes where archived = " + str(archived)
+        return list(self.query_to_df(query)['processed_at_ts'].values)
 
     def add(self,processed_at_ts,seconds_processed,hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,sensor_accelerometer_type,sensor_saturation_g,flow_id,output_folder_name,process_id=-1):
         sql = "INSERT INTO "+self.table_name+" (processed_at_ts,seconds_processed,hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,sensor_accelerometer_type,sensor_saturation_g,flow_id,output_folder_name,process_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s , %s)"
