@@ -17,24 +17,21 @@ from dcrhino3.feature_extraction.jazz_with_zero_crossings import missing_zero_cr
 #from dcrhino3.feature_extraction.jazz_with_zero_crossings import semi_theoretical_tick_times
 
 from dcrhino3.feature_extraction.jazz3_helpers import sanity_check_plot_jazz3
+from dcrhino3.feature_extraction.jazz3_helpers import DataWindow
 
-class DataWindow(object):
-    def __init__(self, time, data):
-        self.time = time
-        self.data = data
 
 
 def jazz2(mini_trace, expected_trough_duration):
     """
     """
-    mini_trace_time = mini_trace.time_vector
     missed_zero_crossing = False
-    #<Basically Here is Aborted Jazz2>
+
+    mini_trace_time = mini_trace.time_vector
     mini_center_index = mini_trace.center_index
     signs = np.sign(mini_trace.data)
     d_signs = np.diff(signs)
-    #plt.plot(d_signs);plt.plot(mini_trace_data);plt.show(block=True)
 
+    #plt.plot(d_signs);plt.plot(mini_trace_data);plt.show(block=True)
     #These designations of left and right indicate the sample to the
     # left and right of the zero-crossing
     positive_slope_zx_indices_left = np.where(d_signs > 0)[0]
@@ -111,10 +108,7 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
 
     #<Basically Here is Aborted Jazz2>
     left_trough_dw, right_trough_dw, positive_peak_dw, tick_times, missed_zero_crossing = jazz2(mini_trace, expected_trough_duration)
-    #missed_zero_crossing, left_trough, t_left_trough, right_trough, t_right_trough, positive_peak, t_positive_peak, tick_times = jazz2(mini_trace, expected_trough_duration)
 
-    #<END JAZZ2 START JAZZ3>
-    # up to here its all jazz2, now:
     d_left_trough = np.diff(left_trough_dw.data)  # slopes
     sign_d_left_trough = np.sign(d_left_trough)  # signs of slopes
     d_sign_d_left_trough = np.diff(sign_d_left_trough)
@@ -136,11 +130,7 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
     if sanity_check_plot:
         print('sanity check')
         ttl_string = '{} {}'.format(symmetric_trace.component_id, wavelet_id)
-#        sanity_check_plot_jazz3(left_trough, positive_peak, right_trough,
-#                                t_left_trough, t_positive_peak, t_right_trough,
-#                                expected_trough_duration, tick_times, ttl_string,
-#                                t_left_half_trough, left_half_trough,
-#                                t_right_half_trough, right_half_trough )
+
         t_left_trough = left_trough_dw.time
         left_trough = left_trough_dw.data
         t_positive_peak = positive_peak_dw.time
