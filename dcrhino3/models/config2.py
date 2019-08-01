@@ -34,6 +34,12 @@ class Config(object):
             self.set_data_from_json(json_data)
         return
 
+    def clear_all_keys(self):
+        for key in self.pipeline_files_to_dict.keys():
+            self.__dict__[key] = None
+        for key in self.field_files_to_dict.keys():
+            self.__dict__[key] = None
+
     def _config_files_to_dict(self, files_type):
         if files_type in self.files_keys.keys():
             pipeline_files = self.files_keys[files_type].keys()
@@ -44,6 +50,17 @@ class Config(object):
             return pipeline_json
         else:
             return None
+
+    def keys(self):
+        """
+        only returns the keys that are important for the config file that is saved in the h5 files
+
+        :return:
+        """
+        return self.pipeline_files_to_dict.keys()
+
+    def __getitem__(self, item):
+        return self.__dict__[item]
 
     @property
     def pipeline_files_to_dict(self):

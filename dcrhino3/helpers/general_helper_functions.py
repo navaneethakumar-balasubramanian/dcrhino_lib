@@ -396,6 +396,7 @@ def calculate_battery_percentage(max_voltage, min_voltage, current_voltage):
 
 
 
+
 #def arrayBounds(ts,ordered=False,**kwargs):
 #    """
 #    return min, max and range of a numpy array

@@ -24,6 +24,7 @@ from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
 from dcrhino3.acquisition.constants import DATA_PATH
 from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file, StandardString
 from dcrhino3.models.drill.drill_helper_functions import LengthMeasurement as Measurement
+from dcrhino3.models.drill.drill_string_component import DrillStringComponent
 logger = init_logging(__name__)
 file_logger = init_logging_to_file(__name__)
 
@@ -41,10 +42,6 @@ try:
 except:
     logger.warning("Rhino hardware is not connected to USB port".upper())
     pass
-
-# config = ConfigParser.SafeConfigParser()
-# config.read(cfg_fname)
-# rhino_version = config.getfloat("COLLECTION", "rhino_version")
 
 menu_fname = os.path.join(PATH, "menus.cfg")
 menus = ConfigParser.SafeConfigParser()
@@ -893,39 +890,39 @@ class GUI():
         self.drill_string_component4_od_units,self.drill_string_component5_od_units,self.drill_string_component6_od_units,
         self.drill_string_component7_od_units,self.drill_string_component8_od_units,self.drill_string_component9_od_units,self.drill_string_component10_od_units]
 
-        # for comp in range(10):
-        #     comp_name = "drill_string_component"+str(comp+1)
-        #     data = self.config.get("INSTALLATION",comp_name).split(',')
-        #     self.current_component = Drill_String_Component(data)
-        #     #print(data)
-        #     #pdb.set_trace()
-        #     if int(data[1]) == 0:
-        #         status_index = 1
-        #     elif int(data[1]) == -1:
-        #         status_index = 2
-        #     else:
-        #         status_index = 0
-        #
-        #     ds_comp_type_vars[comp].set(drill_string_component_types[self.current_component._type-1])
-        #     ds_comp_status_vars[comp].set(drill_string_component_status_options[status_index])
-        #     ds_comp_length_vars[comp].delete(0,len(ds_comp_length_vars[comp].get()))
-        #     ds_comp_length_vars[comp].insert(0,self.current_component._length)
-        #     ds_comp_length_units_vars[comp].set(measurement_units_options[self.current_component._length_units-1])
-        #     ds_comp_od_vars[comp].delete(0,len(ds_comp_od_vars[comp].get()))
-        #     ds_comp_od_vars[comp].insert(0,self.current_component._od)
-        #     ds_comp_od_units_vars[comp].set(measurement_units_options[self.current_component._od_units-1])
-        #
-        #     if self.current_component.type == 5 and self.current_component.status == 1:
-        #         self.shocksub_length = self.current_component.length_in_meters
+        for comp in range(10):
+            comp_name = "drill_string_component"+str(comp+1)
+            if comp < len(self.config.drill_string_components_list):
+                self.current_component = self.config.drill_string_components_list[comp]
+            else:
+                self.current_component = DrillStringComponent()
+            if int(self.current_component._installation) == 0:
+                status_index = 1
+            elif int(self.current_component._installation) == -1:
+                status_index = 2
+            else:
+                status_index = 0
+
+            ds_comp_type_vars[comp].set(drill_string_component_types[self.current_component._component_type-1])
+            ds_comp_status_vars[comp].set(drill_string_component_status_options[status_index])
+            ds_comp_length_vars[comp].delete(0,len(ds_comp_length_vars[comp].get()))
+            ds_comp_length_vars[comp].insert(0,self.current_component._length)
+            ds_comp_length_units_vars[comp].set(measurement_units_options[self.current_component._length_units-1])
+            ds_comp_od_vars[comp].delete(0,len(ds_comp_od_vars[comp].get()))
+            ds_comp_od_vars[comp].insert(0,self.current_component._outer_diameter)
+            ds_comp_od_units_vars[comp].set(measurement_units_options[self.current_component._outer_diameter_units-1])
+
+            if self.current_component._component_type == 5 and self.current_component._installation == 1:
+                self.shocksub_length = self.current_component.length_in_meters
 
         data = self.config.drill_string_total_length
         measurement = Measurement((data["value"], data["units"]))
         self.drill_string_total_length.set(measurement.value_in_meters())
 
         data = self.config.drill_string_steel_od
-        measurement = Measurement((data["value"],data["units"]))
-        self.drill_string_steel_od.delete(0,len(self.drill_string_steel_od.get()))
-        self.drill_string_steel_od.insert(0,measurement._value)
+        measurement = Measurement((data["value"], data["units"]))
+        self.drill_string_steel_od.delete(0, len(self.drill_string_steel_od.get()))
+        self.drill_string_steel_od.insert(0, measurement._value)
         self.drill_string_steel_od_units.set(measurement_units_options[measurement._units-1])
 
 

@@ -25,7 +25,7 @@ import datetime
 #import numpy as np
 import os
 import pdb
-
+from json import JSONEncoder
 #from dcrhino3.models.interval import Interval
 
 from dcrhino3.helpers.general_helper_functions import init_logging, add_inverse_dictionary
@@ -59,8 +59,9 @@ NUM_DRILL_STRING_COMPONENTS_SUPPORTED = 10
 ORDERED_GUI_STRING_ELEMENTS = ['component_type', 'installation', 'length',
                                 'length_units', 'outer_diameter', 'outer_diameter_units']
 
+EMPTY_COMPONENT_GUI_STRING = "6,-1,0,3,0,3"
 
-class DrillStringComponent(object):
+class DrillStringComponent(JSONEncoder):
     """
     ..:warning: there is possibility for error here as the length_in_meters
     applies a roundoff on each component, the roundoff should happen after summation.
@@ -72,7 +73,7 @@ class DrillStringComponent(object):
         length
 
     """
-    def __init__(self, attributes_list=None, gui_string=None, attributes_dict=None):
+    def __init__(self, attributes_list=None, gui_string=EMPTY_COMPONENT_GUI_STRING, attributes_dict=None):
         self._component_type = None
         self._installation = None
         self._length = None
@@ -82,14 +83,20 @@ class DrillStringComponent(object):
         self.gui_number = None
         self.gui_string = gui_string
         self.label = None   # collar, bit_sub
+        if gui_string is not None:
+            self.populate_from_gui_string()
         if attributes_list is not None:
             self.populate_from_attributes_list(attributes_list)
         if attributes_dict is not None:
             self.populate_from_attributes_dict(attributes_dict)
+
+    def default(self):
+        return self.to_dict()
     
     @property
     def od(self):
         return self._outer_diameter
+
     
     def populate_from_attributes_list(self, attributes_list):
         """
@@ -124,6 +131,15 @@ class DrillStringComponent(object):
 
     def _to_json(self):
         return
+
+    def to_dict(self):
+        component_as_dict = {"status": self._installation,
+                              "label": self.label,
+                              "length": {"units": self._length_units, "value": self._length},
+                              "outer_diameter": {"units": self._outer_diameter_units, "value": self._outer_diameter},
+                              "type": self._component_type,
+                              "id": self.gui_number}
+        return component_as_dict
 
     def from_json(self, jsonthingy):
         """

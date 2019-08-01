@@ -20,7 +20,6 @@ import shutil
 import subprocess
 import serial
 import logging
-from dcrhino3.models.metadata import Metadata
 import multiprocessing
 import glob2
 from dcrhino3.models.config2 import Config
@@ -54,10 +53,10 @@ def stop_rx(active, baud_rate):
         cport.close()
         logging.info("Serial Port Closed")
         m = ("{}: SERIAL PORT CLOSED".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
-        print (m)
+        logger.info(m)
         if active:
             m = ("{}: ACQUISITION STOPPED".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
-            print (m)
+            logger.info(m)
     except:
         pass
 
@@ -70,7 +69,7 @@ def rename_temp_files(data_path):
         for file in temp_files:
             if "RTA" in file or "RTR" in file:
                 new_name = file.replace(".tmp", ".h5")
-                print("Renaming {} to {}".format(file, new_name))
+                logger.debug("Renaming {} to {}".format(file, new_name))
                 shutil.move(file, new_name)
     except:
         pass
@@ -103,9 +102,9 @@ class GUI():
         master.title("DataCloud Rhino Version 3")
         master.resizable(width=False, height=False)
         Label(master, text="Rhino Configuration").grid(row=row)
-        # Button(master, text='Settings', command=self.rhino_installation_settings).grid(row=row, column=1,
-        #                                                                                sticky="ew", pady=4,
-        #                                                                                columnspan=1)
+        Button(master, text='Settings', command=self.rhino_installation_settings).grid(row=row, column=1,
+                                                                                       sticky="ew", pady=4,
+                                                                                       columnspan=1)
         row += 1
 
         Label(master, text="Acquisition").grid(row=row)
@@ -123,12 +122,12 @@ class GUI():
         row += 1
 
         Label(master, text="Upload Files").grid(row=row)
-        # Button(master, text='Go', command=self.rsync_daemon).grid(row=row, column=1, sticky="ew", pady=4)
-        # Button(master, text='Stop', command=self.rsync_daemon_stop).grid(row=row, column=2, sticky="ew", pady=4)
+        Button(master, text='Go', command=self.rsync_daemon).grid(row=row, column=1, sticky="ew", pady=4)
+        Button(master, text='Stop', command=self.rsync_daemon_stop).grid(row=row, column=2, sticky="ew", pady=4)
         row += 1
 
         Label(master, text="Fix Headers").grid(row=row)
-        # Button(master, text='Go', command=self.update_h5_headers).grid(row=row, column=1, sticky="ew", pady=4)
+        Button(master, text='Go', command=self.update_h5_headers).grid(row=row, column=1, sticky="ew", pady=4)
         row += 1
 
         Button(master, text='Exit', command=self.exit).grid(row=row, column=1, sticky="ew", pady=4)

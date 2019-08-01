@@ -12,7 +12,12 @@ from datetime import datetime
 from dcrhino3.models.metadata import Metadata
 import json
 from dcrhino3.models.config2 import Config
+from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
+from dcrhino3.helpers.config_file_helper import update_global_config
 import h5py
+
+logger = init_logging(__name__)
+file_logger = init_logging_to_file(__name__)
 
 
 def save_np_array_to_h5_file(h5, key, np_array, close_file=False):
@@ -35,6 +40,7 @@ def save_np_array_to_h5_file(h5, key, np_array, close_file=False):
     if close_file:
         h5file.close()
 
+
 def save_dataframe_to_h5_file(h5, dataframe, close_file=False):
     if isinstance(h5, h5py._hl.files.File):
         h5file = h5
@@ -45,6 +51,23 @@ def save_dataframe_to_h5_file(h5, dataframe, close_file=False):
         save_np_array_to_h5_file(h5file, key, data_array)
     if close_file:
         h5file.close()
+
+def replace_value_in_h5_key(h5, key, array, close_file=False):
+    if isinstance(h5, h5py._hl.files.File):
+        h5file = h5
+    else:
+        h5file = h5py.File(h5, "a")
+    if key in h5file.keys():
+        del h5file[key]
+
+    ds = h5file.create_dataset(key, data=array, chunks=True, dtype=array.dtype, maxshape=(None,),
+                               compression="gzip",
+                               compression_opts=9)
+    ds[:] = array
+    h5file.flush()
+    if close_file:
+        h5file.close()
+
 
 class H5Helper:
     """
@@ -57,7 +80,7 @@ class H5Helper:
         load_xyz (boolean): true to load xyz data
     """
 
-    def __init__(self, h5f, load_xyz=True, load_ts=True, config=None, actions="r+"):
+    def __init__(self, h5f, load_xyz=True, load_ts=True, config=None):
 
         self.h5f = h5f
         # self.metadata = self._extract_metadata_from_h5_file()
@@ -138,6 +161,12 @@ class H5Helper:
         else:
             save_dataframe_to_h5_file(h5file, dataframe, close_file)
 
+    def replace_value_in_h5_key(self, key, array, h5file=None, close_file=False):
+        if h5file is None:
+            replace_value_in_h5_key(self.h5f, key, array, close_file)
+        else:
+            replace_value_h5_key(h5file, key, array, close_file)
+
     def close_h5f(self):
         self.h5f.close()
 
@@ -197,9 +226,11 @@ class H5Helper:
             return [1, 1, 1]
 
     def _extract_global_config_from_h5_file(self):
+        if "global_config_jsons" not in self.h5f.attrs:
+            return None
         global_config_json = json.loads(self.h5f.attrs["global_config_jsons"])
         keys = global_config_json.keys()
-        first_config = json.loads(global_config_json[keys[0]])
+        first_config = global_config_json[keys[0]]
         c = Config()
         c.set_data_from_json(first_config)
         return c
@@ -213,6 +244,9 @@ class H5Helper:
         json_dict = {"0": config_to_save.pipeline_files_to_dict}
         self.h5f.attrs['global_config_jsons'] = json.dumps(json_dict)
         self.h5f.flush()
+
+    def update_global_config(self, config, file_id="0"):
+        update_global_config(self.h5f, config, file_id)
 
     def extract_metadata_from_h5_file_as_json(self):
         return json.dumps(self.extract_metadata_from_h5_file_as_dict(), indent=4)
