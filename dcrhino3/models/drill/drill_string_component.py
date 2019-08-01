@@ -16,6 +16,8 @@ incehes, meters cm
 
 see
 https://datacloudintl.atlassian.net/wiki/spaces/RHINO/pages/139526154/Configuration+File+Definition
+
+@Natal: why do we need these integers codes? is this a gui thing?
 """
 
 
@@ -26,18 +28,12 @@ import datetime
 import os
 import pdb
 
-#from dcrhino3.models.interval import Interval
-
 from dcrhino3.helpers.general_helper_functions import init_logging, add_inverse_dictionary
 from dcrhino3.models.drill.drill_helper_functions import LengthMeasurement as Measurement
 from dcrhino3.models.drill.drill_helper_functions import LENGTH_UNITS
 
 logger = init_logging(__name__)
 
-"""
-@Natal: why do we need these integers codes? is this a gui thing?
--
-"""
 DRILL_STRING_COMPONENT_TYPES = {}
 DRILL_STRING_COMPONENT_TYPES[1] = 'bit'
 DRILL_STRING_COMPONENT_TYPES[2] = 'collar'
@@ -59,7 +55,7 @@ NUM_DRILL_STRING_COMPONENTS_SUPPORTED = 10
 ORDERED_GUI_STRING_ELEMENTS = ['component_type', 'installation', 'length',
                                 'length_units', 'outer_diameter', 'outer_diameter_units']
 
-EMPTY_COMPONENT_GUI_STRING = "6,0,0,3,0,3"
+EMPTY_COMPONENT_GUI_STRING = "6,-1,0,3,0,3"
 
 class DrillStringComponent(object):
     """
@@ -73,7 +69,8 @@ class DrillStringComponent(object):
         length
 
     """
-    def __init__(self, attributes_list=None, gui_string=EMPTY_COMPONENT_GUI_STRING):
+    def __init__(self, attributes_list=None, gui_string=EMPTY_COMPONENT_GUI_STRING,
+                 attributes_dict=None):
         self._component_type = None
         self._installation = None
         self._length = None
@@ -92,8 +89,11 @@ class DrillStringComponent(object):
 
     @property
     def _type(self):
+        """
+        HACK ALERT!  calls to _type should be replaced with calls to self.component_type() in future
+        """
         return self._component_type
-    
+
     def populate_from_attributes_list(self, attributes_list):
         """
         """
