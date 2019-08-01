@@ -80,7 +80,7 @@ def jazz2(mini_trace, expected_trough_duration):
 
     return left_trough_dw, right_trough_dw, positive_peak_dw, tick_times, missed_zero_crossing
 
-def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='', sanity_check_plot=False):
+def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='', sanity_check_plot=False, method='discrete'):
     """
     This method expects a trace and a time corresponding to a wavelet maxima.  It will measure the width of the peak
     and of the two troughs left and right of the peak.  It will also calculate the absolute area under curve for
@@ -100,7 +100,7 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
         the zero-crossing times left and right of peak (these are common to jazz2)
     """
     missed_zero_crossing = False
-    sanity_check_plot = False
+    sanity_check_plot = True
 
     mini_center_index = np.where(symmetric_trace.time_vector == center_time)[0][0]
     mini_trace = symmetric_trace.trim_to_new_center_index(mini_center_index)
@@ -108,38 +108,37 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
 
     #<Basically Here is Aborted Jazz2>
     left_trough_dw, right_trough_dw, positive_peak_dw, tick_times, missed_zero_crossing = jazz2(mini_trace, expected_trough_duration)
+    print(method)
+    if method=='discrete':
+        d_left_trough = np.diff(left_trough_dw.data)  # slopes
+        sign_d_left_trough = np.sign(d_left_trough)  # signs of slopes
+        d_sign_d_left_trough = np.diff(sign_d_left_trough)
+        left_jazz3_trough_ndx = np.where(d_sign_d_left_trough == 2)[0][-1]  # where slopes change +/-
+        left_jazz3_trough_ndx += 1 #off by 1 from derivative
+        t_left_half_trough = left_trough_dw.time[left_jazz3_trough_ndx:]
+        left_half_trough = left_trough_dw.data[left_jazz3_trough_ndx:]
+        left_half_trough_dw = DataWindow(t_left_half_trough, left_half_trough)
 
-    d_left_trough = np.diff(left_trough_dw.data)  # slopes
-    sign_d_left_trough = np.sign(d_left_trough)  # signs of slopes
-    d_sign_d_left_trough = np.diff(sign_d_left_trough)
-    left_jazz3_trough_ndx = np.where(d_sign_d_left_trough == 2)[0][-1]  # where slopes change +/-
-    left_jazz3_trough_ndx += 1 #off by 1 from derivative
-    t_left_half_trough = left_trough_dw.time[left_jazz3_trough_ndx:]
-    left_half_trough = left_trough_dw.data[left_jazz3_trough_ndx:]
-    left_half_trough_dw = DataWindow(t_left_half_trough, left_half_trough)
+        d_right_trough = np.diff(right_trough_dw.data)  # slopes
+        sign_d_right_trough = np.sign(d_right_trough)  # signs of slopes
+        d_sign_d_right_trough = np.diff(sign_d_right_trough)
+        right_jazz3_trough_ndx = np.where(d_sign_d_right_trough == 2)[0][0]  # where slopes change +/-
+        right_jazz3_trough_ndx += 1 #off by 1 from derivative
+        t_right_half_trough = right_trough_dw.time[:right_jazz3_trough_ndx]
+        right_half_trough = right_trough_dw.data[:right_jazz3_trough_ndx]
+        right_half_trough_dw = DataWindow(t_right_half_trough, right_half_trough)
 
-    d_right_trough = np.diff(right_trough_dw.data)  # slopes
-    sign_d_right_trough = np.sign(d_right_trough)  # signs of slopes
-    d_sign_d_right_trough = np.diff(sign_d_right_trough)
-    right_jazz3_trough_ndx = np.where(d_sign_d_right_trough == 2)[0][0]  # where slopes change +/-
-    right_jazz3_trough_ndx += 1 #off by 1 from derivative
-    t_right_half_trough = right_trough_dw.time[:right_jazz3_trough_ndx]
-    right_half_trough = right_trough_dw.data[:right_jazz3_trough_ndx]
-    right_half_trough_dw = DataWindow(t_right_half_trough, right_half_trough)
-
+    elif method=='analytic':
+        print('workign on this method --in progrss')
+        raise Exception
+    else:
+        error_msg = "unknown method {}".format(method)
+        print(error_msg)
     if sanity_check_plot:
         print('sanity check')
         ttl_string = '{} {}'.format(symmetric_trace.component_id, wavelet_id)
-
-        t_left_trough = left_trough_dw.time
-        left_trough = left_trough_dw.data
-        t_positive_peak = positive_peak_dw.time
-        positive_peak = positive_peak_dw.data
-        t_right_trough = right_trough_dw.time
-        right_trough = right_trough_dw.data
-        sanity_check_plot_jazz3(t_left_trough, left_trough, t_positive_peak, positive_peak,
-                                t_right_trough, right_trough,t_left_half_trough, left_half_trough,
-                                t_right_half_trough, right_half_trough,
+        sanity_check_plot_jazz3(left_trough_dw, positive_peak_dw, right_trough_dw,
+                                left_half_trough_dw, right_half_trough_dw,
                                 expected_trough_duration, tick_times, ttl_string)
 
     left_integral = np.sum(np.abs(left_trough_dw.data)) * symmetric_trace.dt
