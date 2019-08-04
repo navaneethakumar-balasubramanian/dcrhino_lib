@@ -122,12 +122,13 @@ def process_glob(default_process_json, glob_str,
                                                        return_dict = {})
                 process_json = ww
 
-            p = Process(target=process_flow.process_file,
-                        args=(process_json, h5_file_path,
-                             env_config, seconds_to_process,return_dict))
-            p.start()
-            p.join()
-            process_json = return_dict["process_json"]
+            else:
+                p = Process(target=process_flow.process_file,
+                            args=(process_json, h5_file_path,
+                                 env_config, seconds_to_process,return_dict))
+                p.start()
+                p.join()
+                process_json = return_dict["process_json"]
 
     if processes is not False:
         p = Pool(int(processes))
