@@ -49,11 +49,15 @@ class MWDHelper():
         Returns:
             (Series): mine_mwd['bench_name', 'pattern_name', 'hole_name', 'hole_id'], the data for a specific hole.
         """
+        #pdb.set_trace()
         cond1 = mine_mwd['bench_name'].astype(str) == str(bench_name)
         cond2 = mine_mwd['pattern_name'].astype(str) == str(pattern_name)
         cond3 = mine_mwd['hole_name'].astype(str) == str(hole_name)
         cond4 = mine_mwd['hole_id'].astype(str) == str(hole_id)
-        return mine_mwd[cond1 & cond2 & cond3 & cond4]
+        hole_mwd = mine_mwd[cond1 & cond2 & cond3 & cond4]
+        if len(hole_mwd) == 0:
+            logger.warning("Hole MWD obtained from Mine MWD is empty")
+        return hole_mwd
 
     def get_mwd_from_csv(self,file_path):
         """
@@ -285,7 +289,6 @@ class MWDHelper():
         Returns:
             (boolean): True if columns are present, False if one or more columns is missing
         """
-
         for col in self.required_columns:
             if col not in mwd_df.columns:
                 logger.warn("MISSING COLUMN:" + col + " ON DATACLOUD DEFAULT DF")
@@ -346,7 +349,8 @@ class MWDHelper():
             mwd_df['hole_name'] = mwd_df.hole_id
         return mwd_df
 
-    def get_rhino_mwd_from_mine_name(self,mine_name,date_start = False,date_end = False,limit=False):
+    def get_rhino_mwd_from_mine_name(self, mine_name, date_start=False,
+                                     date_end=False, limit=False):
         """
         Retrieves mwd from .csv or database connection, remaps,
         adds columns, standardizes format/names for downstream functions.
