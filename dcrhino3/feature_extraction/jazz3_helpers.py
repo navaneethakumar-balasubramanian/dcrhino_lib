@@ -20,28 +20,26 @@ from dcrhino3.feature_extraction.jazz_with_zero_crossings import semi_theoretica
 
 
 
+class DataWindow(object):
+    def __init__(self, time, data):
+        self.time = time
+        self.data = data
 
 
-#def sanity_check_plot_jazz3(left_trough, positive_peak, right_trough,
-#                            t_left_trough, t_positive_peak, t_right_trough,
-#                            expected_trough_duration, tick_times, ttl_string,
-#                            t_left_half_trough, left_half_trough,
-#                            t_right_half_trough, right_half_trough ):
-def sanity_check_plot_jazz3(t_left_trough, left_trough, t_positive_peak, positive_peak,
-                                t_right_trough, right_trough,t_left_half_trough, left_half_trough,
-                                t_right_half_trough, right_half_trough,
+def sanity_check_plot_jazz3(left_trough_dw, positive_peak_dw, right_trough_dw,
+                            left_half_trough_dw, right_half_trough_dw,
                                 expected_trough_duration, tick_times, ttl_string):
-    wiggly_wiggle = np.hstack((left_trough, positive_peak, right_trough))
+    wiggly_wiggle = np.hstack((left_trough_dw.data, positive_peak_dw.data, right_trough_dw.data))
     tick_heights = 0.1 * np.ptp(wiggly_wiggle)
     fig, ax = plt.subplots(1, 1)
 
     tick_times_semi_theoretical = semi_theoretical_tick_times(tick_times, expected_trough_duration)
-    ax.plot(t_left_trough, left_trough, label='left');
-    ax.plot(t_positive_peak, positive_peak, label='peak');
-    ax.plot(t_right_trough, right_trough, label='right');
-    ax.plot(t_left_half_trough, left_half_trough, label='jazz3_left', color='cyan', linewidth=3.4)
-    ax.plot(t_right_half_trough, right_half_trough, label='jazz3_right', color='cyan', linewidth=3.4)
-    ax.hlines(0, t_left_trough[0], t_right_trough[-1], color='black');
+    ax.plot(left_trough_dw.time, left_trough_dw.data, label='left');
+    ax.plot(positive_peak_dw.time, positive_peak_dw.data, label='peak');
+    ax.plot(right_trough_dw.time, right_trough_dw.data, label='right');
+    ax.plot(left_half_trough_dw.time, left_half_trough_dw.data, label='jazz3_left', color='cyan', linewidth=3.4)
+    ax.plot(right_half_trough_dw.time, right_half_trough_dw.data, label='jazz3_right', color='cyan', linewidth=3.4)
+    ax.hlines(0, left_trough_dw.time[0], right_trough_dw.time[-1], color='black');
     ax.vlines(tick_times, -tick_heights/2, tick_heights/2, color='lime', label='ticktimes')
     ax.vlines([tick_times[1]-expected_trough_duration, tick_times[2]+expected_trough_duration],
               -tick_heights / 2, tick_heights / 2, color='purple')
@@ -49,9 +47,9 @@ def sanity_check_plot_jazz3(t_left_trough, left_trough, t_positive_peak, positiv
     ax.set_xlabel('Wavelet Amplitude')
     ax.legend();
     ax.set_title(ttl_string)
-    ax.fill_between(t_left_trough, left_trough, where=t_left_trough> tick_times_semi_theoretical[0],
+    ax.fill_between(left_trough_dw.time, left_trough_dw.data, where=left_trough_dw.time> tick_times_semi_theoretical[0],
                     facecolor='green', interpolate=True)
-    ax.fill_between(t_right_trough, right_trough, where=t_right_trough < tick_times_semi_theoretical[3],
+    ax.fill_between(right_trough_dw.time, right_trough_dw.data, where=right_trough_dw.time < tick_times_semi_theoretical[3],
                     facecolor='red', interpolate=True)
     plt.show(block=True)
     #plt.show()

@@ -13,10 +13,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pdb
+import socket
+
+hostname = socket.gethostname()
 
 home = os.path.expanduser("~/")
-dc_cache_path = os.path.join(home, '.cache', 'datacloud')
-dc_rhino_lib_dir = os.path.join(home, 'software/datacloud/dcrhino_lib')
+
+if hostname == 'dcrhino-dev':
+    dc_cache_path = os.path.join('/data')
+    dc_rhino_lib_dir = os.path.join(home, 'dcrhino_lib')
+else:
+    dc_cache_path = os.path.join(home, '.cache', 'datacloud')
+    dc_rhino_lib_dir = os.path.join(home, 'software/datacloud/dcrhino_lib')
 bin_dir = os.path.join(dc_rhino_lib_dir, 'bin')
 
 env_path = os.path.join(bin_dir, 'env_config.json')
@@ -38,6 +46,12 @@ bma_acorr_folder = os.path.join(bma_data_cache_path, 'acorr')
 bmc_data_cache_path = os.path.join(dc_cache_path, 'bmc')
 south_walker_creek_data_cache_path = os.path.join(bmc_data_cache_path, 'south_walker_creek')
 south_walker_creek_acorr_folder = os.path.join(south_walker_creek_data_cache_path, 'acorr')
+
+bhp_data_cache_path = os.path.join(dc_cache_path, 'bhp')
+eastern_ridge_data_cache_path = os.path.join(bhp_data_cache_path, 'eastern_ridge')
+eastern_ridge_acorr_folder = os.path.join(eastern_ridge_data_cache_path, 'acorr')
+eastern_ridge_mwd_folder = os.path.join(eastern_ridge_data_cache_path, 'mwd')
+eastern_ridge_mwd_filehandle = os.path.join(eastern_ridge_mwd_folder, 'mwd.csv')
 
 def my_function():
     """

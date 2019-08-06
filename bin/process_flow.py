@@ -21,6 +21,7 @@ os.environ['OMP_NUM_THREADS'] = '1'
 ## HACK TO WORK ON SERVERS NON INTERACTIVE MODE
 import matplotlib
 matplotlib.use('Svg')
+#matplotlib.use('TkAgg')
 
 
 
@@ -53,8 +54,8 @@ file_logger = init_logging_to_file(__name__)
 def process(list_of_args):
     try:
         process_flow = list_of_args[0]
-        qq, ww, results_dict = process_flow.process_file(list_of_args[1], 
-                                                         list_of_args[2], 
+        qq, ww, results_dict = process_flow.process_file(list_of_args[1],
+                                                         list_of_args[2],
                                                          env_config=list_of_args[3],
                                                          seconds_to_process=list_of_args[4],
                                                          return_dict=dict())
@@ -66,11 +67,11 @@ def process(list_of_args):
 
 
 def process_glob(default_process_json, glob_str,
-                 env_config_path="env_config.json", seconds_to_process=False, 
-                 processes=False, photo_folder=False, DEBUG=True):
+                 env_config_path="env_config.json", seconds_to_process=False,
+                 processes=False, photo_folder=False, DEBUG=False):
     """
     repairing redundant logic, 20190718
-    process_queue: 
+    process_queue:
     """
 
     env_config = EnvConfig(env_config_path)
@@ -88,8 +89,8 @@ def process_glob(default_process_json, glob_str,
         logger.warning('File does not exist: {}'.format(glob_str))
         return
     files_list = [x for x in files_list if not env_config.is_file_blacklisted(x)]
-    
-    
+
+
     la_lista = []
     for ffile in files_list:
         if ".txt" in ffile:
@@ -110,9 +111,9 @@ def process_glob(default_process_json, glob_str,
         print('Processing ' + h5_file_path + ' using ' + process_json['id'])
 
         if processes is not False:
-            temp = [process_flow,process_json, h5_file_path, env_config, 
+            temp = [process_flow,process_json, h5_file_path, env_config,
                     seconds_to_process, return_dict]
-            process_queue.append(temp)            
+            process_queue.append(temp)
         else:
             if DEBUG:
                 qq, ww, ee = process_flow.process_file(process_json, h5_file_path,
@@ -120,14 +121,15 @@ def process_glob(default_process_json, glob_str,
                                                        seconds_to_process=seconds_to_process,
                                                        return_dict = {})
                 process_json = ww
-            
-            p = Process(target=process_flow.process_file,
-                        args=(process_json, h5_file_path,
-                             env_config, seconds_to_process,return_dict))
-            p.start()
-            p.join()
-            process_json = return_dict["process_json"]
-        
+
+            else:
+                p = Process(target=process_flow.process_file,
+                            args=(process_json, h5_file_path,
+                                 env_config, seconds_to_process,return_dict))
+                p.start()
+                p.join()
+                process_json = return_dict["process_json"]
+
     if processes is not False:
         p = Pool(int(processes))
         results = p.map(process, process_queue)
