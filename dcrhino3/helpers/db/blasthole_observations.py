@@ -15,11 +15,11 @@ class BlastholeObservations(BaseDbModel):
         return sql
 
     def get_bo_to_update_acorr(self):
-        sql = "SELECT bo.*,af.filename,af.created_at FROM blasthole_observations bo LEFT OUTER JOIN acorr_files af ON (af.bo_id = bo.bo_id) WHERE bo.solution != '' AND (af.created_at is NULL OR af.created_at < bo.updated_at)"
+        sql = "SELECT bo.*,af.filename,af.created_at FROM blasthole_observations bo LEFT JOIN acorr_files af ON (af.bo_id = bo.bo_id) WHERE bo.solution != '' AND (af.created_at is NULL OR af.created_at < bo.updated_at)"
         return self.query_to_df(sql)
 
     def get_all_with_solution(self):
-        sql = "SELECT bo.*,af.filename,af.created_at FROM blasthole_observations bo LEFT OUTER JOIN acorr_files af ON (af.bo_id = bo.bo_id) WHERE bo.solution != ''"
+        sql = "SELECT bo.*,af.filename,af.created_at FROM blasthole_observations bo LEFT JOIN acorr_files af ON (af.bo_id = bo.bo_id) WHERE bo.solution != ''"
         return self.query_to_df(sql)
 
 
