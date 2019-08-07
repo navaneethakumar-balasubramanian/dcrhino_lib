@@ -31,7 +31,7 @@ class AcorrFiles(BaseDbModel):
             self.add(hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,filename,min_ts,max_ts,bo_id)
 
     def update(self,rig_id,digitizer_id,filename,min_ts,max_ts,bo_id):
-        sql = "UPDATE " + self.table_name + " set (rig_id=%s, digitizer_id=%s, filename=%s, min_ts=%s, max_ts=%s) where bo_id=%s"
+        sql = "UPDATE " + self.table_name + " set rig_id=%s, digitizer_id=%s, filename=%s, min_ts=%s, max_ts=%s where bo_id=%s"
         val = (rig_id, digitizer_id, filename, min_ts, max_ts, bo_id)
         try:
             cursor = self.conn.cursor()
