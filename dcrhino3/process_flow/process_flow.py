@@ -56,7 +56,7 @@ from dcrhino3.process_flow.modules.hybrid.phase_balance_trace_hybrid import Phas
 from dcrhino3.process_flow.modules.hybrid.feature_extract_hybrid import FeatureExtractJ2Hybrid
 
 from dcrhino3.unstable.multipass_util import update_acorr_with_resonance_info
-from dcrhino3.unstable.hacks.bma_hack import bma_hack_20190606
+#from dcrhino3.unstable.hacks.bma_hack import bma_hack_20190606
 from dcrhino3.unstable.multipass_util import get_depths_at_which_steels_change
 
 
@@ -78,6 +78,10 @@ class ProcessFlow:
         self.modules = active_process_flow_modules
     ..:: ToDo: @Thiago: can we replace self.actual_module with self.i_module?  
     its an integer.  the we can rename module to active_module
+    ..:: ToDo: The name 'subsets' is really ambiguous.  Can we replace 
+    think up something that says what it is ... subsets of the blasthole to process
+    with different parameters because the steels lengths are different ... 
+    "drill_config_subsets"??
     """
     def __init__(self, output_path=""):
         self.id = "process_flow"
@@ -258,7 +262,10 @@ class ProcessFlow:
         return os.path.join(temp_output_path, str(self.datetime_str + "_" + process_flow_json['id']))
 
 
-    def process_file(self,process_json, acorr_h5_file_path, env_config = False, seconds_to_process = False,return_dict = dict()):
+    def process_file(self, process_json, acorr_h5_file_path, env_config = False, 
+                     seconds_to_process=False, return_dict=dict()):
+        """
+        """
         logger.info("PROCESSING FILE:" + str(acorr_h5_file_path))
         acorr_trace = TraceData()
         acorr_trace.load_from_h5(acorr_h5_file_path)
@@ -276,7 +283,7 @@ class ProcessFlow:
         if seconds_to_process is not False:
             acorr_trace.dataframe = acorr_trace.dataframe[:seconds_to_process]
         splitted_subsets = self.split_subsets(process_json,process_json['subsets'],acorr_trace)
-        print("FoUnD {} subsets".format(len(splitted_subsets))  )
+        logger.info("FoUnD {} subsets".format(len(splitted_subsets))  )
 
         for i,subset in enumerate(splitted_subsets):
 
