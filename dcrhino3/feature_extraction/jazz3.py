@@ -155,7 +155,7 @@ def jazz3(symmetric_trace, center_time, expected_trough_duration, wavelet_id='',
     elif method=='analytic':
         poly_order = 17
         #jazz3_ticks = np.full(4, np.nan)
-        print('workign on this method --in progrss')
+        #print('workign on this method --in progrss')
         wiggly_wiggle = np.hstack((left_trough_dw.data, positive_peak_dw.data, right_trough_dw.data))
         t_wiggly_wiggle = np.hstack((left_trough_dw.time, positive_peak_dw.time, right_trough_dw.time))
         wavelet = DataWindow(t_wiggly_wiggle, wiggly_wiggle)
