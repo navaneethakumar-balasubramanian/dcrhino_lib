@@ -26,11 +26,11 @@ class AcorrFiles(BaseDbModel):
 
     def add_or_update(self,hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,filename,min_ts,max_ts,bo_id):
         if self.bo_id_exists(bo_id):
-            self.update(self,hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,filename,min_ts,max_ts,bo_id)
+            self.update(rig_id,digitizer_id,filename,min_ts,max_ts,bo_id)
         else:
-            self.add(self,hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,filename,min_ts,max_ts,bo_id)
+            self.add(hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,filename,min_ts,max_ts,bo_id)
 
-    def update(self,hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,filename,min_ts,max_ts,bo_id):
+    def update(self,rig_id,digitizer_id,filename,min_ts,max_ts,bo_id):
         sql = "UPDATE " + self.table_name + " set (rig_id=%s, digitizer_id=%s, filename=%s, min_ts=%s, max_ts=%s) where bo_id=%s"
         val = (rig_id, digitizer_id, filename, min_ts, max_ts, bo_id)
         try:
