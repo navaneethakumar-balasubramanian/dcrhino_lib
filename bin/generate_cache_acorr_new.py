@@ -214,7 +214,7 @@ if __name__ == '__main__':
         mine_name = args.mine_name
         env_config_path = args.env_config_path
         processes = args.mp_processes
-        bo_id = args.match_id
+        bo_id = args.bo_id
         force_regen = args.force_regen
     else:
         mine_name = 'eastern_ridge'
