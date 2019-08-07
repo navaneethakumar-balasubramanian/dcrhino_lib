@@ -214,18 +214,22 @@ if __name__ == '__main__':
         mine_name = args.mine_name
         env_config_path = args.env_config_path
         processes = args.mp_processes
-        bo_id = args.bo_id
+        bo_id = args.match_id
+        force_regen = args.force_regen
     else:
-        mine_name = ''
+        mine_name = 'eastern_ridge'
+        force_regen = True
+        bo_id = False
+        processes = False
 
     env_config = EnvConfig()
     mwd_helper = MWDHelper(env_config)
-    mwd_df = mwd_helper.get_rhino_mwd_from_mine_name(args.mine_name)
+    mwd_df = mwd_helper.get_rhino_mwd_from_mine_name(mine_name)
     if mwd_df is not False:
         merger = MWDRhinoMerger(None,None,False)
         sqlconn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
         sql_db_helper = RhinoSqlHelper(**sqlconn)
-        if args.force_regen:
+        if force_regen:
             matches_df = sql_db_helper.blasthole_observations.get_all_with_solution()
         else:
             matches_df = sql_db_helper.blasthole_observations.get_bo_to_update_acorr()
@@ -238,9 +242,9 @@ if __name__ == '__main__':
                 if processes is not False:
                     processes_queue.append([line,env_config,args.mine_name,files_df,mwd_df,mwd_helper,sql_db_helper])
                 else:
-                    process_match_line(line, env_config, args.mine_name, files_df, mwd_df, mwd_helper,sql_db_helper)
+                    process_match_line(line, env_config, mine_name, files_df, mwd_df, mwd_helper,sql_db_helper)
 
         if processes is not False:
             p = Pool(int(processes))
             p.map(process, processes_queue)
-        # matches_df.apply(process_match_line, axis=1,args=(env_config,args.mine_name,files_df,mwd_df,mwd_helper))
+
