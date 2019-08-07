@@ -181,7 +181,7 @@ def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper,sql_
         except:
             pass
         logger.info("File saved at " + h5_path)
-        sql_db_helper.acorr_files.add(td.hole_id, td.sensor_id, td.bench_name,
+        sql_db_helper.acorr_files.add_or_update(td.hole_id, td.sensor_id, td.bench_name,
                                   td.pattern_name, td.hole_name, td.rig_id,
                                   td.digitizer_id, h5_path, int(td.min_ts), int(td.max_ts),line.bo_id)
         try:
@@ -208,13 +208,13 @@ if __name__ == '__main__':
         argparser.add_argument("-env", '--env_config_path', help="Path to optional env config file", default=False)
         argparser.add_argument("-m", '--matches_output_path', help="Path to optional matches file", default=False)
         argparser.add_argument('-mp', '--mp-processes', help="MULTIPROCESSING PROCESSES", default=False)
-        argparser.add_argument('-mid', '--match-id', help="Match id", default=False)
+        argparser.add_argument('-boid', '--bo-id', help="Blasthole observations id", default=False)
         argparser.add_argument("-force", "--force-regen", action="store_true",help="Force to regenerate files")
         args = argparser.parse_args()
         mine_name = args.mine_name
         env_config_path = args.env_config_path
         processes = args.mp_processes
-        bo_id = args.match_id
+        bo_id = args.bo_id
     else:
         mine_name = ''
 
