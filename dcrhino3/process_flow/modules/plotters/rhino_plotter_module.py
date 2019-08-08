@@ -1,13 +1,14 @@
-from dcrhino3.process_flow.modules.base_module import BaseModule
-from dcrhino3.plotters.rhino_display_v3.rhino_display import RhinoDisplay
-from dcrhino3.plotters.rhino_display_v3.rhino_display_panel import Header, Heatmap, Curve, Wiggle
-from dcrhino3.models.drill.drill_types import DrillTypes
-from dcrhino3.models.drill.bit_types import BitTypes
-from dcrhino3.models.sensor_installation_locations import SensorInstallationLocations
+import datetime
 import matplotlib.pyplot as plt
 import pandas as pd
 
 from dcrhino3.helpers.general_helper_functions import init_logging, is_string
+from dcrhino3.models.drill.drill_types import DrillTypes
+from dcrhino3.models.drill.bit_types import BitTypes
+from dcrhino3.models.sensor_installation_locations import SensorInstallationLocations
+from dcrhino3.process_flow.modules.base_module import BaseModule
+from dcrhino3.plotters.rhino_display_v3.rhino_display import RhinoDisplay
+from dcrhino3.plotters.rhino_display_v3.rhino_display_panel import Header, Heatmap, Curve, Wiggle
 
 logger = init_logging(__name__)
 
@@ -40,10 +41,14 @@ class RhinoPlotterModule(BaseModule):
         bit_type = BitTypes(transformed_args.bit_type).name
         sensor_location = SensorInstallationLocations(transformed_args.sensor_installation_location).name
 
+        start_timestamp = trace.dataframe.timestamp.iloc[0]
+        hole_start_datetime = datetime.datetime.fromtimestamp(start_timestamp)
+        #hole_start_date = hole_start_datetime.date()
+        #, format = '%Y%m%d.0'
         title_line1 = r"$\bf{"+ "SENSOR"+"}$"+": LOCATION: {}".format(sensor_location) +", SERIAL NUMBER: {}".format(transformed_args.sensor_serial_number)+'\n'+"SENSITIVITY: {}, ORIENTATION: <> ".format(transformed_args.sensor_saturation_g)
         title_line2 = r"$\bf{"+ "RIG/BIT/DRILLSTRING"+"}$"+": RIG TYPE: <>, RIG ID: {},".format(transformed_args.rig_id) + " DRILL TYPE: {},".format(drill_type)+'\n'+"BIT SIZE: {}/".format(transformed_args.bit_size)+" Type:{}".format(bit_type)+"/Model:{}".format(transformed_args.bit_model)+"/Tooth Length:<>,"+'\n'+" DRILL STRING LENGTH:{}".format(transformed_args.drill_string_total_length)
         title_line3 = "DISTANCE FROM BIT TO SENSOR: {}".format(transformed_args.sensor_distance_to_source,transformed_args.rig_id)
-        title_line4 = r"$\bf{"+"PROCESSFLOW"+"}$"+": "+process_flow_id+"\n"+r"$\bf{"+"MINE"+"}$"+": {},".format(transformed_args.mine_name)+ r"$\bf{"+"DATE:"+"}$"+ "{},".format(pd.to_datetime(trace.dataframe.start_time.iloc[0]),format='%Y%m%d.0')+'\n'+r"$\bf{"+" BENCH:"+"}$"+"{},".format(trace.dataframe.bench_name.iloc[0])+ r"$\bf{"+"HOLE:"+"}$"+ "{}" .format(trace.dataframe.hole_name.iloc[0])
+        title_line4 = r"$\bf{"+"PROCESSFLOW"+"}$"+": "+process_flow_id+"\n"+r"$\bf{"+"MINE"+"}$"+": {},".format(transformed_args.mine_name)+ r"$\bf{"+"DATE:"+"}$"+ "{},".format(hole_start_datetime)+'\n'+r"$\bf{"+" BENCH:"+"}$"+"{},".format(trace.dataframe.bench_name.iloc[0])+ r"$\bf{"+"HOLE:"+"}$"+ "{}" .format(trace.dataframe.hole_name.iloc[0])
 
         plot_title = [title_line4, title_line2+' '+title_line3, title_line1]
 

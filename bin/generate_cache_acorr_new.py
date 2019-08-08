@@ -10,37 +10,24 @@ os.environ['MKL_NUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 os.environ['OMP_NUM_THREADS'] = '1'
 
-
-#import json
-import numpy as np
-#import pandas as pd
-import pdb
-import os
 import argparse
+import json
+from multiprocessing import Pool
+import numpy as np
 import pandas as pd
+import pdb
 
-from multiprocessing import Process
-
-from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
+from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
 from dcrhino3.helpers.mwd_helper import MWDHelper
 from dcrhino3.helpers.mwd_rhino_merger import MWDRhinoMerger
+from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
+from dcrhino3.helpers.rhino_clickhouse_helper import ClickhouseHelper
+from dcrhino3.models.config import Config
 from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.models.trace_dataframe import TraceData
-from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
+
 
 logger = init_logging(__name__)
-
-from dcrhino3.models.traces.raw_trace import RawTraceData
-from dcrhino3.models.config import Config
-from dcrhino3.helpers.h5_helper import H5Helper
-from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
-import h5py
-import json
-import os
-from dcrhino3.models.traces.raw_trace import RawTraceData
-from multiprocessing import Pool
-from dcrhino3.helpers.rhino_clickhouse_helper import ClickhouseHelper
-
 
 file_logger = init_logging_to_file(__name__)
 
@@ -73,22 +60,11 @@ def merge_mwd_with_trace(hole_mwd, trace_data, merger):
     return merged
 
 
-
 def load_acorr_db(sensor_file_id, timestamp_min, timestamp_max,config_str, file_min_ts,clickhouse_helper):
 
 
     global_config = Config()
     global_config.set_data_from_json(json.loads(config_str))
-
-    #upsample_factor = 1.25
-    #try:
-    #    print(global_config.upsample_factor)
-    #except AttributeError:
-    #    logger.warning("this warning will be removed once the upsample factor is coming from the global cfg")
-    #    global_config.output_sampling_rate *= upsample_factor
-
-
-
 
     relative_timestamp_min = int(timestamp_min) - int(file_min_ts)
     relative_timestamp_max = int(timestamp_max) - int(file_min_ts)
@@ -99,31 +75,30 @@ def load_acorr_db(sensor_file_id, timestamp_min, timestamp_max,config_str, file_
     return df, global_config
 
 
-import pdb
-
-
 def generate_cache_acorr(matches_line,files,mwd_df,mwd_helper,env_config,mine_name):
     files_ids_to_load = np.array(matches_line.solution.split(',')).astype(int)
     files_to_load = files[files['sensor_file_id'].astype(int).isin(files_ids_to_load)]
     td = TraceData()
-    for file in files_to_load.iterrows():
-        #folder = env_config.get_sensor_files_storage_folder(mine_name)
-        #file_path = os.path.join(folder,str(file[1].sensor_file_id) + ".h5")
-        clickhouse_helper = ClickhouseHelper(conn=env_config.get_rhino_db_connection_from_mine_name(mine_name))
-        #output_df, global_config = load_acorr_file(file_path, matches_line.start_time_min, matches_line.start_time_max,file[1].config_str, file[1].min_ts)
-        output_df, global_config = load_acorr_db(file[1].sensor_file_id, matches_line.start_time_min, matches_line.start_time_max,
-                                                   file[1].config_str, file[1].min_ts,clickhouse_helper)
+    #pdb.set_trace()
+    for sensor_file in files_to_load.iterrows():
+        db_conn = env_config.get_rhino_db_connection_from_mine_name(mine_name)
+        clickhouse_helper = ClickhouseHelper(conn=db_conn)
+        output_df, global_config = load_acorr_db(sensor_file[1].sensor_file_id,
+                                                 matches_line.start_time_min,
+                                                 matches_line.start_time_max,
+                                                 sensor_file[1].config_str,
+                                                 sensor_file[1].min_ts,
+                                                 clickhouse_helper)
 
         for component_id in COMPONENT_IDS:
             output_df.rename(columns={ component_id + "_trace":component_id}, inplace=True)
-            # pdb.set_trace()
-        file_id = file[1].sensor_file_id
+        file_id = sensor_file[1].sensor_file_id
         output_df['acorr_file_id'] = file_id
-        if 'remap_columns' in json.loads(file[1].config_str).keys():
+        if 'remap_columns' in json.loads(sensor_file[1].config_str).keys():
             td_remmaped = pd.DataFrame()
             for column in output_df.columns:
-                if column in json.loads(file[1].config_str)['remap_columns'].keys():
-                    td_remmaped[column] = output_df[json.loads(file[1].config_str)['remap_columns'][column]]
+                if column in json.loads(sensor_file[1].config_str)['remap_columns'].keys():
+                    td_remmaped[column] = output_df[json.loads(sensor_file[1].config_str)['remap_columns'][column]]
                 else:
                     td_remmaped[column] = output_df[column]
             output_df = td_remmaped
@@ -215,17 +190,21 @@ if __name__ == '__main__':
         env_config_path = args.env_config_path
         processes = args.mp_processes
         bo_id = args.bo_id
+        force_regen = args.force_regen
     else:
-        mine_name = ''
+        mine_name = 'eastern_ridge'
+        force_regen = True
+        bo_id = False
+        processes = False
 
     env_config = EnvConfig()
     mwd_helper = MWDHelper(env_config)
-    mwd_df = mwd_helper.get_rhino_mwd_from_mine_name(args.mine_name)
+    mwd_df = mwd_helper.get_rhino_mwd_from_mine_name(mine_name)
     if mwd_df is not False:
         merger = MWDRhinoMerger(None,None,False)
         sqlconn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
         sql_db_helper = RhinoSqlHelper(**sqlconn)
-        if args.force_regen:
+        if force_regen:
             matches_df = sql_db_helper.blasthole_observations.get_all_with_solution()
         else:
             matches_df = sql_db_helper.blasthole_observations.get_bo_to_update_acorr()
@@ -238,9 +217,9 @@ if __name__ == '__main__':
                 if processes is not False:
                     processes_queue.append([line,env_config,args.mine_name,files_df,mwd_df,mwd_helper,sql_db_helper])
                 else:
-                    process_match_line(line, env_config, args.mine_name, files_df, mwd_df, mwd_helper,sql_db_helper)
+                    process_match_line(line, env_config, mine_name, files_df, mwd_df, mwd_helper,sql_db_helper)
 
         if processes is not False:
             p = Pool(int(processes))
             p.map(process, processes_queue)
-        # matches_df.apply(process_match_line, axis=1,args=(env_config,args.mine_name,files_df,mwd_df,mwd_helper))
+
