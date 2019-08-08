@@ -28,3 +28,5 @@ bin/temp\.csv
 
 dcrhino3/acquisition/external/dimmer/traindata/
 bin/original_mwd\.csv
+
+*.csv

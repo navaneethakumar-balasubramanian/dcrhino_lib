@@ -222,6 +222,11 @@ class MWDHelper():
 
         return conn_dict
 
+    def get_token(self):
+        r = requests.post('https://prod.datacloud.rocks/v1/auth', json={"username": 'admin', "password": 'pass123$$$'})
+        token = r.json()['token']
+        return token
+
     def get_dc_datasets_configs(self,subdomain):
         """
         Returns json, not dictionary, with database token and configuration.
@@ -232,8 +237,7 @@ class MWDHelper():
         Returns:
             (unicode): json containing token for database connection, credentials, configuration
         """
-        r = requests.post('https://prod.datacloud.rocks/v1/auth', json={"username":'admin', "password":'pass123$$$'})
-        token = r.json()['token']
+        token = self.get_token()
         headers = {'Authorization':'Bearer ' + token,'x-dc-subdomain':subdomain}
         r = requests.get('https://prod.datacloud.rocks/v1/viz/dataset_config',headers=headers)
         return r.json()
