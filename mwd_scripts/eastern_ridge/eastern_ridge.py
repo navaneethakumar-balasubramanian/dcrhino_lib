@@ -1,16 +1,20 @@
-import pandas as pd
-import sqlite3
-import os
-import math
+"""
+welcome to the future
+"""
 import datetime
 import glob2
 import numpy as np
+import os
+import pandas as pd
 import pdb
 import requests
+import socket
 
 MP_REQUIRED_COLUMNS = ['pit','bench','pattern','hole','x','y','z']
 RHINO_REQUIRED_COLUMNS = ['hole_id','start_time','rig_id','measured_depth','hole_start_time']
+TIME_COLUMNS_HOLES_DF = []
 SUPPORTED_DTYPES = [np.float64, np.int]
+
 
 def filename_pattern_to_df(file_pattern,skiprows=0):
     df_list = []
@@ -29,25 +33,68 @@ def filename_pattern_to_df(file_pattern,skiprows=0):
     return pd.concat(df_list)
 
 def clean_empty_columns_df(df):
+    """
+    ..:ToDo: add logging here to tell how many columns or rows were cut
+    and also tell the column names that were cut
+    """
     # REMOVE ALL NANS - Columns and rows
     df.dropna(how='all',axis='columns', inplace=True)
     df.dropna(how='all', axis='rows', inplace=True)
 
 
-def timeshift_df(df,timedelta):
-    df.update(df.select_dtypes(include=[np.datetime64]) + timedelta)
-
-
-
+def timeshift_df(df, timedelta):
+   """
+   iterates over columns and changes those that can be converted to datetimes
+   into datetimes.  Must first check if type is object.
+   """
+   for col in df.columns:
+       if df[col].dtype == 'object':
+           try:
+               df[col] = pd.to_datetime(df[col])
+           except ValueError:
+               pass
+   df.update(df.select_dtypes(include=[np.datetime64]) + timedelta)
 
 def run(raw_directory,debug=False):
+    """
+    Generates a csv for rhino and mine portal
+    """
     print("Started reading files from: " + str(raw_directory))
-    raw_files = os.listdir(raw_directory)
-    drilled_holes_df = filename_pattern_to_df(os.path.join(raw_directory,'*drilled_hole.xlsx'),skiprows=3)
-    clean_empty_columns_df(drilled_holes_df)
-    mwd_samples_df = filename_pattern_to_df(os.path.join(raw_directory,'*MWD_Sample.xlsx'),skiprows=3)
-    clean_empty_columns_df(mwd_samples_df)
+    if debug:
+        tmp_holes_df = os.path.join(raw_directory, 'drilled_holes.csv')
+        if os.path.isfile(tmp_holes_df):
+            drilled_holes_df = pd.read_csv(tmp_holes_df, compression='zip', parse_dates=True)
+        else:
+            filename_pattern = os.path.join(raw_directory,'*drilled_hole.xlsx')
+            drilled_holes_df = filename_pattern_to_df(filename_pattern,skiprows=3)
+            drilled_holes_df.to_csv(tmp_holes_df, compression='zip')
+            
+        tmp_mwd_df = os.path.join(raw_directory, 'tmp_mwd.csv')
+        if os.path.isfile(tmp_mwd_df):
+            mwd_samples_df = pd.read_csv(tmp_mwd_df, compression='zip', 
+                                     parse_dates=True)
+        else:
+            filename_pattern = os.path.join(raw_directory,'*MWD_Sample.xlsx')
+            mwd_samples_df = filename_pattern_to_df(filename_pattern, skiprows=3)
+            mwd_samples_df.to_csv(tmp_mwd_df, compression='zip')
+    else:
+        filename_pattern = os.path.join(raw_directory,'*drilled_hole.xlsx')
+        drilled_holes_df = filename_pattern_to_df(filename_pattern,skiprows=3)
+        filename_pattern = os.path.join(raw_directory,'*MWD_Sample.xlsx')
+        mwd_samples_df = filename_pattern_to_df(filename_pattern, skiprows=3)
+    
 
+    clean_empty_columns_df(drilled_holes_df)
+    tmp_mwd_df = os.path.join(raw_directory, 'tmp_mwd.csv')
+    if os.path.isfile(tmp_mwd_df):
+        mwd_samples_df = pd.read_csv(tmp_mwd_df, compression='zip', 
+                                     parse_dates=True)
+    else:
+        filename_pattern = os.path.join(raw_directory,'*MWD_Sample.xlsx')
+        mwd_samples_df = filename_pattern_to_df(filename_pattern, skiprows=3)
+        mwd_samples_df.to_csv(tmp_mwd_df, compression='zip')
+    clean_empty_columns_df(mwd_samples_df)
+    
     ## KEY COLUMNS TO CONNECT BOTH DATASETS (LEFT IS THE FIRST DATASET ON MERGE(), right is the second)
     key_columns_left = ['Rig Name','Drill Plan Name','Drilled Hole ID','Drilled Hole Name']
     key_columns_right = ['Rig Name','Drill Plan Name','MWD Hole ID','MWD Hole Name']
@@ -126,8 +173,13 @@ def prop_type_from_column_dtype(column_dtype):
     elif column_dtype.kind == 'M':
         return "datetimeprop"
 
-def update_or_create_config(subdomain_name,dataset_name,df,rhino_props):
+def update_or_create_config(subdomain_name, dataset_name, df, rhino_props):
+    """
+    dataset_conf: mapping is the part that will be changed in the dev cleanup
+    
+    """
     datasets_confs = MWDHelper('').get_dc_datasets_configs(subdomain_name)
+    
     dataset_conf = {
         "mapping": [
             {"node_level": 0, "is_hierarchy": "Y", "column": "pit", "is_filter_by": "N", "label": "pit",
@@ -165,6 +217,7 @@ def update_or_create_config(subdomain_name,dataset_name,df,rhino_props):
     intprops_counter = 0
     strprops_counter = 0
     datetimeprops_counter = 0
+    
     for column in df.columns:
         if column not in columns_in_mapping:
             column_obj = {}
@@ -189,8 +242,10 @@ def update_or_create_config(subdomain_name,dataset_name,df,rhino_props):
             column_obj["is_display"] = "Y"
             column_obj["is_welllog"] = "Y"
             column_obj["is_color_by"] = "Y"
-            if we have it on rhino_props:
-                column_obj["is_welllog"]
+            print(column, rhino_props.keys())
+            if column in rhino_props.keys():
+                column_obj['rhino_prop'] = rhino_props[column]
+
             dataset_conf['mapping'].append(column_obj)
 
     dataset_names = [o['name'] for o in datasets_confs]
@@ -203,14 +258,14 @@ def update_or_create_config(subdomain_name,dataset_name,df,rhino_props):
     deploy_config(token,subdomain_name,dataset_name,datasets_confs)
     return dataset_conf['mapping']
 
-def deploy_config(token,subdomain_name, active_dataset, datasets):
+def deploy_config(token, subdomain_name, active_dataset, datasets):
 
     headers = {'auth_token': token, 'domain_name':subdomain_name,'dataset_name':active_dataset}
     r = requests.post(API_BASE_URL+'/new_dataset', json=(datasets), headers = headers)
     response = (r.json())
     return response
 
-def deploy_data(csv_file_path,subdomain_name,dataset_name,mapping):
+def deploy_data(csv_file_path, subdomain_name, dataset_name, mapping):
     df = pd.read_csv(csv_file_path)
     columns_rename = {}
     for col in mapping:
@@ -231,10 +286,27 @@ def deploy_data(csv_file_path,subdomain_name,dataset_name,mapping):
 
 if __name__ == "__main__":
     from dcrhino3.helpers.mwd_helper import MWDHelper
+    import matplotlib.pyplot as plt
+    hostname = socket.gethostname()
+    if hostname=='thales4':
+        mwd_folder = '/home/kkappler/.cache/datacloud/bhp/eastern_ridge/mwd/from_client/eastern_ridge_raw_mwd'
+    else:
+        mwd_folder = '/home/thiago/Downloads/eastern_ridge_raw_mwd/'
+
     subdomain_name = 'devdatacloud'
     dataset_name = 'eastern_ridge_v1'
     API_BASE_URL = "http://104.42.216.162:5002/api"
-    df = run('/home/thiago/Downloads/eastern_ridge_raw_mwd/', debug=True)
+    df = run(mwd_folder, debug=True) #creates a csv: df.to_csv(), that csv goes to MP, Rhino
+        
     print ("Generating mapping")
-    mapping = update_or_create_config(subdomain_name, dataset_name, df)
+
+    rhyno_props = {'Drilled Penetration Rate (m/min)':'rate_of_penetration', 
+                   'MWD Sample Rotation Torque (Avg)':'torque_on_bit'}
+    mapping = update_or_create_config(subdomain_name, dataset_name, df, rhyno_props)
+    
     deploy_data('./temp.csv', subdomain_name, dataset_name,mapping)
+    print('success!')
+    #pipeline_df?
+    
+    #can call physics functions here by apply 
+    
