@@ -53,6 +53,12 @@ eastern_ridge_acorr_folder = os.path.join(eastern_ridge_data_cache_path, 'acorr'
 eastern_ridge_mwd_folder = os.path.join(eastern_ridge_data_cache_path, 'mwd')
 eastern_ridge_mwd_filehandle = os.path.join(eastern_ridge_mwd_folder, 'mwd.csv')
 
+rio_tinto_data_cache_path = os.path.join(dc_cache_path, 'rio_tinto')
+west_angelas_data_cache_path = os.path.join(rio_tinto_data_cache_path, 'west_angelas')
+west_angelas_acorr_folder = os.path.join(west_angelas_data_cache_path, 'acorr')
+west_angelas_mwd_folder = os.path.join(west_angelas_data_cache_path, 'mwd')
+
+
 def my_function():
     """
     """
