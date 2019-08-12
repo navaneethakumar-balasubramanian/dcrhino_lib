@@ -6,16 +6,17 @@ Author: kkappler
 
 Basic tools to help write Python script, mostly taken from websites.
 """
-import json
 import collections
 import datetime
 import fnmatch
 import glob
+import json
 import numpy as np
 import os
+import pandas as pd
+import pdb
 #from string import zfill
 import subprocess
-import pdb
 import sys
 
 from collections import namedtuple
@@ -23,6 +24,63 @@ from scipy.interpolate import interp1d
 
 #<temporary logging>
 import logging
+
+
+def identify_time_columns(df, manual=False):
+    """
+    gets you a list of 'datelike' columns
+    
+    in the case that you are reading from csv files, sometimes we have datetimes
+    and these need to be converted to pd.datetime format.  parse_dates=True
+    does not always work.  If you know the columns you want to cast as dates
+    that is OK, but if you don't then use this to get a list of datelike cols    
+    
+    Also Supports a manually supplied list.
+    
+    Could make this use a list of accepted formats (%Y-%m-%d %H:%M:%S, etc)
+    for multiple lambda funcitons
+    """
+    #can make this iterate over strings#'%Y-%m-%d %H:%M:%S'
+    dateparse = lambda x: pd.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+
+    if manual is not False:
+        return manual
+    datetime_column_labels = []
+    row = df.iloc[0]
+    for col in df.columns:
+#        if col == 'Drilled Start Hole Timestamp':
+#            print('dd')
+#            pdb.set_trace()
+        try:
+            dateparse(row[col])
+            pd.to_datetime(row[col])
+            datetime_column_labels.append(col)
+        except:
+            message = "looks like {} is not a datetime".format(col)
+            print(message)
+    return datetime_column_labels
+
+def StandardString(s):
+    """
+    historical method from SEGY-land
+    Parameters:
+        s (str): string to be standardized
+
+    Returns:
+        (str): cleaned, standardized string with underscores instead of spaces
+    """
+    s = str(s).replace("_"," ")
+    components = s.split(" ")
+    clean_components=[]
+    string=""
+    for ch in components:
+        word = ''.join(e for e in ch if (e.isalnum() or (e in ['&','.'])))
+        clean_components.append(word)
+    for i,c in enumerate(clean_components):
+        string += c
+        if i<len(clean_components)-1:
+            string+= "_"
+    return string.upper()
 
 
 def df_column_uniquify(df):

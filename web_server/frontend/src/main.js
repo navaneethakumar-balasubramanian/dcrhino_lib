@@ -8,11 +8,10 @@ import store from "./store";
 
 import DateRangePicker from 'vue2-daterange-picker'
 import 'vue2-daterange-picker/dist/vue2-daterange-picker.css'
-
-
+Vue.component('date-range-picker', DateRangePicker);
 window.moment = require("moment");
 axios.defaults.baseURL = process.env.VUE_APP_API_SERVER;
-Vue.component('date-range-picker', DateRangePicker)
+
 
 window.axios = axios;
 

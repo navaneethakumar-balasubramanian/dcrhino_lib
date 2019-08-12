@@ -926,6 +926,7 @@ class Interval(object):
                 and self.lower_closed == other.lower_closed \
                 and self.upper_closed == other.upper_closed)
 
+    @property
     def duration(self):
         """
         @note: added 20140618 kkappler

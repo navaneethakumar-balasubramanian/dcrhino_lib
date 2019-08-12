@@ -6,21 +6,41 @@ Created on Fri Sep 28 17:05:30 2018
 Author: thiago
 """
 
-import numpy as np
-import ConfigParser
 from datetime import datetime
-from dcrhino3.models.metadata import Metadata
-import pandas as pd
-import pdb
 import json
-from dcrhino3.models.config import Config
+import numpy as np
+import pdb
+import sys
+
+if sys.version_info.major==2:
+    import ConfigParser
+elif sys.version_info.major==3:
+    import configparser as ConfigParser
+
+from dcrhino3.models.metadata import Metadata
+from dcrhino3.models.config2 import Config
+
+
+def save_np_array_to_h5_file(h5file, key, np_array):
+    np_length = len(np_array)
+    my_key = key
+    if my_key in h5file.keys():
+        ds = h5file[my_key]
+        ds.resize((h5file[my_key].shape[0] + np_array.shape[0]), axis=0)
+        ds[-np_length:] = np_array
+    else:
+        ds = h5file.create_dataset(my_key, data=np_array, chunks=True, dtype=np_array.dtype, maxshape=(None,),
+                                   compression="gzip",
+                                   compression_opts=9)
+        ds[:] = np_array
+
 class H5Helper:
     """
     Facilitates extraction of data from .h5 files.
-    
+
     Parameters:
         h5f (str): path to h5f
-        
+
     Other Parameters:
         load_xyz (boolean): true to load xyz data
     """
@@ -61,7 +81,7 @@ class H5Helper:
     def load_xyz(self):
         """
         Load 3D data from h5 file using :func:`load_axis` to store data as an np array.
-        
+
         Returns:
             (list): list of three arrays, one for each axis
         """
@@ -76,7 +96,7 @@ class H5Helper:
     def load_axis(self,axis):
         """
         Load single axis as a Numpy array.
-        
+
         Returns:
             (array): axis from h5 file in array format
         """
@@ -85,15 +105,15 @@ class H5Helper:
     def load_axis_boundaries(self,axis,min_index,max_index):
         """
         Load a snippet of axis without loading the whole thing
-        
+
         Parameters:
             axis (str): axis to load a portion of
             min_index (int): limit to start loading
             max_index (int): limit to stop loading
-            
+
         Returns:
             Slice of axis between min/max_index
-            
+
         """
         #arr = np.zeros((max_index-min_index,), dtype='float64')
         #self.h5f[axis].read_direct(arr,np.s_[min_index:max_index])
@@ -108,13 +128,13 @@ class H5Helper:
     @property
     def ts(self):
         """
-        Timestamp retrieval function. Can be set manually with clock_ts value 
+        Timestamp retrieval function. Can be set manually with clock_ts value
         found in __init__(). Defaults to return:
         ::
-            
+
             self._ts = np.asarray(self.h5f.get('ts'))
-        
-        
+
+
         Returns:
             self._ts or self.clock_ts if it exists
         """
@@ -124,10 +144,10 @@ class H5Helper:
         return self.clock_ts
 
     def _is_ide_file(self):
-        """ 
+        """
         Check if sensitivity value is larger than 1, indicating sensitivity
         values that are axis-specific.
-        
+
         Returns:
             (boolean): False if len(self.sensitivity)>1, True otherwise
         """
@@ -141,7 +161,7 @@ class H5Helper:
     def _get_sensitivity_xyz(self):
         """
         Get sensitivity values, may be axis dependent or the same for all 3
-        
+
         Returns:
             (list): sensitivity values [x,y,z] (may not be axis-specific)
         """
@@ -168,6 +188,15 @@ class H5Helper:
         c.set_data_from_json(first_config)
         return c
 
+    def extract_metadata_from_h5_file_as_json(self):
+        return json.dumps(self.extract_metadata_from_h5_file_as_dict(), indent=4)
+
+    def extract_metadata_from_h5_file_as_dict(self):
+        config_dict = dict()
+        for key, value in self.h5f.attrs.items():
+            param_name = key.split("/")[1]
+            config_dict[param_name] = value
+        return config_dict
 
     def _extract_metadata_from_h5_file(self):
         try:
@@ -184,5 +213,7 @@ class H5Helper:
                     config.set(section, param_name, value)
             m = Metadata(config)
             return m
-        except:
+        except Exception as e:
+        #    print(e)
+            print("Error loading metadata" ,e)
             return None

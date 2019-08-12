@@ -30,8 +30,8 @@ class MWDHelper():
         self.env_config = env_config
 
 
-        self.required_columns = ['easting','northing','hole_id','hole_name','pattern_name','bench_name','start_time','rig_id','measured_depth']
-        self.optional_columns = ['tob','rop','wob','mse','air_pressure','rpm']
+        self.required_columns = ['hole_id','hole_name','pattern_name','bench_name','start_time','rig_id','measured_depth','hole_start_time']
+        self.optional_columns = ['easting','northing','tob','rop','wob','mse','air_pressure','rpm','end_time']
 
 
 
@@ -49,11 +49,15 @@ class MWDHelper():
         Returns:
             (Series): mine_mwd['bench_name', 'pattern_name', 'hole_name', 'hole_id'], the data for a specific hole.
         """
+        #pdb.set_trace()
         cond1 = mine_mwd['bench_name'].astype(str) == str(bench_name)
         cond2 = mine_mwd['pattern_name'].astype(str) == str(pattern_name)
         cond3 = mine_mwd['hole_name'].astype(str) == str(hole_name)
         cond4 = mine_mwd['hole_id'].astype(str) == str(hole_id)
-        return mine_mwd[cond1 & cond2 & cond3 & cond4]
+        hole_mwd = mine_mwd[cond1 & cond2 & cond3 & cond4]
+        if len(hole_mwd) == 0:
+            logger.warning("Hole MWD obtained from Mine MWD is empty")
+        return hole_mwd
 
     def get_mwd_from_csv(self,file_path):
         """
@@ -68,7 +72,18 @@ class MWDHelper():
         logger.info("Loading mwd csv from:" + file_path)
         return pd.read_csv(file_path)
 
-    def get_mwd_from_db(self, mine_domain, dataset_name):
+    def get_db_column_by_rhino_prop_name(self,mapping,rhino_prop_name):
+        for col in mapping:
+            if col['rhino_prop'] == rhino_prop_name:
+                return col['column']
+
+        #IF IT CANT FIND TRY PROP
+        for col in mapping:
+            if col['prop'] == rhino_prop_name:
+                return col['column']
+        return
+
+    def get_mwd_from_db(self, mine_domain, dataset_name,date_start= False,date_end=False, limit= 1000):
         """
         Connects to database using :func:`~get_db_conn` with credentials and retrieves data from specified mine.
 
@@ -88,12 +103,17 @@ class MWDHelper():
 
         datasets = self.get_dc_datasets_configs(mine_domain)
         for i, dataset in enumerate(datasets):
-            if dataset['name'] == dataset_name:
+            if dataset['name'].lower() == dataset_name.lower():
                 columns_to_get = list()
                 renamed = {}
                 mappings = []
                 for col in dataset['mapping']:
-                    renamed[col['column']] = col['label']
+                    if 'rhino_prop' in col and col['rhino_prop'] != '':
+                        renamed[col['column']] = col['rhino_prop']
+                    elif 'prop' in col and col['prop'] != '':
+                        renamed[col['column']] = col['prop']
+                    else :
+                        renamed[col['column']] = col['label']
                     columns_to_get.append(col['column'])
                     mappings.append(col)
                 columns = client.execute('DESCRIBE TABLE ' + str(dataset['table_name']))
@@ -105,15 +125,25 @@ class MWDHelper():
                     else:
                         transformed_type_columns_to_get.append(column_to_get)
 
+                date_column_name = self.get_db_column_by_rhino_prop_name(dataset['mapping'],'hole_start_time')
+                measured_depth_column_name = self.get_db_column_by_rhino_prop_name(dataset['mapping'], 'measured_depth')
+                mwd_query = 'SELECT '+','.join(transformed_type_columns_to_get)+' FROM ' +  str(dataset['table_name'] + " where 1=1 ")
+                if date_start is not False:
+                    mwd_query += " and " + str(date_column_name) + " >= " + str(date_start)
+                if date_end is not False:
+                    mwd_query += " and " + str(date_column_name) + " <= " + str(date_end)
 
-                mwd_data_from_db = client.execute('SELECT '+','.join(transformed_type_columns_to_get)+' FROM ' +  str(dataset['table_name'] ))
+                mwd_query += " order by " + str(date_column_name) + " desc,  " + str(measured_depth_column_name)
+
+                if limit is not False:
+                    mwd_query +=  " asc limit " + str(limit)
+
+                mwd_data_from_db = client.execute(mwd_query)
                 columns_table_name = list()
                 for i, col in enumerate(columns_to_get):
                     columns_table_name.append(renamed[col])
 
                 mwd_data_df = pd.DataFrame(mwd_data_from_db,columns=columns_table_name)
-
-                #mwd_data_df = mwd_data_df.loc[:, ~mwd_data_df.columns.duplicated()]
 
         original_mwd_df = df_column_uniquify(mwd_data_df)
         original_mwd_df.to_csv('original_mwd.csv')
@@ -192,6 +222,11 @@ class MWDHelper():
 
         return conn_dict
 
+    def get_token(self):
+        r = requests.post('https://prod.datacloud.rocks/v1/auth', json={"username": 'admin', "password": 'pass123$$$'})
+        token = r.json()['token']
+        return token
+
     def get_dc_datasets_configs(self,subdomain):
         """
         Returns json, not dictionary, with database token and configuration.
@@ -202,8 +237,7 @@ class MWDHelper():
         Returns:
             (unicode): json containing token for database connection, credentials, configuration
         """
-        r = requests.post('https://prod.datacloud.rocks/v1/auth', json={"username":'admin', "password":'pass123$$$'})
-        token = r.json()['token']
+        token = self.get_token()
         headers = {'Authorization':'Bearer ' + token,'x-dc-subdomain':subdomain}
         r = requests.get('https://prod.datacloud.rocks/v1/viz/dataset_config',headers=headers)
         return r.json()
@@ -259,7 +293,6 @@ class MWDHelper():
         Returns:
             (boolean): True if columns are present, False if one or more columns is missing
         """
-
         for col in self.required_columns:
             if col not in mwd_df.columns:
                 logger.warn("MISSING COLUMN:" + col + " ON DATACLOUD DEFAULT DF")
@@ -320,7 +353,8 @@ class MWDHelper():
             mwd_df['hole_name'] = mwd_df.hole_id
         return mwd_df
 
-    def get_rhino_mwd_from_mine_name(self,mine_name):
+    def get_rhino_mwd_from_mine_name(self, mine_name, date_start=False,
+                                     date_end=False, limit=False):
         """
         Retrieves mwd from .csv or database connection, remaps,
         adds columns, standardizes format/names for downstream functions.
@@ -337,23 +371,27 @@ class MWDHelper():
         mine_type = self.env_config.get_mwd_type(mine_name)
         if mine_type is False:
             logger.warn("Couldnt find a mwd config for this mine:" + mine_name)
+            return False
         elif mine_type == MwdType.CSV:
             cfg = self.env_config.get_mwd_csv_cfg(mine_name)
             original_mwd_df = self.get_mwd_from_csv(cfg['path'])
         elif mine_type == MwdType.DATABASE:
             cfg = self.env_config.get_mwd_db_cfg(mine_name)
-            original_mwd_df = self.get_mwd_from_db(cfg['domain'],cfg['dataset_name'])
+            original_mwd_df = self.get_mwd_from_db(cfg['domain'],cfg['dataset_name'],date_start,date_end,limit)
 
         for column in original_mwd_df.columns:
             if "Unnamed: " in column:
                 original_mwd_df.drop([column],axis=1,inplace=True)
         original_mwd_df = original_mwd_df.drop_duplicates()
 
-        remaped = self.remap_mwd_df(original_mwd_df,cfg['mapping'])
+        if 'mapping' in cfg:
+            remaped = self.remap_mwd_df(original_mwd_df,cfg['mapping'])
+        else:
+            remaped = original_mwd_df
         remaped = self.try_creating_missing_columns(remaped)
         if self._have_required_columns(remaped):
-            remaped_with_optionals = self._create_optional_columns(remaped)
-            remaped_with_optionals = self._post_process(remaped_with_optionals)
+            ##remaped_with_optionals = self._create_optional_columns(remaped)
+            remaped_with_optionals = self._post_process(remaped)
             return remaped_with_optionals
         else:
             return False

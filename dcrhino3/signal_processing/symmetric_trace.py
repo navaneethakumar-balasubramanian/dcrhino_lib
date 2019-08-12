@@ -80,6 +80,18 @@ class SymmetricTrace(object):
     @property
     def center_index(self):
         return (len(self.data)-1) // 2
+    
+    def trim_to_new_center_index(self, center_index):
+        lhs = self.data[:center_index]   # everything up to but not including the max
+        rhs = self.data[center_index + 1:] # everything after the max
+        n_keep = min(len(lhs), len(rhs))
+        keep_lhs = lhs[-n_keep:]
+        keep_rhs = rhs[:n_keep]
+        mini_trace_data = np.hstack((keep_lhs, self.data[center_index], keep_rhs))
+        mini_trace = SymmetricTrace(mini_trace_data, self.sampling_rate,
+                                component_id=self.component_id)
+        return mini_trace
+
 
     def trim_to_num_points_lr(self, n_points):
         """
@@ -98,7 +110,7 @@ class SymmetricTrace(object):
         self._time_vector = self._time_vector[indices]
 
 
-    def plot(self, ticks=[]):
+    def plot(self, ticks=[], block=True):
         """
         Plot time_vector vs. data, title, label, and show.
         """

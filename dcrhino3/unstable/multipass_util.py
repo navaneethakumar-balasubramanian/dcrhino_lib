@@ -3,23 +3,12 @@
 Created on Tue May 14 11:05:07 2019
 
 @author: kkappler
-1. type
-2. status
-3. length
-4. units of lenght
-5. od
-6, untis of od
-
-in file menus.cfg you can see the drill string components
-but, collar, cc, save
-incehes, meters cm
-
 see
 https://datacloudintl.atlassian.net/wiki/spaces/RHINO/pages/139526154/Configuration+File+Definition
 
  ..:TODO: From the Interval Class build a TimeInterval, and make support for
  UTC and UNIX time so we dont have to look at the fkng unix times always and
- digest 10-digit numbers everytime we want to think about when events happenn
+ digest 10-digit numbers everytime we want to think about when events happen
 """
 
 
@@ -33,7 +22,7 @@ import pdb
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.models.interval import Interval
 from dcrhino3.models.trace_dataframe import TraceData
-from dcrhino3.unstable.multipass.drill_rig import DrillRig
+from dcrhino3.models.drill.drill_rig import DrillRig
 
 logger = init_logging(__name__)
 
@@ -273,20 +262,21 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
         -- Now you have a list of relevant transition depths for the given blasthole-acorr
         3. Place the 'actual' transition depth at the center of the drill stop
         nearest to the theoretical transition depth
+    ..::ToDo: lets remove the 'hack' part of the code here.
     """
-    if hack:
-        print("hack" )
-        logger.critical("HACJ HACK HACK HACK ALERT!!! BAD BAD NAUGHTY!!!")
-        installed_steels_length = 12.8
-        variable_steels_lengths = [12.8, 12.8, 12.8, 12.8]
-        installed_resonant_length = 15.39999
-        all_steels_lengths = [installed_steels_length] + variable_steels_lengths
-    else:
-        drill_rig = DrillRig(field_config=acorr_trace.first_global_config)
-        installed_steels_length = drill_rig.installed_steels_length
-        variable_steels_lengths = drill_rig.variable_steels_lengths
-        all_steels_lengths = [installed_steels_length] + variable_steels_lengths
-        installed_resonant_length = drill_rig.installed_resonant_length
+#    if hack:
+#        print("hack" )
+#        logger.critical("HACJ HACK HACK HACK ALERT!!! BAD BAD NAUGHTY!!!")
+#        installed_steels_length = 12.8
+#        variable_steels_lengths = [12.8, 12.8, 12.8, 12.8]
+#        installed_resonant_length = 15.39999
+#        all_steels_lengths = [installed_steels_length] + variable_steels_lengths
+#    else:
+    drill_rig = DrillRig(field_config=acorr_trace.first_global_config)
+    installed_steels_length = drill_rig.installed_steels_length
+    variable_steels_lengths = drill_rig.variable_steels_lengths
+    all_steels_lengths = [installed_steels_length] + variable_steels_lengths
+    installed_resonant_length = drill_rig.installed_resonant_length
 
     df = acorr_trace.dataframe
     try:
@@ -344,7 +334,7 @@ def update_acorr_with_resonance_info(acorr_trace, transition_depth_offset_m=-1.0
 def get_depths_at_which_steels_change(df):
     """
     helper function to do with multipass stuff
-    df is the df from an acorr_trace
+    df is the dataframe from an TraceData()
     """
     resonant_lengths_array = df.drill_string_resonant_length.unique()
     resonant_lengths = [x for x in resonant_lengths_array]

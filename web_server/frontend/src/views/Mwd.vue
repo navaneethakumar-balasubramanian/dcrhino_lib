@@ -120,33 +120,9 @@
             hide-details
           ></v-checkbox>
         </td>
-        <td class="text-xs-right">{{ items.item.processed_hole_id }}</td>
-        <td class="text-xs-right">
-          {{ moment(items.item.processed_at_ts).format("YYYY-MM-DD hh:mm:ss") }}
-        </td>
-        <td class="text-xs-right">{{ items.item.bench_name }}</td>
-        <td class="text-xs-right">{{ items.item.pattern_name }}</td>
-        <td class="text-xs-right">{{ items.item.hole_name }}</td>
-        <td class="text-xs-right">{{ items.item.hole_id }}</td>
-        <td class="text-xs-right">{{ items.item.rig_id }}</td>
-        <td class="text-xs-right">{{ items.item.sensor_id }}</td>
-        <td class="text-xs-right">{{ items.item.digitizer_id }}</td>
-        <td class="text-xs-right">{{ items.item.flow_id }}</td>
-        <td class="text-xs-right">
-          <v-icon v-if="items.item.to_mp == 1" color="green"
-            >radio_button_checked</v-icon
-          ><v-icon v-else color="red">radio_button_unchecked</v-icon>
-        </td>
-        <td>
-          <v-btn
-            outline
-            icon
-            color="indigo"
-            @click="showProcessedHole(items.item.processed_hole_id)"
-          >
-            <v-icon>info</v-icon>
-          </v-btn>
-        </td>
+        <td v-for="value in Object.keys(items.item)" class="text-xs-right">{{ items.item[value] }}</td>
+        
+        
       </template>
     </v-data-table>
     <v-btn flat color="light-blue" v-on:click="compare_selection()"
@@ -224,8 +200,9 @@ export default {
     },
     changed_filter: function() {
       let temp = [];
-      for (let item in this.server_data) {
-        item = this.server_data[item];
+    
+      for (let item in this.server_data.data) {
+        item = this.server_data.data[item];
         let canPush = true;
         for (let header in this.headers) {
           header = this.headers[header];
@@ -235,7 +212,6 @@ export default {
             Object.keys(header.values).includes(item[header.value]) &&
             header.values[item[header.value]].checked == false
           ) {
-            //console.log("cannot push ", item,header,header.values[item[header.value]].checked)
             canPush = false;
           }
         }
@@ -342,92 +318,16 @@ export default {
       }
 
       if (_new){
-        let processed_list = _new;
-        let flow_ids = [...new Set(processed_list.map(a => a.flow_id))];
-        let bench_names = [...new Set(processed_list.map(a => a.bench_name))];
-        let pattern_names = [...new Set(processed_list.map(a => a.pattern_name))];
-        let hole_names = [...new Set(processed_list.map(a => a.hole_name))];
-        let hole_ids = [...new Set(processed_list.map(a => a.hole_id))];
-        let rig_ids = [...new Set(processed_list.map(a => a.rig_id))];
-        let sensor_ids = [...new Set(processed_list.map(a => a.sensor_id))];
-        let digitizer_ids = [...new Set(processed_list.map(a => a.digitizer_id))];
-        if (processed_list.length >0 && this.dateRange.endDate == ""){
-          this.dateRange.endDate = moment(processed_list[0].processed_at_ts,"X").format("YYYY-MM-DD") + " 23:59:59";
-          this.dateRange.startDate = moment(processed_list[processed_list.length-1].processed_at_ts,"X").format("YYYY-MM-DD") + " 00:00:00";
-        }
+        let list = _new.data;
+        this.headers = []
+        Object.keys(list[0]).forEach(column => {
+          let values_list = [...new Set(list.map(a => a[column]))];
+          this.headers.push({ text: column, value: column, sortable: false, values: to_unique_obj(values_list), allChecked: true })
+        }); 
+       
         
 
-        this.headers = [
-          { text: "Id", value: "processed_hole_id", sortable: true },
-          { text: "Processed date", value: "date", sortable: false },
-          {
-            text: "Bench",
-            value: "bench_name",
-            sortable: false,
-            values: to_unique_obj(bench_names),
-            allChecked: true
-          },
-          {
-            text: "Pattern",
-            value: "pattern_name",
-            sortable: false,
-            values: to_unique_obj(pattern_names),
-            allChecked: true
-          },
-          {
-            text: "Hole_name",
-            value: "hole_name",
-            sortable: false,
-            values: to_unique_obj(hole_names),
-            allChecked: true
-          },
-          {
-            text: "Hole_id",
-            value: "hole_id",
-            sortable: false,
-            values: to_unique_obj(hole_ids),
-            allChecked: true
-          },
-          {
-            text: "Rig",
-            value: "rig_id",
-            sortable: false,
-            values: to_unique_obj(rig_ids),
-            allChecked: true
-          },
-          {
-            text: "Sensor",
-            value: "sensor_id",
-            sortable: false,
-            values: to_unique_obj(sensor_ids),
-            allChecked: true
-          },
-          {
-            text: "Digitizer",
-            value: "digitizer_id",
-            sortable: false,
-            values: to_unique_obj(digitizer_ids),
-            allChecked: true
-          },
-          {
-            text: "Flow",
-            value: "flow_id",
-            sortable: false,
-            values: to_unique_obj(flow_ids),
-            allChecked: true
-          },
-          {
-            text: "MP",
-            value: "to_mp",
-            sortable: false,
-            values: {
-              1: { label: "True", checked: true },
-              0: { label: "False", checked: true }
-            },
-            allChecked: true
-          },
-          { text: "Actions", sortable: false }
-        ];
+        
       }
     },
     headers: function(_new, _old) {

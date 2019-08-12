@@ -66,6 +66,29 @@ class LeadChannelDeconvolutionModuleHybrid(BaseHybridModule):
         if filter_duration is None:
             return n_taps
 
+    def sanity_check_filter_duration(self, n_samples_per_trace, n_taps):
+        """
+        :param samples_per_trace:
+        :param n_taps: the number of points in the deconvolution filter we will solve for
+        :return:
+        :var threshold: This is the fraction of the data duration that the filter is expected to be shorter than.
+        i.e. if the data_duration were 1s, and the threshold was 0.25, we would only admit filters shorter than
+        0.25s duration.
+
+        Note: This does not actually need sampling_rate, it can be done simply by looking at
+        n_taps/n_samples_per_trace < threshold.  Sampling rate is basically there to
+        """
+        threshold = 0.5
+        filter_fraction = 1.0 * n_taps / n_samples_per_trace
+        if filter_fraction < threshold:
+            return
+        else:
+            error_message = "decon filter length is {} of the acorr trace duration -- too long!".format(filter_fraction)
+            logger.critical(error_message)
+            error_message = "We only tolerate decon filter up to {}x input trace duration".format(threshold)
+            logger.error(error_message)
+            raise Exception
+
     def process_splitted_trace(self, splitted_traces):
         """
         @type component_array: numpy array
@@ -74,10 +97,15 @@ class LeadChannelDeconvolutionModuleHybrid(BaseHybridModule):
         logger.warning("lead channel decon assumes the first trace has same sampling rate\
                        as all traces passed in splitted_trace")
         logger.info("lead channel decon only supports even length filters right now")
+
         n_taps = self.sort_out_filter_length(splitted_traces)
+
         for component_id in self.components_to_process:
+            
             data_array = splitted_traces.component_as_array(component_id)
             n_traces, n_samples_per_trace = data_array.shape
+            sampling_rate = splitted_traces.dataframe.sampling_rate.iloc[0]
+            self.sanity_check_filter_duration(n_samples_per_trace, n_taps)
             t0_index = (n_samples_per_trace + 1) // 2 #
             t0_index += n_taps // 2 #-1 more here to make clean  reduction by n_taps_decon
             n_valid_samples_rhs = n_samples_per_trace - t0_index
