@@ -9,6 +9,7 @@ import pandas as pd
 import pdb
 import requests
 import socket
+from dc_mwd.mwd import MWD
 
 MP_REQUIRED_COLUMNS = ['pit','bench','pattern','hole','x','y','z']
 RHINO_REQUIRED_COLUMNS = ['hole_id','start_time','rig_id','measured_depth','hole_start_time']
@@ -32,28 +33,10 @@ def filename_pattern_to_df(file_pattern,skiprows=0):
         df_list.append(df)
     return pd.concat(df_list)
 
-def clean_empty_columns_df(df):
-    """
-    ..:ToDo: add logging here to tell how many columns or rows were cut
-    and also tell the column names that were cut
-    """
-    # REMOVE ALL NANS - Columns and rows
-    df.dropna(how='all',axis='columns', inplace=True)
-    df.dropna(how='all', axis='rows', inplace=True)
 
 
-def timeshift_df(df, timedelta):
-   """
-   iterates over columns and changes those that can be converted to datetimes
-   into datetimes.  Must first check if type is object.
-   """
-   for col in df.columns:
-       if df[col].dtype == 'object':
-           try:
-               df[col] = pd.to_datetime(df[col])
-           except ValueError:
-               pass
-   df.update(df.select_dtypes(include=[np.datetime64]) + timedelta)
+
+
 
 def run(raw_directory,debug=False):
     """
@@ -84,7 +67,7 @@ def run(raw_directory,debug=False):
         mwd_samples_df = filename_pattern_to_df(filename_pattern, skiprows=3)
     
 
-    clean_empty_columns_df(drilled_holes_df)
+    MWD.clean_empty_columns_df(drilled_holes_df)
     tmp_mwd_df = os.path.join(raw_directory, 'tmp_mwd.csv')
     if os.path.isfile(tmp_mwd_df):
         mwd_samples_df = pd.read_csv(tmp_mwd_df, compression='zip', 
@@ -93,7 +76,7 @@ def run(raw_directory,debug=False):
         filename_pattern = os.path.join(raw_directory,'*MWD_Sample.xlsx')
         mwd_samples_df = filename_pattern_to_df(filename_pattern, skiprows=3)
         mwd_samples_df.to_csv(tmp_mwd_df, compression='zip')
-    clean_empty_columns_df(mwd_samples_df)
+    MWD.clean_empty_columns_df(mwd_samples_df)
     
     ## KEY COLUMNS TO CONNECT BOTH DATASETS (LEFT IS THE FIRST DATASET ON MERGE(), right is the second)
     key_columns_left = ['Rig Name','Drill Plan Name','Drilled Hole ID','Drilled Hole Name']
@@ -130,8 +113,10 @@ def run(raw_directory,debug=False):
                       ]
     df = df[filter_columns]
 
+    MWD.create_dc_hole_uuid(df,rig_id_column_name='Rig Name',hole_start_time_column_name='Drilled Start Hole Timestamp')
+
     ## TIMESHIFT
-    timeshift_df(df,timedelta=datetime.timedelta(hours=-8))
+    MWD.timeshift_df(df,timedelta=datetime.timedelta(hours=-8))
 
 
     ## MP REQUIRED COLUMNS
@@ -183,14 +168,14 @@ def update_or_create_config(subdomain_name, dataset_name, df, rhino_props):
     dataset_conf = {
         "mapping": [
             {"node_level": 0, "is_hierarchy": "Y", "column": "pit", "is_filter_by": "N", "label": "pit",
-             "is_display": "Y", "uom": "", "is_welllog": "Y", "rhino_prop": "PIT", "prop": "pit", "is_color_by": "N"},
+             "is_display": "Y", "uom": "", "is_welllog": "Y", "rhino_prop": "pit_name", "prop": "pit", "is_color_by": "N"},
             {"column": "hole", "is_filter_by": "Y", "label": "hole",
-             "is_display": "Y", "uom": "", "is_welllog": "N", "rhino_prop": "HOLE", "prop": "hole", "is_color_by": "Y"},
+             "is_display": "Y", "uom": "", "is_welllog": "N", "rhino_prop": "hole_name", "prop": "hole", "is_color_by": "Y"},
             {"node_level": 1, "is_hierarchy": "Y", "column": "bench", "is_filter_by": "N", "label": "bench",
-             "is_display": "Y", "uom": "", "is_welllog": "N", "rhino_prop": "BENCH", "prop": "bench",
+             "is_display": "Y", "uom": "", "is_welllog": "N", "rhino_prop": "bench_name", "prop": "bench",
              "is_color_by": "N"},
             {"node_level": 2, "is_hierarchy": "Y", "column": "pattern", "is_filter_by": "N", "label": "pattern",
-             "is_display": "Y", "uom": "", "is_welllog": "N", "rhino_prop": "PATTERN", "prop": "pattern",
+             "is_display": "Y", "uom": "", "is_welllog": "N", "rhino_prop": "pattern_name", "prop": "pattern",
              "is_color_by": "N"},
             {"is_hierarchy": "N", "column": "x", "is_filter_by": "Y", "label": "x", "is_display": "Y", "uom": "",
              "is_welllog": "N", "prop": "x", "is_color_by": "Y"},
@@ -260,7 +245,7 @@ def update_or_create_config(subdomain_name, dataset_name, df, rhino_props):
 
 def deploy_config(token, subdomain_name, active_dataset, datasets):
 
-    headers = {'auth_token': token, 'domain_name':subdomain_name,'dataset_name':active_dataset}
+    headers = {'auth_token': token, 'x-dc-subdomain':subdomain_name,'dataset_name':active_dataset}
     r = requests.post(API_BASE_URL+'/new_dataset', json=(datasets), headers = headers)
     response = (r.json())
     return response
@@ -276,7 +261,7 @@ def deploy_data(csv_file_path, subdomain_name, dataset_name, mapping):
     try:
         token = MWDHelper('').get_token()
         files = {'file': open(csv_file_path, 'rb')}
-        headers = {'auth_token': token, 'domain_name': subdomain_name, 'dataset_name': dataset_name}
+        headers = {'auth_token': token, 'x-dc-subdomain': subdomain_name, 'dataset_name': dataset_name}
         r = requests.post(API_BASE_URL + '/upload_dataset', files=files, headers=headers)
         response = (r.json())
         print(response)
@@ -296,12 +281,16 @@ if __name__ == "__main__":
     subdomain_name = 'devdatacloud'
     dataset_name = 'eastern_ridge_v1'
     API_BASE_URL = "http://104.42.216.162:5002/api"
-    df = run(mwd_folder, debug=True) #creates a csv: df.to_csv(), that csv goes to MP, Rhino
+    df = run(mwd_folder, debug=False) #creates a csv: df.to_csv(), that csv goes to MP, Rhino
         
     print ("Generating mapping")
 
     rhyno_props = {'Drilled Penetration Rate (m/min)':'rate_of_penetration', 
-                   'MWD Sample Rotation Torque (Avg)':'torque_on_bit'}
+                   'MWD Sample Rotation Torque (Avg)':'torque_on_bit',
+                   'Drilled Start Hole Timestamp':'hole_start_time',
+                   'Drilled Hole ID':'hole_id',
+                    'MWD Sample Timestamp':'start_time',
+                   'Rig Name':'rig_id'}
     mapping = update_or_create_config(subdomain_name, dataset_name, df, rhyno_props)
     
     deploy_data('./temp.csv', subdomain_name, dataset_name,mapping)

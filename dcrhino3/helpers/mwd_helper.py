@@ -390,8 +390,8 @@ class MWDHelper():
             remaped = original_mwd_df
         remaped = self.try_creating_missing_columns(remaped)
         if self._have_required_columns(remaped):
-            remaped_with_optionals = self._create_optional_columns(remaped)
-            remaped_with_optionals = self._post_process(remaped_with_optionals)
+            ##remaped_with_optionals = self._create_optional_columns(remaped)
+            remaped_with_optionals = self._post_process(remaped)
             return remaped_with_optionals
         else:
             return False
