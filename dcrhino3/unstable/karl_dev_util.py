@@ -52,6 +52,8 @@ eastern_ridge_data_cache_path = os.path.join(bhp_data_cache_path, 'eastern_ridge
 eastern_ridge_acorr_folder = os.path.join(eastern_ridge_data_cache_path, 'acorr')
 eastern_ridge_mwd_folder = os.path.join(eastern_ridge_data_cache_path, 'mwd')
 eastern_ridge_mwd_filehandle = os.path.join(eastern_ridge_mwd_folder, 'mwd.csv')
+eastern_ridge_process_flows_folder = os.path.join(eastern_ridge_data_cache_path, 'process_flows')
+eastern_ridge_processed_folder = os.path.join(eastern_ridge_data_cache_path, 'processed')
 
 rio_tinto_data_cache_path = os.path.join(dc_cache_path, 'rio_tinto')
 west_angelas_data_cache_path = os.path.join(rio_tinto_data_cache_path, 'west_angelas')
