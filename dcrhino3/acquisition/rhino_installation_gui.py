@@ -1116,173 +1116,326 @@ class GUI():
 
 
     def save_file(self):
-        pass
-#         if float(self.sensor_distance_to_shocksub.get().split(" ")[0]) < 0 or \
-#                 float(self.sensor_distance_to_source.get().split(" ")[0]) < 0:
-#             tkMessageBox.showinfo("Short between the chair and the keyboard",
-#                                   "Config File Error. Unable to save file. Check errors on drill string lengths")
-#             return
-#
-#         config.set("INSTALLATION","country",self.country.get())
-#         config.set("INSTALLATION","company",self.company.get())
-#         config.set("INSTALLATION","mine_name",self.mine_name.get())
-#         config.set("INSTALLATION","recording_engineer",self.recording_engineer.get())
-#         config.set("INSTALLATION","rig_model",self.rig_model.get())
-#         config.set("INSTALLATION","rig_manufacturer",self.rig_manufacturer.get())
-#         config.set("INSTALLATION","rig_id",self.rig_id.get())
-#         config.set("INSTALLATION","drill_type",str(drill_types.index(self.drill_type.get())+1))
-#         config.set("INSTALLATION","mwd_type",str(mwd_types.index(self.mwd_type.get())+1))
-#         config.set("INSTALLATION","bit_type",str(bit_types.index(self.bit_type.get())+1))
-#         config.set("INSTALLATION","bit_model",self.bit_model.get())
-#
-#         m = Measurement((self.bit_size.get(),measurement_units_options.index(self.bit_size_units.get())+1))
-#         config.set("INSTALLATION","bit_size",str(m))
-#
-#
-#
-#         config.set("INSTALLATION","bit_date",self.get_date("bit"))
-#         config.set("INSTALLATION","drill_string_total_length",self.drill_string_total_length.get())
-#
-#
-#         dsc = Drill_String_Component((drill_string_component_types.index(self.drill_string_component1_type.get())+1,self.get_status_from_index(drill_string_component_status_options.index(self.drill_string_component1_status.get())+1),self.drill_string_component1_length.get(),measurement_units_options.index(self.drill_string_component1_units.get())+1,self.drill_string_component1_od.get(),measurement_units_options.index(self.drill_string_component1_od_units.get())+1))
-#         config.set("INSTALLATION","drill_string_component1",str(dsc))
-#
-#         dsc = Drill_String_Component((drill_string_component_types.index(self.drill_string_component2_type.get())+1,self.get_status_from_index(drill_string_component_status_options.index(self.drill_string_component2_status.get())+1),self.drill_string_component2_length.get(),measurement_units_options.index(self.drill_string_component2_units.get())+1,self.drill_string_component2_od.get(),measurement_units_options.index(self.drill_string_component2_od_units.get())+1))
-#         config.set("INSTALLATION","drill_string_component2",str(dsc))
-#
-#         dsc = Drill_String_Component((drill_string_component_types.index(self.drill_string_component3_type.get())+1,self.get_status_from_index(drill_string_component_status_options.index(self.drill_string_component3_status.get())+1),self.drill_string_component3_length.get(),measurement_units_options.index(self.drill_string_component3_units.get())+1,self.drill_string_component3_od.get(),measurement_units_options.index(self.drill_string_component3_od_units.get())+1))
-#         config.set("INSTALLATION","drill_string_component3",str(dsc))
-#
-#         dsc = Drill_String_Component((drill_string_component_types.index(self.drill_string_component4_type.get())+1,self.get_status_from_index(drill_string_component_status_options.index(self.drill_string_component4_status.get())+1),self.drill_string_component4_length.get(),measurement_units_options.index(self.drill_string_component4_units.get())+1,self.drill_string_component4_od.get(),measurement_units_options.index(self.drill_string_component4_od_units.get())+1))
-#         config.set("INSTALLATION","drill_string_component4",str(dsc))
-#
-#         dsc = Drill_String_Component((drill_string_component_types.index(self.drill_string_component5_type.get())+1,self.get_status_from_index(drill_string_component_status_options.index(self.drill_string_component5_status.get())+1),self.drill_string_component5_length.get(),measurement_units_options.index(self.drill_string_component5_units.get())+1,self.drill_string_component5_od.get(),measurement_units_options.index(self.drill_string_component5_od_units.get())+1))
-#         config.set("INSTALLATION","drill_string_component5",str(dsc))
-#
-#         dsc = Drill_String_Component((drill_string_component_types.index(self.drill_string_component6_type.get())+1,self.get_status_from_index(drill_string_component_status_options.index(self.drill_string_component6_status.get())+1),self.drill_string_component6_length.get(),measurement_units_options.index(self.drill_string_component6_units.get())+1,self.drill_string_component6_od.get(),measurement_units_options.index(self.drill_string_component6_od_units.get())+1))
-#         config.set("INSTALLATION","drill_string_component6",str(dsc))
-#
-#         dsc = Drill_String_Component((drill_string_component_types.index(self.drill_string_component7_type.get())+1,self.get_status_from_index(drill_string_component_status_options.index(self.drill_string_component7_status.get())+1),self.drill_string_component7_length.get(),measurement_units_options.index(self.drill_string_component7_units.get())+1,self.drill_string_component7_od.get(),measurement_units_options.index(self.drill_string_component7_od_units.get())+1))
-#         config.set("INSTALLATION","drill_string_component7",str(dsc))
-#
-#         dsc = Drill_String_Component((drill_string_component_types.index(self.drill_string_component8_type.get())+1,self.get_status_from_index(drill_string_component_status_options.index(self.drill_string_component8_status.get())+1),self.drill_string_component8_length.get(),measurement_units_options.index(self.drill_string_component8_units.get())+1,self.drill_string_component8_od.get(),measurement_units_options.index(self.drill_string_component8_od_units.get())+1))
-#         config.set("INSTALLATION","drill_string_component8",str(dsc))
-#
-#         dsc = Drill_String_Component((drill_string_component_types.index(self.drill_string_component9_type.get())+1,self.get_status_from_index(drill_string_component_status_options.index(self.drill_string_component9_status.get())+1),self.drill_string_component9_length.get(),measurement_units_options.index(self.drill_string_component9_units.get())+1,self.drill_string_component9_od.get(),measurement_units_options.index(self.drill_string_component9_od_units.get())+1))
-#         config.set("INSTALLATION","drill_string_component9",str(dsc))
-#
-#         dsc = Drill_String_Component((drill_string_component_types.index(self.drill_string_component10_type.get())+1,self.get_status_from_index(drill_string_component_status_options.index(self.drill_string_component10_status.get())+1),self.drill_string_component10_length.get(),measurement_units_options.index(self.drill_string_component10_units.get())+1,self.drill_string_component10_od.get(),measurement_units_options.index(self.drill_string_component10_od_units.get())+1))
-#         config.set("INSTALLATION","drill_string_component10",str(dsc))
-#
-#         m = Measurement((self.drill_string_steel_od.get(),measurement_units_options.index(self.drill_string_steel_od_units.get())+1))
-#         config.set("INSTALLATION","drill_string_steel_od",str(m))
-#
-#         config.set("INSTALLATION","sensor_type",str(sensor_types.index(self.sensor_type.get())+1))
-#         config.set("COLLECTION","rhino_version",str(self.rhino_version.get()))
-#         config.set("INSTALLATION","digitizer_serial_number",self.digitizer_serial_number.get())
-#         config.set("INSTALLATION","sensor_serial_number",self.sensor_serial_number.get())
-#         config.set("INSTALLATION","sensor_accelerometer_type",self.get_accelerometer_channel(self.sensor_accelerometer_type.get()))
-#         config.set("INSTALLATION","sensor_ideal_sampling_rate",self.sensor_ideal_sampling_rate.get())
-#         config.set("INSTALLATION","sensor_saturation_g",self.sensor_saturation_g.get())
-#
-#         m = Measurement((self.sensor_position.get(),measurement_units_options.index(self.sensor_position_units.get())+1))
-#         config.set("INSTALLATION","sensor_position",str(m))
-#
-#         config.set("INSTALLATION","sensor_axial_axis",str(sensor_channel_options.index(self.sensor_axial_axis.get())+1))
-#         config.set("INSTALLATION","sensor_tangential_axis",str(sensor_channel_options.index(self.sensor_tangential_axis.get())+1))
-#         config.set("INSTALLATION","sensor_mount_size",str(sensor_mount_size_options.index(self.sensor_mount_size.get())+1))
-#         config.set("INSTALLATION","sensor_installation_location",str(sensor_location_options.index(self.sensor_installation_location.get())+1))
-#         config.set("INSTALLATION","sensor_installation_date",self.get_date("sensor"))
-#         config.set("INSTALLATION","comments",self.comments.get(1.0,END))
-#
-# ################################################################################
-# #SAVE PROCESSING PARAMETERS                                                    #
-# ################################################################################
-#
-#         collection = []
-#         if self.component1.get() == 1:
-#             collection.append("axial")
-#         if self.component2.get() == 1:
-#             collection.append("tangential")
-#         if self.component3.get() == 1:
-#             collection.append("radial")
-#
-#         value = ",".join(collection)
-#         config.set("COLLECTION","components_to_collect",value)
-#         config.set("COLLECTION","output_sampling_rate",str(self.output_sampling_rate.get()))
-#         config.set("COLLECTION","channels_per_sensor",str(self.channels_per_sensor.get()))
-#         config.set("COLLECTION","packet_length",str(self.packet_length.get()))
-#         config.set("COLLECTION","baud_rate",str(self.baud_rate.get()))
-#
-#         #Set the Runtime Parameters
-#         if self.show_plots.get() == 0:
-#             value = False
-#         else:
-#             value = True
-#         config.set("RUNTIME","show_plots",str(value))
-#
-#         if self.log_to_file.get() == 0:
-#             value = False
-#         else:
-#             value = True
-#         config.set("DATAUNIT","log_to_file",str(value))
-#
-#         #set the Playback Parameters
-#         if self.apply_sensitivities.get() == 0:
-#             value = False
-#         else:
-#             value = True
-#         config.set("PLAYBACK","apply_sensitivities",str(value))
-#
-#         if self.plot_playback.get() == 0:
-#             value = False
-#         else:
-#             value = True
-#         config.set("PLAYBACK","show_plots",str(value))
-#
-#         config.set("PLAYBACK","accelerometer_max_voltage",str(round(float(self.accelerometer_max_voltage.get()),1)))
-#         config.set("PLAYBACK","x_sensitivity",self.format_numeric_value(self.x_sensitivity.get()))
-#         config.set("PLAYBACK","y_sensitivity",self.format_numeric_value(self.x_sensitivity.get()))
-#         config.set("PLAYBACK","z_sensitivity",self.format_numeric_value(self.z_sensitivity.get()))
-#         config.set("PLAYBACK","ide_multiplier",self.format_numeric_value(self.ide_multiplier.get()))
-#
-#         #read the Processing Parameters
-#         config.set("PROCESSING","deconvolution_filter_duration",str(round(float(self.deconvolution_filter_duration.get()),3)))
-#         config.set("PROCESSING","min_lag_trimmed_trace",str(round(float(self.min_lag_trimmed_trace.get()),3)))
-#         config.set("PROCESSING","max_lag_trimmed_trace",str(round(float(self.max_lag_trimmed_trace.get()),3)))
-#         config.set("PROCESSING","trapezoidal_bpf_corner_1",str(round(float(self.trapezoidal_bpf_corner_1.get()),1)))
-#         config.set("PROCESSING","trapezoidal_bpf_corner_2",str(round(float(self.trapezoidal_bpf_corner_2.get()),1)))
-#         config.set("PROCESSING","trapezoidal_bpf_corner_3",str(round(float(self.trapezoidal_bpf_corner_3.get()),1)))
-#         config.set("PROCESSING","trapezoidal_bpf_corner_4",str(round(float(self.trapezoidal_bpf_corner_4.get()),1)))
-#         config.set("PROCESSING","trapezoidal_bpf_duration",str(round(float(self.trapezoidal_bpf_duration.get()),3)))
-#
-#
-#         folder = str(self.local_folder.get())
-#         if folder[-1] != "/":
-#             folder = folder + "/"
-#         config.set("DATA_TRANSMISSION","local_folder",folder)
-#
-#         folder = str(self.remote_folder.get())
-#         if folder[-1] != "/":
-#             folder = folder + "/"
-#         config.set("DATA_TRANSMISSION","remote_folder",folder)
-#         config.set("DATA_TRANSMISSION","server",self.server.get())
-#         config.set("DATA_TRANSMISSION","sleep_interval",str(self.sleep_interval.get()))
-#
-#
-#         with open(cfg_fname, 'w') as configfile:
-#             config.write(configfile)
-#
-#         print("File Saved Successfully")
+        # pass
+        if float(self.sensor_distance_to_shocksub.get().split(" ")[0]) < 0 or \
+                float(self.sensor_distance_to_source.get().split(" ")[0]) < 0:
+            tkMessageBox.showinfo("Short between the chair and the keyboard",
+                                  "Config File Error. Unable to save file. Check errors on drill string lengths")
+            return
+
+        self.config.country = self.country.get()
+        self.config.company = self.company.get()
+        self.config.mine_name = self.mine_name.get()
+        self.config.recording_engineer = self.recording_engineer.get()
+        self.config.rig_model = self.rig_model.get()
+        self.config.rig_manufacturer = self.rig_manufacturer.get()
+        self.config.rig_id = self.rig_id.get()
+        self.config.drill_type = int(drill_types.index(self.drill_type.get())+1)
+        self.config.mwd_type = int(mwd_types.index(self.mwd_type.get())+1)
+        self.config.bit_type = int(bit_types.index(self.bit_type.get())+1)
+        self.config.bit_model = self.bit_model.get()
+
+        m = Measurement((self.bit_size.get(), measurement_units_options.index(self.bit_size_units.get())+1))
+        self.config.bit_size = m.to_dict()
+
+
+
+        self.config.bit_date = self.get_date("bit")
+        m = Measurement((self.drill_string_total_length.get(), 3))
+        self.config.drill_string_total_length = m.to_dict()
+
+        length = Measurement((self.drill_string_component1_length.get(),
+                              measurement_units_options.index(self.drill_string_component1_units.get())+1))
+        outer_diameter = Measurement((self.drill_string_component1_od.get(),
+                                     measurement_units_options.index(self.drill_string_component1_od_units.get())+1))
+        label = self.drill_string_component1_type.get()
+        dsc_dict = {
+            "id": 1,
+            "type": drill_string_component_types.index(self.drill_string_component1_type.get())+1,
+            "status": self.get_status_from_index(drill_string_component_status_options.index(
+                self.drill_string_component1_status.get())+1),
+            "length": length.to_dict(),
+            "outer_diameter": outer_diameter.to_dict(),
+            "label": label
+        }
+
+        dsc = DrillStringComponent(attributes_dict=dsc_dict)
+        self.config.drill_string_components[0] = dsc.to_dict()
+
+        length = Measurement((self.drill_string_component2_length.get(),
+                              measurement_units_options.index(self.drill_string_component2_units.get()) + 1))
+        outer_diameter = Measurement((self.drill_string_component2_od.get(),
+                                     measurement_units_options.index(self.drill_string_component2_od_units.get()) + 1))
+        label = self.drill_string_component2_type.get()
+        dsc_dict = {
+            "id": 2,
+            "type": drill_string_component_types.index(self.drill_string_component2_type.get()) + 1,
+            "status": self.get_status_from_index(drill_string_component_status_options.index(
+                self.drill_string_component2_status.get()) + 1),
+            "length": length.to_dict(),
+            "outer_diameter": outer_diameter.to_dict(),
+            "label": label
+        }
+        dsc = DrillStringComponent(attributes_dict=dsc_dict)
+        self.config.drill_string_components[1] = dsc.to_dict()
+
+        length = Measurement((self.drill_string_component3_length.get(),
+                              measurement_units_options.index(self.drill_string_component3_units.get()) + 1))
+        outer_diameter = Measurement((self.drill_string_component3_od.get(),
+                                      measurement_units_options.index(self.drill_string_component3_od_units.get()) + 1))
+        label = self.drill_string_component3_type.get()
+        dsc_dict = {
+            "id": 3,
+            "type": drill_string_component_types.index(self.drill_string_component3_type.get()) + 1,
+            "status": self.get_status_from_index(drill_string_component_status_options.index(
+                self.drill_string_component3_status.get()) + 1),
+            "length": length.to_dict(),
+            "outer_diameter": outer_diameter.to_dict(),
+            "label": label
+        }
+        dsc = DrillStringComponent(attributes_dict=dsc_dict)
+        self.config.drill_string_components[2] = dsc.to_dict()
+
+        length = Measurement((self.drill_string_component4_length.get(),
+                              measurement_units_options.index(self.drill_string_component4_units.get()) + 1))
+        outer_diameter = Measurement((self.drill_string_component4_od.get(),
+                                      measurement_units_options.index(self.drill_string_component4_od_units.get()) + 1))
+        label = self.drill_string_component4_type.get()
+        dsc_dict = {
+            "id": 4,
+            "type": drill_string_component_types.index(self.drill_string_component4_type.get()) + 1,
+            "status": self.get_status_from_index(drill_string_component_status_options.index(
+                self.drill_string_component4_status.get()) + 1),
+            "length": length.to_dict(),
+            "outer_diameter": outer_diameter.to_dict(),
+            "label": label
+        }
+        dsc = DrillStringComponent(attributes_dict=dsc_dict)
+        self.config.drill_string_components[3] = dsc.to_dict()
+
+        length = Measurement((self.drill_string_component5_length.get(),
+                              measurement_units_options.index(self.drill_string_component5_units.get()) + 1))
+        outer_diameter = Measurement((self.drill_string_component5_od.get(),
+                                      measurement_units_options.index(self.drill_string_component5_od_units.get()) + 1))
+        label = self.drill_string_component5_type.get()
+        dsc_dict = {
+            "id": 5,
+            "type": drill_string_component_types.index(self.drill_string_component5_type.get()) + 1,
+            "status": self.get_status_from_index(drill_string_component_status_options.index(
+                self.drill_string_component5_status.get()) + 1),
+            "length": length.to_dict(),
+            "outer_diameter": outer_diameter.to_dict(),
+            "label": label
+        }
+        dsc = DrillStringComponent(attributes_dict=dsc_dict)
+        self.config.drill_string_components[4] = dsc.to_dict()
+
+        length = Measurement((self.drill_string_component6_length.get(),
+                              measurement_units_options.index(self.drill_string_component6_units.get()) + 1))
+        outer_diameter = Measurement((self.drill_string_component6_od.get(),
+                                      measurement_units_options.index(self.drill_string_component6_od_units.get()) + 1))
+        label = self.drill_string_component6_type.get()
+        dsc_dict = {
+            "id": 6,
+            "type": drill_string_component_types.index(self.drill_string_component6_type.get()) + 1,
+            "status": self.get_status_from_index(drill_string_component_status_options.index(
+                self.drill_string_component6_status.get()) + 1),
+            "length": length.to_dict(),
+            "outer_diameter": outer_diameter.to_dict(),
+            "label": label
+        }
+        dsc = DrillStringComponent(attributes_dict=dsc_dict)
+        self.config.drill_string_components[5] = dsc.to_dict()
+
+        length = Measurement((self.drill_string_component7_length.get(),
+                              measurement_units_options.index(self.drill_string_component7_units.get()) + 1))
+        outer_diameter = Measurement((self.drill_string_component7_od.get(),
+                                      measurement_units_options.index(self.drill_string_component7_od_units.get()) + 1))
+        label = self.drill_string_component7_type.get()
+        dsc_dict = {
+            "id": 7,
+            "type": drill_string_component_types.index(self.drill_string_component7_type.get()) + 1,
+            "status": self.get_status_from_index(drill_string_component_status_options.index(
+                self.drill_string_component7_status.get()) + 1),
+            "length": length.to_dict(),
+            "outer_diameter": outer_diameter.to_dict(),
+            "label": label
+        }
+        dsc = DrillStringComponent(attributes_dict=dsc_dict)
+        self.config.drill_string_components[6] = dsc.to_dict()
+
+        length = Measurement((self.drill_string_component8_length.get(),
+                              measurement_units_options.index(self.drill_string_component8_units.get()) + 1))
+        outer_diameter = Measurement((self.drill_string_component8_od.get(),
+                                      measurement_units_options.index(self.drill_string_component8_od_units.get()) + 1))
+        label = self.drill_string_component8_type.get()
+        dsc_dict = {
+            "id": 8,
+            "type": drill_string_component_types.index(self.drill_string_component8_type.get()) + 1,
+            "status": self.get_status_from_index(drill_string_component_status_options.index(
+                self.drill_string_component8_status.get()) + 1),
+            "length": length.to_dict(),
+            "outer_diameter": outer_diameter.to_dict(),
+            "label": label
+        }
+        dsc = DrillStringComponent(attributes_dict=dsc_dict)
+        self.config.drill_string_components[7] = dsc.to_dict()
+
+        length = Measurement((self.drill_string_component9_length.get(),
+                              measurement_units_options.index(self.drill_string_component9_units.get()) + 1))
+        outer_diameter = Measurement((self.drill_string_component9_od.get(),
+                                      measurement_units_options.index(self.drill_string_component9_od_units.get()) + 1))
+        label = self.drill_string_component9_type.get()
+        dsc_dict = {
+            "id": 9,
+            "type": drill_string_component_types.index(self.drill_string_component9_type.get()) + 1,
+            "status": self.get_status_from_index(drill_string_component_status_options.index(
+                self.drill_string_component9_status.get()) + 1),
+            "length": length.to_dict(),
+            "outer_diameter": outer_diameter.to_dict(),
+            "label": label
+        }
+        dsc = DrillStringComponent(attributes_dict=dsc_dict)
+        self.config.drill_string_components[8] = dsc.to_dict()
+
+        length = Measurement((self.drill_string_component10_length.get(),
+                              measurement_units_options.index(self.drill_string_component10_units.get()) + 1))
+        outer_diameter = Measurement((self.drill_string_component10_od.get(),
+                                      measurement_units_options.index(self.drill_string_component10_od_units.get()) + 1))
+        label = self.drill_string_component10_type.get()
+        dsc_dict = {
+            "id": 10,
+            "type": drill_string_component_types.index(self.drill_string_component10_type.get()) + 1,
+            "status": self.get_status_from_index(drill_string_component_status_options.index(
+                self.drill_string_component10_status.get()) + 1),
+            "length": length.to_dict(),
+            "outer_diameter": outer_diameter.to_dict(),
+            "label": label
+        }
+        dsc = DrillStringComponent(attributes_dict=dsc_dict)
+        self.config.drill_string_components[9] = dsc.to_dict()
+
+        m = Measurement((self.drill_string_steel_od.get(),measurement_units_options.index(self.drill_string_steel_od_units.get())+1))
+        self.config.drill_string_steel_od = m.to_dict()
+
+        self.config.sensor_type = int(sensor_types.index(self.sensor_type.get())+1)
+        self.config.rhino_version = float(self.rhino_version.get())
+        self.config.digitizer_serial_number = self.digitizer_serial_number.get()
+        self.config.sensor_serial_number = self.sensor_serial_number.get()
+        self.config.sensor_accelerometer_type = self.get_accelerometer_channel(self.sensor_accelerometer_type.get())
+        self.config.sensor_ideal_sampling_rate = int(self.sensor_ideal_sampling_rate.get())
+        self.config.sensor_saturation_g = int(self.sensor_saturation_g.get())
+
+        m = Measurement((self.sensor_position.get(),
+                         measurement_units_options.index(self.sensor_position_units.get())+1))
+        self.config.sensor_position = m.to_dict()
+
+        self.config.sensor_axial_axis = int(sensor_channel_options.index(self.sensor_axial_axis.get())+1)
+        self.config.sensor_tangential_axis = int(sensor_channel_options.index(self.sensor_tangential_axis.get())+1)
+        self.config.sensor_mount_size = int(sensor_mount_size_options.index(self.sensor_mount_size.get())+1)
+        self.config.sensor_installation_location = int(sensor_location_options.index(
+            self.sensor_installation_location.get())+1)
+        self.config.sensor_installation_date = self.get_date("sensor")
+        self.config.comments = self.comments.get(1.0, END)
+
+################################################################################
+#SAVE PROCESSING PARAMETERS                                                    #
+################################################################################
+
+        collection = list()
+        if self.component1.get() == 1:
+            collection.append("axial")
+        if self.component2.get() == 1:
+            collection.append("tangential")
+        if self.component3.get() == 1:
+            collection.append("radial")
+
+        # value = ",".join(collection)
+        self.config.components_to_collect = collection
+        self.config.output_sampling_rate = int(self.output_sampling_rate.get())
+        # self.config.channels_per_sensor (self.channels_per_sensor.get()))
+        self.config.packet_length = int(self.packet_length.get())
+        self.config.baud_rate = int(self.baud_rate.get())
+
+        #Set the Runtime Parameters
+        # if self.show_plots.get() == 0:
+        #     value = False
+        # else:
+        #     value = True
+        # config.set("RUNTIME","show_plots",str(value))
+        #
+        # if self.log_to_file.get() == 0:
+        #     value = False
+        # else:
+        #     value = True
+        # config.set("DATAUNIT","log_to_file",str(value))
+
+        #set the Playback Parameters
+        # if self.apply_sensitivities.get() == 0:
+        #     value = False
+        # else:
+        #     value = True
+        # config.set("PLAYBACK","apply_sensitivities",str(value))
+        #
+        # if self.plot_playback.get() == 0:
+        #     value = False
+        # else:
+        #     value = True
+        # config.set("PLAYBACK","show_plots",str(value))
+
+        self.config.accelerometer_max_voltage = round(float(self.accelerometer_max_voltage.get()), 1)
+        self.sensor_sensitivity = {
+            "x_sensitivity": self.format_numeric_value(self.x_sensitivity.get()),
+            "y_sensitivity": self.format_numeric_value(self.x_sensitivity.get()),
+            "z_sensitivity": self.format_numeric_value(self.z_sensitivity.get()),
+        }
+        # self.config.set("PLAYBACK","ide_multiplier",self.format_numeric_value(self.ide_multiplier.get()))
+
+        #save the Processing Parameters
+        self.config.deconvolution_filter_duration = round(float(self.deconvolution_filter_duration.get()), 3)
+        self.config.min_lag_trimmed_trace = round(float(self.min_lag_trimmed_trace.get()), 3)
+        self.config.max_lag_trimmed_trace = round(float(self.max_lag_trimmed_trace.get()), 3)
+        # self.config.set("PROCESSING","trapezoidal_bpf_corner_1",str(round(float(self.trapezoidal_bpf_corner_1.get()),1)))
+        # self.config.set("PROCESSING","trapezoidal_bpf_corner_2",str(round(float(self.trapezoidal_bpf_corner_2.get()),1)))
+        # self.config.set("PROCESSING","trapezoidal_bpf_corner_3",str(round(float(self.trapezoidal_bpf_corner_3.get()),1)))
+        # self.config.set("PROCESSING","trapezoidal_bpf_corner_4",str(round(float(self.trapezoidal_bpf_corner_4.get()),1)))
+        # self.config.set("PROCESSING","trapezoidal_bpf_duration",str(round(float(self.trapezoidal_bpf_duration.get()),3)))
+
+
+        folder = str(self.local_folder.get())
+        if folder[-1] != "/":
+            folder = folder + "/"
+        self.config.local_folder = folder
+
+        folder = str(self.remote_folder.get())
+        if folder[-1] != "/":
+            folder = folder + "/"
+        self.config.remote_folder = folder
+        self.config.server = self.server.get()
+        self.config.sleep_interval = int(self.sleep_interval.get())
+
+
+        # with open(cfg_fname, 'w') as configfile:
+        #     self.config.write(configfile)
+
+        for file_type in self.config.files_keys.keys():
+            for cfg_file in self.config.files_keys[file_type].keys():
+                file_dict = dict()
+                for i, key in enumerate(self.config.files_keys[file_type][cfg_file]):
+                    file_dict[key] = self.config[key]
+                with open(os.path.join(PATH, cfg_file), "w") as output:
+                    json.dump(file_dict, output)
+
+        print("File Saved Successfully")
 
 
     def format_numeric_value(self,value):
         value = float(value)
         if value < 1.0:
-            value = round(value,3)
+            value = round(value, 3)
         else:
-            value = round(value,2)
-        return str(value)
+            value = round(value, 2)
+        return value
 
     def update_ds_length(self,sv):
         #print (sv)
@@ -1428,11 +1581,11 @@ class GUI():
 
     def get_accelerometer_channel(self,accel_type):
         if accel_type == "PIEZO" or accel_type == "PE":
-            return '8'
+            return 8
         elif accel_type == "MEMS":
-            return '32'
+            return 32
         elif accel_type == "PIEZORESISTIVE" or accel_type == "PR":
-            return '9'
+            return 9
         else:
             return None
 
