@@ -1254,8 +1254,7 @@ class GUI():
         self.config.sensor_ideal_sampling_rate = int(self.sensor_ideal_sampling_rate.get())
         self.config.sensor_saturation_g = int(self.sensor_saturation_g.get())
 
-        m = Measurement((self.sensor_position.get(),
-                         measurement_units_options.index(self.sensor_position_units.get())+1))
+        m = Measurement((self.calculate_sensor_position(), 3))
         self.config.sensor_position = m.to_dict()
 
         self.config.sensor_axial_axis = int(sensor_channel_options.index(self.sensor_axial_axis.get())+1)
