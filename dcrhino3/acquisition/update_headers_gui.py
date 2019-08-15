@@ -41,14 +41,14 @@ class GUI():
 
         Label(master, text="H5 Path to Fix").grid(row=row)
         self.h5f_path = Entry(master)
-        self.h5f_path.insert(0, "/home/natal/toconvert/test/level_1/piezo/20180707_SSX35660_5452_3200.h5")
+        # self.h5f_path.insert(0, "/home/natal/toconvert/test/level_1/piezo/20180707_SSX35660_5452_3200.h5")
         self.h5f_path.grid(row=row, column=1, columnspan=4, sticky="EW")
         Button(master, text='...', command=self.get_h5f_path).grid(row=row, column=5, sticky="W", pady=4)
         row += 1
 
         Label(master, text="Config File with New Values").grid(row=row)
         self.cfg_path = Entry(master)
-        self.cfg_path.insert(0, "/home/natal/toconvert/test/level_0/20180707_SSX32060_5452.cfg")
+        # self.cfg_path.insert(0, "/home/natal/toconvert/test/level_0/20180707_SSX32060_5452.cfg")
         self.cfg_path.grid(row=row, column=1, columnspan=4, sticky="EW")
         Button(master, text='...', command=self.get_cfg_path).grid(row=row, column=5, sticky="W", pady=4)
         row += 1
@@ -122,11 +122,11 @@ class GUI():
         logger.info("Finished updating files")
 
 
-def main():
+def main(config):
     try:
         master = Tk()
         master.option_add("*Font", "TkDefaultFont 16")
-        GUI(master)
+        GUI(master, config)
         master.mainloop()
     except KeyboardInterrupt:
         sys.exit(0)

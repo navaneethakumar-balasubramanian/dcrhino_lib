@@ -13,6 +13,7 @@ import ttk
 import tkFileDialog
 import tkMessageBox
 import tkFont
+import copy
 from datetime import datetime
 import os
 import calendar
@@ -78,7 +79,8 @@ class GUI():
         self.tx_configuration_process = None
         self.rx_configuration_process = None
         self.shocksub_length = 0
-        self.config = config
+        self._config = config
+        self.config = copy.deepcopy(config)
         row = 0
 
         master.title("Rhino Configuration Settings")
@@ -89,8 +91,9 @@ class GUI():
             master.rowconfigure(rows, weight=1)
             master.columnconfigure(rows, weight=1)
             rows += 1
+        self.master = master
 
-        nb = ttk.Notebook(master)
+        nb = ttk.Notebook(self.master)
         nb.grid(row=row, column=0, columnspan=50, rowspan=49, sticky='NESW')
         row += 1
 
@@ -517,16 +520,40 @@ class GUI():
         Label(page2, text="Hz").grid(row=row,column=2)
         row += 1
 
-        Label(page2, text="Sensor Position from Top of Drillstring").grid(row=row)
+        Label(page2, text="Sensor distance to SS bottom shoulder").grid(row=row)
 
-        self.sensor_position_var = StringVar(page2)
-        self.sensor_position_var.trace("w", lambda name, index, mode, sv=self.sensor_position_var: self.update_sensor_distance_to_source())
-        self.sensor_position = Entry(page2, textvariable=self.sensor_position_var)
-        self.sensor_position.grid(row=row, column=1)
+        self.sensor_distance_to_ss_btm_shoulder_var = StringVar(page2)
+        self.sensor_distance_to_ss_btm_shoulder_var.trace("w", lambda name, index, mode,
+                                                                sv=self.sensor_distance_to_ss_btm_shoulder_var: self.update_sensor_distance_to_source())
+        self.sensor_distance_to_ss_btm_shoulder = Entry(page2, textvariable=self.sensor_distance_to_ss_btm_shoulder_var)
+        self.sensor_distance_to_ss_btm_shoulder.grid(row=row, column=1)
 
-        self.sensor_position_units = StringVar(page2)
-        sensor_position_units_popupMenu = OptionMenu(page2, self.sensor_position_units, *measurement_units_options)
-        sensor_position_units_popupMenu.grid(row = row, column =2)
+        self.sensor_distance_to_ss_btm_shoulder_units = StringVar(page2)
+        sensor_distance_to_ss_btm_shoulder_units_popupMenu = OptionMenu(page2,
+                                                                        self.sensor_distance_to_ss_btm_shoulder_units,
+                                                                        *measurement_units_options)
+        sensor_distance_to_ss_btm_shoulder_units_popupMenu.grid(row=row, column=2)
+        row += 1
+
+        Label(page2, text="Shocksub tail length").grid(row=row)
+
+        self.shocksub_tail_length_var = StringVar(page2)
+        self.shocksub_tail_length_var.trace("w", lambda name, index, mode,
+                                                   sv=self.shocksub_tail_length_var:
+        self.update_sensor_distance_to_source())
+        self.shocksub_tail_length = Entry(page2, textvariable=self.shocksub_tail_length_var)
+        self.shocksub_tail_length.grid(row=row, column=1)
+
+        self.shocksub_tail_length_units = StringVar(page2)
+        shocksub_tail_length_units_popupMenu = OptionMenu(page2, self.shocksub_tail_length_units,
+                                                            *measurement_units_options)
+        shocksub_tail_length_units_popupMenu.grid(row=row, column=2)
+        row += 1
+
+        Label(page2, text="Sensor position to top of Drillstring").grid(row=row)
+        self.sensor_position = StringVar(page2)
+        self.sensor_position_lbl = Label(page2, text="", textvariable=self.sensor_position, fg="green")
+        self.sensor_position_lbl.grid(row=row, column=1)
         row += 1
 
         Label(page2, text="Sensor Distance to Source").grid(row=row)
@@ -536,7 +563,7 @@ class GUI():
         self.sensor_distance_to_source_lbl.grid(row=row, column=1)
         row += 1
 
-        Label(page2, text="Sensor Distance to Shocksub").grid(row=row)
+        Label(page2, text="Sensor Distance to Reflector").grid(row=row)
         self.sensor_distance_to_shocksub = StringVar(page2)
         self.sensor_distance_to_shocksub_lbl = Label(page2, text="", textvariable=self.sensor_distance_to_shocksub,
                                                      fg="green")
@@ -617,44 +644,11 @@ class GUI():
         Label(page3, text="Runtime Parameters", fg="blue").grid(row=row)
         row += 1
 
-        # Label(page3, text="Show Plots").grid(row=row)
-        # self.show_plots = IntVar()
-        # self.plots_true = Radiobutton(page3,
-        #               text="True",
-        #               padx = 20,
-        #               command=lambda:self.toggle(self.show_plots),
-        #               value=1,variable=self.show_plots)
-        # self.plots_true.grid(row=row,column=1,sticky=W)
-        # self.plots_false = Radiobutton(page3,
-        #               text="False",
-        #               padx = 20,
-        #               command=lambda:self.toggle(self.show_plots),
-        #               value=0, variable=self.show_plots)
-        # self.plots_false.grid(row=row,column=2,sticky=W)
-        # row += 1
-
         s = ttk.Separator(page3,orient=HORIZONTAL).grid(row=row, columnspan=50,sticky="ew")
         row+=1
 
         Label(page3, text="Data Unit Parameters", fg="blue").grid(row=row)
         row += 1
-
-        # Label(page3, text="Log to File").grid(row=row)
-        # self.log_to_file = IntVar()
-        # self.log_true = Radiobutton(page3,
-        #               text="True",
-        #               padx = 20,
-        #               command=lambda:self.toggle(self.log_to_file),
-        #               value=1,variable=self.log_to_file)
-        # self.log_true.grid(row=row,column=1,sticky=W)
-        # self.log_false = Radiobutton(page3,
-        #               text="False",
-        #               padx = 20,
-        #               command=lambda:self.toggle(self.log_to_file),
-        #               value=0,variable=self.log_to_file)
-        # self.log_false.grid(row=row,column=2,sticky=W)
-        # row += 1
-
 
         s = ttk.Separator(page3,orient=HORIZONTAL).grid(row=row, columnspan=50,sticky="ew")
         row+=1
@@ -662,38 +656,6 @@ class GUI():
 
         Label(page3, text="Playback Parameters", fg="blue").grid(row=row)
         row += 1
-
-        # Label(page3, text="Apply Sensitivities").grid(row=row)
-        # self.apply_sensitivities = IntVar()
-        # self.apply_sensitivities_true = Radiobutton(page3,
-        #               text="True",
-        #               padx = 20,
-        #               command=lambda:self.toggle(self.apply_sensitivities),
-        #               value=1,variable=self.apply_sensitivities)
-        # self.apply_sensitivities_true.grid(row=row,column=1,sticky=W)
-        # self.apply_sensitivities_false = Radiobutton(page3,
-        #               text="False",
-        #               padx = 20,
-        #               command=lambda:self.toggle(self.apply_sensitivities),
-        #               value=0, variable=self.apply_sensitivities)
-        # self.apply_sensitivities_false.grid(row=row,column=2,sticky=W)
-        # row += 1
-
-        # Label(page3, text="Plot Results").grid(row=row)
-        # self.plot_playback = IntVar()
-        # self.plot_playback_true = Radiobutton(page3,
-        #               text="True",
-        #               padx = 20,
-        #               command=lambda:self.toggle(self.plot_playback),
-        #               value=1,variable=self.plot_playback)
-        # self.plot_playback_true.grid(row=row,column=1,sticky=W)
-        # self.plot_playback_false = Radiobutton(page3,
-        #               text="False",
-        #               padx = 20,
-        #               command=lambda:self.toggle(self.plot_playback),
-        #               value=0, variable=self.plot_playback)
-        # self.plot_playback_false.grid(row=row,column=2,sticky=W)
-        # row += 1
 
         Label(page3, text="Accelerometer Maximum Voltage").grid(row=row)
         self.accelerometer_max_voltage = Entry(page3)
@@ -714,11 +676,6 @@ class GUI():
         self.z_sensitivity = Entry(page3)
         self.z_sensitivity.grid(row=row, column=1)
         row += 1
-
-        # Label(page3, text="IDE Data Multiplier").grid(row=row)
-        # self.ide_multiplier = Entry(page3)
-        # self.ide_multiplier.grid(row=row, column=1)
-        # row += 1
 
         s = ttk.Separator(page3,orient=HORIZONTAL).grid(row=row, columnspan=50,sticky="ew")
         row+=1
@@ -822,7 +779,7 @@ class GUI():
         row = 51
         Button(master, text='Load File', command=self.load_from).grid(row=row, column=1, sticky=W, pady=4)
         Button(master, text='Apply Changes', command=self.save_file).grid(row=row, column=2, sticky=W, pady=4)
-        Button(master, text='Save File As', command=self.save_as).grid(row=row, column=3, sticky=W, pady=4)
+        Button(master, text='Export H5 JSON', command=self.save_as).grid(row=row, column=3, sticky=W, pady=4)
 
         for i in range(100):
             master.grid_columnconfigure(i, weight=1)
@@ -956,12 +913,21 @@ class GUI():
         self.sensor_ideal_sampling_rate.delete(0,len(self.sensor_ideal_sampling_rate.get()))
         self.sensor_ideal_sampling_rate.insert(0,self.config.sensor_ideal_sampling_rate)
 
-        data = self.config.sensor_position
+        data = self.config.sensor_distance_to_ss_btm_shoulder
         measurement = Measurement((data["value"], data["units"]))
-        self.sensor_position.delete(0,len(self.sensor_position.get()))
-        self.sensor_position.insert(0,measurement._value)
-        self.sensor_position_units.set(measurement_units_options[measurement._units-1])
+        self.sensor_distance_to_ss_btm_shoulder.delete(0, len(self.sensor_distance_to_ss_btm_shoulder.get()))
+        self.sensor_distance_to_ss_btm_shoulder.insert(0, measurement._value)
+        self.sensor_distance_to_ss_btm_shoulder_units.set(measurement_units_options[measurement._units - 1])
 
+        data = self.config.shocksub_tail_length
+        measurement = Measurement((data["value"], data["units"]))
+        self.shocksub_tail_length.delete(0, len(self.shocksub_tail_length.get()))
+        self.shocksub_tail_length.insert(0, measurement._value)
+        self.shocksub_tail_length_units.set(measurement_units_options[measurement._units-1])
+
+
+
+        self.sensor_position.set("{} m".format(self.calculate_sensor_position()))
         self.sensor_distance_to_source.set("{} m".format(self.calculate_sensor_distance_to_source()))
         self.sensor_distance_to_shocksub.set("{} m".format(self.calculate_sensor_distance_to_shocksub()))
 
@@ -1002,41 +968,6 @@ class GUI():
         self.baud_rate.delete(0,len(self.baud_rate.get()))
         self.baud_rate.insert(0,baud_rate)
 
-        # #read the Runtime Parameters
-        # plots = self.config.getboolean("RUNTIME","show_plots")
-        # if plots == False:
-        #     self.show_plots.set(0)
-        #     self.plots_false.select()
-        # else:
-        #     self.show_plots.set(1)
-        #     self.plots_true.select()
-
-        # #read the DataUnit Parameters
-        # log = self.config.getboolean("DATAUNIT","log_to_file")
-        # if log == False:
-        #     self.log_to_file.set(0)
-        #     self.log_false.select()
-        # else:
-        #     self.log_to_file.set(1)
-        #     self.log_true.select()
-
-        # #read the Playback Parameters
-        # apply = self.config.getboolean("PLAYBACK","apply_sensitivities")
-        # if apply == False:
-        #     self.apply_sensitivities.set(0)
-        #     self.apply_sensitivities_false.select()
-        # else:
-        #     self.apply_sensitivities.set(1)
-        #     self.apply_sensitivities_true.select()
-
-        # plot_playback = self.config.getboolean("PLAYBACK","show_plots")
-        # if plot_playback == False:
-        #     self.plot_playback.set(0)
-        #     self.plot_playback_false.select()
-        # else:
-        #     self.plot_playback.set(1)
-        #     self.plot_playback_true.select()
-
         accelerometer_max_voltage = self.config.accelerometer_max_voltage
         x_sensitivity = self.config.x_sensitivity
         y_sensitivity = self.config.y_sensitivity
@@ -1066,25 +997,25 @@ class GUI():
         self.max_lag_trimmed_trace.delete(0,len(self.max_lag_trimmed_trace.get()))
         self.max_lag_trimmed_trace.insert(0,max_lag_trimmed_trace)
 
-        # trapezoidal_bpf_corner_1 =self.config.getfloat("PROCESSING","trapezoidal_bpf_corner_1")
-        # self.trapezoidal_bpf_corner_1.delete(0,len(self.trapezoidal_bpf_corner_1.get()))
-        # self.trapezoidal_bpf_corner_1.insert(0,trapezoidal_bpf_corner_1)
-        #
-        # trapezoidal_bpf_corner_2 =self.config.getfloat("PROCESSING","trapezoidal_bpf_corner_2")
-        # self.trapezoidal_bpf_corner_2.delete(0,len(self.trapezoidal_bpf_corner_2.get()))
-        # self.trapezoidal_bpf_corner_2.insert(0,trapezoidal_bpf_corner_2)
-        #
-        # trapezoidal_bpf_corner_3 =self.config.getfloat("PROCESSING","trapezoidal_bpf_corner_3")
-        # self.trapezoidal_bpf_corner_3.delete(0,len(self.trapezoidal_bpf_corner_3.get()))
-        # self.trapezoidal_bpf_corner_3.insert(0,trapezoidal_bpf_corner_3)
-        #
-        # trapezoidal_bpf_corner_4 =self.config.getfloat("PROCESSING","trapezoidal_bpf_corner_4")
-        # self.trapezoidal_bpf_corner_4.delete(0,len(self.trapezoidal_bpf_corner_4.get()))
-        # self.trapezoidal_bpf_corner_4.insert(0,trapezoidal_bpf_corner_4)
-        #
-        # trapezoidal_bpf_duration = self.config.getfloat("PROCESSING","trapezoidal_bpf_duration")
-        # self.trapezoidal_bpf_duration.delete(0,len(self.trapezoidal_bpf_duration.get()))
-        # self.trapezoidal_bpf_duration.insert(0,trapezoidal_bpf_duration)
+        trapezoidal_bpf_corner_1 =self.config.bpf["trapezoidal_bpf_corner_1"]
+        self.trapezoidal_bpf_corner_1.delete(0, len(self.trapezoidal_bpf_corner_1.get()))
+        self.trapezoidal_bpf_corner_1.insert(0, trapezoidal_bpf_corner_1)
+
+        trapezoidal_bpf_corner_2 =self.config.bpf["trapezoidal_bpf_corner_2"]
+        self.trapezoidal_bpf_corner_2.delete(0,len(self.trapezoidal_bpf_corner_2.get()))
+        self.trapezoidal_bpf_corner_2.insert(0,trapezoidal_bpf_corner_2)
+
+        trapezoidal_bpf_corner_3 =self.config.bpf["trapezoidal_bpf_corner_3"]
+        self.trapezoidal_bpf_corner_3.delete(0,len(self.trapezoidal_bpf_corner_3.get()))
+        self.trapezoidal_bpf_corner_3.insert(0,trapezoidal_bpf_corner_3)
+
+        trapezoidal_bpf_corner_4 =self.config.bpf["trapezoidal_bpf_corner_4"]
+        self.trapezoidal_bpf_corner_4.delete(0,len(self.trapezoidal_bpf_corner_4.get()))
+        self.trapezoidal_bpf_corner_4.insert(0,trapezoidal_bpf_corner_4)
+
+        trapezoidal_bpf_duration =self.config.bpf["trapezoidal_bpf_duration"]
+        self.trapezoidal_bpf_duration.delete(0,len(self.trapezoidal_bpf_duration.get()))
+        self.trapezoidal_bpf_duration.insert(0,trapezoidal_bpf_duration)
 
         local_folder = self.config.local_folder
         if len(local_folder) == 0:
@@ -1103,9 +1034,6 @@ class GUI():
         self.remote_folder.delete(0,len(self.remote_folder.get()))
         self.remote_folder.insert(0,remote_folder)
 
-        # self.level_0_path.set(os.path.join(remote_folder,m.level_0_path()))
-        # self.level_1_path.set(os.path.join(remote_folder,m.level_1_path()))
-
         sleep_interval = self.config.sleep_interval
         self.sleep_interval.delete(0,len(self.sleep_interval.get()))
         self.sleep_interval.insert(0,sleep_interval)
@@ -1115,7 +1043,7 @@ class GUI():
 
 
 
-    def save_file(self):
+    def save_file(self, write_to_disk=True):
         # pass
         if float(self.sensor_distance_to_shocksub.get().split(" ")[0]) < 0 or \
                 float(self.sensor_distance_to_source.get().split(" ")[0]) < 0:
@@ -1357,31 +1285,6 @@ class GUI():
         self.config.packet_length = int(self.packet_length.get())
         self.config.baud_rate = int(self.baud_rate.get())
 
-        #Set the Runtime Parameters
-        # if self.show_plots.get() == 0:
-        #     value = False
-        # else:
-        #     value = True
-        # config.set("RUNTIME","show_plots",str(value))
-        #
-        # if self.log_to_file.get() == 0:
-        #     value = False
-        # else:
-        #     value = True
-        # config.set("DATAUNIT","log_to_file",str(value))
-
-        #set the Playback Parameters
-        # if self.apply_sensitivities.get() == 0:
-        #     value = False
-        # else:
-        #     value = True
-        # config.set("PLAYBACK","apply_sensitivities",str(value))
-        #
-        # if self.plot_playback.get() == 0:
-        #     value = False
-        # else:
-        #     value = True
-        # config.set("PLAYBACK","show_plots",str(value))
 
         self.config.accelerometer_max_voltage = round(float(self.accelerometer_max_voltage.get()), 1)
         self.sensor_sensitivity = {
@@ -1389,18 +1292,18 @@ class GUI():
             "y_sensitivity": self.format_numeric_value(self.x_sensitivity.get()),
             "z_sensitivity": self.format_numeric_value(self.z_sensitivity.get()),
         }
-        # self.config.set("PLAYBACK","ide_multiplier",self.format_numeric_value(self.ide_multiplier.get()))
 
         #save the Processing Parameters
         self.config.deconvolution_filter_duration = round(float(self.deconvolution_filter_duration.get()), 3)
         self.config.min_lag_trimmed_trace = round(float(self.min_lag_trimmed_trace.get()), 3)
         self.config.max_lag_trimmed_trace = round(float(self.max_lag_trimmed_trace.get()), 3)
-        # self.config.set("PROCESSING","trapezoidal_bpf_corner_1",str(round(float(self.trapezoidal_bpf_corner_1.get()),1)))
-        # self.config.set("PROCESSING","trapezoidal_bpf_corner_2",str(round(float(self.trapezoidal_bpf_corner_2.get()),1)))
-        # self.config.set("PROCESSING","trapezoidal_bpf_corner_3",str(round(float(self.trapezoidal_bpf_corner_3.get()),1)))
-        # self.config.set("PROCESSING","trapezoidal_bpf_corner_4",str(round(float(self.trapezoidal_bpf_corner_4.get()),1)))
-        # self.config.set("PROCESSING","trapezoidal_bpf_duration",str(round(float(self.trapezoidal_bpf_duration.get()),3)))
-
+        bpf = dict()
+        bpf["trapezoidal_bpf_corner_1"] = round(float(self.trapezoidal_bpf_corner_1.get()), 1)
+        bpf["trapezoidal_bpf_corner_2"] = round(float(self.trapezoidal_bpf_corner_2.get()), 1)
+        bpf["trapezoidal_bpf_corner_3"] = round(float(self.trapezoidal_bpf_corner_3.get()), 1)
+        bpf["trapezoidal_bpf_corner_4"] = round(float(self.trapezoidal_bpf_corner_4.get()), 1)
+        bpf["trapezoidal_bpf_duration"] = round(float(self.trapezoidal_bpf_duration.get()), 1)
+        self.config.bpf = bpf
 
         folder = str(self.local_folder.get())
         if folder[-1] != "/":
@@ -1415,18 +1318,20 @@ class GUI():
         self.config.sleep_interval = int(self.sleep_interval.get())
 
 
-        # with open(cfg_fname, 'w') as configfile:
-        #     self.config.write(configfile)
-
-        for file_type in self.config.files_keys.keys():
-            for cfg_file in self.config.files_keys[file_type].keys():
-                file_dict = dict()
-                for i, key in enumerate(self.config.files_keys[file_type][cfg_file]):
-                    file_dict[key] = self.config[key]
-                with open(os.path.join(PATH, cfg_file), "w") as output:
-                    json.dump(file_dict, output)
-
-        print("File Saved Successfully")
+        if write_to_disk:
+            for file_type in self.config.files_keys.keys():
+                for cfg_file in self.config.files_keys[file_type].keys():
+                    file_dict = dict()
+                    for i, key in enumerate(self.config.files_keys[file_type][cfg_file]):
+                        file_dict[key] = self.config[key]
+                    with open(os.path.join(PATH, cfg_file), "w") as output:
+                        json.dump(file_dict, output)
+            for key in self.config.__dict__.keys():
+                self._config.__dict__[key] = self.config.__dict__[key]
+            print("File Saved Successfully")
+            return
+        print("Config File Updated Successfully")
+        return
 
 
     def format_numeric_value(self,value):
@@ -1457,6 +1362,7 @@ class GUI():
             total = 0
 
             for comp in range(10):
+                self.shocksub_length = 0
                 if drill_string_component_status_options.index(ds_comp_status_vars[comp].get())+1 != 3:
                     value = ds_comp_length_vars[comp].get()
                     units = measurement_units_options.index(ds_comp_length_units_vars[comp].get())+1
@@ -1472,12 +1378,18 @@ class GUI():
             self.update_sensor_distance_to_source()
             return
 
+    def update_sensor_position(self):
+        if self.loaded:
+            self.sensor_position.set("{} m".format(self.calculate_sensor_position()))
+
+
     def update_sensor_distance_to_source(self):
         if self.loaded:
-            value = self.sensor_position_var.get()
-            units = measurement_units_options.index(self.sensor_position_units.get())+1
-            if value == "" or units == "":
-                return
+
+            # value = self.calculate_sensor_position()
+            # units = measurement_units_options.index(self.sensor_position_units.get())+1
+            # if value == "" or units == "":
+            #     return
 
             distance = self.calculate_sensor_distance_to_source()
             if distance < 0:
@@ -1486,6 +1398,7 @@ class GUI():
                 self.sensor_distance_to_source_lbl.config(fg="green")
             self.sensor_distance_to_source.set("{} m".format(distance))
             self.update_sensor_distance_to_shocksub()
+            self.update_sensor_position()
 
 
     def update_sensor_distance_to_shocksub(self):
@@ -1496,6 +1409,7 @@ class GUI():
             self.sensor_distance_to_shocksub_lbl.config(fg="green")
 
         self.sensor_distance_to_shocksub.set("{} m".format(distance))
+
 
     def update_mine_names(self, sv=None, clear_selection=True):
         # pdb.set_trace()
@@ -1527,18 +1441,32 @@ class GUI():
     def toggle(self,var):
         var.set(not var.get())
 
+    def calculate_sensor_position(self):
+        value = self.sensor_distance_to_ss_btm_shoulder.get()
+        if value != "" or value != " ":
+            sensor_distance_to_ss_btm_shoulder = Measurement((value,
+                                                              measurement_units_options.index(self.sensor_distance_to_ss_btm_shoulder_units.get())+1))
+            sensor_position = self.shocksub_length + sensor_distance_to_ss_btm_shoulder.value_in_meters()
+            return round(sensor_position, 2)
+
     def calculate_sensor_distance_to_source(self):
         """
         it looks like the sensor_distance_to_source is drill_string_total_length - sensor_position
         """
-        m = Measurement((float(self.sensor_position.get()), measurement_units_options.index(
-            self.sensor_position_units.get())+1))
-        return round(float(self.drill_string_total_length.get()) - m.value_in_meters(), 2)
+        # m = Measurement((self.calculate_sensor_position(), measurement_units_options.index(
+        #     self.sensor_position_units.get())+1))
+        return round(float(self.drill_string_total_length.get()) - self.calculate_sensor_position(), 2)
 
     def calculate_sensor_distance_to_shocksub(self):
-        sensor_position = Measurement((float(self.sensor_position.get()), measurement_units_options.index(
-            self.sensor_position_units.get())+1))
-        return round(sensor_position.value_in_meters() - self.shocksub_length, 2)
+        value = self.shocksub_tail_length.get()
+        if value != "" or value != " ":
+            tail = Measurement((float(value), measurement_units_options.index(
+                self.shocksub_tail_length_units.get())+1))
+            if self.shocksub_length == 0:
+                tail = Measurement((0,1))
+            distance_to_btm_shoulder = Measurement((float(self.sensor_distance_to_ss_btm_shoulder.get()),
+                                                    measurement_units_options.index(self.sensor_distance_to_ss_btm_shoulder_units.get())+1))
+            return round(tail.value_in_meters() + distance_to_btm_shoulder.value_in_meters(), 2)
 
     def create_ts(self):
         dt = [self.year.get(),self.month.get(),self.day.get(),self.hour.get(),self.minute.get(),self.second.get()]
@@ -1558,26 +1486,31 @@ class GUI():
             return 1
 
     def save_as(self):
-        extension = [('Config File','*.cfg')]
-        f = tkFileDialog.asksaveasfile(initialdir = PATH, mode='w', defaultextension=".cfg",filetypes = extension)
+        extension = [('JSON','*.json')]
+        f = tkFileDialog.asksaveasfile(initialdir = PATH, mode='w', defaultextension=".json",filetypes = extension)
         if f is None: # asksaveasfile return `None` if dialog closed with "cancel".
             return
-        global cfg_fname
-        tmp_cfg = cfg_fname
-        cfg_fname = f.name # starts from `1.0`, not `0.0`
-        self.save_file()
-        cfg_fname =tmp_cfg
+        # global cfg_fname
+        # tmp_cfg = cfg_fname
+        # cfg_fname = f.name # starts from `1.0`, not `0.0`
+        self.save_file(write_to_disk=False)
+        # cfg_fname =tmp_cfg
+        self.config.export_config_for_h5_files(f.name)
+        logger.info("File Exported successfully as {}".format(f.name))
 
     def load_from(self):
-        extension = [('Config File','*.cfg')]
+        extension = [('JSON', '*.json')]
         f = tkFileDialog.askopenfilename(initialdir = PATH, defaultextension=".cfg",filetypes = extension)
         if f is None: # asksaveasfile return `None` if dialog closed with "cancel".
             return
-        global cfg_fname
-        tmp_cfg = cfg_fname
-        cfg_fname = f # starts from `1.0`, not `0.0`
+        # global cfg_fname
+        # tmp_cfg = cfg_fname
+        # cfg_fname = f # starts from `1.0`, not `0.0`
+        with open(f,"r") as input:
+            external_cfg = json.load(input)
+        self.config.set_data_from_json(external_cfg)
         self.load_file()
-        cfg_fname =tmp_cfg
+        # cfg_fname =tmp_cfg
 
     def get_accelerometer_channel(self,accel_type):
         if accel_type == "PIEZO" or accel_type == "PE":
@@ -1675,13 +1608,12 @@ class GUI():
         self.sensor_ideal_sampling_rate.delete(0,len(self.sensor_ideal_sampling_rate.get()))
         self.sensor_ideal_sampling_rate.insert(0,sampling_rate)
 
-        self.sampling_rate_label["text"]="Ideal Sampling Rate in Installation configuration is {} Hz".format(sampling_rate)
+        self.sampling_rate_label["text"] = "Ideal Sampling Rate in Installation configuration is {} Hz".format(
+            sampling_rate)
 
-    def sensor_type_changed(self,sv):
+    def sensor_type_changed(self, sv):
         self.set_default_orientation()
         self.toggle_rhino_version()
-
-
 
 
 def main(config):

@@ -23,10 +23,12 @@ def main(args):
         for root, dirnames, filenames in os.walk(path):
             for filename in filenames:
                 if args.sensor == "rhino":
+                    file_identifier = "RHINO"
                     data_dtype = np.uint32
                     if fnmatch.fnmatch(filename, "*RTR*.h5") or fnmatch.fnmatch(filename, "*raw_data*.h5"):
                         file_list.append(os.path.join(root, filename))
                 elif args.sensor == "ssx":
+                    file_identifier = "SSX"
                     data_dtype = np.float32
                     if fnmatch.fnmatch(filename, "*SSX*.h5"):
                         file_list.append(os.path.join(root, filename))
@@ -51,15 +53,16 @@ def main(args):
         # saved_sensitivity = False
         min_time = time.time()
 
-        sensor_serial_number = None
+        sensor_serial_number = config.digitizer_serial_number
+        sampling_rate = config.output_sampling_rate
 
         for fname in file_list:
             # pdb.set_trace()
-            this_sensor_serial_number = fname.split("_")[-1]
-            if sensor_serial_number is None:
-                sensor_serial_number = this_sensor_serial_number
-            elif sensor_serial_number != this_sensor_serial_number:
-                raise ValueError("Can't merge files from different sensors")
+            # this_sensor_serial_number = fname.split("_")[-2]
+            # if sensor_serial_number is None:
+            #     sensor_serial_number = this_sensor_serial_number
+            # elif sensor_serial_number != this_sensor_serial_number:
+            #     raise ValueError("Can't merge files from different sensors")
 
             print("Merging file: ", fname)
             hf = h5py.File(fname, 'r')
@@ -95,16 +98,16 @@ def main(args):
             output_h5_helper.save_np_array_to_h5_file('z', z)
 
             rssi = np.asarray(hf.get('rssi'), dtype=np.float32)
-            if not np.isnan(rssi.all()):
+            if not np.isnan(rssi):
                 output_h5_helper.save_np_array_to_h5_file('rssi', rssi)
             temp = np.asarray(hf.get('temp'), dtype=np.float32)
-            if not np.isnan(temp.all()):
+            if not np.isnan(temp):
                 output_h5_helper.save_np_array_to_h5_file('temp', temp)
             batt = np.asarray(hf.get('batt'), dtype=np.float32)
-            if not np.isnan(batt.all()):
+            if not np.isnan(batt):
                 output_h5_helper.save_np_array_to_h5_file('batt', batt)
             h5_helper.close_h5f()
-        pdb.set_trace()
+        # pdb.set_trace()
         output_h5_helper.save_field_config_to_h5(config)
         axis = np.asarray([config.sensor_axial_axis, config.sensor_tangential_axis], dtype=np.int32)
         if config.sensor_type == 2:
@@ -123,7 +126,8 @@ def main(args):
         if len(elapsed_str) < 5:
             leading_zeros = "0" * (5-len(elapsed_str))
             elapsed_str = leading_zeros+elapsed_str
-        rename = "{}_RHINO{}_{}".format(min_time.strftime("%Y%m%d"), elapsed_str, sensor_serial_number)
+        rename = "{}_{}{}_{}_{}".format(min_time.strftime("%Y%m%d"), file_identifier, elapsed_str, sensor_serial_number,
+                                     sampling_rate)
         rename = h5fileName.replace(tmp_output_name, rename)
         shutil.move(h5fileName, rename)
 

@@ -225,7 +225,7 @@ class GUI():
             self.playback_daemon_process = None
 
     def rhino_installation_settings(self):
-        self.config = rig.main(self.config)
+        rig.main(self.config)
 
     def update_h5_headers(self):
         uhg.main(self.config)
