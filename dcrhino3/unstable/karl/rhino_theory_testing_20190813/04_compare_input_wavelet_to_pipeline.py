@@ -19,6 +19,7 @@ filtered_model_data = np.load('filtered_rho2670_vel4000_axial.npy')
 
 hole_obs_id = '544_59_619_619_6172_6172'
 process_flow_id = '20190814-115718_model_v1'
+process_flow_id = '20190815-132023_model_v1'
 #processed_h5 = os.path.join(eastern_ridge_processed_folder, hole_obs_id, process_flow_id, 'processed.h5')
 
 processed_h5 = os.path.join(eastern_ridge_processed_folder, hole_obs_id, 

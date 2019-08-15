@@ -8,6 +8,9 @@ Created on Tue Aug 13 13:33:42 2019
 
 import numpy as np
 from scipy import signal
+from model_config import ADD_NOISE
+
+
 
 AXIAL_FEATURE_EXTRACTOR = dict(
     center_window=(-.002, 0.005), 
@@ -26,6 +29,23 @@ TANGENTIAL_FEATURE_EXTRACTOR = dict(
     left_pick='min',
     right_pick='min',
 )
+
+def trace_filename(rho, velocity, component, add_noise, filtered = False):
+    file_handle = 'rho{}_vel{}_{}_noise{}.npy'.format(int(rho), int(velocity), 
+                       component, add_noise)
+    if filtered:
+        file_handle = 'filtered_{}'.format(file_handle)
+    return file_handle
+
+
+def output_h5_name():
+    """
+    contrils the name of the output h5 file
+    """
+    output_filehandle = 'test.h5'    
+    if ADD_NOISE:
+        output_filehandle = 'test_noiseTrue.h5'
+    return output_filehandle
 
 def feature_extractor(wavelet, time, 
                       center_window=None, 
