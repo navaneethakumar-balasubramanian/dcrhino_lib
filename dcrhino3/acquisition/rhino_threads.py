@@ -1,13 +1,13 @@
 import threading
-from urllib2 import urlopen, URLError
-# from urllib.request import urlopen, URLError
+# from urllib2 import urlopen, URLError
+from urllib.request import urlopen, URLError
 import time
 import sys
 from gps3 import gps3
 import pyudev
 import subprocess
 # from dcrhino3.acquisition.external.dimmer import dimmer
-import Queue
+import queue as Queue
 from bin.ide2h5 import ideExport, SimpleUpdater
 import dcrhino3.ide_utilities.path_manager as pm
 import dcrhino3.ide_utilities.data_formats as df

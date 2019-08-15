@@ -7,7 +7,7 @@ Author: thiago
 """
 
 import numpy as np
-import ConfigParser
+import configparser as ConfigParser
 from datetime import datetime
 from dcrhino3.models.metadata import Metadata
 import json

@@ -4,7 +4,7 @@
 from __future__ import absolute_import, division, print_function
 import serial
 import threading
-import Queue  # queue for python 3
+import queue as Queue  # queue for python 3
 import struct
 import sys
 import os
@@ -853,7 +853,7 @@ def main_run(run=True):
             plt.clf()
             last_tracetime = trace_second
 
-        except RuntimeError, e:
+        except RuntimeError(e):
             if e.message == "Unable to create link (name already exists)":
                 m = "{}\n".format(e)
                 logger.error(m)

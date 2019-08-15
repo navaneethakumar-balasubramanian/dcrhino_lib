@@ -1,4 +1,4 @@
-import ConfigParser
+import configparser as ConfigParser
 from dcrhino3.models.drill.drill_string_component import DrillStringComponent
 from dcrhino3.models.config2 import Config
 import json

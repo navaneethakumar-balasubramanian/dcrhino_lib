@@ -86,6 +86,13 @@ class Config(object):
                 """
         return os.path.join(self.field_base_path(), "level_0").lower()
 
+    # @property
+    # def full_json(self):
+    #     """
+    #     This is to return all the keys in the dictionary and not only the ones that are going to
+    #     :return:
+    #     """
+
     @property
     def drill_string_components_list(self):
         components = list()

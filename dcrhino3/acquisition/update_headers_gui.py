@@ -6,8 +6,8 @@ Created on Tue Aug 14 00:58:14 2018
 @author: natal
 """
 
-from Tkinter import *
-import tkFileDialog
+from tkinter import *
+import tkinter.filedialog as tkFileDialog
 import os
 import h5py
 import numpy as np

@@ -6,13 +6,12 @@ Created on Tue Aug 24 00:58:14 2018
 @author: natal
 """
 
-import ConfigParser
-from Tkinter import *
-from Tkinter import _setit as RESET
-import ttk
-import tkFileDialog
-import tkMessageBox
-import tkFont
+import configparser as ConfigParser
+from tkinter import *
+from tkinter import _setit as RESET
+from tkinter import ttk
+import tkinter.filedialog as tkFileDialog
+import tkinter.messagebox as tkMessageBox
 import copy
 from datetime import datetime
 import os
@@ -48,21 +47,22 @@ menu_fname = os.path.join(PATH, "menus.cfg")
 menus = ConfigParser.SafeConfigParser()
 menus.read(menu_fname)
 
-countries = map(StandardString, menus.get("MENUS","countries").split(","))
-engineers = map(StandardString, menus.get("MENUS","engineers").split(","))
-drill_types = map(StandardString,menus.get("MENUS","drill_types").split(","))
-mwd_types = map(StandardString,menus.get("MENUS","mwd_types").split(","))
-bit_types = map(StandardString,menus.get("MENUS","bit_types").split(","))
-drill_string_component_types =map(StandardString,menus.get("MENUS","drill_string_component_types").split(","))
-drill_string_component_status_options =map(StandardString,menus.get("MENUS","drill_string_component_status_options").split(","))
-measurement_units_options=map(StandardString,menus.get("MENUS","measurement_units_options").split(","))
-sensor_types = map(StandardString,menus.get("MENUS","sensor_types").split(","))
-sensor_accelerometer_types = map(StandardString,menus.get("MENUS","sensor_accelerometer_types").split(","))
-sensor_saturation_g_options = map(StandardString,menus.get("MENUS","sensor_saturation_g_options").split(","))
-sensor_mount_size_options = map(StandardString,menus.get("MENUS","sensor_mount_size_options").split(","))
-sensor_location_options = map(StandardString,menus.get("MENUS","sensor_location_options").split(","))
-sensor_channel_options = map(StandardString,menus.get("MENUS","sensor_channel_options").split(","))
-rhino_versions=map(StandardString,menus.get("MENUS","rhino_versions").split(","))
+countries = list(map(StandardString, menus.get("MENUS","countries").split(",")))
+engineers = list(map(StandardString, menus.get("MENUS","engineers").split(",")))
+drill_types = list(map(StandardString,menus.get("MENUS","drill_types").split(",")))
+mwd_types = list(map(StandardString,menus.get("MENUS","mwd_types").split(",")))
+bit_types = list(map(StandardString,menus.get("MENUS","bit_types").split(",")))
+drill_string_component_types = list(map(StandardString,menus.get("MENUS","drill_string_component_types").split(",")))
+drill_string_component_status_options = list(map(StandardString,menus.get("MENUS",
+                                                                    "drill_string_component_status_options").split(",")))
+measurement_units_options = list(map(StandardString,menus.get("MENUS","measurement_units_options").split(",")))
+sensor_types = list(map(StandardString,menus.get("MENUS","sensor_types").split(",")))
+sensor_accelerometer_types = list(map(StandardString,menus.get("MENUS","sensor_accelerometer_types").split(",")))
+sensor_saturation_g_options = list(map(StandardString,menus.get("MENUS","sensor_saturation_g_options").split(",")))
+sensor_mount_size_options = list(map(StandardString,menus.get("MENUS","sensor_mount_size_options").split(",")))
+sensor_location_options = list(map(StandardString,menus.get("MENUS","sensor_location_options").split(",")))
+sensor_channel_options = list(map(StandardString,menus.get("MENUS","sensor_channel_options").split(",")))
+rhino_versions = list(map(StandardString,menus.get("MENUS","rhino_versions").split(",")))
 
 
 clients_fname = os.path.join(PATH,"clients.json")
@@ -80,7 +80,8 @@ class GUI():
         self.rx_configuration_process = None
         self.shocksub_length = 0
         self._config = config
-        self.config = copy.deepcopy(config)
+        # self.config = copy.deepcopy(config.__dict__)
+        self.config = config
         row = 0
 
         master.title("Rhino Configuration Settings")
@@ -248,8 +249,10 @@ class GUI():
         self.drill_string_component1_length = Entry(page2, textvariable=self.drill_string_component1_length_var)
         self.drill_string_component1_length.grid(row=row, column=3)
         self.drill_string_component1_units = StringVar(page2)
+        options = ["one","two","three", "four"]
         drill_string_component1_units_popupMenu = OptionMenu(page2, self.drill_string_component1_units,
-                                                             *measurement_units_options, command=self.update_ds_length)
+                                                             *measurement_units_options,
+                                                             command=self.update_ds_length)
         drill_string_component1_units_popupMenu.grid(row=row, column=4)
         self.drill_string_component1_od = Entry(page2)
         self.drill_string_component1_od.grid(row=row, column=5)
@@ -1575,7 +1578,8 @@ class GUI():
     def run_tx_configuration(self):
         if self.tx_configuration_process == None:
             #self.tx_configuration_process = Popen(['python', os.path.abspath(os.path.join(PATH,"phyzika","rh_config.py {}".format(rhino_port)))])
-            cmd = "source acivate py36; python {} {}".format(os.path.join(PATH,"phyzika","rh_config.py"),rhino_port)
+            # cmd = "source acivate py36; python {} {}".format(os.path.join(PATH,"phyzika","rh_config.py"),rhino_port)
+            cmd = "python {} {}".format(os.path.join(PATH, "phyzika", "rh_config.py"), rhino_port)
             self.tx_configuration_process = Popen(cmd,shell=True)
 
     def toggle_rhino_version(self):
@@ -1626,4 +1630,6 @@ def main(config):
 
 
 if __name__ == "__main__":
-    main()
+    from dcrhino3.models.config2 import Config
+    c = Config(acquisition_config=True)
+    main(c)

@@ -5,9 +5,9 @@ Created on Tue Aug 14 00:58:14 2018
 
 @author: natal
 """
-from Tkinter import *
-import tkFont
-import tkFileDialog
+from tkinter import *
+import tkinter.font as tkFont
+import tkinter.filedialog as tkFileDialog
 from datetime import datetime
 import dcrhino3.acquisition.rhino_installation_gui as rig
 import dcrhino3.acquisition.update_headers_gui as uhg
@@ -36,6 +36,8 @@ BAUD_RATE = None
 LOCAL_FOLDER = None
 debug = True
 
+import sys
+print("Python version is {}".format(sys.version))
 
 def goodbye():
     global BAUD_RATE

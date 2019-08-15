@@ -5,11 +5,11 @@ Created on Tue Aug 14 00:58:14 2018
 
 @author: natal
 """
-from Tkinter import *
-import tkFileDialog
+from tkinter import *
+import tkinter.filedialog as tkFileDialog
 import os
 from subprocess import Popen
-from constants import ACQUISITION_PATH as PATH
+from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
 from dcrhino3.models.config2 import Config
 
 class GUI():

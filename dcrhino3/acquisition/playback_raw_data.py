@@ -162,8 +162,8 @@ def main(args):
 
     print("Applying calibration")
 
-    accelerometer_max_voltage = config.accelerometer_max_voltage
-    rhino_version = config.rhino_version
+    accelerometer_max_voltage = float(config.accelerometer_max_voltage)
+    rhino_version = float(config.rhino_version)
 
     if len(sensitivity) > 1:
         is_ide_file = False
@@ -190,6 +190,8 @@ def main(args):
         z_data = calibrate_data(z_raw, sensitivity[0], is_ide_file, remove_mean=remove_mean)
     else:
         print("Rhino file")
+        # import pdb
+        # pdb.set_trace()
         x_data = calibrate_data(x_raw, sensitivity[0], accelerometer_max_voltage,
                                 rhino_version, remove_mean=remove_mean)
         y_data = calibrate_data(y_raw, sensitivity[1], accelerometer_max_voltage,
