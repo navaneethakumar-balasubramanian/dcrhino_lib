@@ -15,6 +15,7 @@ from dcrhino3.models.config2 import Config
 from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
 from dcrhino3.helpers.config_file_helper import update_global_config
 import h5py
+import pdb
 
 logger = init_logging(__name__)
 file_logger = init_logging_to_file(__name__)
@@ -88,7 +89,7 @@ class H5Helper:
     """
 
     def __init__(self, h5f, load_xyz=True, load_ts=True, config=None):
-
+        # pdb.set_trace()
         self.h5f = h5f
         # self.metadata = self._extract_metadata_from_h5_file()
         if config is None:
@@ -239,11 +240,12 @@ class H5Helper:
             return [1, 1, 1]
 
     def _extract_global_config_from_h5_file(self):
-        if "global_config_jsons" not in self.h5f.attrs:
-            return None
-        global_config_json = json.loads(self.h5f.attrs["global_config_jsons"])
-        keys = global_config_json.keys()
-        first_config = global_config_json[keys[0]]
+        if "global_config_jsons" not in self.h5f.attrs.keys():
+            first_config = json.loads(self.extract_metadata_from_h5_file_as_json())
+        else:
+            global_config_json = json.loads(self.h5f.attrs["global_config_jsons"])
+            keys = list(global_config_json.keys())
+            first_config = global_config_json[keys[0]]
         c = Config()
         c.set_data_from_json(first_config)
         return c
@@ -261,6 +263,9 @@ class H5Helper:
     def update_global_config(self, config, file_id="0"):
         update_global_config(self.h5f, config, file_id)
 
+    def extract_global_config_from_h5(self):
+        return self._extract_global_config_from_h5_file()
+
     def extract_metadata_from_h5_file_as_json(self):
         return json.dumps(self.extract_metadata_from_h5_file_as_dict(), indent=4)
 
@@ -268,6 +273,8 @@ class H5Helper:
         config_dict = dict()
         for key, value in self.h5f.attrs.items():
             param_name = key.split("/")[1]
+            if isinstance(value, bytes):
+                value = value.decode("utf-8")
             config_dict[param_name] = value
         return config_dict
 
