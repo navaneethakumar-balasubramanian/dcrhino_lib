@@ -9,9 +9,16 @@ Created on Jan 26, 2016
 Modified by NRN on May 22, 2018
 '''
 from __future__ import absolute_import, division, print_function
+import sys
+from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
+logger = init_logging(__name__)
+file_logger = init_logging_to_file(__name__)
+if sys.version_info.major != 2:
+    logger.error("This script only works with Python 2")
+    sys.exit(0)
+
 import locale
 import os.path
-import sys
 import time
 from datetime import datetime
 from sys import platform
@@ -21,9 +28,10 @@ import dcrhino3.ide_utilities.path_manager as pm
 import dcrhino3.ide_utilities.rhino
 from dcrhino3.ide_utilities.mide_ebml import importer
 from dcrhino3.models.config2 import Config
-from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
-logger = init_logging(__name__)
-file_logger = init_logging_to_file(__name__)
+
+
+
+
 
 
 class IDEExportError(Exception):
