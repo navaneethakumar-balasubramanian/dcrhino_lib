@@ -10,6 +10,20 @@ from dcrhino3.acquisition.constants import ACQUISITION_PATH
 from dcrhino3.models.drill.drill_string_component import DrillStringComponent
 
 
+def copy_config_object(old_config):
+    new_config = Config()
+    if old_config.acquisition_config:
+        new_config.acquisition_config = True
+
+    for key in old_config.__dict__.keys():
+        setattr(new_config, key, old_config.__dict__[key])
+
+    for key in old_config.files_keys:
+        new_config.files_keys[key] = old_config.files_keys[key]
+
+    return new_config
+
+
 class Config(object):
     """
     """
@@ -33,6 +47,9 @@ class Config(object):
         if json_data is not None:
             self.set_data_from_json(json_data)
         return
+
+    def duplicate_config(self):
+        return copy_config_object(self)
 
     def clear_all_keys(self):
         for key in self.pipeline_files_to_dict.keys():

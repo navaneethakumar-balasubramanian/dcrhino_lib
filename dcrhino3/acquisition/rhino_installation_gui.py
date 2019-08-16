@@ -80,8 +80,8 @@ class GUI():
         self.rx_configuration_process = None
         self.shocksub_length = 0
         self._config = config
-        # self.config = copy.deepcopy(config.__dict__)
-        self.config = config
+        self.config = config.duplicate_config()
+        # self.config = config
         row = 0
 
         master.title("Rhino Configuration Settings")
