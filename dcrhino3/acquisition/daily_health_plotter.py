@@ -5,13 +5,14 @@ import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 import numpy as np
 import argparse
+from dcrhino3.acquisition.constants import LOGS_PATH
 
 
 def main(start_date=None, end_date=None):
     # path = "/home/natal/toconvert/waio/tablet_logs/Logs_83361/*health.log"
     # path = "/home/natal/toconvert/bma/tablet_logs/*health.log"
-    path = "/media/natal/256/BMC/logs/*health.log"
-    # path = os.path.join(LOGS_PATH, "*health.log")
+    # path = "/media/natal/256/BMC/logs/*health.log"
+    path = os.path.join(LOGS_PATH, "*health.log")
 
     files = glob2.glob(path)
 
@@ -144,7 +145,7 @@ def main(start_date=None, end_date=None):
     plt.suptitle("Tablet System Health Time Series from {} to {}".format(df.date.min(), df.date.max()))
 
     plt.show()
-    print(df.temperature.describe())
+    # print(df.temperature.describe())
     print("Done")
 
 
