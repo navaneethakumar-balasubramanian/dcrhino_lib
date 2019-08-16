@@ -530,11 +530,9 @@ class CollectionDaemonThread(threading.Thread):
                                 h5_helper.save_field_config_to_h5()
                                 sensitivity = np.array(config.sensitivity_list_xyz, dtype=np.float32)
                                 h5_helper.save_np_array_to_h5_file('sensitivity', sensitivity)
-                                print("Saved Sensitivity array")
                                 axis = np.array([config.sensor_axial_axis, config.sensor_tangential_axis],
                                                 dtype=np.float32)
                                 h5_helper.save_np_array_to_h5_file('axis', axis)
-                                print("Saved Axis array")
                                 lastFileName = utc_dt
                                 first = True
                             else:
