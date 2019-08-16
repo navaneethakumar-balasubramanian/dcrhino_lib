@@ -44,6 +44,7 @@ config = Config(acquisition_config=True)
 
 def get_rhino_ttyusb():
     p = subprocess.check_output('ls -l /dev/serial/by-id/ | grep "usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_" | grep -Po -- "../../\K\w*"',shell=True)
+    p = p.decode("utf-8")
     return "/dev/" + p.replace('\n', '')
 
 
@@ -76,7 +77,7 @@ class LogFileDaemonThread(threading.Thread):
         threading.Thread.__init__(self)
         self.logQ = logQ
         self.filename = os.path.join(LOGS_PATH, datetime.now().strftime('%Y_%m_%d_%H')+'.log')
-        self.output_file = open(self.filename, 'ar', buffering=0)
+        self.output_file = open(self.filename, 'a')
 
     def run(self):
         m = "Started LogFileDaemon\n"
@@ -98,7 +99,7 @@ class LogFileDaemonThread(threading.Thread):
 
     def change_files(self, filename):
         self.output_file.close()
-        self.output_file = open(filename, 'ar', buffering=0)
+        self.output_file = open(filename, 'a')
 
     def log(self):
         while not self.logQ.empty():
@@ -399,13 +400,15 @@ class SerialThread(threading.Thread):
                 a = self.cport.read(self.pktlen)
                 if restarted:
                     if len(a):
-                        logger.debug(a[0] == b'\x02', a[-1] == b'\x03', len(a))
+                        # logger.debug(a[0] == b'\x02', a[-1] == b'\x03', len(a))
+                        logger.debug(a[0] == 0x02, a[-1] == 0x03, len(a))
                     restarted = False
-                if len(a) == self.pktlen and a[0] == b'\x02' and a[self.pktlen-1] == b'\x03':
+                # if len(a) == self.pktlen and a[0] == b'\x02' and a[self.pktlen-1] == b'\x03':
+                if len(a) == self.pktlen and a[0] == 0x02 and a[self.pktlen - 1] == 0x03:
                     counter = 0
-                    if a[1] == b'\x64':
+                    if a[1] == 0x64:
                         self.tx_status = 1
-                    elif a[1] == b'\x69':
+                    elif a[1] == 0x69:
                         self.tx_status = 0
                     self.flushq.put(a)
                 else:
@@ -666,7 +669,8 @@ def main_run(run=True):
         p = subprocess.Popen(['pstree', '-p', str(pid)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate()
         subpids = []
-        for sub_pid in re.findall('\(.*?\)', out):
+        for sub_pid in re.findall(b'\(.*?\)', out):
+            sub_pid = sub_pid.decode("utf-8")
             sub_pid = sub_pid.replace('(', '').replace(')', '')
             if pid != int(sub_pid):
                 m = "{}\n".format(sub_pid)
@@ -853,7 +857,7 @@ def main_run(run=True):
             plt.clf()
             last_tracetime = trace_second
 
-        except RuntimeError(e):
+        except RuntimeError as e:
             if e.message == "Unable to create link (name already exists)":
                 m = "{}\n".format(e)
                 logger.error(m)
@@ -979,10 +983,14 @@ def add_empty_health_row_to_Q(rssi, temp, batt, packets, delay, trace_time_array
     last_tracetime = datetime.utcfromtimestamp(last_tracetime)
     trace_time_array.append(last_tracetime)
     now_array.append(now)
+    # health = [rssi, packets, delay, temp, batt, last_counterchanges, last_tracetime, now, sec_delay,
+    #           corrupt_packets, tx_status, max_axial_acceleration, min_axial_acceleration,
+    #           max_tangential_acceleration, min_tangential_acceleration,
+    #           max_radial_acceleration, min_radial_acceleration, disk_usage]
     health = [rssi, packets, delay, temp, batt, last_counterchanges, last_tracetime, now, sec_delay,
               corrupt_packets, tx_status, max_axial_acceleration, min_axial_acceleration,
               max_tangential_acceleration, min_tangential_acceleration,
-              max_radial_acceleration, min_radial_acceleration, disk_usage]
+              max_radial_acceleration, min_radial_acceleration, disk_usage, current_drift]
     system_healthQ.put(health)
     np.save(os.path.join(RAM_PATH, 'system_health.npy'), np.asarray(health))
 
@@ -1000,9 +1008,10 @@ if __name__ == "__main__":
 
 
 #############################################################################
-# v4.0
+# v4.2
 # Only compatible with rhino 1.1
 # Uses the new config files
 # Saves the config file in the h5 file as a json string and not as attributes
 # Uses raw trace data object for data handling
+# Runs on Python 3.6
 #############################################################################

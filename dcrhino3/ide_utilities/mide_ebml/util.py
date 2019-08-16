@@ -20,14 +20,14 @@ import sys
 import time
 import types
 import xml.dom.minidom
-from StringIO import StringIO
+from io import StringIO
 from collections import Sequence, OrderedDict
 
-from ebml import core as ebml_core
-from ebml.schema import base as schema_base
-from ebml.schema import specs as schema_specs
-from ebmlite import INT, UINT, FLOAT, STRING, UNICODE, DATE, BINARY, CONTAINER
-from ebmlite import Schema
+from dcrhino3.ide_utilities.mide_ebml.ebml import core as ebml_core
+from dcrhino3.ide_utilities.mide_ebml.ebml.schema import base as schema_base
+from dcrhino3.ide_utilities.mide_ebml.ebml.schema import specs as schema_specs
+from dcrhino3.ide_utilities.mide_ebml.ebmlite import INT, UINT, FLOAT, STRING, UNICODE, DATE, BINARY, CONTAINER
+from dcrhino3.ide_utilities.mide_ebml.ebmlite import Schema
 
 #===============================================================================
 # 
@@ -444,7 +444,7 @@ def encode_attributes(data):
     result = []
     for d in data:
         if isinstance(d[1], (tuple, list)):
-            print d
+            print (d)
             k = d[0]
             v, elementType = d[1]
         else:
@@ -534,41 +534,41 @@ if __name__ == "__main__":
     from pprint import pprint
     from ebml.schema.mide import MideDocument
     
-    print "\n*** Testing configuration EBML input and output"
+    print ("\n*** Testing configuration EBML input and output")
     
     def uglyprint(*args, **kwargs):
-        print repr(args[0])
+        print (repr(args[0]))
         
     def testWriteRead(parentElementName, children, pretty=True):
         printer = pprint if pretty else uglyprint
         
-        print "*" * 78
-        print "*** Source data:"
+        print ("*" * 78)
+        print ("*** Source data:")
         printer(children)
     
-        print "\n*** Building EBML data:"    
+        print ("\n*** Building EBML data:")
         config = build_ebml(parentElementName, children)
         printer(config)
         
-        print "\n*** Creating MideDocument from data: ",
+        print ("\n*** Creating MideDocument from data: ",)
         doc = MideDocument(StringIO(config))
         printer(doc)
         
-        print "*** Document structure:"
+        print ("*** Document structure:")
         dump_ebml(doc)
         
-        print "\n*** Parsed Data:"
+        print ("\n*** Parsed Data:")
         readConfig = parse_ebml(doc.roots, ordered=False)[parentElementName]
         printer(readConfig)
         
-        print "\n*** Comparing the output to the input...", 
+        print ("\n*** Comparing the output to the input...",)
         try:
             assert(readConfig == children)
-            print "Input matches the output!"
+            print ("Input matches the output!")
         except AssertionError:
-            print "Input and output did not match!"
+            print ("Input and output did not match!")
             
-        print "*" * 78
+        print ("*" * 78)
 
 
     testWriteRead("RecorderConfiguration", {

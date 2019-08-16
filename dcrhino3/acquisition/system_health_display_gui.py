@@ -30,7 +30,7 @@ class SystemHealthLogger():
     def change_files(self, filename):
         if self.output_file is not None:
             self.output_file.close()
-        self.output_file = open(filename, 'ar', buffering=0)
+        self.output_file = open(filename, 'a')
 
     def log(self, message):
         filename = os.path.join(LOGS_PATH, datetime.now().strftime('%Y_%m_%d_%H')+'_health.log')
