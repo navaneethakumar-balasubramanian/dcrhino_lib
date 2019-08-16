@@ -155,7 +155,7 @@ class GUI():
                 logging.info("Acquisition started in debug mode")
             else:
                 self.error_file = os.path.join(LOGS_PATH, "{}.err".format(timestamp))
-                with open(self.error_file, "ar", buffering=0) as self.err:
+                with open(self.error_file, "a", buffering=0) as self.err:
                     self.acquisition_process = Popen(['python', os.path.abspath(os.path.join(PATH, acq_script))],
                                                      stderr=self.err)
                     self.system_health_process = Popen(['python', os.path.abspath(os.path.join(PATH,
