@@ -5,17 +5,20 @@ import matplotlib.pyplot as plt
 import os
 import argparse
 import calendar
-import pdb
 import time
 from datetime import datetime
 from dcrhino3.models.config2 import Config
 from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
 from dcrhino3.helpers.general_helper_functions import interpolate_data, calibrate_data
-from test_spectral_qc_plot import make_spectral_qc_plot
+from dcrhino3.acquisition.test_spectral_qc_plot import make_spectral_qc_plot
 from dcrhino3.helpers.h5_helper import H5Helper
 import shutil
 import scipy.signal as ssig
 import json
+import pdb
+logger = init_logging(__name__)
+file_logger = init_logging_to_file(__name__)
+
 
 
 def main(args):
@@ -23,14 +26,14 @@ def main(args):
     repeat = args.repeat_file
 
     if debug:
-        print "Starting in Debug Mode"
+        print("Starting in Debug Mode")
         save_raw = False
         save_csv = False
         save_numpy = False
         show_plots = True
         make_spectrum = True
     else:
-        print "Starting in Regular Mode"
+        print("Starting in Regular Mode")
         save_raw = args.save_raw == "True"
         save_csv = args.save_csv == "True"
         save_numpy = args.save_numpy == "True"
@@ -103,15 +106,6 @@ def main(args):
         ts.drop(bad_indices, inplace=True)
         time_indices = (ts.ts >= start_time) & (ts.ts < end_time)
 
-
-    # counter = 0
-    # for i in range(1, len(ts)):
-    #     if ts[i] < ts[i-1]:
-    #         print(ts[i-1],ts[i],counter)
-    #         counter += 1
-    #         time_indices[i] = False
-    # ts = h5_helper.load_axis_mask("ts", time_indices)
-
     print("Loading Raw Data")
     try:
         x_raw = h5_helper.load_axis_mask("x", time_indices)
@@ -123,41 +117,35 @@ def main(args):
         y_raw = h5_helper.load_axis_mask("y_data", time_indices)
         z_raw = h5_helper.load_axis_mask("z_data", time_indices)
     print("Extracting Metadata")
+    # pdb.set_trace()
     config = Config()
-    config.set_data_from_json(json.loads(h5_helper.extract_metadata_from_h5_file_as_json()))
+    try:
+        config = h5_helper.extract_global_config_from_h5()
+    except:
+        json_data_for_config = json.loads(h5_helper.extract_metadata_from_h5_file_as_json())
+        config.set_data_from_json(json_data_for_config)
     sensitivity = np.asarray(hf.get('sensitivity'), dtype=np.float32)
-    print (hf.get('axis'))
+    print(hf.get('axis'))
     if hf.get('axis') is None:
-        print ("NO AXIS ON METADATA ASSUMING IT'S AN IDE FILE")
+        print("NO AXIS ON METADATA ASSUMING IT'S AN IDE FILE")
         file_axis = [1, 2]
     else:
         file_axis = np.asarray(hf.get('axis'), dtype=np.int32)
 
     if args.sampling_rate is None:
-        output_sampling_rate = config.output_sampling_rate
-        print ("Using metadata sampling rate of {}".format(output_sampling_rate))
+        output_sampling_rate = int(config.output_sampling_rate)
+        print("Using metadata sampling rate of {}".format(output_sampling_rate))
     else:
         output_sampling_rate = int(args.sampling_rate)
 
     print(sensitivity)
     print(file_axis)
-    # print (hf.keys())
 
-    # IDE File
-    # sensitivity = [1000000.0]
-    # file_axis = [1,2]
-
-    # Rhino File
-    # sensitivity = [2.5,2.5,2.5]#500g
-    # sensitivity = [12.5,12.5,12.5]#500g
-    # file_axis = [2,1]
-
-
-    # pdb.set_trace()
-
-    # seq = np.asarray(hf.get('seq'), dtype=np.uint32)
-    tx_sequence = h5_helper.load_axis_mask("cticks", time_indices)
-
+    try:
+        tx_sequence = h5_helper.load_axis_mask("cticks", time_indices)
+    except:
+        logger.warning("File has ticks in the column names instead of cticks")
+        tx_sequence = h5_helper.load_axis_mask("ticks", time_indices)
 
     # sequence_diff = np.diff(tx_sequence)
     # missed_samples = sequence_diff[sequence_diff > 1]-1
@@ -181,9 +169,9 @@ def main(args):
     # performance_df["missed"] = missed_samples
 
     print("Applying calibration")
-
-    accelerometer_max_voltage = config.accelerometer_max_voltage
-    rhino_version = config.rhino_version
+    # pdb.set_trace()
+    accelerometer_max_voltage = float(config.accelerometer_max_voltage)
+    rhino_version = float(config.rhino_version)
 
     if len(sensitivity) > 1:
         is_ide_file = False
@@ -210,6 +198,8 @@ def main(args):
         z_data = calibrate_data(z_raw, sensitivity[0], is_ide_file, remove_mean=remove_mean)
     else:
         print("Rhino file")
+        # import pdb
+        # pdb.set_trace()
         x_data = calibrate_data(x_raw, sensitivity[0], accelerometer_max_voltage,
                                 rhino_version, remove_mean=remove_mean)
         y_data = calibrate_data(y_raw, sensitivity[1], accelerometer_max_voltage,
@@ -569,7 +559,7 @@ if __name__ == "__main__":
                            default=None)
     argparser.add_argument('-sr', '--sampling_rate', help="Resampling Rate for Output Data", default=None)
     argparser.add_argument('-source', '--source_path', help="Path to source file", default=None)
-    argparser.add_argument('-plot', '--plot', help="Show plot for axial axis", default=False)
+    argparser.add_argument('-plot', '--plot', help="Show plot for axial axis", default=True)
     argparser.add_argument('-kind', '--kind', help="Interpolation Method", choices=["linear", "quadratic"],
                            default="linear")
     argparser.add_argument('-rm', '--remove_mean', help="Remove mean flag", default=False)
@@ -578,7 +568,7 @@ if __name__ == "__main__":
     argparser.add_argument('-save_csv', '--save_csv', help="Save interpolated data csv",  default=True)
     argparser.add_argument('-save_numpy', '--save_numpy', help="Save numpy arrays",  default=False)
     argparser.add_argument('-debug', '--debug', help="Run in debug mode",  default=False)
-    argparser.add_argument('-spectrum', '--spectrum', help="Generate Spectrum Plot",  default=False)
+    argparser.add_argument('-spectrum', '--spectrum', help="Generate Spectrum Plot",  default=True)
     argparser.add_argument('-to', '--time_offset', help="Time offset for time axis", default=0)
     argparser.add_argument('-repeat', '--repeat_file', help='Path to the repeat file', default=None)
 

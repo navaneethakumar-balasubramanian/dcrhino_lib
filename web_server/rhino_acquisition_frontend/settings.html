@@ -59,23 +59,93 @@
     function bodyLoadHandler() {
         // Use require to load script.js. The object which the script returns
         // will be passed to your callback function
-        require(['rhino_acq'], function(App) {
+        require(['rhino_acq','jquery','helper'one ], function(App) {
             // Call initialize function which we created in script.js
 
             App.initialize();
+            $("form#settings_form").submit(function(e){
+            e.preventDefault()
+            var formData = new FormData($(this)[0]);
+             //append some non-form data also
+             console.log(formData)
+             $.ajax({
+              type: "POST",
+              url: "/hello",
+              data: formData,
+              processData: false,
+               contentType: false,
+               dataType: "json"
+            });
+            });
+            $.ajax({
+            url:"/get_config",
+            dataType: "json",
+            success: function(data, textStatus, jqXHR) {
+               //process data
+            console.log(data)
+            populate('#settings_form', data);
+            },
+            });
         });
+
     }
+
+    function populate(frm, data) {
+ $.each(data, function(key, value){
+   $('[name='+key+']', frm).val(value);
+ });
+}
+
+
     </script>
   </head>
 
-        <!-- Change body tag to the following -->
-        <body onload="bodyLoadHandler()">
-
-<!--           <h1>NATAL THIS IS THE PAGE!!</h1>-->
-<!--            <button class="toolbutton mode-button" id="resetButton" title="START PROCESS"-->
-<!--                    onclick="require(['rhino_acq'], function(App) { App.open_settings();})">-->
-<!--                <i class="geotoolkit-icon-fit-to-screen"></i></button>-->
-           <a class="btn btn-dark" role="button" href="/open_settings">Settings</a>
-    <canvas id="canvas" style="width:90%;height:90%;"></canvas>
-</body>
+    <!-- Change body tag to the following -->
+    <body onload="bodyLoadHandler()">
+        <form method="post" id="settings_form" action="">
+          <div class="form-group col-md-6">
+            <label for="country">Country</label>
+            <input type="text" class="form-control" id="country" name="country" placeholder="Australia">
+          </div>
+          <div class="form-group col-md-6">
+            <label for="company">Mining Company</label>
+            <input type="text" class="form-control" id="company" name="company" placeholder="BMA">
+          </div>
+          <div class="form-group col-md-6">
+            <label for="inputAddress">Mine Name</label>
+            <input type="text" class="form-control" id="inputAddress" placeholder="Goonyella">
+          </div>
+          <div class="form-group col-md-6">
+            <label for="inputAddress2">Datacloud Engineer</label>
+            <input type="text" class="form-control" id="inputAddress2" placeholder="Doug_Kirkby">
+          </div>
+          <!--<div class="form-group col-md-6">
+            <label for="inputCity">City</label>
+            <input type="text" class="form-control" id="inputCity">
+          </div>
+          <div class="form-group col-md-4">
+            <label for="inputState">State</label>
+            <select id="inputState" class="form-control">
+              <option selected>Choose...</option>
+              <option>...</option>
+            </select>
+          </div>
+          <div class="form-group col-md-2">
+            <label for="inputZip">Zip</label>
+            <input type="text" class="form-control" id="inputZip">
+          </div>
+          <div class="form-group col-md-6">
+            <div class="form-check ">
+              <input class="form-check-input" type="checkbox" id="gridCheck">
+              <label class="form-check-label" for="gridCheck">
+                Check me out
+              </label>
+            </div>
+          </div>-->
+          <div class="form-group col-md-6">
+            <button type="submit" class="btn btn-primary">Sign in</button>
+          </div>
+        </form>
+        <canvas id="canvas" style="width:90%;height:90%;"></canvas>
+    </body>
 </html>

@@ -27,6 +27,8 @@ import datetime
 #import numpy as np
 import os
 import pdb
+from json import JSONEncoder
+#from dcrhino3.models.interval import Interval
 
 from dcrhino3.helpers.general_helper_functions import init_logging, add_inverse_dictionary
 from dcrhino3.models.drill.drill_helper_functions import LengthMeasurement as Measurement
@@ -79,10 +81,15 @@ class DrillStringComponent(object):
         self._outer_diameter_units = None
         self.gui_number = None
         self.gui_string = gui_string
-        self.label = None# collar, bit_sub
+        self.label = None   # collar, bit_sub
+        if gui_string is not None:
+            self.populate_from_gui_string()
         if attributes_list is not None:
             self.populate_from_attributes_list(attributes_list)
+        if attributes_dict is not None:
+            self.populate_from_attributes_dict(attributes_dict)
 
+    
     @property
     def od(self):
         return self._outer_diameter
@@ -105,14 +112,38 @@ class DrillStringComponent(object):
             raise Exception
         self._component_type = int(attributes_list[0])
         self._installation = int(attributes_list[1])
-        self._length= float(attributes_list[2])
-        self._length_units= int(attributes_list[3])
+        self._length = float(attributes_list[2])
+        self._length_units = int(attributes_list[3])
         self._outer_diameter = float(attributes_list[4])
         self._outer_diameter_units = int(attributes_list[5])
         return
 
+    def populate_from_attributes_dict(self, attributes_dict):
+        self.gui_number = attributes_dict["id"]
+        self._component_type = attributes_dict["type"]
+        self._installation = attributes_dict["status"]
+        self._length = attributes_dict["length"]["value"]
+        self._length_units = attributes_dict["length"]["units"]
+        self._outer_diameter = attributes_dict["outer_diameter"]["value"]
+        self._outer_diameter_units = attributes_dict["outer_diameter"]["units"]
+        self.label = attributes_dict["label"]  # collar, bit_sub
+        self.gui_string = str([self._component_type, self._installation,
+                           self._length, self._length_units,
+                           self._outer_diameter, self._outer_diameter_units])
+        return
+
     def _to_json(self):
         return
+
+    def to_dict(self):
+        component_as_dict = {"status": self._installation,
+                              "label": self.label,
+                              "length": {"units": self._length_units, "value": self._length},
+                              "outer_diameter": {"units": self._outer_diameter_units, "value": self._outer_diameter},
+                              "type": self._component_type,
+                              "id": self.gui_number}
+        return component_as_dict
+
     def from_json(self, jsonthingy):
         """
         probably getting a list of dicts as input
@@ -168,6 +199,7 @@ class DrillStringComponent(object):
 
 
 def test(acorr_filename=None):
+    from dcrhino3.models.trace_dataframe import TraceData
     """
     """
     if acorr_filename is None:

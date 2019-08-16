@@ -135,7 +135,7 @@ def init_logging(name):
         logger to record DataCloud-specific warnings, errors, and steps.
     """
     logger = logging.getLogger(name)
-    logging.basicConfig(level = logging.INFO,format='%(asctime)s %(name)-12s \
+    logging.basicConfig(level = logging.DEBUG,format='%(asctime)s %(name)-12s \
                         %(levelname)-8s line:%(lineno)d %(funcName)s %(message)s', \
                         datefmt='%m-%d %H:%M:%S',filemode='w')
     return logger
@@ -382,7 +382,7 @@ def interpolate_data(raw_timestamps, data, ideal_timestamps, kind="quadratic"):
         interp_data = interp_function(ideal_timestamps)
     except:
         logger.error("Failed to interpolate this trace " + str(int(raw_timestamps[0])))
-        return False
+        return None
     return np.asarray(interp_data, dtype=np.float32)
 
 
@@ -429,6 +429,7 @@ def fft_data(data_array, sampling_rate):
 def calculate_battery_percentage(max_voltage, min_voltage, current_voltage):
     value = 100 - (max_voltage - current_voltage) / (max_voltage - min_voltage) * 100
     return round(value, 2)
+
 
 
 
@@ -664,3 +665,9 @@ def add_inverse_dictionary(my_map):
     inv_map = {v: k for k, v in my_map.items()}
     my_map = merge_two_dicts(my_map, inv_map)
     return my_map
+
+def add_leading_zeors_to_timestamp_for_file_names(elapsed):
+    leading_zeros = ""
+    if len(elapsed) < 5:
+        leading_zeros = "0" * (5 - len(elapsed))
+    return("{}{}".format(leading_zeros,elapsed))
