@@ -34,10 +34,10 @@ timestamp = datetime.now().strftime('%Y_%m_%d_%H')
 # config = Config(acquisition_config=True)
 BAUD_RATE = None
 LOCAL_FOLDER = None
-debug = True
+debug = False
 
 import sys
-print("Python version is {}".format(sys.version))
+logger.info("Python version is {}".format(sys.version))
 
 def goodbye():
     global BAUD_RATE
