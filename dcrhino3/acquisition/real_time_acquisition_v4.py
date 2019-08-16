@@ -516,11 +516,6 @@ class CollectionDaemonThread(threading.Thread):
                             if lastFileName is None or (utc_dt.minute % file_change_interval_in_min == 0 and
                                                         look_for_time):
                                 if lastFileName is not None:
-                                    sensitivity = np.array(config.sensitivity_list_xyz, dtype=np.float32)
-                                    h5_helper.save_np_array_to_h5_file('sensitivity', sensitivity)
-                                    axis = np.array([config.sensor_axial_axis, config.sensor_tangential_axis],
-                                                    dtype=np.float32)
-                                    h5_helper.save_np_array_to_h5_file('axis', axis)
                                     h5_helper.close_h5f()
                                     move(filename, filename.replace(".tmp", ".h5"))
                                 look_for_time = False
@@ -533,6 +528,13 @@ class CollectionDaemonThread(threading.Thread):
                                 h5f = h5py.File(filename, "a")
                                 h5_helper = H5Helper(h5f, config=config, load_ts=False)
                                 h5_helper.save_field_config_to_h5()
+                                sensitivity = np.array(config.sensitivity_list_xyz, dtype=np.float32)
+                                h5_helper.save_np_array_to_h5_file('sensitivity', sensitivity)
+                                print("Saved Sensitivity array")
+                                axis = np.array([config.sensor_axial_axis, config.sensor_tangential_axis],
+                                                dtype=np.float32)
+                                h5_helper.save_np_array_to_h5_file('axis', axis)
+                                print("Saved Axis array")
                                 lastFileName = utc_dt
                                 first = True
                             else:
