@@ -215,8 +215,9 @@ class GUI():
             return
 
         sampling_rate = self.config.output_sampling_rate
-        cmd = "python {} -source {} -sr {}".format(os.path.abspath(os.path.join(PATH, 'playback_raw_data.py')),
-                                                   fname, sampling_rate)
+        cmd = "python {} -source {} -sr {} -plot True".format(os.path.abspath(os.path.join(PATH,
+                                                                                          'playback_raw_data.py')),
+                                                              fname, sampling_rate)
         logging.debug(cmd)
         self.playback_daemon_process = Popen(cmd, shell=True)
         logging.info("Played back file {}".format(fname))
