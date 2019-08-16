@@ -33,7 +33,7 @@ def main(args):
         show_plots = True
         make_spectrum = True
     else:
-        print ("Starting in Regular Mode")
+        print("Starting in Regular Mode")
         save_raw = args.save_raw == "True"
         save_csv = args.save_csv == "True"
         save_numpy = args.save_numpy == "True"
@@ -141,8 +141,11 @@ def main(args):
     print(sensitivity)
     print(file_axis)
 
-    tx_sequence = h5_helper.load_axis_mask("cticks", time_indices)
-
+    try:
+        tx_sequence = h5_helper.load_axis_mask("cticks", time_indices)
+    except:
+        logger.warning("File has ticks in the column names instead of cticks")
+        tx_sequence = h5_helper.load_axis_mask("ticks", time_indices)
 
     # sequence_diff = np.diff(tx_sequence)
     # missed_samples = sequence_diff[sequence_diff > 1]-1
