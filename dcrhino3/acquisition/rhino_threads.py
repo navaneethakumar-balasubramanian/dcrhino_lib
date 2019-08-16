@@ -8,7 +8,8 @@ import pyudev
 import subprocess
 # from dcrhino3.acquisition.external.dimmer import dimmer
 import queue as Queue
-# from bin.ide2h5 import ideExport, SimpleUpdater
+if sys.version_info.major == 2:
+    from bin.ide2h5 import ideExport, SimpleUpdater
 import dcrhino3.ide_utilities.path_manager as pm
 import dcrhino3.ide_utilities.data_formats as df
 from dcrhino3.acquisition.constants import ACQUISITION_PATH
@@ -111,47 +112,47 @@ class USBportThread(threading.Thread):
 #         dimmer.main()
 
 
-# class IDEConverterThread(threading.Thread):
-#     def __init__(self, global_config):
-#         threading.Thread.__init__(self)
-#         self.files_q = Queue.Queue()
-#         self.global_config = global_config
-#         thread = threading.Thread(target=self.run, args=())
-#         thread.daemon = True
-#         thread.start()
-#
-#     def add_file_to_q(self, file_name):
-#         self.files_q.put(file_name)
-#
-#     def run(self):
-#         updater = SimpleUpdater()
-#         df.initBivariates(True)
-#         ide_config = Config()
-#         ide_config.set_data_from_json(self.global_config.pipeline_files_to_dict)
-#         while True:
-#             if not self.files_q.empty():
-#                 next_file = self.files_q.get()
-#                 dc_logger.info("ABOUT TO CONVERT FILE {}".format(next_file))
-#                 source_file = pm.FileObject(next_file)
-#                 updater.precision = max(0, min(2, (len(next_file) / 2) - 1))
-#                 updater(starting=True)
-#                 channel_list = self.global_config.ide_channel_list_to_convert_realtime
-#                 resampling_rate = self.global_config.output_sampling_rate
-#                 time_offset = self.global_config.ide2h5_converter_time_offset
-#                 max_file_size_in_sec = self.global_config.file_change_interval_in_min * 60
-#                 try:
-#                     ideExport(source_file, channels=channel_list, resampling_rate=resampling_rate,
-#                               config=ide_config, time_offset=time_offset, max_file_size_in_sec=max_file_size_in_sec,
-#                               updater=updater)
-#                 except:
-#                     path = os.path.dirname(next_file)
-#                     path = os.path.join(path, "FAILED")
-#                     failed_file = os.path.join(path, os.path.basename(next_file))
-#                     if not os.path.exists(path):
-#                         os.makedirs(path)
-#                     shutil.move(next_file, failed_file)
-#             else:
-#                 time.sleep(10)
+class IDEConverterThread(threading.Thread):
+    def __init__(self, global_config):
+        threading.Thread.__init__(self)
+        self.files_q = Queue.Queue()
+        self.global_config = global_config
+        thread = threading.Thread(target=self.run, args=())
+        thread.daemon = True
+        thread.start()
+
+    def add_file_to_q(self, file_name):
+        self.files_q.put(file_name)
+
+    def run(self):
+        updater = SimpleUpdater()
+        df.initBivariates(True)
+        ide_config = Config()
+        ide_config.set_data_from_json(self.global_config.pipeline_files_to_dict)
+        while True:
+            if not self.files_q.empty():
+                next_file = self.files_q.get()
+                dc_logger.info("ABOUT TO CONVERT FILE {}".format(next_file))
+                source_file = pm.FileObject(next_file)
+                updater.precision = max(0, min(2, (len(next_file) / 2) - 1))
+                updater(starting=True)
+                channel_list = self.global_config.ide_channel_list_to_convert_realtime
+                resampling_rate = self.global_config.output_sampling_rate
+                time_offset = self.global_config.ide2h5_converter_time_offset
+                max_file_size_in_sec = self.global_config.file_change_interval_in_min * 60
+                try:
+                    ideExport(source_file, channels=channel_list, resampling_rate=resampling_rate,
+                              config=ide_config, time_offset=time_offset, max_file_size_in_sec=max_file_size_in_sec,
+                              updater=updater)
+                except:
+                    path = os.path.dirname(next_file)
+                    path = os.path.join(path, "FAILED")
+                    failed_file = os.path.join(path, os.path.basename(next_file))
+                    if not os.path.exists(path):
+                        os.makedirs(path)
+                    shutil.move(next_file, failed_file)
+            else:
+                time.sleep(10)
 
 
 # if __name__ == "__main__":

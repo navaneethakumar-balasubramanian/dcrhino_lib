@@ -24,8 +24,8 @@ from datetime import datetime
 from time import sleep
 from time import time as time_time
 
-import dcrhino3.ide_utilities.mide_ebml.calibration
-import dcrhino3.ide_utilities.mide_ebml. parsers
+import dcrhino3.ide_utilities.mide_ebml.calibration as calibration
+import dcrhino3.ide_utilities.mide_ebml.parsers as parsers
 from dcrhino3.ide_utilities.mide_ebml.dataset import Dataset
 
 # ===============================================================================
