@@ -48,19 +48,7 @@ class MWDRhinoMerger():
         max_ts = hole_mwd['start_time'].astype(int).max()/1000000000
         return min_ts, max_ts
 
-    def get_acorr_trace_data_from_index(self,idx):
-        """
-        Pick out line using from matches_list.iloc (created by :func:`_generate_matches_list`),
-        then pull hole dataframe using :func:`get_hole_df`
 
-        Parameters:
-            idx (int): line no. of hole for acorr trace data to be pulled
-
-        Returns:
-            none
-        """
-        line = self.matches_list.iloc[idx]
-        hole_mwd = self.get_hole_df(line.bench_name,line.pattern_name,line.hole_name,line.hole_id)
 
 
     def _generate_matches_list(self):
