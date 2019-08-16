@@ -47,6 +47,7 @@ def goodbye():
 def stop_rx(active, baud_rate):
     try:
         rhino_ttyusb = subprocess.check_output('ls -l /dev/serial/by-id/ | grep "usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_" | grep -Po -- "../../\K\w*"',shell=True)
+        rhino_ttyusb = rhino_ttyusb.decode("utf-8")
         rhino_ttyusb = rhino_ttyusb.replace('\n', '')
         rhino_port = "/dev/"+rhino_ttyusb
         baud_rate = baud_rate
