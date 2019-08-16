@@ -13,11 +13,13 @@ from dcrhino3.helpers.general_helper_functions import init_logging, init_logging
 from dcrhino3.models.config2 import Config
 logger = init_logging(__name__)
 file_logger = init_logging_to_file(__name__)
+import pdb
 
 
 
 def main(args):
     try:
+        # pdb.set_trace()
         path = args.input_path
         file_list = []
         for root, dirnames, filenames in os.walk(path):
@@ -98,13 +100,13 @@ def main(args):
             output_h5_helper.save_np_array_to_h5_file('z', z)
 
             rssi = np.asarray(hf.get('rssi'), dtype=np.float32)
-            if not np.isnan(rssi):
+            if not np.isnan(rssi.all()):
                 output_h5_helper.save_np_array_to_h5_file('rssi', rssi)
             temp = np.asarray(hf.get('temp'), dtype=np.float32)
-            if not np.isnan(temp):
+            if not np.isnan(temp.all()):
                 output_h5_helper.save_np_array_to_h5_file('temp', temp)
             batt = np.asarray(hf.get('batt'), dtype=np.float32)
-            if not np.isnan(batt):
+            if not np.isnan(batt.all()):
                 output_h5_helper.save_np_array_to_h5_file('batt', batt)
             h5_helper.close_h5f()
         # pdb.set_trace()
@@ -146,7 +148,7 @@ if __name__ == "__main__":
     argparser.add_argument('-i', '--input-path', help="Input folder path", default=None)
     argparser.add_argument('-o', '--output-path', help="Output file path", default=None)
     argparser.add_argument('-s', '--sensor', help="Sensor type to merge (SSX/RHINO", choices=["ssx", "rhino"],
-                           default="ssx")
+                           default="rhino")
     argparser.add_argument('-cfg', '--config-path', help="Config file path", default=None)
     args = argparser.parse_args()
     main(args)
