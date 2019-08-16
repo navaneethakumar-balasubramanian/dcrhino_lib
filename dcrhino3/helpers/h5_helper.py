@@ -19,7 +19,7 @@ elif sys.version_info.major==3:
 
 from dcrhino3.models.metadata import Metadata
 from dcrhino3.models.config2 import Config
-
+from dcrhino3.models.trace_dataframe import TraceData
 
 def save_np_array_to_h5_file(h5file, key, np_array):
     np_length = len(np_array)
@@ -217,3 +217,13 @@ class H5Helper:
         #    print(e)
             print("Error loading metadata" ,e)
             return None
+
+
+def load_acorr_h5(full_path):
+    """
+    little helper function used all the time to load an acorr file
+    full_path: full path to acorr h5 file
+    """
+    td = TraceData()
+    td.load_from_h5(full_path)
+    return td
