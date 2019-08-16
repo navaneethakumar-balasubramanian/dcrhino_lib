@@ -99,7 +99,7 @@ def init_logging(name):
         logger to record DataCloud-specific warnings, errors, and steps.
     """
     logger = logging.getLogger(name)
-    logging.basicConfig(level = logging.DEBUG,format='%(asctime)s %(name)-12s \
+    logging.basicConfig(level = logging.INFO,format='%(asctime)s %(name)-12s \
                         %(levelname)-8s line:%(lineno)d %(funcName)s %(message)s', \
                         datefmt='%m-%d %H:%M:%S',filemode='w')
     return logger
