@@ -47,6 +47,7 @@ def goodbye():
 def stop_rx(active, baud_rate):
     try:
         rhino_ttyusb = subprocess.check_output('ls -l /dev/serial/by-id/ | grep "usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_" | grep -Po -- "../../\K\w*"',shell=True)
+        rhino_ttyusb = rhino_ttyusb.decode("utf-8")
         rhino_ttyusb = rhino_ttyusb.replace('\n', '')
         rhino_port = "/dev/"+rhino_ttyusb
         baud_rate = baud_rate
@@ -155,7 +156,7 @@ class GUI():
                 logging.info("Acquisition started in debug mode")
             else:
                 self.error_file = os.path.join(LOGS_PATH, "{}.err".format(timestamp))
-                with open(self.error_file, "a", buffering=0) as self.err:
+                with open(self.error_file, "a") as self.err:
                     self.acquisition_process = Popen(['python', os.path.abspath(os.path.join(PATH, acq_script))],
                                                      stderr=self.err)
                     self.system_health_process = Popen(['python', os.path.abspath(os.path.join(PATH,

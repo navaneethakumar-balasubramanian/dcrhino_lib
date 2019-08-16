@@ -33,6 +33,7 @@ file_logger = init_logging_to_file(__name__)
 def get_rhino_ttyusb():
     # p = subprocess.check_output('ls -l /dev/serial/by-id/ | grep "usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_" | grep -Po -- "../../\K\w*"',shell=True)
     p = subprocess.check_output('ls -l /dev/serial/by-id/ | grep "UART" | grep -Po -- "../../\K\w*"', shell=True)
+    p = p.decode("utf-8")
     return p.replace('\n', '')
 
 
