@@ -357,8 +357,8 @@ class GUI():
                 self.sample_count.set(str(samples))
                 self.samples_label.config(bg=bgcolor, fg=fgcolor)
 
-                delay = round(health[2][-1], 2)
-                calculated_delay = delay + self.drift
+                delay = health[2][-1]
+                calculated_delay = round(delay + self.drift,2)
                 bgcolor, fgcolor = self.colors("delay", calculated_delay)
                 self.delay.set("{} sec".format(calculated_delay))
                 self.delay_label.config(bg=bgcolor, fg=fgcolor)
@@ -400,7 +400,9 @@ class GUI():
                     else:
                         tablet_battery_status = 0
                     tablet_battery_percentage = round(battery_sensor[0], 2)
-                    tablet_battery_life = battery_sensor[1]
+                    tablet_battery_life = int(battery_sensor[1])
+                    if tablet_battery_life < 0:
+                        tablet_battery_life = np.inf
                 else:
                     tablet_battery_status = np.nan
                     tablet_battery_percentage = np.nan
