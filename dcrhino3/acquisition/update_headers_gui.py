@@ -102,7 +102,7 @@ class GUI():
         except:
             replace_config = transform_configparser_to_config2(self.cfg_path.get())
         for h5file in files:
-            logger.debug("Updating File {}".format(h5file))
+            logger.Info("Updating File {}".format(h5file))
             h5f = h5py.File(h5file, 'r+')
             h5_helper = H5Helper(h5f, load_xyz=False, load_ts=False)
             if not 'global_config_jsons' in h5_helper.h5f.attrs.keys():
