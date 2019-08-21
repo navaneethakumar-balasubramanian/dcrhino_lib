@@ -49,6 +49,10 @@ class Config(object):
         return
 
     def duplicate_config(self):
+        """
+        Creates an independent copy of an instance of the object
+        :return: a new copy of the object
+        """
         return copy_config_object(self)
 
     def clear_all_keys(self):
@@ -58,6 +62,13 @@ class Config(object):
             self.__dict__[key] = None
 
     def _config_files_to_dict(self, files_type):
+        """
+        will return a dictionary with all the keys that are part of the pipeline_files or the field_files.  These can
+        be found in the acquisition_config.cfg"
+
+        :param files_type: "pipeline_files" or "field_files"
+        :return:a dictionary with all the key/value pairs of all the files that are part of the files_type
+        """
         if files_type in self.files_keys.keys():
             pipeline_files = self.files_keys[files_type].keys()
             pipeline_json = dict()
@@ -70,9 +81,9 @@ class Config(object):
 
     def keys(self):
         """
-        only returns the keys that are important for the config file that is saved in the h5 files
+        only returns the keys that are important for the config file that is saved in the h5 files (pipeline_files)
 
-        :return:
+        :return:a dictionary with the keys of the pipeline files
         """
         return self.pipeline_files_to_dict.keys()
 
@@ -187,7 +198,10 @@ class Config(object):
         Returns:
             list of strings of components to collect/process
         """
-        return self.components_to_collect.split(',')
+        if isinstance(self.components_to_collect, str):
+            return self.components_to_collect.split(',')
+        else:
+            return self.components_to_collect
 
     @property
     def dt(self):
@@ -314,6 +328,16 @@ class Config(object):
         this is the distance from the bottom of the shocksub to the bottom of the bit
         """
         return self.sensor_distance_to_shocksub + self.sensor_distance_to_source
+
+    def save_to_disk_files(self):
+        for file_type in self.files_keys.keys():
+            for cfg_file in self.files_keys[file_type].keys():
+                file_dict = dict()
+                for i, key in enumerate(self.files_keys[file_type][cfg_file]):
+                    file_dict[key] = self.__dict__[key]
+                with open(os.path.join(ACQUISITION_PATH, cfg_file), "w") as output:
+                    json.dump(file_dict, output)
+        return True
 
 
 if __name__ == "__main__":

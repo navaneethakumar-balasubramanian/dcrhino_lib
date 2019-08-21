@@ -1,8 +1,10 @@
 import threading
-# from urllib2 import urlopen, URLError
-from urllib.request import urlopen, URLError
-import time
 import sys
+if sys.version_info.major == 2:
+    from urllib2 import urlopen, URLError
+else:
+    from urllib.request import urlopen, URLError
+import time
 from gps3 import gps3
 import pyudev
 import subprocess
