@@ -1,5 +1,6 @@
 *.pyc
 *.png
+*.npy
 dcrhino.egg-info/*
 dcrhino3/acquisition/logs/*.log
 dcrhino3/acquisition/logs/*.err

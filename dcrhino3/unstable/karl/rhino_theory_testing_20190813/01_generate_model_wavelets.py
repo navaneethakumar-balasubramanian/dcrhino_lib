@@ -20,7 +20,7 @@ import scipy.signal as ssig
 
 from matplotlib import pyplot as plt
 
-from model_config import ADD_NOISE, pipe, rock, NYQUIST, BANDPASS_FILTER
+from model_config import ADD_NOISE, pipe, rock, NYQUIST, BANDPASS_FILTER, noise_factors
 from model_config import start, end #change to start_index, end_index
 from model_config import rho, velocity#change to start_index, end_index
 from supporting_functions_tmp import trace_filename
@@ -40,15 +40,26 @@ data = getattr(theoretical, 'primary_in_time_domain')(window=None, filtered=Fals
 data /= np.max(data)
 
 data_1s = data[start:end]
-
+#noise_factors = [0.0, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0]
 if ADD_NOISE:
     #pdb.set_trace()
     noise = np.random.normal(size=(len(data_1s)))
-    noise *= 0.1
-    data = data_1s + noise
-    plt.plot(data, label='noisy data')
-    plt.plot(data_1s, label='data')
-    plt.show(block=True)
+    for i_noise in np.arange(len(noise_factors)):
+        noise_factor = noise_factors[i_noise]
+        #noise *= noise_factor#0.1
+        data = data_1s + (noise *noise_factor)#0.1
+        outdata_name = trace_filename(rho, velocity, COMPONENT, noise_factor)
+        np.save(outdata_name, data)
+        ttl_string = 'noise factor {}'.format(noise_factor)
+        plt.figure(1);plt.clf()
+        plt.plot(data, label='noisy data')
+        plt.plot(data_1s, label='data')
+        plt.title(ttl_string)
+        plt.legend()
+        plt.savefig('model_{}.png'.format(i_noise))
+        plt.show(block=True)
+
+pdb.set_trace()
 
 outdata_name = trace_filename(rho, velocity, COMPONENT, ADD_NOISE)
 np.save(outdata_name, data_1s)
