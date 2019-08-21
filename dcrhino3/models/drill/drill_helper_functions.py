@@ -38,13 +38,18 @@ logger = init_logging(__name__)
 class LengthMeasurement():
     """
     """
-    def __init__(self,tuple):
-        (value,units) = tuple
+    def __init__(self, tuple):
+        (value, units) = tuple
         self._value = float(value)
         self._units = int(units)
 
     def __str__(self):
-        return "{},{}".format(self._value,self._units)
+        return "{},{}".format(self._value, self._units)
+
+    def to_dict(self):
+        d = {"value": self._value,
+             "units": self._units}
+        return d
 
     def value_in_meters(self):
         """

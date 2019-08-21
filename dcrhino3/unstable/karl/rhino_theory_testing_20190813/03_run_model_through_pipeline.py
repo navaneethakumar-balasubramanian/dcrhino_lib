@@ -20,7 +20,7 @@ import json
 import pdb
 
 from dcrhino3.unstable.karl_dev_util import bin_dir
-from model_config import sacrificial_h5_file
+from model_config import sacrificial_h5_file, noise_factors
 
 os.chdir(bin_dir)#"/home/kkappler/software/datacloud/dcrhino_lib/bin")
 

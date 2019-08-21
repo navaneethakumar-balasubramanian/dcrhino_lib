@@ -35,6 +35,7 @@ modulus = rho * velocity**2
 rock = Rock(alpha=velocity, beta=velocity, rho=rho)
 
 ADD_NOISE = True
+noise_factors = [0.0, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0]
 sacrificial_h5_file = '544_59_619_619_6172_6172.h5'
 
 

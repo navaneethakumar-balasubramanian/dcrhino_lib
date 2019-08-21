@@ -1,17 +1,17 @@
 from flask import Flask,  request, jsonify, send_from_directory, render_template, make_response,send_file
 from flask_cors import CORS
-from flask_compress import Compress
-import numpy as np
-import pandas as pd
-from dcrhino3.models.env_config import EnvConfig
-from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
-from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
-from holes_to_mp import holes_to_mp
-from dcrhino3.helpers.general_helper_functions import create_folders_if_needed
-from dcrhino3.models.env_config import EnvConfig
-from dcrhino3.models.trace_dataframe import TraceData
-import glob2
-import uuid
+# from flask_compress import Compress
+# import numpy as np
+# import pandas as pd
+# from dcrhino3.models.env_config import EnvConfig
+# from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
+# from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
+# from holes_to_mp import holes_to_mp
+# from dcrhino3.helpers.general_helper_functions import create_folders_if_needed
+# from dcrhino3.models.env_config import EnvConfig
+# from dcrhino3.models.trace_dataframe import TraceData
+# import glob2
+# import uuid
 import os
 import pdb
 CACHE_IMAGE_FOLDER = "/tmp/image_cache_rhino_api/"
@@ -26,13 +26,18 @@ COMPRESS_MIMETYPES = ['text/html', 'text/css', 'text/xml', 'application/json', '
 COMPRESS_LEVEL = 9
 COMPRESS_MIN_SIZE = 500
 
-Compress(app)
+# Compress(app)
 
 
 @app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
+@app.route('/<path:path>', methods=['GET', 'POST'])
 def index(path):
     return render_template("index.html")
+
+@app.route('/open_settings', methods=['GET'])
+def settings(path):
+    return render_template("settings.html")
+
 
 @app.route('/css/<path:path>')
 def send_css(path):
@@ -49,8 +54,19 @@ def send_3rd(path):
 
 @app.route('/start_acquisition')
 def start_acquisition():
-    pdb.set_trace()
     os.popen("gedit").read()
-
     return jsonify("oaaaaaaaa")
+
+@app.route('/hello', methods=['GET', 'POST'])
+def hello():
+    # pdb.set_trace()
+    # return render_template('settings.html', country=request.form['country'], company=request.form['company'])
+    with open("/home/natal/toconvert/test.txt",'w') as f:
+        f.write("it worked {} {}".format(request.form['country'], request.form['company']))
+    f.close()
+    return "Ok"
+
+@app.route('/get_config', methods=['GET', 'POST'])
+def get_config():
+    return jsonify({"country":"Brazil","company":"Thiago"})
 

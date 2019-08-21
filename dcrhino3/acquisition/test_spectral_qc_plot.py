@@ -46,7 +46,10 @@ def make_spectral_qc_plot(h5_helper, components_to_plot=['x', 'y'],
     header_color_scheme['z'] = 'green'
     h5h = h5_helper
     global_config = Config()
-    global_config.set_data_from_json(json.loads(h5h.extract_metadata_from_h5_file_as_json()))
+    try:
+        global_config = h5_helper.extract_global_config_from_h5()
+    except:
+        global_config.set_data_from_json(json.loads(h5h.extract_metadata_from_h5_file_as_json()))
     h5_basename = os.path.basename(h5h.h5f.filename)
     header_frequency_band_str = '{}-{}Hz'.format(header_frequency_band[0], header_frequency_band[1])
 
@@ -61,12 +64,12 @@ def make_spectral_qc_plot(h5_helper, components_to_plot=['x', 'y'],
         y_data = h5h.load_axis_mask("y", mask)
         z_data = h5h.load_axis_mask("z", mask)
     x_data = calibrate_data(x_data, h5_helper._get_sensitivity_xyz()[0],
-                            global_config.accelerometer_max_voltage,
-                            rhino_version=rhino_version,
+                            float(global_config.accelerometer_max_voltage),
+                            rhino_version=float(rhino_version),
                             is_ide_file=ide_file)
     y_data = calibrate_data(y_data, h5_helper._get_sensitivity_xyz()[0],
-                            global_config.accelerometer_max_voltage,
-                            rhino_version=rhino_version,
+                            float(global_config.accelerometer_max_voltage),
+                            rhino_version=float(rhino_version),
                             is_ide_file=ide_file)
 
     if 'x' in components_to_plot:

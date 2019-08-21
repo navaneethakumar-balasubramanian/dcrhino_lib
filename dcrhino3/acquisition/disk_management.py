@@ -1,12 +1,11 @@
 import glob
 import os
-import sys
-import ConfigParser
 import shutil
 import time
 import gzip
 import psutil
 from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
+from dcrhino3.models.config2 import Config
 
 
 def file_is_old(file_date, age_threshold=32):
@@ -43,10 +42,8 @@ def low_space():
 
 
 def scan():
-    cfg_fname = os.path.join(PATH, "collection_daemon.cfg")
-    config = ConfigParser.SafeConfigParser()
-    config.read(cfg_fname)
-    data_path = config.get("DATA_TRANSMISSION", "local_folder")
+    config = Config(acquisition_config=True)
+    data_path = config.local_folder
     daily_archive = True
     default_age = 30
     initial_disk_space = psutil.disk_usage("/")[1]

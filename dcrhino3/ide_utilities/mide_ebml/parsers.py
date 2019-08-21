@@ -42,9 +42,9 @@ import sys
 import types
 from collections import OrderedDict, Sequence
 
-import calibration
+import dcrhino3.ide_utilities.mide_ebml.calibration
 # from util import parse_ebml, decode_attributes
-from util import decode_attributes
+from dcrhino3.ide_utilities.mide_ebml.util import decode_attributes
 
 #===============================================================================
 # 
@@ -691,13 +691,13 @@ class SimpleChannelDataBlockParser(ElementHandler):
         try:
             block = self.product(element)
             timestamp, channel = block.getHeader()
-        except struct.error, e:
+        except struct.error(e):
             raise ParsingError("Element would not parse: %s (ID %d) @%d (%s)" % 
                                (element.name, element.id, element.offset, e))
         except AttributeError:
             # Can happen if the block had no timestamp (broken imported data?)
             # TODO: Actually handle, instead of ignoring?
-            print "bad attribute in element", element
+            print ("bad attribute in element", element)
             return 0
             
         
