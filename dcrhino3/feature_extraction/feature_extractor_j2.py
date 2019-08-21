@@ -290,7 +290,7 @@ class FeatureExtractorJ2(object):
             center_time_key = '{}-{}-maximum_time'.format(self.trace.component_id, wavelet_id)
             wavelet_max_time = extracted_features_dict[center_time_key]
             logger_message = "applying jazz3 to {} component by {} method".format(self.trace.component_id, self.jazz3_method)
-            print(logger_message)
+            #print(logger_message)
             jazz3_dict = jazz3(self.trace, wavelet_max_time, expected_trough_duration,
                                wavelet_id=wavelet_id, method=self.jazz3_method)
             for feature_id, feature_value in jazz3_dict.items():

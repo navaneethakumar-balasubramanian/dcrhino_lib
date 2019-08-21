@@ -112,7 +112,7 @@ class Config(object):
                 Returns:
                     Path from :func:`field_base_path` joined by level_0
                 """
-        return os.path.join(self.field_base_path(), "level_0").lower()
+        return os.path.join(self._field_base_path(), "level_0").lower()
 
     # @property
     # def full_json(self):

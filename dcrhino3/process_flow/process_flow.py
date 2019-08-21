@@ -56,7 +56,7 @@ from dcrhino3.process_flow.modules.hybrid.phase_balance_trace_hybrid import Phas
 from dcrhino3.process_flow.modules.hybrid.feature_extract_hybrid import FeatureExtractJ2Hybrid
 
 from dcrhino3.unstable.multipass_util import update_acorr_with_resonance_info
-from dcrhino3.unstable.hacks.bma_hack import bma_hack_20190606
+#from dcrhino3.unstable.hacks.bma_hack import bma_hack_20190606
 from dcrhino3.unstable.multipass_util import get_depths_at_which_steels_change
 
 
@@ -68,6 +68,20 @@ class ProcessFlow:
     """
     ..: ivar modules: this is basically a catalog (or a registry) of legal operations
     to perform on an element of TraceData()
+    ..: ivar modules_flow: This is a list of the modules to apply in the current
+    instance of the process_flow.
+    
+    Readability/clarity review:
+    ..:: ToDo: Lets manage the gigantic collection of modules in another py file
+    could be called active_process_flow_modules.py we can import from it and then
+    in the __init__ here can say:
+        self.modules = active_process_flow_modules
+    ..:: ToDo: @Thiago: can we replace self.actual_module with self.i_module?  
+    its an integer.  the we can rename module to active_module
+    ..:: ToDo: The name 'subsets' is really ambiguous.  Can we replace 
+    think up something that says what it is ... subsets of the blasthole to process
+    with different parameters because the steels lengths are different ... 
+    "drill_config_subsets"??
     """
     def __init__(self, output_path=""):
         self.id = "process_flow"
@@ -127,6 +141,12 @@ class ProcessFlow:
 
         self.parse_json(process_json,subset_index)
 
+
+    @property
+    def num_modules_to_process(self):
+        return len(self.modules_flow)
+
+
     def parse_json(self, process_json,subset_index):
         """
         Parse env_config.json for info on mine/how to run the process. Use dictionary
@@ -177,12 +197,8 @@ class ProcessFlow:
                                                        str(sql_conn['database']).lower())
         return
 
+
     def process(self, trace_data,subset_index=False):
-
-        process_flow_output_path = self.output_path
-
-        logger.info("Processing files to :" + process_flow_output_path)
-        create_folders_if_needed(process_flow_output_path)
         """
         Process the trace data. Uses :py:mod:`process_flow.modules.trace_processing.base`
 
@@ -196,25 +212,17 @@ class ProcessFlow:
             processed trace data (other files will be saved to assigned locations
                 and folders will be created if needed)
         """
+
+        process_flow_output_path = self.output_path
+        logger.info("Processing files to :" + process_flow_output_path)
+        create_folders_if_needed(process_flow_output_path)
         output_trace = trace_data
 
-        #readability/clarity review:
-        # below we should be referencing self.num_modules_to_process,
-        #modules_to_process sounds like a list of modules, NOT an integer
-        #specifying how many are in the list.
-        #where as modules_flow is modules_to_process.
-        #also, lets make self.num_modules_to_process an @property of the class, thereby removing a line.
-        #moreover, I would suggest, for i_module, module in enumerate(self.modules_to_process):
-        #using i_module to denote an integer counter.  actual_module would hten be eliminated
-        #as a variable.
-        self.modules_to_process = len(self.modules_flow)
         self.actual_module = 0
-        while self.actual_module != self.modules_to_process:
+        while self.actual_module != self.num_modules_to_process:
             module = self.modules_flow[self.actual_module]
             t0 = time.time()
             logger.info("Applying " + str(module.id) + " with: " + str(module.args))
-            #if module.id == 'rhino_plotter':
-            #    pdb.set_trace()
             output_trace = module.process_trace(output_trace)
             delta_t = time.time() - t0
             logger.info("{} ran in {}s ".format(module.id, delta_t))
@@ -254,26 +262,17 @@ class ProcessFlow:
         return os.path.join(temp_output_path, str(self.datetime_str + "_" + process_flow_json['id']))
 
 
-    def process_file(self,process_json, acorr_h5_file_path, env_config = False, seconds_to_process = False,return_dict = dict()):
+    def process_file(self, process_json, acorr_h5_file_path, env_config = False, 
+                     seconds_to_process=False, return_dict=dict()):
+        """
+        """
         logger.info("PROCESSING FILE:" + str(acorr_h5_file_path))
         acorr_trace = TraceData()
         acorr_trace.load_from_h5(acorr_h5_file_path)
 
-        #This comment replaces the chunk of code we used to use to hack the field config for BMA
-#        print("EMERGENCY HACK FOR BMA. FIELD CONFIG NEEDS VARAIBLE STEELS CORRECT ON DB" )
-#        try:
-#            hack = process_json['vars'][0]['hack_multipass_bma']
-#            first_global_config_index = acorr_trace.dataframe['acorr_file_id'].values[0]
-#            corrected_global_config = bma_hack_20190606(acorr_trace.first_global_config)
-#            acorr_trace._global_configs[first_global_config_index] = corrected_global_config
-#            hack = False
-#        except KeyError:
-#            hack = False
-        #pdb.set_trace()
         if 'subsets' not in process_json.keys():
             acorr_trace = update_acorr_with_resonance_info(acorr_trace,
-                                                       transition_depth_offset_m=-1.0)#,
-                                                       #hack=hack)
+                                                       transition_depth_offset_m=-1.0)
             splits = get_depths_at_which_steels_change(acorr_trace.dataframe)
             print("splits = {}".format(splits))
             process_json['subsets'] = splits
@@ -284,7 +283,7 @@ class ProcessFlow:
         if seconds_to_process is not False:
             acorr_trace.dataframe = acorr_trace.dataframe[:seconds_to_process]
         splitted_subsets = self.split_subsets(process_json,process_json['subsets'],acorr_trace)
-        print("FoUnD {} subsets".format(len(splitted_subsets))  )
+        logger.info("FoUnD {} subsets".format(len(splitted_subsets))  )
 
         for i,subset in enumerate(splitted_subsets):
 

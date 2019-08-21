@@ -33,7 +33,8 @@ class MWDHelper():
         self.required_columns = ['hole_id','hole_name','pattern_name','bench_name','start_time','rig_id','measured_depth','hole_start_time']
         self.optional_columns = ['easting','northing','tob','rop','wob','mse','air_pressure','rpm','end_time']
 
-
+	logger.warning("dcrhino3.helpers.mwd_helper.MWDHelper is slated for depreaction")
+	logger.warning("Please use the MWDHelper from dc_mwd instead")
 
     def get_hole_mwd_from_mine_mwd(self,mine_mwd,bench_name,pattern_name,hole_name,hole_id):
         """
@@ -49,11 +50,15 @@ class MWDHelper():
         Returns:
             (Series): mine_mwd['bench_name', 'pattern_name', 'hole_name', 'hole_id'], the data for a specific hole.
         """
+        #pdb.set_trace()
         cond1 = mine_mwd['bench_name'].astype(str) == str(bench_name)
         cond2 = mine_mwd['pattern_name'].astype(str) == str(pattern_name)
         cond3 = mine_mwd['hole_name'].astype(str) == str(hole_name)
         cond4 = mine_mwd['hole_id'].astype(str) == str(hole_id)
-        return mine_mwd[cond1 & cond2 & cond3 & cond4]
+        hole_mwd = mine_mwd[cond1 & cond2 & cond3 & cond4]
+        if len(hole_mwd) == 0:
+            logger.warning("Hole MWD obtained from Mine MWD is empty")
+        return hole_mwd
 
     def get_mwd_from_csv(self,file_path):
         """
@@ -218,6 +223,11 @@ class MWDHelper():
 
         return conn_dict
 
+    def get_token(self):
+        r = requests.post('https://prod.datacloud.rocks/v1/auth', json={"username": 'admin', "password": 'pass123$$$'})
+        token = r.json()['token']
+        return token
+
     def get_dc_datasets_configs(self,subdomain):
         """
         Returns json, not dictionary, with database token and configuration.
@@ -228,8 +238,7 @@ class MWDHelper():
         Returns:
             (unicode): json containing token for database connection, credentials, configuration
         """
-        r = requests.post('https://prod.datacloud.rocks/v1/auth', json={"username":'admin', "password":'pass123$$$'})
-        token = r.json()['token']
+        token = self.get_token()
         headers = {'Authorization':'Bearer ' + token,'x-dc-subdomain':subdomain}
         r = requests.get('https://prod.datacloud.rocks/v1/viz/dataset_config',headers=headers)
         return r.json()
@@ -285,7 +294,6 @@ class MWDHelper():
         Returns:
             (boolean): True if columns are present, False if one or more columns is missing
         """
-
         for col in self.required_columns:
             if col not in mwd_df.columns:
                 logger.warn("MISSING COLUMN:" + col + " ON DATACLOUD DEFAULT DF")
@@ -346,7 +354,8 @@ class MWDHelper():
             mwd_df['hole_name'] = mwd_df.hole_id
         return mwd_df
 
-    def get_rhino_mwd_from_mine_name(self,mine_name,date_start = False,date_end = False,limit=False):
+    def get_rhino_mwd_from_mine_name(self, mine_name, date_start=False,
+                                     date_end=False, limit=False):
         """
         Retrieves mwd from .csv or database connection, remaps,
         adds columns, standardizes format/names for downstream functions.
@@ -382,8 +391,8 @@ class MWDHelper():
             remaped = original_mwd_df
         remaped = self.try_creating_missing_columns(remaped)
         if self._have_required_columns(remaped):
-            remaped_with_optionals = self._create_optional_columns(remaped)
-            remaped_with_optionals = self._post_process(remaped_with_optionals)
+            ##remaped_with_optionals = self._create_optional_columns(remaped)
+            remaped_with_optionals = self._post_process(remaped)
             return remaped_with_optionals
         else:
             return False

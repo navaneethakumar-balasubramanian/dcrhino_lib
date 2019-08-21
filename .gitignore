@@ -1,5 +1,6 @@
 *.pyc
 *.png
+*.npy
 dcrhino.egg-info/*
 dcrhino3/acquisition/logs/*.log
 dcrhino3/acquisition/logs/*.err
@@ -28,3 +29,5 @@ bin/temp\.csv
 
 dcrhino3/acquisition/external/dimmer/traindata/
 bin/original_mwd\.csv
+
+*.csv
