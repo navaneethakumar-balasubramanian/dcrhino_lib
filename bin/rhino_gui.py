@@ -125,8 +125,8 @@ class GUI():
         row += 1
 
         Label(master, text="Upload Files").grid(row=row)
-        # Button(master, text='Go', command=self.rsync_daemon).grid(row=row, column=1, sticky="ew", pady=4)
-        # Button(master, text='Stop', command=self.rsync_daemon_stop).grid(row=row, column=2, sticky="ew", pady=4)
+        Button(master, text='Go', command=self.rsync_daemon).grid(row=row, column=1, sticky="ew", pady=4)
+        Button(master, text='Stop', command=self.rsync_daemon_stop).grid(row=row, column=2, sticky="ew", pady=4)
         row += 1
 
         Label(master, text="Fix Headers").grid(row=row)
