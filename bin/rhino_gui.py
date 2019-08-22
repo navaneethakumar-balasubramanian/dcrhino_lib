@@ -102,7 +102,7 @@ class GUI():
         default_font = tkFont.nametofont("TkDefaultFont")
         default_font.configure(size=16)
         master.option_add("*Font", default_font)
-        master.title("DataCloud Rhino Version 3")
+        master.title("DataCloud Rhino Version {}".format(self.config.acquisition_system_version))
         master.resizable(width=False, height=False)
         Label(master, text="Rhino Configuration").grid(row=row)
         Button(master, text='Settings', command=self.rhino_installation_settings).grid(row=row, column=1,
