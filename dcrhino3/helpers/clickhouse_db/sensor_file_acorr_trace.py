@@ -14,4 +14,5 @@ class SensorFileAcorrTrace(BaseClickhouseModel):
             pass
 
     def get_traces(self,sensor_file_id,relative_min_ts,relative_max_ts):
+
         return self.query_to_pandas(self.conn.execute('select * from '+self.table_name+' where relative_timestamp >= '+str(relative_min_ts)+' and relative_timestamp <= ' + str(relative_max_ts) + ' and sensor_file_id = ' +str(sensor_file_id),with_column_types=True))

@@ -33,7 +33,7 @@ class MWDRhinoMerger():
             self.observed_blasthole_catalog = self._generate_matches_list()
 
 
-    def get_min_max_time(self,hole_id):
+    def get_min_max_time(self,bench_name,pattern_name,hole_name,hole_id):
         """
         Get the min and max timestamps for each hole id
 
@@ -43,24 +43,12 @@ class MWDRhinoMerger():
         Returns:
             minimum and maximum timestamps
         """
-        hole_mwd = self.mwd_dc_df[self.mwd_dc_df['hole_id']== str(hole_id)]
+        hole_mwd = self.mwd_dc_df[(self.mwd_dc_df['bench_name'] == str(bench_name)) & (self.mwd_dc_df['pattern_name']== str(pattern_name)) & (self.mwd_dc_df['hole_name']== str(hole_name)) & (self.mwd_dc_df['hole_id']== str(hole_id))]
         min_ts = hole_mwd['start_time'].astype(int).min()/1000000000
         max_ts = hole_mwd['start_time'].astype(int).max()/1000000000
         return min_ts, max_ts
 
-    def get_acorr_trace_data_from_index(self,idx):
-        """
-        Pick out line using from matches_list.iloc (created by :func:`_generate_matches_list`),
-        then pull hole dataframe using :func:`get_hole_df`
 
-        Parameters:
-            idx (int): line no. of hole for acorr trace data to be pulled
-
-        Returns:
-            none
-        """
-        line = self.matches_list.iloc[idx]
-        hole_mwd = self.get_hole_df(line.bench_name,line.pattern_name,line.hole_name,line.hole_id)
 
 
     def _generate_matches_list(self):
@@ -103,7 +91,7 @@ class MWDRhinoMerger():
         dict_list  = [dict()] * len(holes_cfgs.keys())
         for idx , unique_hole in enumerate(holes_cfgs.keys()):
             splitted = unique_hole.split('----')
-            start_time_min, start_time_max = self.get_min_max_time(splitted[3])
+
 
             line = dict()
             line['bench_name'] = str(splitted[0])
@@ -117,6 +105,7 @@ class MWDRhinoMerger():
             for i, file in enumerate(holes_cfgs[unique_hole]):
                 files_ids[i] = int(file[0])
             line['files_ids'] = ','.join(files_ids.astype(str))
+            start_time_min, start_time_max = self.get_min_max_time(line['bench_name'],line['pattern_name'],line['hole_name'],line['hole_id'])
             line['start_time_min'] = start_time_min
             line['start_time_max'] = start_time_max
             dict_list[idx] = line

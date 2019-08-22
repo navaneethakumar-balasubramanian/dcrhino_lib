@@ -26,7 +26,8 @@ class BaseDbModel:
             print("Something went wrong: {}".format(err))
 
     def get_all(self):
-        return self.query_to_df("select * from " + self.table_name)
+        df = self.query_to_df("select * from " + self.table_name)
+        return df
 
 
 

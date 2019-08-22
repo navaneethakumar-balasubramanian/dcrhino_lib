@@ -249,8 +249,8 @@ class TraceData(object):
         """
         #df_as_dict = dict(self.dataframe)
         if len(self.dataframe) == 0:
-            logger.error("No point on saving an empty h5 file to " + str(path))
-            return
+            logger.error("No point on saving an empty h5 file to " +str(path))
+            return False
         all_columns = list(self.dataframe.columns)
         folder = os.path.dirname(path)
         create_folders_if_needed(folder)
@@ -324,7 +324,7 @@ class TraceData(object):
         #</config>
 
         h5f.close()
-        return
+        return True
 
     def realtime_append_to_h5(self, path, file_id='0', global_config=None):
         """
