@@ -12,10 +12,9 @@ class MyConverter(mysql.connector.conversion.MySQLConverter):
         row = super(MyConverter, self).row_to_python(row, fields)
 
         def to_unicode(col):
-            if type(col) == bytearray:
+            if type(col) == bytearray or type(col) == bytes:
                 return col.decode('utf-8')
             return col
-
         return[str(to_unicode(col)) for col in row]
 
 class RhinoSqlHelper:
@@ -27,7 +26,9 @@ class RhinoSqlHelper:
           user=user,
           passwd=password,
           database=database,
-          port= port
+          port= port,
+          charset='utf8',
+          use_unicode=True
         )
         self.processed_holes = ProcessedHoles(self.conn)
         self.acorr_files = AcorrFiles(self.conn)

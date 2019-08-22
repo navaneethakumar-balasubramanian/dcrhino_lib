@@ -1,10 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
-import ConfigParser
 from dcrhino3.acquisition.constants import RAM_PATH
-from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
-from dcrhino3.models.config import Config
+from dcrhino3.models.config2 import Config
 if plt.get_backend() == "Qt4Agg":
     pass
 else:
@@ -13,13 +11,14 @@ plt.ioff()
 
 
 import os, sys
-import pdb
 import time
-
+from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
+logger = init_logging(__name__)
+file_logger = init_logging_to_file(__name__)
 
 def get_min_max_values(config_value):
-    min = float(config_value.split(",")[0])
-    max = float(config_value.split(",")[1])
+    min = float(config_value[0])
+    max = float(config_value[1])
     return min, max
 
 class StatsPlotter():
@@ -56,7 +55,6 @@ class StatsPlotter():
         self.rssi_plot.tick_params(labelsize=tick_font_size)
         self.rssi_plot.set_title("RSSI", **title_font)
         self.rssi_plot.set_xlabel("Signal Strength", **axis_font)
-        # min, max = get_min_max_values(self.config.get("SYSTEM_HEALTH_PLOTS", "rssi_y_lim"))
         min, max = get_min_max_values(self.global_config.rssi_y_lim)
         self.rssi_bins = np.arange(min, max, 1)
         row += 1
@@ -65,7 +63,6 @@ class StatsPlotter():
         self.temp_plot.tick_params(labelsize=tick_font_size)
         self.temp_plot.set_title("Board Temperature", **title_font)
         self.temp_plot.set_xlabel("degC", **axis_font)
-        # min, max = get_min_max_values(self.config.get("SYSTEM_HEALTH_PLOTS", "temperature_y_lim"))
         min, max = get_min_max_values(self.global_config.temperature_y_lim)
         self.temp_bins = np.arange(min, max, 1)
         row += 1
@@ -77,8 +74,6 @@ class StatsPlotter():
         self.axial_accel_plot.tick_params(labelsize=tick_font_size)
         self.axial_accel_plot.set_title("Axial Acceleration", **title_font)
         self.axial_accel_plot.set_xlabel("G", **axis_font)
-        # self.accel_plot_bins = np.arange(config.getint("INSTALLATION", "sensor_saturation_g") * -1.1,
-        #                                  config.getint("INSTALLATION", "sensor_saturation_g") * 1.1, 1)
         sensor_saturation_g = int(global_config.sensor_saturation_g)
         self.accel_plot_bins = np.arange(sensor_saturation_g * -1.1,
                                          sensor_saturation_g * 1.1, 1)
@@ -150,15 +145,11 @@ class StatsPlotter():
         plt.clf()
 
 
-config_collection_file_path = os.path.join(PATH, 'collection_daemon.cfg')
-config = ConfigParser.SafeConfigParser()
-config.read(config_collection_file_path)
-global_config = Config(config_parser=config)
-
-length = config.getint("SYSTEM_HEALTH_PLOTS", "histogram_length_in_sec")
-rhino_version = config.getfloat("COLLECTION", "rhino_version")
-ideal_packets = config.getfloat("COLLECTION", "output_sampling_rate")
-sensor_saturation_g = config.getint("INSTALLATION", "sensor_saturation_g")
+global_config = Config(acquisition_config=True)
+length = global_config.histogram_length_in_sec
+rhino_version = global_config.rhino_version
+ideal_packets = global_config.output_sampling_rate
+sensor_saturation_g = global_config.sensor_saturation_g
 
 rssi = list()
 packets = list()
@@ -246,5 +237,4 @@ while True:
         pass
     except:
         time.sleep(0.1)
-        print("Sensor Stats Plotter Exception")
-        print(sys.exc_info())
+        logger.error("Sensor Stats Plotter Exception: {}".format(sys.exc_info()))

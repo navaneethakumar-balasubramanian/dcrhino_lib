@@ -60,7 +60,7 @@ def merge_mwd_with_trace(hole_mwd, trace_data, merger):
     return merged
 
 
-def load_acorr_db(sensor_file_id, timestamp_min, timestamp_max,config_str, file_min_ts,clickhouse_helper):
+def load_acorr_db(sensor_file_id, timestamp_min, timestamp_max,config_str, file_min_ts, clickhouse_helper):
 
 
     global_config = Config()
@@ -120,7 +120,7 @@ def generate_cache_acorr(matches_line,files,mwd_df,mwd_helper,env_config,mine_na
 
 def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper,sql_db_helper):
 
-    if line.solution_label == 'Non Conflict' or line.solution_label== 'Conflict Solved':
+    if line.solution != '':
         td = generate_cache_acorr(line,files_df,mwd_df,mwd_helper,env_config,mine_name)
         if td is False:
             return
@@ -152,18 +152,20 @@ def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper,sql_
 
 
         try:
-            td.save_to_h5(temp_h5_path)
+            saved = td.save_to_h5(temp_h5_path)
         except:
             pass
-        logger.info("File saved at " + h5_path)
-        sql_db_helper.acorr_files.add_or_update(td.hole_id, td.sensor_id, td.bench_name,
-                                  td.pattern_name, td.hole_name, td.rig_id,
-                                  td.digitizer_id, h5_path, int(td.min_ts), int(td.max_ts),line.bo_id)
-        try:
-            os.rename(temp_h5_path, h5_path)
 
-        except:
-            logger.error("Failed to rename " + str(temp_h5_path) + " to " + str(h5_path))
+        if saved:
+            logger.info("File saved at " + h5_path)
+            sql_db_helper.acorr_files.add_or_update(td.hole_id, td.sensor_id, td.bench_name,
+                                      td.pattern_name, td.hole_name, td.rig_id,
+                                      td.digitizer_id, h5_path, int(td.min_ts), int(td.max_ts),line.bo_id)
+            try:
+                os.rename(temp_h5_path, h5_path)
+
+            except:
+                logger.error("Failed to rename " + str(temp_h5_path) + " to " + str(h5_path))
     return
 
 

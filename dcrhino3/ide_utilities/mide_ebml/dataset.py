@@ -41,7 +41,6 @@ Created on Sep 26, 2013
 #
 # TODO: Clean up the min/mean/max stuff.
 
-# import ConfigParser
 import os.path
 import random
 import struct
@@ -55,10 +54,9 @@ import pdb
 import collections
 import h5py
 import numpy
-# from dcrhino.models.raw_data import RawDataModel
-# import data_formats as df
 from dcrhino3.ide_utilities import data_formats as df
-# from infi.clickhouse_orm.database import Database
+from dcrhino3.models.config2 import Config
+from dcrhino3.helpers.h5_helper import H5Helper
 
 from calibration import Transform, CombinedPoly, PolyPoly
 from ebmlite.core import loadSchema
@@ -2640,15 +2638,13 @@ class EventList(Transformable):
             output_path = os.path.join(output_path, "{}.h5".format(fname))
         return output_path, row_keys_type_dict
 
-    def create_h5_file(self, output_path, config):
+    def create_h5_helper(self, output_path, config):
         h5f = h5py.File(output_path, 'a')
-        h5f = config_file_to_attrs(config, h5f)
-        self.saveNumpyToFile(h5f, "sensitivity",
-                             numpy.asarray([config.getfloat("PLAYBACK", "ide_multiplier")], dtype=numpy.float32))
-        axis = numpy.asarray([config.getint("INSTALLATION", "sensor_axial_axis"),
-                              config.getint("INSTALLATION", "sensor_tangential_axis")], dtype=numpy.int32)
-        self.saveNumpyToFile(h5f, "axis", axis)
-        return h5f
+        h5_helper = H5Helper(h5f, load_ts=False, load_xyz=False, config=config)
+        h5_helper.save_np_array_to_h5_file("sensitivity", numpy.asarray([1.], dtype=numpy.float32))
+        axis = numpy.asarray([config.sensor_axial_axis, config.sensor_tangential_axis], dtype=numpy.int32)
+        h5_helper.save_np_array_to_h5_file("axis", axis)
+        return h5_helper
 
 
     def exportH5(self, sensor_serial_number,ideFileObj,resampling_rate, config, time_offset=0,
@@ -2746,7 +2742,7 @@ class EventList(Transformable):
         first_timestamp = None
         file_start_ts = None
         split_file = False
-        h5f = self.create_h5_file(output_path, config)
+        h5_helper = self.create_h5_helper(output_path, config)
         try:
             for num, evt in enumerate(_self.iterSlice(start, stop, step, display=display)):
                 sample_ts = (evt[0]/1000000)+_self.session.utcStartTime + time_offset
@@ -2776,32 +2772,31 @@ class EventList(Transformable):
                     # print ("{} samples procesed".format(counter))
                     if split_file:
                         split_file = False
-                        print("This sample belings in the new file {}".format(sample_ts))
-                        print("First we save the samples in the old file")
+                        # print("This sample belings in the new file {}".format(sample_ts))
+                        # print("First we save the samples in the old file")
                         logger.info("{} samples procesed".format(counter))
                         buffer = numpy.asarray(buffer)
                         for i, key in enumerate(row_keys_type_dict.keys()):
                             buffer_data = numpy.asarray(buffer[:, i], dtype=row_keys_type_dict[key])
-                            self.saveNumpyToFile(h5f, key, buffer_data)
-                        print("Then we create  new buffer")
+                            h5_helper.save_np_array_to_h5_file(key, buffer_data)
+                        h5_helper.close_h5f()
+                        # print("Then we create  new buffer")
                         buffer = list()
-                        print('Then append this sample to the new buffer')
+                        # print('Then append this sample to the new buffer')
                         buffer.append(row)
-                        print("close the file")
-                        h5f.close()
                         output_path, row_keys_type_dict = self.generate_h5_output_name(_self, ideFileObj,
                                                                                        sensor_serial_number,
                                                                                        resampling_rate, time_offset,
                                                                                        override_timestamp=sample_ts)
-                        print("create the new file {}".format(output_path))
-                        h5f = self.create_h5_file(output_path, config)
+                        logger.debug("create the new file {}".format(output_path))
+                        h5_helper = self.create_h5_helper(output_path, config)
                     else:
                         buffer.append(row)
                         logger.info("{} samples procesed".format(counter))
                         buffer = numpy.asarray(buffer)
                         for i, key in enumerate(row_keys_type_dict.keys()):
                             buffer_data = numpy.asarray(buffer[:, i], dtype=row_keys_type_dict[key])
-                            self.saveNumpyToFile(h5f, key, buffer_data)
+                            h5_helper.save_np_array_to_h5_file(key, buffer_data)
                         buffer = list()
                 else:
                     buffer.append(row)
@@ -2811,13 +2806,12 @@ class EventList(Transformable):
                         break
                     if updateInt == 0 or num % updateInt == 0:
                         callback(num*numChannels, total=totalSamples)
-            # print ("{} samples procesed".format(counter))
             logger.info("{} samples procesed".format(counter))
             buffer = numpy.asarray(buffer)
             for i, key in enumerate(row_keys_type_dict.keys()):
                 buffer_data = numpy.asarray(buffer[:, i], dtype=row_keys_type_dict[key])
-                self.saveNumpyToFile(h5f, key, buffer_data)
-            h5f.close()
+                h5_helper.save_np_array_to_h5_file(key, buffer_data)
+            h5_helper.close_h5f()
             if callback is not None:
                 callback(done=True)
         except ex as e:

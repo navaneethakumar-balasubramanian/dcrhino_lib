@@ -7,6 +7,24 @@ import json
 import numpy as np
 import os
 from dcrhino3.acquisition.constants import ACQUISITION_PATH
+from dcrhino3.models.drill.drill_string_component import DrillStringComponent
+
+from dcrhino3.helpers.general_helper_functions import init_logging
+logger = init_logging(__name__)
+
+
+def copy_config_object(old_config):
+    new_config = Config()
+    if old_config.acquisition_config:
+        new_config.acquisition_config = True
+
+    for key in old_config.__dict__.keys():
+        setattr(new_config, key, old_config.__dict__[key])
+
+    for key in old_config.files_keys:
+        new_config.files_keys[key] = old_config.files_keys[key]
+
+    return new_config
 
 
 class Config(object):
@@ -33,8 +51,32 @@ class Config(object):
             self.set_data_from_json(json_data)
         return
 
+    @property
+    def sampling_rate(self):
+        return float(self.output_sampling_rate)
+
+    def duplicate_config(self):
+        """
+        Creates an independent copy of an instance of the object
+        :return: a new copy of the object
+        """
+        return copy_config_object(self)
+
+    def clear_all_keys(self):
+        for key in self.pipeline_files_to_dict.keys():
+            self.__dict__[key] = None
+        for key in self.field_files_to_dict.keys():
+            self.__dict__[key] = None
+
     def _config_files_to_dict(self, files_type):
-        if files_type in self.files_keys[files_type].keys():
+        """
+        will return a dictionary with all the keys that are part of the pipeline_files or the field_files.  These can
+        be found in the acquisition_config.cfg"
+
+        :param files_type: "pipeline_files" or "field_files"
+        :return:a dictionary with all the key/value pairs of all the files that are part of the files_type
+        """
+        if files_type in self.files_keys.keys():
             pipeline_files = self.files_keys[files_type].keys()
             pipeline_json = dict()
             for pipeline_file in pipeline_files:
@@ -43,6 +85,17 @@ class Config(object):
             return pipeline_json
         else:
             return None
+
+    def keys(self):
+        """
+        only returns the keys that are important for the config file that is saved in the h5 files (pipeline_files)
+
+        :return:a dictionary with the keys of the pipeline files
+        """
+        return self.pipeline_files_to_dict.keys()
+
+    def __getitem__(self, item):
+        return self.__dict__[item]
 
     @property
     def pipeline_files_to_dict(self):
@@ -66,18 +119,39 @@ class Config(object):
                 Returns:
                     Path from :func:`field_base_path` joined by level_0
                 """
-        return os.path.join(self.field_base_path(), "level_0").lower()
+        return os.path.join(self._field_base_path(), "level_0").lower()
+
+    # @property
+    # def full_json(self):
+    #     """
+    #     This is to return all the keys in the dictionary and not only the ones that are going to
+    #     :return:
+    #     """
+
+    @property
+    def drill_string_components_list(self):
+        components = list()
+        for component in self.drill_string_components:
+            c = DrillStringComponent(attributes_dict=component)
+            components.append(c)
+        return components
 
     @property
     def sensor_distance_to_source(self):
+        # todo: ADD LOGIC HERE
+        logger.warn("MISSING LOGIC FOR SENSOR DISTANCE TO SOURCE on config2")
         return
 
     @property
     def sensor_distance_to_shocksub(self):
+        logger.warn("MISSING LOGIC FOR SENSOR DISTANCE TO SHOCKSUB on config2")
+        #todo: ADD LOGIC HERE
         return
 
     @property
     def two_way_resonance_distance(self):
+        logger.warn("MISSING LOGIC FOR two_way_resonance_distance on config2")
+        # todo: ADD LOGIC HERE
         return
 
     def _get_channel_sensitivity(self, channel):
@@ -137,7 +211,10 @@ class Config(object):
         Returns:
             list of strings of components to collect/process
         """
-        return self.components_to_collect.split(',')
+        if isinstance(self.components_to_collect, str):
+            return self.components_to_collect.split(',')
+        else:
+            return self.components_to_collect
 
     @property
     def dt(self):
@@ -193,6 +270,10 @@ class Config(object):
         json_str = json.dumps(vars(self), indent=4)
         return json_str
 
+    def map_component_to_axis(self, component):
+        axis = ["x", "y", "z"]
+        return axis[self.get_component_index(component)]
+
     @property
     def pipeline_json_string(self):
         json_string = json.dumps(self.pipeline_files_to_dict, indent=4)
@@ -205,12 +286,12 @@ class Config(object):
 
     def export_config_for_h5_files(self, path):
         with open(path, 'w') as fp:
-            json.dump(self.pipeline_json_string, fp)
-        return
+            json.dump(self.pipeline_files_to_dict, fp)
+        return True
 
     def load_from_config_for_h5_files(self, path):
         with open(path, 'r') as fp:
-            data = json.load(self.pipeline_json_string, fp)
+            data = json.load(fp)
         config_files_json = json.load(open(os.path.join(ACQUISITION_PATH, "acquisition_config.cfg")))
         self.files_keys["pipeline_files"] = dict()
         for config_file in config_files_json["pipeline_files"]:
@@ -261,10 +342,21 @@ class Config(object):
         """
         return self.sensor_distance_to_shocksub + self.sensor_distance_to_source
 
+    def save_to_disk_files(self):
+        for file_type in self.files_keys.keys():
+            for cfg_file in self.files_keys[file_type].keys():
+                file_dict = dict()
+                for i, key in enumerate(self.files_keys[file_type][cfg_file]):
+                    file_dict[key] = self.__dict__[key]
+                with open(os.path.join(ACQUISITION_PATH, cfg_file), "w") as output:
+                    json.dump(file_dict, output)
+        return True
+
 
 if __name__ == "__main__":
     try:
         c = Config(acquisition_config=True)
+        c_list = c.drill_string_components_list
         print("done")
     except:
         pass

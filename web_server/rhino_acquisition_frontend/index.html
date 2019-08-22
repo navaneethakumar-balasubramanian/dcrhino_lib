@@ -1,12 +1,18 @@
+<!doctype html>
 <html lang="en">
-<head>
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
 <title>Title</title>
 <!-- here go your script declarations and style links -->
-</head>
 <link rel="stylesheet" type="text/css" href="/3rdparty/css/font.css" media="screen" />
 <link rel="stylesheet" type="text/css" href="/3rdparty/fonts/geotoolkit.css" media="screen" />
 <link rel="stylesheet" type="text/css" href="/3rdparty/css/styles.css" media="screen" />
 <link rel="stylesheet" type="text/css" href="/3rdparty/css/vs.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="/3rdparty/css/bootstrap.4.3.1.min.css" media="screen"/>
+<!--<script src="/3rdparty/js/bootstrap.min.js"></script>-->
 <script src="/js/require.js"></script>
 <script>
     require.config({
@@ -41,7 +47,8 @@
             'geotoolkit.map': "/js/geotoolkit/geotoolkit.map.adv",
             'geotoolkit.report': "/js/geotoolkit/geotoolkit.report.adv",
             'jquery': '/js/jquery',
-            'rhino_acq' : '/js/rhino_acq'
+            'rhino_acq' : '/js/rhino_acq',
+            'bootstrap': '/3rdparty/js/bootstrap.4.3.1.min.js'
         },
         // Browser independent configuration of the dependencies, exports, and custom init
         shim: {
@@ -59,14 +66,16 @@
         });
     }
     </script>
-    </head>
+  </head>
 
         <!-- Change body tag to the following -->
         <body onload="bodyLoadHandler()">
 
-            <h1>NATAL THIS IS THE PAGE!!</h1>
-            <button class="toolbutton mode-button" id="resetButton" title="START PROCESS" onclick="require(['rhino_acq'], function(App) { App.start_process();})">
-                <i class="geotoolkit-icon-fit-to-screen"></i></button>
+<!--           <h1>NATAL THIS IS THE PAGE!!</h1>-->
+<!--            <button class="toolbutton mode-button" id="resetButton" title="START PROCESS"-->
+<!--                    onclick="require(['rhino_acq'], function(App) { App.open_settings();})">-->
+<!--                <i class="geotoolkit-icon-fit-to-screen"></i></button>-->
+           <a class="btn btn-dark" role="button" href="/open_settings">Settings</a>
     <canvas id="canvas" style="width:90%;height:90%;"></canvas>
 </body>
 </html>

@@ -1,3 +1,8 @@
+"""
+???
+file_types: 1 Level0 h5
+file_types: 2 Level0 h5
+"""
 import h5py
 import os
 import json
@@ -16,12 +21,15 @@ class SensorFileManager:
         self.env_config = env_config
 
     def file_props(self,raw_path):
+        """
+        what are props? congratulations?  file_properties?
+        """
         if ".ide" in str(raw_path).lower():
-            logger.warn("Convert to h5 first")
+            logger.warn("Convert {} to h5 first".format(raw_path))
             return False
         elif ".h5" in str(raw_path).lower():
             h5f = h5py.File(raw_path, 'r+')
-            if self.is_h5_level0(h5f):
+            if self.is_h5_level0(h5f): 
                 raw_trace = RawTraceData()
                 raw_trace.load_from_h5(str(raw_path))
 
@@ -33,7 +41,7 @@ class SensorFileManager:
                 max_ts = raw_trace.dataframe.timestamp.max()
                 global_config = raw_trace.global_config_by_index("0")
                 config_str = json.dumps(vars(global_config), indent=4)
-                type = 1
+                file_type = 1  #"type" is a reserved word - use "file_type"
             else:
                 td = TraceData()
                 td.load_from_h5(h5f)
@@ -45,16 +53,29 @@ class SensorFileManager:
                 max_ts = td.dataframe.timestamp.max()
                 global_config = td.first_global_config()
                 config_str = json.dumps(vars(global_config), indent=4)
-                type = 2
+                file_type = 2  #"type" is a reserved word - use "file_type"
 
         else:
             logger.error("Unable to identify this file : " + str(raw_path))
             return False
         sensor_files_storage_folder = self.env_config.get_sensor_files_storage_folder(mine_name)
         date = datetime.utcfromtimestamp(min_ts).strftime('%Y%m%d')
-        storage_file_path = os.path.join(sensor_files_storage_folder,rig_id,sensor_id,digitizer_id,date,os.path.basename(raw_path))
+        storage_file_path = os.path.join(sensor_files_storage_folder, rig_id,
+                                         sensor_id, digitizer_id, date,
+                                         os.path.basename(raw_path))
+        output_dict = {}
+        output_dict['file_path_actual'] = raw_path
+        output_dict['file_path_storage'] = storage_file_path
+        output_dict['mine_name'] = mine_name
+        output_dict['rig_id'] = rig_id
+        output_dict['sensor_id'] = sensor_id
+        output_dict['digitizer_id'] = digitizer_id
+        output_dict['min_ts'] = min_ts
+        output_dict['max_ts'] = max_ts
+        output_dict['type'] = file_type
+        output_dict['config_str'] = config_str
 
-        return {"file_path_actual":raw_path,"file_path_storage":storage_file_path,"mine_name": mine_name, "rig_id": rig_id, "sensor_id": sensor_id, "digitizer_id": digitizer_id, "min_ts": min_ts, "max_ts": max_ts, "type": type,'config_str':config_str}
+        return output_dict
 
 
 
@@ -75,7 +96,6 @@ class SensorFileManager:
                 digitizer_id = td.digitizer_id
                 min_ts = td.dataframe.to_timestamp.min()
                 max_ts = td.dataframe.to_timestamp.max()
-                print "aa"
                 pass
             pass
         else:

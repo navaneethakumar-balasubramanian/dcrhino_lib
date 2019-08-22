@@ -4,7 +4,7 @@ import os
 try:
     from cStringIO import StringIO
 except ImportError:
-    from StringIO import StringIO #@UnusedImport (PyLint doesn't like this)
+    from io import StringIO #@UnusedImport (PyLint doesn't like this)
 from ..core import read_element_id, read_element_size
 from ..core import read_signed_integer, read_unsigned_integer, read_float, read_string, read_unicode_string, read_date
 

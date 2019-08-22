@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<title>Title</title>
+<!-- here go your script declarations and style links -->
+<link rel="stylesheet" type="text/css" href="/3rdparty/css/font.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="/3rdparty/fonts/geotoolkit.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="/3rdparty/css/styles.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="/3rdparty/css/vs.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="/3rdparty/css/bootstrap.4.3.1.min.css" media="screen"/>
+<!--<script src="/3rdparty/js/bootstrap.min.js"></script>-->
+<script src="/js/require.js"></script>
+<script>
+    require.config({
+            baseUrl: '/js/',
+        paths: {
+            'axios':'axios',
+            'numjs':'numjs',
+            'highlight.pack':'highlight.pack',
+            'geotoolkit': 'geotoolkit/geotoolkit.adv',
+            'geotoolkit.intgeo': "/js/geotoolkit/geotoolkit.intgeo.adv",
+            'geotoolkit.legacygauges': "/js/geotoolkit/geotoolkit.legacygauges.adv",
+            'geotoolkit.svg': "/js/geotoolkit/geotoolkit.svg.adv",
+            'geotoolkit.cgm': "/js/geotoolkit/geotoolkit.cgm.adv",
+            'geotoolkit.pdf': "/js/geotoolkit/geotoolkit.pdf.adv",
+            'geotoolkit.gridding': "/js/geotoolkit/geotoolkit.gridding.adv",
+            'geotoolkit.data': "/js/geotoolkit/geotoolkit.data.adv",
+            'geotoolkit.seismic': "/js/geotoolkit/geotoolkit.seismic.adv",
+            'geotoolkit.seismic.analysis': "/js/geotoolkit/geotoolkit.seismic.analysis.adv",
+            'geotoolkit.seismic.cgmplus': "/js/geotoolkit/geotoolkit.seismic.cgmplus.adv",
+            'geotoolkit.welllog': "/js/geotoolkit/geotoolkit.welllog.adv",
+            'geotoolkit.seislog': "/js/geotoolkit/geotoolkit.seislog.adv",
+            'geotoolkit.welllog.las': "/js/geotoolkit/geotoolkit.welllog.las.adv",
+            'geotoolkit.controls': "/js/geotoolkit/geotoolkit.controls.adv",
+            'geotoolkit.deviation': "/js/geotoolkit/geotoolkit.deviation.adv",
+            'geotoolkit.gauges': "/js/geotoolkit/geotoolkit.gauges.adv",
+            'geotoolkit.widgets': "/js/geotoolkit/geotoolkit.widgets.adv",
+            'geotoolkit.seismic.widgets': "/js/geotoolkit/geotoolkit.seismic.widgets.adv",
+            'geotoolkit.welllog.widgets': "/js/geotoolkit/geotoolkit.welllog.widgets.adv",
+            'geotoolkit.welllog.multiwell': "/js/geotoolkit/geotoolkit.welllog.multiwell.adv",
+            'geotoolkit.welllog.widgets.ui': "/js/geotoolkit/geotoolkit.welllog.widgets.ui.adv",
+            'geotoolkit.flowcharts': "/js/geotoolkit/geotoolkit.flowcharts.adv",
+            'geotoolkit.map': "/js/geotoolkit/geotoolkit.map.adv",
+            'geotoolkit.report': "/js/geotoolkit/geotoolkit.report.adv",
+            'jquery': '/js/jquery',
+            'rhino_acq' : '/js/rhino_acq',
+            'bootstrap': '/3rdparty/js/bootstrap.4.3.1.min.js'
+        },
+        // Browser independent configuration of the dependencies, exports, and custom init
+        shim: {
+        }
+    });
+</script>
+<script>
+    function bodyLoadHandler() {
+        // Use require to load script.js. The object which the script returns
+        // will be passed to your callback function
+        require(['rhino_acq','jquery','helper'one ], function(App) {
+            // Call initialize function which we created in script.js
+
+            App.initialize();
+            $("form#settings_form").submit(function(e){
+            e.preventDefault()
+            var formData = new FormData($(this)[0]);
+             //append some non-form data also
+             console.log(formData)
+             $.ajax({
+              type: "POST",
+              url: "/hello",
+              data: formData,
+              processData: false,
+               contentType: false,
+               dataType: "json"
+            });
+            });
+            $.ajax({
+            url:"/get_config",
+            dataType: "json",
+            success: function(data, textStatus, jqXHR) {
+               //process data
+            console.log(data)
+            populate('#settings_form', data);
+            },
+            });
+        });
+
+    }
+
+    function populate(frm, data) {
+ $.each(data, function(key, value){
+   $('[name='+key+']', frm).val(value);
+ });
+}
+
+
+    </script>
+  </head>
+
+    <!-- Change body tag to the following -->
+    <body onload="bodyLoadHandler()">
+        <form method="post" id="settings_form" action="">
+          <div class="form-group col-md-6">
+            <label for="country">Country</label>
+            <input type="text" class="form-control" id="country" name="country" placeholder="Australia">
+          </div>
+          <div class="form-group col-md-6">
+            <label for="company">Mining Company</label>
+            <input type="text" class="form-control" id="company" name="company" placeholder="BMA">
+          </div>
+          <div class="form-group col-md-6">
+            <label for="inputAddress">Mine Name</label>
+            <input type="text" class="form-control" id="inputAddress" placeholder="Goonyella">
+          </div>
+          <div class="form-group col-md-6">
+            <label for="inputAddress2">Datacloud Engineer</label>
+            <input type="text" class="form-control" id="inputAddress2" placeholder="Doug_Kirkby">
+          </div>
+          <!--<div class="form-group col-md-6">
+            <label for="inputCity">City</label>
+            <input type="text" class="form-control" id="inputCity">
+          </div>
+          <div class="form-group col-md-4">
+            <label for="inputState">State</label>
+            <select id="inputState" class="form-control">
+              <option selected>Choose...</option>
+              <option>...</option>
+            </select>
+          </div>
+          <div class="form-group col-md-2">
+            <label for="inputZip">Zip</label>
+            <input type="text" class="form-control" id="inputZip">
+          </div>
+          <div class="form-group col-md-6">
+            <div class="form-check ">
+              <input class="form-check-input" type="checkbox" id="gridCheck">
+              <label class="form-check-label" for="gridCheck">
+                Check me out
+              </label>
+            </div>
+          </div>-->
+          <div class="form-group col-md-6">
+            <button type="submit" class="btn btn-primary">Sign in</button>
+          </div>
+        </form>
+        <canvas id="canvas" style="width:90%;height:90%;"></canvas>
+    </body>
+</html>

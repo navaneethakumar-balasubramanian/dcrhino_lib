@@ -20,6 +20,7 @@ define(["highlight.pack", "geotoolkit", "axios","numjs","geotoolkit.seismic", "g
             'root' : line
         });
     }
+
     function startProcess () {
         axios.get('http://localhost:5000/start_acquisition')
     }

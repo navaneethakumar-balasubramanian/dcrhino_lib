@@ -33,7 +33,8 @@ class SensorFiles(BaseDbModel):
 
 
     def get_all_valid(self):
-        return self.query_to_df("select * from " + self.table_name + " where status='valid'")
+        df = self.query_to_df("select * from " + self.table_name + " where status='valid'")
+        return df
 
     def add(self,file_path,rig_id,sensor_id,digitizer_id,min_ts,max_ts,config_str,type,status,file_name,original_file_record_day,file_changed_at,file_size,file_checksum):
 

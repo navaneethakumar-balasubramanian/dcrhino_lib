@@ -33,7 +33,8 @@ class MWDHelper():
         self.required_columns = ['hole_id','hole_name','pattern_name','bench_name','start_time','rig_id','measured_depth','hole_start_time']
         self.optional_columns = ['easting','northing','tob','rop','wob','mse','air_pressure','rpm','end_time']
 
-
+        logger.warning("dcrhino3.helpers.mwd_helper.MWDHelper is slated for depreaction")
+        logger.warning("Please use the MWDHelper from dc_mwd instead")
 
     def get_hole_mwd_from_mine_mwd(self,mine_mwd,bench_name,pattern_name,hole_name,hole_id):
         """

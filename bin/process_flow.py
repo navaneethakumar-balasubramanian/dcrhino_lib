@@ -20,8 +20,8 @@ os.environ['OMP_NUM_THREADS'] = '1'
 
 ## HACK TO WORK ON SERVERS NON INTERACTIVE MODE
 import matplotlib
-matplotlib.use('Svg')
-#matplotlib.use('TkAgg')
+#matplotlib.use('Svg')
+matplotlib.use('TkAgg')
 
 
 
@@ -68,7 +68,7 @@ def process(list_of_args):
 
 def process_glob(default_process_json, glob_str,
                  env_config_path="env_config.json", seconds_to_process=False,
-                 processes=False, photo_folder=False, DEBUG=False):
+                 processes=False, photo_folder=False, DEBUG=True):
     """
     repairing redundant logic, 20190718
     process_queue:

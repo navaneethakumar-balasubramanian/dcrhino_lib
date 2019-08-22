@@ -34,8 +34,9 @@ import pandas as pd
 import pdb
 import sys
 
-from dcrhino3.helpers.general_helper_functions import init_logging,create_folders_if_needed, df_component_as_array, is_string
-from dcrhino3.models.config import Config
+from dcrhino3.helpers.general_helper_functions import init_logging, create_folders_if_needed, df_component_as_array, \
+    is_string
+from dcrhino3.models.config2 import Config
 
 logger = init_logging(__name__)
 
@@ -164,14 +165,14 @@ class TraceData(object):
     @property
     def hole_h5_filename(self):
         line = self.dataframe.iloc[0]
-        return  str(line.bench_name) + "_" + str(line.pattern_name) + "_" + str(line.hole_name) + "_" + str(
+        return str(line.bench_name) + "_" + str(line.pattern_name) + "_" + str(line.hole_name) + "_" + str(
             line.hole_id) + "_" + str(self.sensor_id) + "_" + str(self.digitizer_id) + ".h5"
 
     @property
     def first_global_config(self):
         return self.global_config_by_index(self.dataframe["acorr_file_id"].values[0])
 
-    def apply_module(self,module_type,arguments):
+    def apply_module(self, module_type, arguments):
         """
         Return the applied modules.
         """
@@ -203,8 +204,10 @@ class TraceData(object):
             global_config.set_data_from_json(json.loads(file_config))
             self._global_configs[file_id] = global_config
 
+    def append_to_dataframe(self, data):
+        self.dataframe = pd.concat((self.dataframe, data))
 
-    def save_to_csv(self,path):
+    def save_to_csv(self, path):
         """
         Save dataframe (without trace data) to csv at location specified by "path"
         
@@ -218,11 +221,11 @@ class TraceData(object):
         df['sensor_id'] = first_global_config.sensor_serial_number
         df['digitizer_id'] = first_global_config.digitizer_serial_number
         df['rhino_sensor_uid'] = str(first_global_config.sensor_type) + "_" + str(first_global_config.sensor_serial_number) + "_" + str(first_global_config.digitizer_serial_number) + "_" + str(first_global_config.sensor_accelerometer_type) + "_" + str(first_global_config.sensor_saturation_g)
-        df.to_csv(path,index=False)
+        df.to_csv(path, index=False)
 
 
 
-    def save_to_h5(self, path,compress=False):
+    def save_to_h5(self, path, compress=False):
         """
         Save dataframe (without trace data) to h5 at location specified by "path"
         
@@ -247,7 +250,7 @@ class TraceData(object):
         #df_as_dict = dict(self.dataframe)
         if len(self.dataframe) == 0:
             logger.error("No point on saving an empty h5 file to " +str(path))
-            return
+            return False
         all_columns = list(self.dataframe.columns)
         folder = os.path.dirname(path)
         create_folders_if_needed(folder)
@@ -259,9 +262,11 @@ class TraceData(object):
                 trace_label = '{}_trace'.format(component_id)
                 trace_data = self.component_as_array(component_id)
                 if compress:
-                    h5f.create_dataset(trace_label, data=trace_data, dtype=float, chunks=True,compression='lzf',shuffle=True)
+                    h5f.create_dataset(trace_label, data=trace_data, dtype=float, chunks=True,
+                                       compression='lzf', shuffle=True)
                 else:
-                    h5f.create_dataset(trace_label, data=trace_data, dtype=float)#, compression="gzip", compression_opts=9)
+                    h5f.create_dataset(trace_label, data=trace_data, dtype=float)  # , compression="gzip",
+                    # compression_opts=9)
                 all_columns.remove(trace_label)
             except KeyError:
                 logger.info('Skipping saving {} as it DNE'.format(trace_label))
@@ -271,20 +276,18 @@ class TraceData(object):
         print('Fix this so that these columns are saved, but for now we just remove them')
         for column in all_columns:
             sample_element = self.dataframe[column].iloc[0]
-            #print(column, type(sample_element))
             if column == "_drop_features":
                 all_columns.remove(column)
                 self.dataframe.drop([column,], axis=1, inplace=True)
         #<cull other columns with array type>
 
         #<mwd columns>
-        mwd_columns = all_columns#traces removed
+        mwd_columns = all_columns
         for column_label in mwd_columns:
             dtype = type(self.dataframe[column_label].iloc[0])
-            #print (column_label, dtype)
             column_data = np.asarray(self.dataframe[column_label])
             if is_string(self.dataframe[column_label].iloc[0]):
-                if (sys.version_info > (3, 0)):
+                if sys.version_info > (3, 0):
                     dt = h5py.special_dtype(vlen=str)
                 else:
                     dt = h5py.special_dtype(vlen=unicode)
@@ -295,16 +298,20 @@ class TraceData(object):
                     h5f.create_dataset(column_label, data=column_data, dtype=dt)
             elif dtype == np.int64:
                 if compress:
-                    h5f.create_dataset(column_label, data=column_data, dtype='i8',chunks=True,compression='lzf',shuffle=True)
+                    h5f.create_dataset(column_label, data=column_data, dtype='i8',
+                                       chunks=True, compression='lzf', shuffle=True)
                 else:
-                    h5f.create_dataset(column_label, data=column_data, dtype='i8')#, compression="gzip", compression_opts=9)
+                    h5f.create_dataset(column_label, data=column_data, dtype='i8')  # , compression="gzip",
+                    # compression_opts=9)
             else:
 
                 column_data = column_data.astype(float)
                 if compress:
-                    h5f.create_dataset(column_label, data=column_data, dtype=float,chunks=True,compression='lzf',shuffle=True)
+                    h5f.create_dataset(column_label, data=column_data, dtype=float, chunks=True,
+                                       compression='lzf', shuffle=True)
                 else:
-                    h5f.create_dataset(column_label, data=column_data, dtype=float)#, compression="gzip", compression_opts=9)
+                    h5f.create_dataset(column_label, data=column_data, dtype=float)  # , compression="gzip",
+                    # compression_opts=9)
         #</mwd columns>
 
         #<config>
@@ -317,9 +324,9 @@ class TraceData(object):
         #</config>
 
         h5f.close()
-        return
+        return True
 
-    def realtime_append_to_h5(self,path, file_id='0', global_config=None):
+    def realtime_append_to_h5(self, path, file_id='0', global_config=None):
         """
         Add to h5 file found at path
         
@@ -337,11 +344,8 @@ class TraceData(object):
             dtype = np.float32
             if column[-9:] == "ial_trace":
                 # dtype = np.float32
-                data=list([self.dataframe[column][0],])
+                data = list([self.dataframe[column][0],])
                 max_shape = (None, None)
-            # elif "acceleration" in column:
-            #     # dtype = np.float32
-            #     data = np.asarray(self.dataframe[column], dtype=dtype)
             elif "timestamp" in column:
                 dtype = np.uint32
                 data = np.asarray(self.dataframe[column], dtype=dtype)
@@ -349,7 +353,7 @@ class TraceData(object):
                 data = np.asarray(self.dataframe[column], dtype=dtype)
             if column in h5f.keys():
                 ds = h5f[column]
-                ds.resize(ds.shape[0] + 1, axis = 0)
+                ds.resize(ds.shape[0] + 1, axis=0)
                 ds[-1:] = data
             else:
                 ds = h5f.create_dataset(column, chunks=True, data=data,
@@ -358,12 +362,12 @@ class TraceData(object):
         configs_dict = {}
         if file_id in self._global_configs.keys():
             if not 'global_config_jsons' in h5f.attrs.keys():
-                unicode_string = self.global_config_by_index(file_id).json_string()
+                unicode_string = self.global_config_by_index(file_id)
                 configs_dict[file_id] = unicode_string
                 all_configs_as_a_string = json.dumps(configs_dict)
                 h5f.attrs['global_config_jsons'] = all_configs_as_a_string
         else:
-            self.add_global_config(global_config,file_id)
+            self.add_global_config(global_config, file_id)
             configs_dict = {}
             for each_file_id in self._global_configs.keys():
                 unicode_string = self.global_config_by_index(each_file_id).json_string()
@@ -378,7 +382,7 @@ class TraceData(object):
         """
         Inverse of save_to_h5; Handle traces, then other columns, then json cfg
         """
-        if isinstance(pathOrH5Py,str) or isinstance(pathOrH5Py,unicode):
+        if isinstance(pathOrH5Py, str) or isinstance(pathOrH5Py, unicode):
             h5f = h5py.File(pathOrH5Py, 'r')
         else:
             h5f = pathOrH5Py
@@ -398,7 +402,7 @@ class TraceData(object):
         #</load traces>
 
         for key in h5f.keys():
-            if key[-9:]=='ial_trace':#skip traces
+            if key[-9:] == 'ial_trace':  # skip traces
                 continue
             data = h5f.get(key)
             dict_for_df[key] = np.asarray(data)
@@ -420,10 +424,10 @@ class TraceData(object):
         h5f.close()
         return
 
-    def add_applied_module(self,module_string):
+    def add_applied_module(self, module_string):
         self.applied_modules.append(module_string)
 
-    def add_global_config(self,global_config, file_id):
+    def add_global_config(self, global_config, file_id):
         """
         Add gloabl configs
         
@@ -440,10 +444,10 @@ class TraceData(object):
     def global_config_to_json_string(self):
         pass
 
-    def remove_global_config(self,index):
+    def remove_global_config(self, index):
         pass
 
-    def global_config_by_index(self,index):
+    def global_config_by_index(self, index):
         """
         Get global configs by index
         """
@@ -461,7 +465,7 @@ class TraceData(object):
             (array): extracted trace, selected by component_id
         """
 
-        return df_component_as_array(component_id,self.dataframe)
+        return df_component_as_array(component_id, self.dataframe)
 
     def copy_without_trace_data(self):
         """
