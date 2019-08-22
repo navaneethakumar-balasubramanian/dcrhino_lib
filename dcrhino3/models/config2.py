@@ -9,6 +9,9 @@ import os
 from dcrhino3.acquisition.constants import ACQUISITION_PATH
 from dcrhino3.models.drill.drill_string_component import DrillStringComponent
 
+from dcrhino3.helpers.general_helper_functions import init_logging
+logger = init_logging(__name__)
+
 
 def copy_config_object(old_config):
     new_config = Config()
@@ -47,6 +50,10 @@ class Config(object):
         if json_data is not None:
             self.set_data_from_json(json_data)
         return
+
+    @property
+    def sampling_rate(self):
+        return float(self.output_sampling_rate)
 
     def duplicate_config(self):
         """
@@ -131,14 +138,20 @@ class Config(object):
 
     @property
     def sensor_distance_to_source(self):
+        # todo: ADD LOGIC HERE
+        logger.warn("MISSING LOGIC FOR SENSOR DISTANCE TO SOURCE on config2")
         return
 
     @property
     def sensor_distance_to_shocksub(self):
+        logger.warn("MISSING LOGIC FOR SENSOR DISTANCE TO SHOCKSUB on config2")
+        #todo: ADD LOGIC HERE
         return
 
     @property
     def two_way_resonance_distance(self):
+        logger.warn("MISSING LOGIC FOR two_way_resonance_distance on config2")
+        # todo: ADD LOGIC HERE
         return
 
     def _get_channel_sensitivity(self, channel):

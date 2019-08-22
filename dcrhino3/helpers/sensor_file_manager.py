@@ -96,7 +96,6 @@ class SensorFileManager:
                 digitizer_id = td.digitizer_id
                 min_ts = td.dataframe.to_timestamp.min()
                 max_ts = td.dataframe.to_timestamp.max()
-                print "aa"
                 pass
             pass
         else:
