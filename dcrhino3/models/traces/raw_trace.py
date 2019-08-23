@@ -23,7 +23,8 @@ class RawTraceData(TraceData):
     def load_config(self, path):
         f1 = h5py.File(path, 'r+')
         h5_helper = H5Helper(f1, False, False)
-        global_config = Config(h5_helper.metadata)
+        #global_config = Config(h5_helper.metadata)
+        global_config = h5_helper.config
         return global_config
 
     def load_from_h5(self, path):
