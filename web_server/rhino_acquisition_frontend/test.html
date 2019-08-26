@@ -1,0 +1,60 @@
+<html lang="en">
+  <head>
+    <title>.int Test</title>
+    <script src="js/require.js"></script>
+    <script>
+      require.config({
+            // Alias name for files and paths to them
+            baseUrl: 'js/',
+        paths: {
+            'axios':'axios',
+            'numjs':'numjs',
+            'highlight.pack':'highlight.pack',
+            'geotoolkit': 'geotoolkit/geotoolkit.adv',
+            'geotoolkit.intgeo': "geotoolkit/geotoolkit.intgeo.adv",
+            'geotoolkit.legacygauges': "geotoolkit/geotoolkit.legacygauges.adv",
+            'geotoolkit.svg': "geotoolkit/geotoolkit.svg.adv",
+            'geotoolkit.cgm': "geotoolkit/geotoolkit.cgm.adv",
+            'geotoolkit.pdf': "geotoolkit/geotoolkit.pdf.adv",
+            'geotoolkit.gridding': "geotoolkit/geotoolkit.gridding.adv",
+            'geotoolkit.data': "geotoolkit/geotoolkit.data.adv",
+            'geotoolkit.seismic': "geotoolkit/geotoolkit.seismic.adv",
+            'geotoolkit.seismic.analysis': "geotoolkit/geotoolkit.seismic.analysis.adv",
+            'geotoolkit.seismic.cgmplus': "geotoolkit/geotoolkit.seismic.cgmplus.adv",
+            'geotoolkit.welllog': "geotoolkit/geotoolkit.welllog.adv",
+            'geotoolkit.seislog': "geotoolkit/geotoolkit.seislog.adv",
+            'geotoolkit.welllog.las': "geotoolkit/geotoolkit.welllog.las.adv",
+            'geotoolkit.controls': "geotoolkit/geotoolkit.controls.adv",
+            'geotoolkit.deviation': "geotoolkit/geotoolkit.deviation.adv",
+            'geotoolkit.gauges': "geotoolkit/geotoolkit.gauges.adv",
+            'geotoolkit.widgets': "geotoolkit/geotoolkit.widgets.adv",
+            'geotoolkit.seismic.widgets': "geotoolkit/geotoolkit.seismic.widgets.adv",
+            'geotoolkit.welllog.widgets': "geotoolkit/geotoolkit.welllog.widgets.adv",
+            'geotoolkit.welllog.multiwell': "geotoolkit/geotoolkit.welllog.multiwell.adv",
+            'geotoolkit.welllog.widgets.ui': "geotoolkit/geotoolkit.welllog.widgets.ui.adv",
+            'geotoolkit.flowcharts': "geotoolkit/geotoolkit.flowcharts.adv",
+            'geotoolkit.map': "geotoolkit/geotoolkit.map.adv",
+            'geotoolkit.report': "geotoolkit/geotoolkit.report.adv",
+            'jquery': 'jquery',
+            'helpers':'helpers'
+        },
+        // Browser independent configuration of the dependencies, exports, and custom init
+        shim: {
+        }
+    });
+    </script>
+    <script>
+function bodyLoadHandler() {
+    // Use require to load script.js. The object which the script returns
+    // will be passed to your callback function
+    require(['js/test.js','axios'], function(App) {
+        // Call initialize function which we created in script.js
+        App.init();
+    });
+}
+</script>
+  </head>
+  <body onload="bodyLoadHandler()">
+    <canvas id="canvas"></canvas>
+  </body>
+</html>
