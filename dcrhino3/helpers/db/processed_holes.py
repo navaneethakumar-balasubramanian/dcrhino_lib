@@ -63,10 +63,13 @@ class ProcessedHoles(BaseDbModel):
     def add(self,processed_at_ts,seconds_processed,hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,sensor_accelerometer_type,sensor_saturation_g,flow_id,output_folder_name,process_id=-1):
         sql = "INSERT INTO "+self.table_name+" (processed_at_ts,seconds_processed,hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,sensor_accelerometer_type,sensor_saturation_g,flow_id,output_folder_name,process_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s , %s)"
         val = (processed_at_ts,seconds_processed,hole_id,sensor_id,bench_name,pattern_name,hole_name,rig_id,digitizer_id,sensor_accelerometer_type,sensor_saturation_g,flow_id,output_folder_name,process_id)
+        #print(sql)
+        #print(val)
         try:
             cursor = self.conn.cursor()
             cursor.execute(sql, val)
             self.conn.commit()
+           # print(cursor)
             return cursor
         except mysql.connector.Error as err:
             print("Something went wrong: {}".format(err))
