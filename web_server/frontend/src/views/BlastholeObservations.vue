@@ -167,7 +167,7 @@ export default {
           mine_name: this.mine_name,
           responseType: "arraybuffer"
         };
-        axios.post("http://localhost:5000/api/process_flows", payload).then(
+        axios.post("/api/process_flows", payload).then(
           response => {
             temp.process_flows = response.data.process_flows
           }
@@ -181,7 +181,7 @@ export default {
           blasthole_obs: this.selected,
           process_flow: item
         };
-         axios.post("http://localhost:5000/api/process_holes_with", payload).then(
+         axios.post("/api/process_holes_with", payload).then(
           response => {
             if (response.data.data == true ){
                 temp.message = true;
@@ -246,7 +246,7 @@ export default {
           processed_holes: this.selected,
           responseType: "arraybuffer"
         };
-        axios.post("http://localhost:5000/get_processed_csv", payload).then(
+        axios.post("/get_processed_csv", payload).then(
           response => {
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement("a");
