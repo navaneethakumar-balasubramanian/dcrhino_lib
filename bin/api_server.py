@@ -382,7 +382,7 @@ def log_process():
         #    processed_csv_list.append(processed_csv)
 
         #df = pd.concat(processed_csv_list)
-        df = pd.read_csv('/home/thiago/Documents/Projects/Dc_rhino/bob_processed_rpp.csv')
+        df = pd.read_csv('/data/bob_processed_rpp.csv')
         lp_df = get_lp_df(df)
     lp_df.to_csv('./temp.csv',index=False)
     rhyno_props = {}
