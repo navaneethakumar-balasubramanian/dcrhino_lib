@@ -10,11 +10,11 @@ import json
 
 app = Celery('tasks', backend='rpc://', broker='pyamqp://guest@localhost//')
 
-@app.task
-def add(x, y):
-    return x + y
+#@app.task
+#def add(x, y):
+#    return x + y
 
-@app.task
+#@app.task
 def process_file_with_flow(acorr_file_path,process_flow_json_path):
     with open(process_flow_json_path) as f:
         process_json = json.load(f)

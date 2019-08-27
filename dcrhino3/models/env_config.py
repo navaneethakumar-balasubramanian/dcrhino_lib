@@ -4,6 +4,7 @@
 import json
 from enum import Enum
 from dcrhino3.helpers.general_helper_functions import init_logging
+import os
 import pdb
 
 logger = init_logging(__name__)
@@ -48,6 +49,14 @@ class EnvConfig(object):
                 return mine
         logger.warn("Could not find a config on env.json for " + str(mine_name) + " mine." )
         return False
+
+
+    def get_process_flows_list(self,mine_name):
+        mine_cfg = self._get_mine_config(mine_name)
+        if not mine_cfg or 'paths' not in mine_cfg.keys() or 'process_flows' not in mine_cfg[
+            'paths']:
+            return []
+        return os.listdir(mine_cfg['paths']['process_flows'])
 
     def get_sensor_files_storage_folder(self, mine_name):
         """
