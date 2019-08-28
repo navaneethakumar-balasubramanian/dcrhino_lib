@@ -195,11 +195,11 @@ class Config(object):
         """
 
         if component_id == 'axial':
-            return self.sensor_axial_axis - 1
+            return int(self.sensor_axial_axis) - 1
         elif component_id == 'tangential':
-            return self.sensor_tangential_axis - 1
+            return int(self.sensor_tangential_axis) - 1
         elif component_id == 'radial':
-            return 5 - self.sensor_axial_axis - self.sensor_tangential_axis #Depending on the physical installation, radial is not always 2
+            return 5 - int(self.sensor_axial_axis) - int(self.sensor_tangential_axis) #Depending on the physical installation, radial is not always 2
         else:
             pass
 
