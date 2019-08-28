@@ -89,7 +89,7 @@ def process(list_of_args):
             h5f.close()
             print ("TYPE 2 " + str(file))
             acorr_h5_to_db(file, env_config, min_ts, max_ts)
-    except Exception, e:
+    except :
         file_logger.warn("COULDNT OPEN THIS FILE :" + str(file))
         logger.warn("COULDNT OPEN THIS FILE :" + str(file))
         traceback.print_exc()
@@ -155,7 +155,7 @@ def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000)
         print(global_config.upsample_factor)
     except AttributeError:
         logger.warning("this warning will be removed once the upsample factor is coming from the global cfg")
-        global_config.output_sampling_rate *= upsample_factor
+        global_config.output_sampling_rate = float(global_config.output_sampling_rate) * upsample_factor
 
     calibrated_dataframe = raw_trace_data.calibrate_l1h5(l1h5_dataframe, global_config)
     resampled_dataframe = raw_trace_data.resample_l1h5(calibrated_dataframe, global_config)
@@ -276,7 +276,7 @@ if __name__ == '__main__':
     process_queue = []
 
     if not files:
-        print  'File does not exist: ' + args.src_path
+        print  ('File does not exist: ' + args.src_path)
     for file in files:
         if '.h5' in os.path.splitext(file)[1]:
             if env_config.is_file_blacklisted(file) is False:

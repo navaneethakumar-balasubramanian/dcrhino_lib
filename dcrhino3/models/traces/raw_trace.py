@@ -23,7 +23,8 @@ class RawTraceData(TraceData):
     def load_config(self, path):
         f1 = h5py.File(path, 'r+')
         h5_helper = H5Helper(f1, False, False)
-        global_config = Config(h5_helper.metadata)
+        #global_config = Config(h5_helper.metadata)
+        global_config = h5_helper.config
         return global_config
 
     def load_from_h5(self, path):
@@ -43,7 +44,8 @@ class RawTraceData(TraceData):
 
         f1 = h5py.File(h5_filename, 'r+')
         h5_helper = H5Helper(f1)
-        global_config = Config(h5_helper.metadata)
+        #global_config = Config(h5_helper.metadata)
+        global_config = h5_helper.config
         #pdb.set_trace()
 
 
@@ -122,7 +124,7 @@ class RawTraceData(TraceData):
             for component_id in global_config.components_to_process:
                 trace_to_process = row_of_df[component_id]
                 processed_trace = self.calibrate_1d_component_array(trace_to_process, global_config,
-                                                                    global_config.sensor_sensitivity[component_id])
+                                                                    global_config.get_sensor_sensitivity_by_axis(component_id))
                 df.at[line_idx, component_id] = processed_trace
 
         time_interval = time.time() - t0

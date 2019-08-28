@@ -245,7 +245,7 @@ class Config(object):
 #            logger.warning("trace_duration is None - Fix this condition in Global Config")
 #            logger.critical("trace duration should be a float")
 #            #self.trace_length_in_seconds
-        return int(self.trace_length_in_seconds * self.output_sampling_rate)
+        return int(float(self.trace_length_in_seconds) * float(self.output_sampling_rate))
 
     @property
     def n_spiking_decon_filter_taps(self):

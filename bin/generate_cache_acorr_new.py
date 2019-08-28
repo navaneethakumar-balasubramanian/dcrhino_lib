@@ -154,6 +154,7 @@ def process_match_line(line,env_config,mine_name,files_df,mwd_df,mwd_helper,sql_
         try:
             saved = td.save_to_h5(temp_h5_path)
         except:
+            saved = False
             pass
 
         if saved:

@@ -62,11 +62,10 @@ export default {
         temp.items.push({
           title: element,
           items: [
-            { title: "MWD", link: "/mwd/" + element },
-            { title: "Sensor files", link: "/sensor_files/" + element },
+            //{ title: "MWD", link: "/mwd/" + element },
+            //{ title: "Sensor files", link: "/sensor_files/" + element },
             { title: "Processed files", link: "/processed/" + element },
-            { title: "Acorr files", link: "/acorr_files/" + element }
-            
+            { title: "Blasthole observations", link: "/blasthole_observations/" + element }
           ]
         });
       });
