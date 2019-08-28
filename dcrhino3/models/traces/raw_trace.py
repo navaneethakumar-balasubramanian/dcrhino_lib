@@ -44,7 +44,8 @@ class RawTraceData(TraceData):
 
         f1 = h5py.File(h5_filename, 'r+')
         h5_helper = H5Helper(f1)
-        global_config = Config(h5_helper.metadata)
+        #global_config = Config(h5_helper.metadata)
+        global_config = h5_helper.config
         #pdb.set_trace()
 
 
