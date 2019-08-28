@@ -276,7 +276,7 @@ if __name__ == '__main__':
     process_queue = []
 
     if not files:
-        print  'File does not exist: ' + args.src_path
+        print  ('File does not exist: ' + args.src_path)
     for file in files:
         if '.h5' in os.path.splitext(file)[1]:
             if env_config.is_file_blacklisted(file) is False:
