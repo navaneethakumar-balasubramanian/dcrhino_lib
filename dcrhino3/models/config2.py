@@ -155,7 +155,7 @@ class Config(object):
         return
 
     def _get_channel_sensitivity(self, channel):
-        return self.sensor_sensitivity["{}_sensitivity".format(channel)]
+        return float(self.sensor_sensitivity["{}_sensitivity".format(channel)])
 
     @property
     def x_sensitivity(self):
@@ -199,7 +199,8 @@ class Config(object):
         elif component_id == 'tangential':
             return int(self.sensor_tangential_axis) - 1
         elif component_id == 'radial':
-            return 5 - int(self.sensor_axial_axis) - int(self.sensor_tangential_axis) #Depending on the physical installation, radial is not always 2
+            return 5 - int(self.sensor_axial_axis) - int(self.sensor_tangential_axis) #Depending on the physical
+            # installation, radial is not always 2
         else:
             pass
 
@@ -335,22 +336,7 @@ class Config(object):
         duration = self.max_lag_trimmed_trace - self.min_lag_trimmed_trace
         return duration
 
-    @property
-    def installed_resonant_length(self):
-        """
-        this is the distance from the bottom of the shocksub to the bottom of the bit
-        """
-        return self.sensor_distance_to_shocksub + self.sensor_distance_to_source
 
-    def save_to_disk_files(self):
-        for file_type in self.files_keys.keys():
-            for cfg_file in self.files_keys[file_type].keys():
-                file_dict = dict()
-                for i, key in enumerate(self.files_keys[file_type][cfg_file]):
-                    file_dict[key] = self.__dict__[key]
-                with open(os.path.join(ACQUISITION_PATH, cfg_file), "w") as output:
-                    json.dump(file_dict, output)
-        return True
 
 
 if __name__ == "__main__":
