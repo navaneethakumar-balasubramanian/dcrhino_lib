@@ -362,8 +362,8 @@ def process_holes_with():
     for hole in holes:
         h5_filename = str(hole['bench_name']) + "_" + str(hole['pattern_name']) + "_" + str(hole['hole_name']) + "_" + str(hole['hole_id']) + "_" + str(hole['sensor_id']) + "_" + str(hole['digitizer_id']) + ".h5"
         acorr_file_path = acorr_files_folder + h5_filename
-        #env_config_path = env_config.env_conf_json_path
-        env_config_path = str(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'env_config.json'))
+        env_config_path = env_config.env_conf_json_path
+        #env_config_path = str(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'env_config.json'))
         process_file_with_flow.delay(acorr_file_path, process_flow_full_path,env_config_path)
     return jsonify({"data":True})
 
