@@ -60,6 +60,8 @@ class EnvConfig(object):
         directory = self.get_process_flow_folder(mine_name)
         files = glob.glob(directory +"/*.json")
         files.sort(key=os.path.getmtime)
+        files.reverse()
+        files = [os.path.basename(x) for x in files]
         return files
 
     def get_process_flow_folder(self,mine_name):
