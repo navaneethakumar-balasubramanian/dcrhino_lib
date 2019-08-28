@@ -155,7 +155,7 @@ def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000)
         print(global_config.upsample_factor)
     except AttributeError:
         logger.warning("this warning will be removed once the upsample factor is coming from the global cfg")
-        global_config.output_sampling_rate *= upsample_factor
+        global_config.output_sampling_rate = float(global_config.output_sampling_rate) * upsample_factor
 
     calibrated_dataframe = raw_trace_data.calibrate_l1h5(l1h5_dataframe, global_config)
     resampled_dataframe = raw_trace_data.resample_l1h5(calibrated_dataframe, global_config)
