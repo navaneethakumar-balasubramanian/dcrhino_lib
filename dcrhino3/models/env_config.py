@@ -7,7 +7,7 @@ from dcrhino3.helpers.general_helper_functions import init_logging
 import os
 import pdb
 import os
-
+import glob
 logger = init_logging(__name__)
 
 
@@ -58,10 +58,8 @@ class EnvConfig(object):
 
     def get_process_flows_list(self,mine_name):
         directory = self.get_process_flow_folder(mine_name)
-        os.chdir(directory)
-        sorted_list = sorted(filter(os.path.isfile, os.listdir('.')), key=os.path.getmtime)
-        sorted_list.reverse()
-        return sorted_list
+        files = glob.glob(directory +"/*.json")
+        return  files.sort(key=os.path.getmtime)
 
     def get_process_flow_folder(self,mine_name):
         mine_cfg = self._get_mine_config(mine_name)
