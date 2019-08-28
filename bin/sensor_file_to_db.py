@@ -89,7 +89,7 @@ def process(list_of_args):
             h5f.close()
             print ("TYPE 2 " + str(file))
             acorr_h5_to_db(file, env_config, min_ts, max_ts)
-    except Exception, e:
+    except :
         file_logger.warn("COULDNT OPEN THIS FILE :" + str(file))
         logger.warn("COULDNT OPEN THIS FILE :" + str(file))
         traceback.print_exc()
