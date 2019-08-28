@@ -290,7 +290,7 @@ class H5Helper:
                     value = value.decode("utf-8")
                 section = key.split("/")[0]
                 param_name = key.split("/")[1]
-                print (section,param_name)
+                #print (section,param_name)
                 # pdb.set_trace()
                 if config.has_section(section):
                     config.set(section, param_name, str(value))
