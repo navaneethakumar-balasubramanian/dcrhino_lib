@@ -22,6 +22,7 @@ class EnvConfig(object):
     def __init__(self,env_conf_json_path=False):
         if env_conf_json_path is False:
             env_conf_json_path = 'env_config.json'
+
         self.env_conf_json_path = os.path.abspath(env_conf_json_path)
         self.blacklist_files = []
         self._parse_json(env_conf_json_path)
