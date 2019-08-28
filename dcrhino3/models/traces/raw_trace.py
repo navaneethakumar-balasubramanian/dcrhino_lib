@@ -124,7 +124,7 @@ class RawTraceData(TraceData):
             for component_id in global_config.components_to_process:
                 trace_to_process = row_of_df[component_id]
                 processed_trace = self.calibrate_1d_component_array(trace_to_process, global_config,
-                                                                    global_config.sensor_sensitivity[component_id])
+                                                                    global_config.get_sensor_sensitivity_by_axis[component_id])
                 df.at[line_idx, component_id] = processed_trace
 
         time_interval = time.time() - t0
