@@ -27,7 +27,10 @@ class EnvConfig(object):
         self.blacklist_files = []
         self._parse_json(env_conf_json_path)
         
-        
+
+    def get_json_path(self):
+        return self.json_path
+
     def _parse_json(self,env_conf_json_path):
         """
         Load the json file.
