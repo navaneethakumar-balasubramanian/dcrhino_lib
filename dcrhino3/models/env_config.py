@@ -59,7 +59,8 @@ class EnvConfig(object):
     def get_process_flows_list(self,mine_name):
         directory = self.get_process_flow_folder(mine_name)
         files = glob.glob(directory +"/*.json")
-        return  files.sort(key=os.path.getmtime)
+        files.sort(key=os.path.getmtime)
+        return files
 
     def get_process_flow_folder(self,mine_name):
         mine_cfg = self._get_mine_config(mine_name)
