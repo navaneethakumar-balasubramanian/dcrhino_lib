@@ -46,8 +46,8 @@ COMPRESS_MIN_SIZE = 500
 
 Compress(app)
 
-subdomain_name = 'devdatacloud'
-dataset_name = 'mont_wright_mwd_' + datetime.today().strftime('%Y%m%d')
+subdomain_name = 'dcmine'
+dataset_name = 'montwright_rhino_' + datetime.today().strftime('%Y%m%d')
 API_BASE_URL = "http://104.42.216.162:5002/api"
 
 def prop_type_from_column_dtype(column_dtype):
