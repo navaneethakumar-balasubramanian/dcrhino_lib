@@ -1,6 +1,7 @@
-define(["highlight.pack", "geotoolkit", "axios","numjs","geotoolkit.seismic", "geotoolkit.welllog.widgets", 'geotoolkit.seislog',"geotoolkit.widgets", "geotoolkit.seismic.widgets"], function () {
+define(["highlight.pack", "geotoolkit", "axios","numjs","geotoolkit.seismic", "geotoolkit.welllog.widgets", 'geotoolkit.seislog',"geotoolkit.widgets", "geotoolkit.seismic.widgets", 'popper'], function () {
     const axios = require('axios')
     const numjs = require('numjs')
+    const popper = require('popper')
 
     function initialize() {
         var line = new geotoolkit.scene.shapes.Line({

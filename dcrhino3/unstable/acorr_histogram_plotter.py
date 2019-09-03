@@ -41,6 +41,6 @@ if __name__ == "__main__":
     argparser.add_argument('-p', '--path', help="Path to file or folder containing acorr files")
     argparser.add_argument('-r', '--range', help="Abs Max acceleration range", default=100, type=int)
     argparser.add_argument('-o', '--output_name', help="Output name for plot", default="histogram.png")
-    argparser.add_argument('-a', '--axis', help="Axis to be analyzed")
+    argparser.add_argument('-a', '--axis', help="Axis to be analyzed", default="axial")
     args = argparser.parse_args()
     main(args)

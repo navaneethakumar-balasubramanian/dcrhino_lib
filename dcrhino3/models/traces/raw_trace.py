@@ -20,6 +20,18 @@ logger = init_logging(__name__)
 
 class RawTraceData(TraceData):
 
+    def __init__(self, **kwargs):
+        TraceData.__init__(self, **kwargs)
+        self._liner_interpolation_required = False
+        self.trace_t0 = None
+
+    def require_linear_interpolation(self, value):
+        self._liner_interpolation_required = value
+
+    @property
+    def linear_interpolation_required(self):
+        return self._liner_interpolation_required
+
     def load_config(self, path):
         f1 = h5py.File(path, 'r+')
         h5_helper = H5Helper(f1, False, False)
