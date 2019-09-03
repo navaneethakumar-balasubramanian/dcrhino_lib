@@ -480,7 +480,7 @@ class CollectionDaemonThread(threading.Thread):
     def calculate_initial_tracetime_from_timestamp(self, timestamp):
         fraction = timestamp - int(timestamp)
         offset = int(fraction / delta_t)
-        return timestamp - sampling_rate * offset
+        return timestamp - delta_t * offset
 
     def run(self):
         m = "Started Collection Daemon\n"
