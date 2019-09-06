@@ -21,6 +21,7 @@ from dcrhino3.models.trace_dataframe import TraceData
 #from dcrhino3.physics.util import get_expected_multiple_times
 from dcrhino3.physics.util import get_resonance_period
 from dcrhino3.plotters.rhino_display_v3.plot_helper import axis_lims_method_1
+from dcrhino3.plotters.rhino_display_v3.plot_helper import get_xlims
 from dcrhino3.helpers.general_helper_functions import init_logging , is_string
 from dcrhino3.plotters.window_picker import WindowPicker
 logger = init_logging(__name__)
@@ -74,10 +75,12 @@ class RhinoDisplayPanel(object):
         #Plotting Vertical Black Lines (not working TJW 3/26)
         X = curve.x_axis_values
 
-        ax1.set_xlim(X[0], X[-1])
+        X0, X1 = get_xlims(X)
 
-        x_maj_tick = (np.arange(X[0], X[-1]) - X[0])
-        x_min_tick = (np.arange(X[0], X[-1], 0.5) - X[0])
+        ax1.set_xlim(X0, X1)
+
+        x_maj_tick = (np.arange(X0, X1) - X0)
+        x_min_tick = (np.arange(X0, X1, 0.5) - X0)
         for x_maj_tick in x_maj_tick:
             ax1.axvline(x=x_maj_tick, ymin=0, ymax=1.5, color='k')
 
@@ -391,9 +394,10 @@ class Heatmap(RhinoDisplayPanel):
                     y_values = np.array(self.manual_time_windows._asdict()[self.component]._asdict()[wavelet_id])*1000
                     ax.hlines(y_values, X[0], X[-1], color=colours[wavelet_id],linestyle = '-',linewidth = 1.05)
 
-        ax.set_xlim(X[0], X[-1])
-        x_maj_tick = (np.arange(X[0],X[-1])-X[0])
-        x_min_tick = (np.arange(X[0],X[-1],0.5)-X[0])
+        X0, X1 = get_xlims(X)
+
+        x_maj_tick = (np.arange(X0, X1)-X0)
+        x_min_tick = (np.arange(X0, X1, 0.5) - X0)
         for x_maj_tick in x_maj_tick:
             ax.axvline(x = x_maj_tick, ymin = 0, ymax = 1.5, color = 'k')
 

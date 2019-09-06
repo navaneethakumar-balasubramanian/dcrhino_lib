@@ -28,6 +28,10 @@ class BaseHybridModule(BaseModule):
         self.original_columns = []
 
     def process_trace(self,trace):
+        """
+        :param trace: models.trace_dataframe.TraceData() class
+        :return:
+        """
         trace = self.before_process_start(trace)
         splitted_traces = self.split_trace_by_acor_file_id(trace)
 
@@ -35,7 +39,8 @@ class BaseHybridModule(BaseModule):
             splitted_traces[i] = self.process_splitted_trace(splitted_trace)
 
         trace = self.merge_splitted_trace(splitted_traces,trace)
-        return self.before_process_finish(trace)
+        trace = self.before_process_finish(trace)
+        return trace
 
     def process_splitted_trace(self,splitted_trace):
         return splitted_trace
@@ -48,6 +53,11 @@ class BaseHybridModule(BaseModule):
         return trace
 
     def before_process_start(self,trace):
+        """
+        backup copy of original data in case module specifically set to Not Alter traces, or columns
+        :param trace:
+        :return:
+        """
         if not self.can_alter_trace:
             for component_column in trace.component_columns:
                 self.original_component_columns_data[component_column] = trace.dataframe[component_column]
@@ -73,6 +83,12 @@ class BaseHybridModule(BaseModule):
 
     def split_trace_by_acor_file_id(self,trace):
         """
+        .:TODO:. this method is adding a fair amount of complexity to the processing, but it mostly unnessecary.
+        I have yet to encounter a case where the acorr file id is different AND the acutal
+        acquistion configuration is different as well.
+        We could likely simplify the code flow Significantly by making this
+        split occur on the acq configuration AND acorr_id.
+
         """
         trace_groups = []
         config_groups = trace.dataframe.groupby("acorr_file_id")
