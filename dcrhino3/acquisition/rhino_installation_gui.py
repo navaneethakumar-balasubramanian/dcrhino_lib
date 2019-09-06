@@ -1290,7 +1290,7 @@ class GUI():
 
 
         self.config.accelerometer_max_voltage = round(float(self.accelerometer_max_voltage.get()), 1)
-        self.sensor_sensitivity = {
+        self.config.sensor_sensitivity = {
             "x_sensitivity": self.format_numeric_value(self.x_sensitivity.get()),
             "y_sensitivity": self.format_numeric_value(self.x_sensitivity.get()),
             "z_sensitivity": self.format_numeric_value(self.z_sensitivity.get()),
