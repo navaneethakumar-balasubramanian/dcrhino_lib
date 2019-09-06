@@ -333,7 +333,7 @@ class ProcessFlow:
         return trace_data , process_json
 
 
-    def split_subsets(self,process_json,subsets,trace_data):
+    def split_subsets(self, process_json, subsets, trace_data):
         subsets_objs = []
         start_depth = 0
         max_depth = trace_data.dataframe.measured_depth.max()
