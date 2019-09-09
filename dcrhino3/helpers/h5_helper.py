@@ -15,7 +15,7 @@ from dcrhino3.models.metadata import Metadata
 import json
 from dcrhino3.models.config2 import Config
 from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
-from dcrhino3.helpers.config_file_helper import update_global_config
+from dcrhino3.helpers.config_file_helper import update_global_config, transform_configparser_to_config2
 import h5py
 import pdb
 from dcrhino3.models.trace_dataframe import TraceData
@@ -244,13 +244,14 @@ class H5Helper:
 
     def _extract_global_config_from_h5_file(self):
         if "global_config_jsons" not in self.h5f.attrs.keys():
-            first_config = json.loads(self.extract_metadata_from_h5_file_as_json())
+            old_metadata = self._extract_metadata_from_h5_file()
+            c = transform_configparser_to_config2(old_metadata)
         else:
             global_config_json = json.loads(self.h5f.attrs["global_config_jsons"])
             keys = list(global_config_json.keys())
             first_config = global_config_json[keys[0]]
-        c = Config()
-        c.set_data_from_json(first_config)
+            c = Config()
+            c.set_data_from_json(first_config)
         return c
 
     def save_field_config_to_h5(self, config=None):
@@ -285,17 +286,19 @@ class H5Helper:
         try:
             config = ConfigParser.ConfigParser()
             for key, value in self.h5f.attrs.items():
-                # print(key,value)
+                if isinstance(value, bytes):
+                    value = value.decode("utf-8")
                 section = key.split("/")[0]
                 param_name = key.split("/")[1]
+                #print (section,param_name)
                 # pdb.set_trace()
                 if config.has_section(section):
-                    config.set(section, param_name, value)
+                    config.set(section, param_name, str(value))
                 else:
                     config.add_section(section)
-                    config.set(section, param_name, value)
-            m = Metadata(config)
-            return m
+                    config.set(section, param_name, str(value))
+            # m = Metadata(config)
+            return config
         except Exception as e:
         #    print(e)
             print("Error loading metadata" ,e)

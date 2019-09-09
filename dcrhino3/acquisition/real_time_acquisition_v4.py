@@ -12,7 +12,7 @@ import h5py
 from datetime import datetime
 import subprocess
 import re
-import pdb
+import argparse
 from shutil import move
 from dcrhino3.models.config2 import Config
 from dcrhino3.models.traces.raw_trace import RawTraceData
@@ -43,9 +43,12 @@ config = Config(acquisition_config=True)
 
 
 def get_rhino_ttyusb():
-    p = subprocess.check_output('ls -l /dev/serial/by-id/ | grep "usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_" | grep -Po -- "../../\K\w*"',shell=True)
-    p = p.decode("utf-8")
-    return "/dev/" + p.replace('\n', '')
+    try:
+        p = subprocess.check_output('ls -l /dev/serial/by-id/ | grep "usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_" | grep -Po -- "../../\K\w*"',shell=True)
+        p = p.decode("utf-8")
+        return "/dev/" + p.replace('\n', '')
+    except:
+        return None
 
 
 rhino_baudrate = config.baud_rate
@@ -109,7 +112,7 @@ class LogFileDaemonThread(threading.Thread):
 
 
 class Packet_v11(object):
-    def __init__(self, q_data):
+    def __init__(self, q_data=None):
         self.packet_type = 0  # 0=data_packet, 1=info_packet
         self.rx_sequence = 0
         self.x = 0
@@ -143,6 +146,8 @@ class Packet_v11(object):
         return round(val, 2)
 
     def packet_decoder(self, pkt):
+        if pkt is None:
+            return
         try:
             lst = struct.unpack('=bbLbLLLbb', pkt)
         except:
@@ -333,6 +338,11 @@ class FileFlusher(threading.Thread):
                 pass
 
 
+class DummyComport:
+    def __init__(self):
+        self.corrupt_packets = 0
+
+
 class SerialThread(threading.Thread):
     def __init__(self, comport, brate, pktlen, flushq, logQ, displayQ):
         threading.Thread.__init__(self)
@@ -465,6 +475,45 @@ class SerialThread(threading.Thread):
                 #             time.sleep(1)
                 #             self.cport.close()
                 #             self.cport = serial.Serial(get_rhino_ttyusb(), self.brate, timeout=1.0)
+
+class SimulationThread(threading.Thread):
+    def __init__(self, file_input, file_flusher):
+        threading.Thread.__init__(self)
+        self.file_input = file_input
+        self.file_flusher = file_flusher
+        self.h5 = H5Helper(h5py.File(file_input, "r"), load_ts=True, load_xyz=True)
+
+    def run(self):
+        seq = self.h5.load_axis("seq")
+        ts = self.h5.load_axis("ts")
+        batt = self.h5.load_axis("batt")
+        temp = self.h5.load_axis("temp")
+        rssi = self.h5.load_axis("rssi")
+        x = self.h5.load_axis("x")
+        y = self.h5.load_axis("y")
+        z = self.h5.load_axis("z")
+
+        previous_seq = None
+        for index in range(len(x)):
+            packet = Packet_v11()
+            if previous_seq is None:
+                previous_seq = seq[index]
+            else:
+                if seq[index] > previous_seq + config.missed_packets_threshold:
+                    packet.valid_trace = False
+            packet.batt = batt[int(index/len(batt))]
+            packet.temp = temp[int(index/len(temp))]
+            packet.rssi = rssi[index]
+            packet.tx_sequence = seq[index]
+            packet.rx_sequence = seq[index]
+            packet.tx_clock_ticks = seq[index]
+            packet.x = x[index]
+            packet.y = y[index]
+            packet.z = z[index]
+            packet.packet_type = 0
+            self.file_flusher.current_timestamp = ts[index]
+            self.file_flusher.save_row_to_processing_q(packet)
+        sys.exit(0)
 
 
 class CollectionDaemonThread(threading.Thread):
@@ -621,7 +670,13 @@ class CollectionDaemonThread(threading.Thread):
                 self.bufferThisSecond = list()
 
 
-def main_run(run=True):
+def main_run(run=True, **kwargs):
+
+    if "args" in kwargs.keys():
+        simulation = kwargs["args"].simulation
+        file_input = kwargs["args"].file_input
+    else:
+        simulation = False
 
     if not os.path.exists(run_folder_path):
         os.makedirs(run_folder_path)
@@ -633,13 +688,22 @@ def main_run(run=True):
     displayQ = Queue.Queue()
     system_healthQ = Queue.Queue()
     rhino_logger = LogFileDaemonThread(logQ)
-    comport = SerialThread(rhino_port, rhino_baudrate, rhino_pktlen, flushQ, logQ, displayQ)
-    comport.stop_rx()
-    comport.cport.close()
     display = GUI(displayQ, system_healthQ)
     fflush = FileFlusher(flushQ, logQ, displayQ)
     collection_daemon = CollectionDaemonThread(fflush.bufferQ, traces, logQ, displayQ)
-    comport = SerialThread(rhino_port, rhino_baudrate, rhino_pktlen, flushQ, logQ, displayQ)
+
+    if not simulation:
+        comport = SerialThread(rhino_port, rhino_baudrate, rhino_pktlen, flushQ, logQ, displayQ)
+        comport.stop_rx()
+        comport.cport.close()
+        comport = SerialThread(rhino_port, rhino_baudrate, rhino_pktlen, flushQ, logQ, displayQ)
+    else:
+        simulation_thread = SimulationThread(file_input, fflush)
+        comport = DummyComport()
+
+
+
+
 
     m = "Started Main\n"
     logger.debug(m)
@@ -660,8 +724,11 @@ def main_run(run=True):
 
     if run:
         fflush.start()
-        comport.start()
-        comport.start_rx()
+        if not simulation:
+            comport.start()
+            comport.start_rx()
+        else:
+            simulation_thread.start()
         collection_daemon.start()
         rhino_logger.start()
 
@@ -732,6 +799,8 @@ def main_run(run=True):
     realtime_trace.add_global_config(config.pipeline_files_to_dict, file_id='0')
 
     fig1 = plt.figure("DataCloud Rhino Real Time Data", figsize=(6, 4))
+    if simulation:
+        fig1.patch.set_facecolor('red')
     plt.subplots_adjust(hspace=0.8, top=0.8)
     fig1.canvas.manager.window.wm_geometry("+%d+%d" % (0, 0))
     fig1.canvas.get_tk_widget().focus_force()
@@ -1000,7 +1069,11 @@ def do_nothing():
 
 
 if __name__ == "__main__":
-    main_run()
+    argparser = argparse.ArgumentParser(description="Playback Raw Data -  Copyright (c) 2019 DataCloud")
+    argparser.add_argument('-s', '--simulation', help="Run in simulation mode", default=False)
+    argparser.add_argument('-i', '--file_input', help="File with data for simulation", default=None)
+    args = argparser.parse_args()
+    main_run(args=args)
 
 
 

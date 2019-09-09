@@ -1,0 +1,69 @@
+<html lang="en">
+<head>
+<title>Title</title>
+<!-- here go your script declarations and style links -->
+</head>
+<link rel="stylesheet" type="text/css" href="/3rdparty/css/font.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="/3rdparty/fonts/geotoolkit.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="/3rdparty/css/styles.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="/3rdparty/css/vs.css" media="screen" />
+<script src="/js/jquery.js"></script>
+<script src="/js/geotoolkit/geotoolkit.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.adv.module.js"></script>
+<script src="/js/geotoolkit/geotoolkit.intgeo.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.legacygauges.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.svg.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.cgm.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.pdf.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.gridding.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.data.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.seismic.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.seismic.analysis.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.seismic.cgmplus.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.welllog.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.seislog.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.welllog.las.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.controls.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.deviation.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.gauges.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.widgets.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.seismic.widgets.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.welllog.widgets.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.welllog.multiwell.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.flowcharts.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.map.adv.js"></script>
+<script src="/js/geotoolkit/geotoolkit.report.adv.js"></script>
+<script>
+    function bodyLoadHandler() {
+var linestyle = new geotoolkit.attributes.LineStyle({
+           'color' : 'blue', // Default value 'black'
+           'width' : 2,
+        });
+
+
+        var group = new geotoolkit.scene.Group();
+
+        group.addChild(linestyle);
+        console.log(linestyle)
+        var canvas = document.getElementById('test');
+        console.log(canvas)
+       //
+        console.log(group)
+        var plot = new geotoolkit.plot.Plot({
+           'canvasElement': canvas,
+           'root': group
+        });
+    }
+    </script>
+    </head>
+
+        <!-- Change body tag to the following -->
+        <body onload="bodyLoadHandler()">
+<!--            <button class="toolbutton mode-button" id="resetButton" title="Reset Zoom" onclick="require(['/js/qc_plot.js'], function(App) { App.resetRubberBandZoom();})">-->
+<!--                <i class="geotoolkit-icon-fit-to-screen"></i></button>-->
+
+<!--            <button class="toolbutton mode-button" id="zoomButton" title="Area Zoom" onclick="require(['/js/qc_plot.js'], function(App) { App.activateRubberBandZoom();})">-->
+<!--                <i class="geotoolkit-icon-selection-free"></i></button>-->
+             <canvas id="test" style="width:90%;height:90%;"></canvas>
+    </body>
+</html>

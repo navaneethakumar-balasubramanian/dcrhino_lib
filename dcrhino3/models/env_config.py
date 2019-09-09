@@ -4,8 +4,10 @@
 import json
 from enum import Enum
 from dcrhino3.helpers.general_helper_functions import init_logging
+import os
 import pdb
-
+import os
+import glob
 logger = init_logging(__name__)
 
 
@@ -20,11 +22,15 @@ class EnvConfig(object):
     def __init__(self,env_conf_json_path=False):
         if env_conf_json_path is False:
             env_conf_json_path = 'env_config.json'
-        
+
+        self.json_path = os.path.abspath(env_conf_json_path)
         self.blacklist_files = []
         self._parse_json(env_conf_json_path)
         
-        
+
+    def get_json_path(self):
+        return self.json_path
+
     def _parse_json(self,env_conf_json_path):
         """
         Load the json file.
@@ -48,6 +54,22 @@ class EnvConfig(object):
                 return mine
         logger.warn("Could not find a config on env.json for " + str(mine_name) + " mine." )
         return False
+
+
+    def get_process_flows_list(self,mine_name):
+        directory = self.get_process_flow_folder(mine_name)
+        files = glob.glob(directory +"/*.json")
+        files.sort(key=os.path.getmtime)
+        files.reverse()
+        files = [os.path.basename(x) for x in files]
+        return files
+
+    def get_process_flow_folder(self,mine_name):
+        mine_cfg = self._get_mine_config(mine_name)
+        if not mine_cfg or 'paths' not in mine_cfg.keys() or 'process_flows' not in mine_cfg[
+            'paths']:
+            return False
+        return mine_cfg['paths']['process_flows']
 
     def get_sensor_files_storage_folder(self, mine_name):
         """
