@@ -35,7 +35,8 @@ class NetworkThread(threading.Thread):
                 # self._counter += 1
                 urlopen('http://www.google.com', timeout=1)
                 self._network_status = "OK"
-            except URLError as err:
+            except:
+            # except URLError as err:
                 self._network_status = "No Connection"
             time.sleep(10)
 
