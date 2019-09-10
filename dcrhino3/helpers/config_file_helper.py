@@ -42,7 +42,7 @@ def transform_configparser_to_config2(config, output_to_file=False):
                         value = value_dict
                     elif option == "comments":
                         value = filter(lambda x: x in string.printable, value)
-                    setattr(c, option, value)
+                    setattr(c, option, "".join(list(value)))
                 elif "trapezoidal" in option:
                     value = cp.get(section, option)
                     bpf[option] = value
