@@ -2,9 +2,6 @@ from shapely.geometry import LineString
 from shapely.geometry import Point
 from shapely.geometry import MultiPoint
 from shapely.geometry import MultiLineString
-from shapely.geometry import Polygon
-from shapely.ops import nearest_points
-from scipy import spatial
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
