@@ -109,20 +109,6 @@ def is_string(val):
         return isinstance(val, basestring)
 
 
-def df_component_as_array(component_id,dataframe):
-    """
-    Returns the data form component as a 2d numpy array with trace index
-    running along rows (zero-index).  Useful for slicing data and linalg.
-
-    Parameters:
-        component_id (str): axial/tangential/radial
-
-    Return:
-        (array): extracted trace, selected by component_id
-    """
-    column_name = '{}_trace'.format(component_id)
-    data_array = np.atleast_2d(list(dataframe[column_name]))
-    return data_array
 
 def init_logging(name):
     """
@@ -226,27 +212,7 @@ def json_string_to_object(_str):
 
     return dict_json
 
-def splitDataFrameIntoSmaller(df, chunk_size = 10000):
-    """
-    Slices up DataFrame into small "chunks"
 
-    Parameters:
-        df (DataFrame): to be sliced up
-        chunk_size (positive integer): max index length of each slice
-
-    Returns:
-        (list): list of DataFrames (1 DataFrame = 1 slice)
-    """
-    listOfDf = list()
-    number_of_chunks = len(df) // chunk_size + 1
-    listOfDf = number_of_chunks * [None]
-    for i in range(number_of_chunks):
-        df_to_add_to_list = df[i*chunk_size:(i+1) * chunk_size]
-        df_to_add_to_list = df_to_add_to_list.reset_index()
-        #pdb.set_trace()
-        #df_to_add_to_list = df_to_add_to_list.copy()
-        listOfDf[i] = df_to_add_to_list
-    return listOfDf
 
 def count_lines(fileName):
     """
