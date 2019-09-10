@@ -584,16 +584,23 @@ def split_cross_sections():
 
 
 
-@app.route('/df')
+@app.route('/df',methods=['GET', 'POST'])
 def get_df():
-    td = TraceData()
-    td.load_from_h5("/home/thiago/Downloads/test_data_/5_trim_0.h5")
-    df = td.dataframe
-    #print df.shape,"dfshape"
-    #print td.dataframe.to_json(orient='records')
-    df = df[df.columns.drop(list(df.filter(regex='_trace')))]
-    response = make_response(df.to_json(orient='columns'))
-    #response.headers.set('Content-Type', 'application/octet-stream')
+    req_json = request.get_json()
+    data_type = req_json['type']
+    data_id = req_json['id']
+    if data_type == 'processed':
+        td = TraceData()
+        td.load_from_h5("/home/thiago/Downloads/test_data_/5_trim_0.h5")
+        df = td.dataframe
+        #print df.shape,"dfshape"
+        #print td.dataframe.to_json(orient='records')
+        df = df[df.columns.drop(list(df.filter(regex='_trace')))]
+        for col in df.columns:
+            if len(df[col].unique()) == 1:
+                df.drop(col, inplace=True, axis=1)
+        response = make_response(df.to_json(orient='columns'))
+        #response.headers.set('Content-Type', 'application/octet-stream')
     return response
 
 
