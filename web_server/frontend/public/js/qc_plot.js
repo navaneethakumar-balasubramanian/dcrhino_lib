@@ -102,7 +102,7 @@ define(["highlight.pack", "geotoolkit", "axios","numjs","geotoolkit.seismic", "g
                 },
                 'decimationSpacing':  1
             },
-            //'tracemapping': mapping
+            'tracemapping': mapping
         });
         return pipeline;
     };
@@ -117,20 +117,16 @@ define(["highlight.pack", "geotoolkit", "axios","numjs","geotoolkit.seismic", "g
         //var sampleRate = 1;
         //var sampleCount = input[0].length;
         //var traceCount = input.length;
+        //console.log(input)
 
         
 
         var traceCount = 3657;
-        var sampleRate = 6000;
-        var sampleCount = 220
+        var sampleRate = 1000;
+        var sampleCount = 220;
         // Create a new empty reader
         
-        var positions = new geotoolkit.data.NumericalDataSeries("ft");
-        var pos = 0;
-        for (var i = 0; i < traceCount; ++i) {
-            positions.addValue(df['measured_depth'][i]);
-            console.log(df['measured_depth'][i])
-        }
+        
 
 
 
@@ -138,8 +134,7 @@ define(["highlight.pack", "geotoolkit", "axios","numjs","geotoolkit.seismic", "g
         var reader = new geotoolkit.seismic.data.MemoryReader({
             'numberOfTraces': traceCount,
             'numberOfSamples': sampleCount,
-            'sampleRate': sampleRate,
-            'samplePower': 10
+            'samplePower': 1
         });
         // Fill the reader with samples
 
@@ -169,11 +164,12 @@ define(["highlight.pack", "geotoolkit", "axios","numjs","geotoolkit.seismic", "g
             .setOptions({
                 'colors': {
                     'colorMap': geotoolkit.seismic.util.SeismicColors.getDefault()
-                        .createNamedColorMap("IntervalVelocity", 16),
+                        .createNamedColorMap("IntervalVelocity"),
                     'alpha' : 1
                 },
                 "normalization": {
-                    "type": geotoolkit.seismic.pipeline.SeismicPipeline.NormalizationType.RMS
+                    "type": geotoolkit.seismic.pipeline.SeismicPipeline.NormalizationType.Limits,
+                    'limits' : new geotoolkit.util.Range(-0.6,0.6)   
                 },
                 'plot': {
                     'type': {
@@ -183,44 +179,36 @@ define(["highlight.pack", "geotoolkit", "axios","numjs","geotoolkit.seismic", "g
                         "IntepolatedDensity": false,
                         'SimpleDensity': true
                     },
-                    'decimationSpacing':  50
+                    //'decimationSpacing':  1
                 }
             });
         
 
         var positions = new geotoolkit.data.NumericalDataSeries({'data': Object.values(df['measured_depth'])});
-        var traceSpacing = 0.00000000001;
-        var traceModel = new geotoolkit.util.Range(minDepth, maxDepth);
-        var mapping = new geotoolkit.seismic.data.VSTraceMapping(pipeline, positions, traceSpacing, traceModel);
+        console.log(Object.values(df['measured_depth']))
+        var traceSpacing = 10;
+
+        var traceModel = new geotoolkit.util.Range(minDepth-traceSpacing, maxDepth+traceSpacing);
+        
+        //console.log(Object.values(df['measured_depth']))
+        
+        
+        var mapping = new geotoolkit.seismic.data.VSTraceMapping(pipeline, positions, traceSpacing,traceModel);
         pipeline.setTraceMapping(mapping)
-        //var mapping = new geotoolkit.seismic.data.VSTraceMapping(pipeline, positions);
-        //pipeline.setTraceMapping(mapping);
-        // Use the pipeline to generate a wave seismic image
-        return new geotoolkit.seislog.WaveSeismicImage(pipeline, 0, minDepth, 1, maxDepth)
+        var imageModelLimits = pipeline.getModelLimits();
+        return new geotoolkit.seislog.WaveSeismicImage(pipeline, 0, imageModelLimits.getLeft(), 1, imageModelLimits.getRight())
             .setName(config['name']);
     }
 
-    function createTestData (from, step, curveMnemonic) {
-        var data = new geotoolkit.welllog.data.LogData(curveMnemonic);
-        var depths = [];
-        var values = [];
-        var curveData = curves.getCurveData(curveMnemonic);
-        var amountOfPoints = curveData.length;
-        for (var i = 0; i < amountOfPoints; i++) {
-            depths.push(i * step + from);
-            values.push(curveData[i]);
-        }
-        data.setValues(depths, values);
-        return data;
-    }
+    
 
 
     function createWavePatternWidget (config) {
         var widget = new geotoolkit.welllog.widgets.WellLogWidget({
             'horizontalscrollable': 'auto',
-            'verticalscrollable': true
-        })
-            .setAxisHeaderType(geotoolkit.welllog.header.LogAxisVisualHeader.HeaderType.Simple);
+            'verticalscrollable': true,
+            'indexunit':'mt'
+        }).setAxisHeaderType(geotoolkit.welllog.header.LogAxisVisualHeader.HeaderType.Simple);
         widget.addTrack(geotoolkit.welllog.widgets.TrackType.IndexTrack);
         var minDepth = Number.MAX_VALUE;
         var maxDepth = -Number.MAX_VALUE;
@@ -228,7 +216,7 @@ define(["highlight.pack", "geotoolkit", "axios","numjs","geotoolkit.seismic", "g
         maxDepth = Math.max(maxDepth, config['maxdepth']);
         widget.addTrack(geotoolkit.welllog.widgets.TrackType.LinearTrack)
             .addChild([createWavePatternImage(config)]);
-        widget.setDepthLimits(minDepth ,maxDepth + 100).scale(150);
+        widget.setDepthLimits(0 ,maxDepth).scale(60);
         widget.invalidate();
         return widget;
     }
