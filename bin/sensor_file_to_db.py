@@ -22,7 +22,7 @@ from dcrhino3.helpers.sensor_file_manager import SensorFileManager
 from dcrhino3.models.traces.raw_trace import RawTraceData
 from dcrhino3.models.env_config import EnvConfig
 from dcrhino3.helpers.dataframe_helpers import split_data_frame_into_smaller
-from dcrhino3.helpers.general_helper_functions import init_logging ,
+from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.helpers.general_helper_functions import init_logging_to_file, file_as_bytes
 import hashlib
 import os
