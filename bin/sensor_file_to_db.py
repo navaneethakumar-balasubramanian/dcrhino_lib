@@ -21,7 +21,9 @@ from dcrhino3.helpers.h5_helper import H5Helper
 from dcrhino3.helpers.sensor_file_manager import SensorFileManager
 from dcrhino3.models.traces.raw_trace import RawTraceData
 from dcrhino3.models.env_config import EnvConfig
-from dcrhino3.helpers.general_helper_functions import init_logging,splitDataFrameIntoSmaller,init_logging_to_file,file_as_bytes
+from dcrhino3.helpers.dataframe_helpers import split_data_frame_into_smaller
+from dcrhino3.helpers.general_helper_functions import init_logging ,
+from dcrhino3.helpers.general_helper_functions import init_logging_to_file, file_as_bytes
 import hashlib
 import os
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
@@ -268,7 +270,7 @@ if __name__ == '__main__':
 
     env_config = EnvConfig(args.env_file)
     files = glob2.glob(args.src_path)
-    
+
     logger.info("Found " + str(len(files)) + " files" )
 
     sensor_file_manager = SensorFileManager(env_config)

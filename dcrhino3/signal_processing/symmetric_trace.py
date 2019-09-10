@@ -21,7 +21,7 @@ logger = init_logging(__name__)
 
 class SymmetricTrace(object):
     """
-    .. :NOTE: 20190528: this would actually make a note bad base class for a TimeSeries,
+    .. :NOTE: 20190528: this would actually make a not bad base class for a TimeSeries,
     SymmetricTrace could then extend TimeSeries. to do this I would need:
     - the t0 method to be overwritten
     """
@@ -80,7 +80,7 @@ class SymmetricTrace(object):
     @property
     def center_index(self):
         return (len(self.data)-1) // 2
-    
+
     def trim_to_new_center_index(self, center_index):
         lhs = self.data[:center_index]   # everything up to but not including the max
         rhs = self.data[center_index + 1:] # everything after the max

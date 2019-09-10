@@ -107,24 +107,29 @@ for i_sf in range(len(sensor_file_ids)):
         data_set = h5f['x']
         data = data_set[ndx0:ndx1]
         ideal_timestamps = np.arange(np.ceil(ts[0]), np.floor(ts[-1]), dt)
-        qq = interpolate_data(ts, data, ideal_timestamps, kind="quadratic", dtype=np.float64)
+        resampled_data = interpolate_data(ts, data, ideal_timestamps, kind="quadratic", dtype=np.float64)
 #        plt.plot(ts, data)
 #        plt.plot(ideal_timestamps, qq)
 #        plt.show()
-        pdb.set_trace()
+        #pdb.set_trace()
         print("what confidence that we do not have axial/tangential flipped do have here?")
 
         #x = np.asarray(h5f.get('x'), dtype=np.float64)
         pass
     else:
-        h5f = h5py.File(sensor_file_path, 'r')
-        ts = np.asarray(h5f.get('timestamp'), dtype=np.float64)
-        h5h = H5Helper(h5f, config=0)
-    pdb.set_trace()
+        print('rhinos not available from L0 at this point')
+        pass
+#        h5f = h5py.File(sensor_file_path, 'r')
+#        ts = np.asarray(h5f.get('timestamp'), dtype=np.float64)
+#        h5h = H5Helper(h5f, config=0)
+#        print('rhinos not available from L0 at this point')
+    #pdb.set_trace()
     print(i_sf)
 
+print('at this point we have resampled data as a time series and idealized timestamps so we can begin')
 
 pdb.set_trace()
+
 
 print('ok')
 #home = os.path.expanduser("~/")
