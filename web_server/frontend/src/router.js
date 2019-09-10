@@ -32,6 +32,12 @@ export default new Router({
       component: () => import("./views/mwdint.vue")
     },
     {
+      path: "/blasthole_observations/:mine_name",
+      name: "blasthole_observations",
+      props: true,
+      component: () => import("./views/BlastholeObservations.vue")
+    },
+    {
       path: "/acorr_files/:mine_name",
       name: "acorr_files",
       props: true,

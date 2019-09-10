@@ -184,17 +184,13 @@ class ProcessFlow:
 
     def make_database_connection(self, mine_name):
 
-        machine_id = socket.gethostname()
-        if machine_id=='thales4' or self.output_to_db is False:
-            pass
-        else:
-            conn = self.env_config.get_rhino_db_connection_from_mine_name(mine_name)
+        conn = self.env_config.get_rhino_db_connection_from_mine_name(mine_name)
 
-            self.rhino_db_helper = RhinoDBHelper(conn=conn)
-            sql_conn = self.env_config.get_rhino_sql_connection_from_mine_name(mine_name)
-            if sql_conn:
-                self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'], sql_conn['user'], sql_conn['password'],
-                                                       str(sql_conn['database']).lower())
+        self.rhino_db_helper = RhinoDBHelper(conn=conn)
+        sql_conn = self.env_config.get_rhino_sql_connection_from_mine_name(mine_name)
+        if sql_conn:
+            self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'], sql_conn['user'], sql_conn['password'],
+                                                   str(sql_conn['database']).lower(),port=sql_conn['port'])
         return
 
 
@@ -302,10 +298,13 @@ class ProcessFlow:
         with open(os.path.join(self.output_path,'process_flow.json'), 'w') as outfile:
             json.dump(process_json, outfile)
 
+        print( self.rhino_sql_helper,self.output_to_db)
         if self.output_to_db and self.rhino_sql_helper:
+            print ("Saving processed results to database")
             seconds_processed = int(acorr_trace.max_ts - acorr_trace.min_ts)
             relative_output_path = "/".join(self.output_path.split('/')[-2:]) + "/"
             process_id = int(self.now.strftime("%s"))
+            #print(process_id,relative_output_path,seconds_processed)
             self.rhino_sql_helper.processed_holes.add(int(self.now.strftime("%s")), seconds_processed,
                                                       acorr_trace.hole_id, acorr_trace.sensor_id,
                                                       acorr_trace.bench_name, acorr_trace.pattern_name,

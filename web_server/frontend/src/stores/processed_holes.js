@@ -5,6 +5,7 @@ const state = {
 };
 const getters = {
   PROCESSED_LIST: state => {
+    console.log(state.processed_list)
     return state.processed_list;
   },
   LOADING: state => {
@@ -13,6 +14,7 @@ const getters = {
 };
 const mutations = {
   SET_PROCESSED_LIST: (state, payload) => {
+    
     state.processed_list = payload.data;
     state.processed_at_ts = payload.processed_at_ts;
   },
@@ -32,6 +34,7 @@ const actions = {
     context.commit("SET_LOADING", true);
     context.commit("SET_PROCESSED_LIST", []);
     let { data } = await axios.post("/api/processed_holes", payload);
+    
     context.commit("SET_PROCESSED_LIST", data);
     context.commit("SET_LOADING", false);
   }
