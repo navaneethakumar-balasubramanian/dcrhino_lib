@@ -1,7 +1,7 @@
 import numpy as np
 
 from dcrhino3.helpers.dataframe_helpers import df_component_as_array
-from dcrhino3.helpers.general_helper_functions import init_logging,
+from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.helpers.dataframe_helpers import df_component_as_array
 
 logger = init_logging(__name__)
