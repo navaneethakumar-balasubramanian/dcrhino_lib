@@ -61,7 +61,9 @@ class RhinoPlotterModule(BaseModule):
         rhino_display.padding_left = transformed_args.padding_left
         rhino_display.padding_right = transformed_args.padding_right
         panels = []
-        for panel in transformed_args.panels:
+        n_panels = len(transformed_args.panels)
+        for i_panel, panel in enumerate(transformed_args.panels):
+            logger.info('Panel {} of {}'.format(i_panel, n_panels))
             if panel.type == "curves":
                 have_curve_to_plot = False
                 curves = []
