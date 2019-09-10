@@ -473,7 +473,8 @@ class TraceData(object):
         cond2 = time_vector <= max_time
         active_indices = np.where(cond1 & cond2)[0]
         data = data[:,active_indices]
-        return data
+        time_axis = time_vector[active_indices]
+        return data, time_axis
 
 
 
