@@ -3,6 +3,7 @@ import os
 os.environ['MKL_NUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 os.environ['OMP_NUM_THREADS'] = '1'
+from multiprocessing import Process
 from multiprocessing import Pool
 import traceback
 import argparse
@@ -16,7 +17,7 @@ import numpy as np
 import h5py
 import time
 from dcrhino3.models.trace_dataframe import TraceData
-from dcrhino3.models.config import Config
+from dcrhino3.models.config2 import Config
 from dcrhino3.helpers.h5_helper import H5Helper
 from dcrhino3.helpers.sensor_file_manager import SensorFileManager
 from dcrhino3.models.traces.raw_trace import RawTraceData
@@ -158,6 +159,9 @@ def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000)
     except AttributeError:
         logger.warning("this warning will be removed once the upsample factor is coming from the global cfg")
         global_config.output_sampling_rate = float(global_config.output_sampling_rate) * upsample_factor
+
+
+
 
     calibrated_dataframe = raw_trace_data.calibrate_l1h5(l1h5_dataframe, global_config)
     resampled_dataframe = raw_trace_data.resample_l1h5(calibrated_dataframe, global_config)
