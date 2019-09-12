@@ -189,5 +189,5 @@ if __name__ == '__main__':
 
     with open(process_flow_path) as f:
         process_json = json.load(f)
-
+    env_path = os.path.abspath(env_path)
     process_glob(process_json, txt_path, env_path, seconds_to_process, processes)
