@@ -194,7 +194,7 @@ class GUI():
     def rsync_daemon(self):
         if self.rsync_daemon_process is None:
             local_folder = self.config.local_folder
-            remote_folder = os.path.join(self.config.remote_folder, self.config.level_0_path())
+            remote_folder = os.path.join(self.config.remote_folder, self.config.level_0_path)
             sleep_interval = self.config.sleep_interval
             server = self.config.server
             stats_folder = self.config.stats_folder
