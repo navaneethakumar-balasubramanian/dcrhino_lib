@@ -93,8 +93,9 @@ def calculate_shock_sub_tail_length(field_config, default_tail_length=0.25):
         length_in_meters = tmp.convert_to_meters()
         return length_in_meters
 
-    except AttributeError:
-        logger.warning('Legacy config detected')
+    except Exception as exception:
+        logger.warning('Legacy config detected: exception is {}'.format(exception))
         logger.warning('Setting Shock Sub Tail Length to {}m'.format(default_tail_length))
         return default_tail_length
+
 

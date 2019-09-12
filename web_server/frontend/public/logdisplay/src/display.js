@@ -218,7 +218,7 @@ define(['preview', 'datasource', 'lassource', 'bootbox', 'printdialog', 'warning
             cd.on('saved', function (src) {
                 dialogModel.save(selectedVisual, selectedVisual.getLeftFill(), selectedVisual.getRightFill());
                 widget.getHeaderContainer().rebuild();
-                window._wellLogPreview.buildDocumentView();
+                //window._wellLogPreview.buildDocumentView();
             });
             cd.show();
             _dialog = cd;
@@ -233,7 +233,7 @@ define(['preview', 'datasource', 'lassource', 'bootbox', 'printdialog', 'warning
                 widget.getTrackContainer().rebuild();
                 widget.updateLayout();
                 widget.invalidate();
-                window._wellLogPreview.buildDocumentView();
+                //window._wellLogPreview.buildDocumentView();
             });
             cd.show();
             _dialog = cd;
@@ -258,7 +258,7 @@ define(['preview', 'datasource', 'lassource', 'bootbox', 'printdialog', 'warning
             });
             cd.on('saved', function (src) {
                 dialogModel.save(selectedVisual);
-                window._wellLogPreview.updateAnnotations();
+                //window._wellLogPreview.updateAnnotations();
             });
             cd.show();
             _dialog = cd;
@@ -468,18 +468,18 @@ define(['preview', 'datasource', 'lassource', 'bootbox', 'printdialog', 'warning
                     'cancreate': false
                 });
 
-                window._wellLogPreview.updateAnnotations();
+                //window._wellLogPreview.updateAnnotations();
             })
             .on(geotoolkit.widgets.overlays.AnnotationOverlay.Events.RemoveAnnotation, function () {
                 checkSelection();
-                window._wellLogPreview.updateAnnotations();
+                //window._wellLogPreview.updateAnnotations();
             })
             .on(geotoolkit.widgets.overlays.AnnotationOverlay.Events.EditAnnotation, function () {
-                window._wellLogPreview.updateAnnotations();
+                //window._wellLogPreview.updateAnnotations();
             })
             .on(geotoolkit.widgets.overlays.AnnotationOverlay.Events.ChangeActiveAnnotation, function () {
                 checkSelection();
-                window._wellLogPreview.updateAnnotations();
+                //window._wellLogPreview.updateAnnotations();
             });
 
         annotationsOverlay.notify(geotoolkit.widgets.overlays.AbstractOverlay.Events.StateChanged, annotationsOverlay);
@@ -541,7 +541,7 @@ define(['preview', 'datasource', 'lassource', 'bootbox', 'printdialog', 'warning
                 var limits = geotoolkit.util.Math.calculateNeatLimits(range.getLow(), range.getHigh(), false, false);
                 window._wellLogWidget.setDepthLimits(limits.getLow(), limits.getHigh());
                 updateCurvesList();
-                window._wellLogPreview.buildDocumentView();
+                //window._wellLogPreview.buildDocumentView();
                 $('#loadspinner').hide();
             }, function (err) {
                 $('#loadspinner').hide();
@@ -558,7 +558,7 @@ define(['preview', 'datasource', 'lassource', 'bootbox', 'printdialog', 'warning
             var host = $('#geotoolkit-plot-host');
             window._plot.setSize(host.width(), host.height());
             window._navigationWidget.fitToHeight();
-            window._wellLogPreview.updateDocumentViewVisibleLimits();
+            //window._wellLogPreview.updateDocumentViewVisibleLimits();
             window._annotationsOverlay.editAnnotation(null);
         }
 
@@ -652,7 +652,7 @@ define(['preview', 'datasource', 'lassource', 'bootbox', 'printdialog', 'warning
                 // deselect all curves in curvelist
                 $('#curveslist li').removeClass('selected');
 
-                window._wellLogPreview.buildDocumentView();
+                //window._wellLogPreview.buildDocumentView();
             }
         });
 
@@ -750,7 +750,7 @@ define(['preview', 'datasource', 'lassource', 'bootbox', 'printdialog', 'warning
             });
         // clear selection after deleting selected
         selector.setSelection([]);
-        window._wellLogPreview.buildDocumentView();
+        //window._wellLogPreview.buildDocumentView();
     };
 
     function getNewVisualIndexAndOrder (currentVisual, track, direction) {
@@ -1004,22 +1004,32 @@ define(['preview', 'datasource', 'lassource', 'bootbox', 'printdialog', 'warning
             }
         ));
 
-        window._wellLogPreview = new WellLogPreview(
-            document.getElementById('geotoolkit-preview-plot'), window._wellLogWidget, window._annotationsOverlay);
+      //  window._wellLogPreview = new WellLogPreview(
+       //     document.getElementById('geotoolkit-preview-plot'), window._wellLogWidget, window._annotationsOverlay);
 
         initGUI();
         updateCurvesList();
     }
 
     var init = function () {
-        axios.get('http://localhost:5000/df', {
+        var url_string = window.location.href; 
+        var url = new URL(url_string);
+        var type = url.searchParams.get("type");
+        var id = url.searchParams.get("id");
+        axios({
+            "url":'http://localhost:5000/df',
+            "method":"post",
+            "data":{
+                "type":type,
+                "id":id
+            }
         })
         .then(function(_result) {
             df = _result.data
             cols = []
             colsdata = []
             for (col in df){
-                cols.push({'name': col,'type': 'number', 'unit': 'ft'})
+                cols.push({'name': col,'type': 'number'})
                 colsdata.push(Object.values(df[col]))
             }
             startIndex = df['measured_depth'][0]
@@ -1028,7 +1038,6 @@ define(['preview', 'datasource', 'lassource', 'bootbox', 'printdialog', 'warning
                 range: new geotoolkit.util.Range(startIndex, endIndex),
                 index: "measured_depth"
             }
-            console.log(Object.values(colsdata[0]))
             datasource = new geotoolkit.data.DataTable({cols:cols,colsdata:colsdata,meta:meta});
             afterLoadData(datasource)
         })
@@ -1180,7 +1189,7 @@ define(['preview', 'datasource', 'lassource', 'bootbox', 'printdialog', 'warning
         showPropertiesDialogForSelection(selection);
     };
     var setOrientation = function (orientation) {
-        window._wellLogPreview.buildDocumentView();
+        //window._wellLogPreview.buildDocumentView();
 
         if (orientation === geotoolkit.util.Orientation.Horizontal) {
             $('#horizontalModeButton').hide();
@@ -1300,7 +1309,7 @@ define(['preview', 'datasource', 'lassource', 'bootbox', 'printdialog', 'warning
                         }
                         var template = event.target.result;
                         window._wellLogWidget.loadTemplate(template);
-                        window._wellLogPreview.buildDocumentView();
+                        //window._wellLogPreview.buildDocumentView();
 
                         // validate orientation
                         if (orientation !== window._wellLogWidget.getOrientation()) {
@@ -1356,7 +1365,7 @@ define(['preview', 'datasource', 'lassource', 'bootbox', 'printdialog', 'warning
 
     var toggleNavigation = function () {
         window._navigationWidget.setVisible(!window._navigationWidget.getVisible());
-        window._wellLogPreview.setVisible(!window._wellLogPreview.getVisible());
+        //window._wellLogPreview.setVisible(!window._wellLogPreview.getVisible());
 
         window._wellLogWidget.setLayoutStyle({
             'left': window._wellLogWidget.getOrientation() === geotoolkit.util.Orientation.Vertical && window._navigationWidget.getVisible() ? 50 : 0,

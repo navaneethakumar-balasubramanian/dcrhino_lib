@@ -61,8 +61,9 @@ EMPTY_COMPONENT_GUI_STRING = "6,-1,0,3,0,3"
 
 class DrillStringComponent(object):
     """
-    ..:warning: there is possibility for error here as the length_in_meters
-    applies a roundoff on each component, the roundoff should happen after summation.
+    ..:TODO: there is possibility for error here as the length_in_meters
+    applies a roundoff on each component, the roundoff should happen after summation. Fix this and then remove this message
+
     Initializes from an attributes list, which is a text string that looks like this:
     u'1,1,27.0,4,270.0,5'
     these are in order:
