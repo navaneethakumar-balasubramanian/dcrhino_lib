@@ -96,7 +96,9 @@ class RhinoDisplayPanel(object):
         .. todo: CAREFUL! This should possibly return a time or depth or df-indeexed
         quantity ...
         """
-        window_widths = self.trace_data.first_global_config.window_widths
+
+        #window_widths = self.trace_data.first_global_config.window_widths
+        window_widths = "{\"axial\": {\"multiple_3\": 0.004, \"multiple_2\": 0.004, \"multiple_1\": 0.004, \"primary\": 0.004}, \"tangential\": {\"multiple_3\": 0.004, \"multiple_2\": 0.004, \"multiple_1\": 0.004, \"primary\": 0.004}}"
         if is_string(window_widths) : ## isinstance(window_widths, unicode):
             window_widths = json.loads(window_widths)
         return window_widths
