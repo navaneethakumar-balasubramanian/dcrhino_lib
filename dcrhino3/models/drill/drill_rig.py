@@ -82,6 +82,8 @@ class DrillRig(object):
         but rather init with the field config.
         @Natal: should we be checking installed vs not installed on components other
         than steels?
+        ..:TODO".. The gui_number in drill string component: We dont know why it is here
+
         """
         if self.field_config is None:
             logger.warning("cannot populate drill string compoennts, field config is None")
@@ -89,13 +91,16 @@ class DrillRig(object):
         field_config =self.field_config
         self._calculate_shock_sub_tail_length()
         total_drill_string_length = 0.0
-        for i_drill_string_component in range(1, NUM_DRILL_STRING_COMPONENTS_SUPPORTED+1):
+        for i_drill_string_component, attr_dict in enumerate(field_config.drill_string_components):
             attribute_label = 'drill_string_component{}'.format(i_drill_string_component)
-            gui_string = field_config.__getattribute__(attribute_label)
-            attributes_list = gui_string.split(',')
-            dsc = DrillStringComponent(attributes_list=attributes_list)
+            dsc = DrillStringComponent(attributes_dict=attr_dict)
+            print('gui string no longer being passed, now its a dict.  check DSC can init from this type?')
+            gui_string = dsc.as_gui_string()
+#            gui_string = field_config.__getattribute__(attribute_label)
+#            attributes_list = gui_string.split(',')
+#            dsc = DrillStringComponent(attributes_list=attributes_list)
             self.drill_string_components.append(dsc)
-            dsc.gui_number = i_drill_string_component
+            dsc.gui_number = i_drill_string_component +1 #legacy crap
             total_drill_string_length += dsc.length_in_meters
             if dsc.component_type == 'steel':
                 if dsc.installation == 'installed':
