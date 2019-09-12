@@ -333,7 +333,7 @@ class Config(object):
         Returns:
             (float): duration of trimmed trace
         """
-        duration = self.max_lag_trimmed_trace - self.min_lag_trimmed_trace
+        duration = float(self.max_lag_trimmed_trace) - float(self.min_lag_trimmed_trace)
         return duration
 
 
