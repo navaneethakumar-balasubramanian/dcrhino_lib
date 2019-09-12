@@ -30,6 +30,11 @@ class BaseModule(object):
         self.order = order
         self._components_to_process = ['axial','tangential']
         self.subset_id = False
+        self.validate()
+
+
+    def validate(self):
+        return True
 
     def set_prop_process(self,var_name,var_value):
         if "vars" not in self.process_flow.process_json.keys():

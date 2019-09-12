@@ -31,6 +31,14 @@ class BandPassFilterModuleHybrid(BaseHybridModule):
         BaseHybridModule.__init__(self, json, output_path,process_flow,order)
         self.id = "band_pass_filter_hybrid"
 
+    def validate(self):
+        for attribute, value in  self.args.items():
+            if type(value) == str and "|global_config" in value:
+                logger.warn("It cant rely on global config arg:{} value:{}".format(attribute,value))
+                return False
+        return True
+
+
     def process_splitted_trace(self, splitted_traces):
         """
         @type component_array: numpy array

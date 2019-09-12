@@ -59,7 +59,7 @@ from dcrhino3.unstable.multipass_util import update_acorr_with_resonance_info
 #from dcrhino3.unstable.hacks.bma_hack import bma_hack_20190606
 from dcrhino3.unstable.multipass_util import get_depths_at_which_steels_change
 
-
+import sys
 logger = init_logging(__name__)
 
 
@@ -177,6 +177,12 @@ class ProcessFlow:
                 process_counter += 1
                 module_output_path = os.path.join(process_flow_output_path)
                 module = self.modules[module['type']](module, module_output_path,self,process_counter)
+                is_valid = module.validate()
+                if is_valid is False:
+                    raise Exception("Invalid module {}".format(module.id) )
+
+
+
                 if subset_index is not False:
                     module.subset_id = subset_index
                 module._components_to_process = self.components_to_process
