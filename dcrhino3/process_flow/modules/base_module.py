@@ -7,6 +7,8 @@ import copy
 
 from collections import namedtuple
 from dcrhino3.helpers.general_helper_functions import json_string_to_object,dict_to_object,is_string
+from dcrhino3.helpers.general_helper_functions import init_logging
+logger = init_logging(__name__)
 
 class BaseModule(object):
     def __init__(self, json, output_path,process_flow,order):
@@ -35,6 +37,14 @@ class BaseModule(object):
 
     def validate(self):
         return True
+
+    def have_global_config_args(self):
+        result = False
+        for attribute, value in self.args.items():
+            if type(value) == str and "|global_config" in value:
+                logger.warn("It cant rely on global config arg:{} value:{}".format(attribute, value))
+                result = True
+        return result
 
     def set_prop_process(self,var_name,var_value):
         if "vars" not in self.process_flow.process_json.keys():

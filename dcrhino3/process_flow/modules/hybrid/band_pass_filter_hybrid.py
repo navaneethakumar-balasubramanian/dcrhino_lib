@@ -32,12 +32,7 @@ class BandPassFilterModuleHybrid(BaseHybridModule):
         self.id = "band_pass_filter_hybrid"
 
     def validate(self):
-        for attribute, value in  self.args.items():
-            if type(value) == str and "|global_config" in value:
-                logger.warn("It cant rely on global config arg:{} value:{}".format(attribute,value))
-                return False
-        return True
-
+        return self.have_global_config_args() == False
 
     def process_splitted_trace(self, splitted_traces):
         """
