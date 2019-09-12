@@ -1,33 +1,30 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import pdb
-import numpy as np
+import glob2
+import hashlib
+import logging
 import matplotlib.pyplot as plt
-
+import numpy as np
+import os
 import pandas as pd
+import pdb
 from scipy import interpolate
 
-from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
-import glob2
-import os
-import logging
-from dcrhino3.models.traces.raw_trace import RawTraceData
-from dcrhino3.models.env_config import EnvConfig
-from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
-from dcrhino3.helpers.mwd_helper import MWDHelper
-from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
-from dcrhino3.models.trace_dataframe import TraceData
-from dcrhino3.helpers.mwd_rhino_merger import MWDRhinoMerger
-from dcrhino3.helpers.general_helper_functions import init_logging,splitDataFrameIntoSmaller
-import os
-import hashlib
 from matplotlib.backends.backend_pdf import PdfPages
+from multiprocessing import Process
 
+from dcrhino3.helpers.dataframe_helpers import split_data_frame_into_smaller
+from dcrhino3.helpers.mwd_helper import MWDHelper
+from dcrhino3.helpers.mwd_rhino_merger import MWDRhinoMerger
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
 from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
+from dcrhino3.helpers.rhino_sql_helper import RhinoSqlHelper
+from dcrhino3.helpers.general_helper_functions import init_logging
+from dcrhino3.models.env_config import EnvConfig
+from dcrhino3.models.trace_dataframe import TraceData
+from dcrhino3.models.traces.raw_trace import RawTraceData
 
-from multiprocessing import Process
 
 logger = init_logging(__name__)
 

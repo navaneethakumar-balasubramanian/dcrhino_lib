@@ -177,7 +177,8 @@ class RTAHandler(threading.Thread):
                                                      2.5,
                                                      3,
                                                      1.1,
-                                                     remove_mean=config.remove_mean)
+                                                     # remove_mean=config.remove_mean)
+                                                     remove_mean=True)
                     interpolated_data = interpolate_data(raw_trace.dataframe.ts, calibrated_data,
                                                          ideal_timestamps, interpolation_type)
                     acorr_data = autocorrelate_trace(interpolated_data, number_of_samples_for_acorr,

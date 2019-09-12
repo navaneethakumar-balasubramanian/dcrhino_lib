@@ -13,8 +13,8 @@ app = Flask(__name__)
 CORS(app)
 
 app = Flask(__name__,
-            static_folder = "../web_server/frontend/dist",
-            template_folder = "../web_server/frontend/dist")
+            static_folder = "../web_server/rhino_acquisition_frontend",
+            template_folder = "../web_server/rhino_acquisition_frontend")
 
 
 app.config['SECRET_KEY'] = 'secret!'
@@ -23,11 +23,11 @@ socketio = SocketIO(app)
 
 @app.route('/test')
 def test():
-    return render_template("test.html")
+    return render_template("traces.html")
 
 @app.route('/js/<path:path>')
 def send_js(path):
-    return send_from_directory('../web_server/frontend/dist/js/', path)
+    return send_from_directory('../web_server/rhino_acquisition_frontend/js/', path)
 
 
 class SendDataThread(threading.Thread):
@@ -51,9 +51,10 @@ class SendDataThread(threading.Thread):
                 data['battery'] = 98
                 self.socketio.emit('data', data, broadcast=True)
                 self.idx += 1
-                sleep(0.1)
+                sleep(1)
             except:
                 print ("failed to send data")
+                self.idx = 0
                 pass
 
 

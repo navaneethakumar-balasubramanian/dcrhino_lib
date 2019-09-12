@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
 from dcrhino3.acquisition.constants import RAM_PATH
-from dcrhino3.helpers.general_helper_functions import calculate_battery_percentage
+from dcrhino3.acquisition.supporting_acquisition import calculate_battery_percentage
 if plt.get_backend() == "Qt4Agg":
     pass
 else:

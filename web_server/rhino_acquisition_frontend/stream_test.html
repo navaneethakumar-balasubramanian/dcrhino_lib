@@ -1,18 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
+<html>
+<head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>Title</title>
+    <title>Stream Test</title>
     <!-- here go your script declarations and style links -->
     <link rel="stylesheet" type="text/css" href="/3rdparty/css/font.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="/3rdparty/fonts/geotoolkit.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="/3rdparty/css/styles.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="/3rdparty/css/vs.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="/3rdparty/css/bootstrap.4.3.1.min.css" media="screen"/>
-          <!--<script src="/3rdparty/js/bootstrap.min.js"></script>-->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
     <script src="/js/require.js"></script>
     <script>
         require.config({
@@ -61,10 +60,10 @@
         function bodyLoadHandler() {
             // Use require to load script.js. The object which the script returns
             // will be passed to your callback function
-            require(['rhino_acq', 'jquery','bootstrap','bootstrap_jquery', 'popper'], function(App) {
+            require(['js/stream_test.js'], function(App) {
                 // Call initialize function which we created in script.js
 
-                App.initialize();
+                App.init();
             });
         }
     </script>
@@ -72,14 +71,11 @@
 
     <!-- Change body tag to the following -->
     <body onload="bodyLoadHandler()">
-
-    <!--           <h1>NATAL THIS IS THE PAGE!!</h1>-->
-    <!--            <button class="toolbutton mode-button" id="resetButton" title="START PROCESS"-->
-    <!--                    onclick="require(['rhino_acq'], function(App) { App.open_settings();})">-->
-    <!--                <i class="geotoolkit-icon-fit-to-screen"></i></button>-->
-        <a class="btn btn-dark" role="button" href="/open_settings">Settings</a>
-        <a class="btn btn-dark" role="button" href="/start_acquisition_int">Start Acquisition</a>
-        <a class="btn btn-dark" role="button" href="/stop_acquisition">Stop Acquisition</a>
-    <!--            <canvas id="canvas" style="width:90%;height:90%;"></canvas>-->
-    </body>
+    <canvas id="axial" style="width:100%"></canvas>
+    <canvas id="tangential" style="width:100%"></canvas>
+<!--  <a class="btn btn-dark" role="button" href="/stop_acquisition">Stop Acquisition</a>-->
+</body>
 </html>
+
+
+

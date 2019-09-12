@@ -81,3 +81,20 @@ class LengthMeasurement():
 
 
 
+def calculate_shock_sub_tail_length(field_config, default_tail_length=0.25):
+    """
+    kindof a hack ... shock sub tail length should be kept with shock_sub,
+    :param field_config:
+    :return:
+    """
+    try:
+        shock_sub_tail_info = field_config.shocksub_tail_length
+        tmp = LengthMeasurement((shock_sub_tail_info['value'], shock_sub_tail_info['units']))
+        length_in_meters = tmp.convert_to_meters()
+        return length_in_meters
+
+    except AttributeError:
+        logger.warning('Legacy config detected')
+        logger.warning('Setting Shock Sub Tail Length to {}m'.format(default_tail_length))
+        return default_tail_length
+

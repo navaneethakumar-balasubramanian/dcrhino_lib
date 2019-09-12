@@ -71,17 +71,16 @@ define(["highlight.pack", "geotoolkit", "axios","numjs","geotoolkit.seismic", "g
     var createPipeline = function (reader) {
 
         var positions = new geotoolkit.data.NumericalDataSeries();
-        var pos = 0;
+        
         for (var i = 0; i < traceCount; ++i) {
             positions.addValue(df['measured_depth'][i]);
-            //console.log(df[i]['measured_depth'].toFixed(10))
         }
         
 
         
         var pipeline = new geotoolkit.seismic.pipeline.SeismicPipeline("MemorySeismic", reader, reader.getStatistics());
         var mapping = new geotoolkit.seismic.data.VSTraceMapping(pipeline, positions);
-        //console.log(mapping)
+        console.log(mapping)
         var colorProvider = geotoolkit.seismic.util.SeismicColors.getDefault();
         pipeline.setOptions({
             'colors': {
@@ -100,9 +99,9 @@ define(["highlight.pack", "geotoolkit", "axios","numjs","geotoolkit.seismic", "g
                     "IntepolatedDensity": false,
                     'SimpleDensity': true
                 },
-                'decimationSpacing':  1
+                'decimationSpacing':  1 
             },
-            //'tracemapping': mapping
+            'tracemapping': mapping
         });
         return pipeline;
     };
@@ -125,11 +124,10 @@ define(["highlight.pack", "geotoolkit", "axios","numjs","geotoolkit.seismic", "g
         var sampleCount = 220
         // Create a new empty reader
         
-        var positions = new geotoolkit.data.NumericalDataSeries("ft");
-        var pos = 0;
+        var positions = new geotoolkit.data.NumericalDataSeries("meters");
         for (var i = 0; i < traceCount; ++i) {
             positions.addValue(df['measured_depth'][i]);
-            console.log(df['measured_depth'][i])
+
         }
 
 

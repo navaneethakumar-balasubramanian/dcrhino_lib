@@ -18,13 +18,13 @@ Author: natal
     For each timestamp there are traces but also a column called 'acorr_file_id', this
     is an integer which is basically a uid for the parent file and can be used to call
     the relevant config ... it is equal to 14 in our prelimniary test)
-    
+
     So the global configs should be a dictionary, keyed by 'acorr_file_id',
 """
 
 from __future__ import absolute_import, division, print_function
 
-from datetime import datetime
+#from datetime import datetime
 from enum import Enum
 import h5py
 import json
@@ -34,9 +34,12 @@ import pandas as pd
 import pdb
 import sys
 
-from dcrhino3.helpers.general_helper_functions import init_logging, create_folders_if_needed, df_component_as_array, \
-    is_string
+from dcrhino3.helpers.dataframe_helpers import df_component_as_array
+from dcrhino3.helpers.general_helper_functions import create_folders_if_needed
+from dcrhino3.helpers.general_helper_functions import init_logging, is_string
 from dcrhino3.models.config2 import Config
+from dcrhino3.signal_processing.array_util import normalize_by_row_maxima
+from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
 
 logger = init_logging(__name__)
 
@@ -47,7 +50,7 @@ TRACE_COLUMN_LABELS = ['{}_trace'.format(x) for x in COMPONENT_IDS]
 class ModuleType(Enum):
     """
     Assign integers to different module types.
-    
+
         + RAW = 1
         + INTERPOLATION = 2
         + AUTOCORRELATION = 3
@@ -57,7 +60,7 @@ class ModuleType(Enum):
         + BAND_PASS_FILTER = 7
         + PHASE_ROTATION = 8
         + TRIM = 9
-    """    
+    """
     RAW = 1
     INTERPOLATION = 2
     AUTOCORRELATION = 3
@@ -69,24 +72,6 @@ class ModuleType(Enum):
     TRIM = 9
 
 
-#def split_df_to_simple_and_array(df):
-#    """
-#    this can be made a method of TraceData or can go in util.py
-#    """
-#
-#    array_df = df.copy()
-#    array_columns = []
-#    non_array_columns = []
-#    for col in df.columns:
-#        sample_element = df[col].iloc[0]
-#        #print(col, type(sample_element))
-#        if isinstance(sample_element, np.ndarray):
-#            array_columns.append(col)
-#        else:
-#            non_array_columns.append(col)
-#    array_df.drop(non_array_columns, axis=1, inplace=True)
-#    df.drop(array_columns, axis=1, inplace=True)
-#    return df, array_df
 
 
 class TraceData(object):
@@ -170,11 +155,13 @@ class TraceData(object):
 
     @property
     def first_global_config(self):
-        return self.global_config_by_index(self.dataframe["acorr_file_id"].values[0])
+        acorr_file_id = self.dataframe["acorr_file_id"].values[0]
+        return self.global_config_by_index(acorr_file_id)
 
     def apply_module(self, module_type, arguments):
         """
-        Return the applied modules.
+        add the module to list of applied modules
+        Return the number of applied modules including latest.
         """
         self.applied_modules.append({module_type:arguments})
         #return the index where it was appended
@@ -183,7 +170,7 @@ class TraceData(object):
     def load_from_db(self, db_helper, files_ids, min_ts, max_ts):
         """
         Load data (selected with file ids and timestamps) from the database.
-        
+
         Parameters:
             db_helper (module): :class:`rhino_db_helper.RhinoDBHelper`
             files_ids (list): list of integers
@@ -210,10 +197,10 @@ class TraceData(object):
     def save_to_csv(self, path):
         """
         Save dataframe (without trace data) to csv at location specified by "path"
-        
+
         Parameters:
             path (str): where to save csv
-            
+
         """
         df = self.copy_without_trace_data()
         first_global_config = self.global_config_by_index(str(int(df['acorr_file_id'].values[0])))
@@ -228,10 +215,10 @@ class TraceData(object):
     def save_to_h5(self, path, compress=False):
         """
         Save dataframe (without trace data) to h5 at location specified by "path"
-        
+
         Parameters:
             path (str): where to save h5
-        
+
         .. note:: when porting to python3 replace iteritems with items see Keith's answer in
             https://stackoverflow.com/questions/10458437/what-is-the-difference-between-dict-items-and-dict-iteritems
         .. warning:: this requires dtypes to be float, will need to use a mapping of
@@ -239,7 +226,7 @@ class TraceData(object):
             be maintained in database models?
 
         .. note:: 20190122: This needs to handle three forms of 'saving':
-            
+
             1. Save the traces (as float32, today they will store as float, will check 32 or 64 later)
             2. Save any columns from the mwd
             3. Save the global_config (as json dumps?)
@@ -275,7 +262,7 @@ class TraceData(object):
         #<cull other columns with array type>
         print('Fix this so that these columns are saved, but for now we just remove them')
         for column in all_columns:
-            sample_element = self.dataframe[column].iloc[0]
+            #sample_element = self.dataframe[column].iloc[0]
             if column == "_drop_features":
                 all_columns.remove(column)
                 self.dataframe.drop([column,], axis=1, inplace=True)
@@ -329,10 +316,10 @@ class TraceData(object):
     def realtime_append_to_h5(self, path, file_id='0', global_config=None):
         """
         Add to h5 file found at path
-        
+
         Parameters:
             path
-        
+
         Other Parameters:
             file_id = '0'
             global_config = None
@@ -430,11 +417,11 @@ class TraceData(object):
     def add_global_config(self, global_config, file_id):
         """
         Add gloabl configs
-        
+
         Parameters:
             global_config (dict): global_config dictionary to add
             file_id (str): where to add the dictionary
-            
+
         Returns:
             (str): file_id of edited file
         """
@@ -453,19 +440,44 @@ class TraceData(object):
         """
         return self._global_configs[str(int(index))]
 
-    def component_as_array(self, component_id):
+    def component_as_array(self, component_id, normalize=False):
         """
         Returns the data form component as a 2d numpy array with trace index
         running along rows (zero-index).  Useful for slicing data and linalg.
-        
+
         Parameters:
             component_id (str): axial/tangential/radial
-            
+
         Return:
             (array): extracted trace, selected by component_id
         """
+        data = df_component_as_array(component_id, self.dataframe)
+        if normalize:
+            data = normalize_by_row_maxima(data)
+        return data
 
-        return df_component_as_array(component_id, self.dataframe)
+    def trim_trace_time_axis(self, data, min_time, max_time):
+        """
+        data: 2D array from self.component_as_array.  Rows are traces,
+        columns are trace time axis
+
+        """
+        sps_list = self.dataframe.sampling_rate.unique()
+        if len(sps_list) != 1:
+            logger.error("\n\n SAmpling reates = {}, \n\n either not defined or non-unique")
+            raise Exception
+        sps = sps_list[0]
+        st = SymmetricTrace(data=data[0,:], sampling_rate=sps)
+        time_vector = st.time_vector
+        cond1 = time_vector >= min_time
+        cond2 = time_vector <= max_time
+        active_indices = np.where(cond1 & cond2)[0]
+        data = data[:,active_indices]
+        time_axis = time_vector[active_indices]
+        return data, time_axis
+
+
+
 
     def copy_without_trace_data(self):
         """

@@ -27,6 +27,8 @@ from dcrhino3.celery.tasks import process_file_with_flow
 from datetime import datetime
 import requests
 
+from dcrhino3.helpers.cross_section_helper import CrossSectionHelper
+
 
 
 import pdb
@@ -463,7 +465,6 @@ def get_processed_csv():
     resp.headers["Content-Type"] = "application/octet-stream"
     return resp
 
-
 @app.route('/get_zipped_plots',methods=['GET', 'POST'])
 def get_zipped_plots():
     req_json = request.get_json()
@@ -550,61 +551,56 @@ def get_nparray():
     td = TraceData()
     td.load_from_h5("/home/thiago/Downloads/test_data_/5_trim_0.h5")
     nparr = td.component_as_array("axial").astype(np.float32)
-    #print nparr.shape
+    # print nparr.shape
     data = nparr
-
+    n_traces, n_samples_per_trace = data.shape
+    # <NORAMLIZE>
+    data = data.T
+    # Make nans into zeros, do normalization, then return nans
     nans_locations = np.where(np.isnan(data))
     data[nans_locations] = 0.0
-    num_samples, num_traces = data.shape
     max_amplitudes = np.max(data, axis=0)
-    #print max_amplitudes
     data = data / max_amplitudes
     data[nans_locations] = np.nan
-#    half_way = int(data.shape[1] / 2)
     data = data.T
-    data = data[590 :590 + 220, :]
-    data = data.T
+    # </NORAMLIZE>
+    data = data[:, 590:590 + 220]
 
-#    print data.shape
     response = make_response(data.tobytes())
     response.headers.set('Content-Type', 'application/octet-stream')
     return response
 
-@app.route('/aa')
-def get_nparray2():
-    td = TraceData()
-    td.load_from_h5("/home/thiago/Downloads/test_data_/5_trim_0.h5")
-    nparr = td.component_as_array("axial").astype(np.float32)
-
-    def generate():
-        last_pos = 0
-        while last_pos < nparr.shape[0]:
-            data = nparr[last_pos:last_pos+1000]
-            last_pos += 1000
-            #yield (b'--frame\r\n'
-            #       b'Content-Type: application/octet-stream\r\n\r\n' + str(data) + b'\r\n')
-            yield data.tobytes()
-            sleep(10)
-
-    #response = make_response(data.tobytes())
-    #response.headers.set('Content-Type', 'application/octet-stream')
-    #return response
-
-    return Response(generate(), mimetype='application/octet-stream')
+@app.route('/api/split_cross_sections',methods=['GET', 'POST'])
+def split_cross_sections():
+    req_json = request.get_json()
+    collars = req_json['collars']
+    point_from_idx = req_json['point_from_idx']
+    point_to_idx = req_json['point_to_idx']
+    threshold = req_json['threshold']
+    cshelper = CrossSectionHelper()
+    cross_sections = cshelper.get_cross_sections(collars, point_from_idx, point_to_idx, threshold)
+    return jsonify(cross_sections)
 
 
 
 
-@app.route('/df')
+@app.route('/df',methods=['GET', 'POST'])
 def get_df():
-    td = TraceData()
-    td.load_from_h5("/home/thiago/Downloads/test_data_/5_trim_0.h5")
-    df = td.dataframe
-#    print df.shape,"dfshape"
-    #print td.dataframe.to_json(orient='records')
-    df = df[df.columns.drop(list(df.filter(regex='_trace')))]
-    response = make_response(df.to_json(orient='columns'))
-    #response.headers.set('Content-Type', 'application/octet-stream')
+    req_json = request.get_json()
+    data_type = req_json['type']
+    data_id = req_json['id']
+    if data_type == 'processed':
+        td = TraceData()
+        td.load_from_h5("/home/thiago/Downloads/test_data_/5_trim_0.h5")
+        df = td.dataframe
+        #print df.shape,"dfshape"
+        #print td.dataframe.to_json(orient='records')
+        df = df[df.columns.drop(list(df.filter(regex='_trace')))]
+        for col in df.columns:
+            if len(df[col].unique()) == 1:
+                df.drop(col, inplace=True, axis=1)
+        response = make_response(df.to_json(orient='columns'))
+        #response.headers.set('Content-Type', 'application/octet-stream')
     return response
 
 

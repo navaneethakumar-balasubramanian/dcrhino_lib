@@ -8,7 +8,7 @@ import numpy as np
 import psutil
 from dcrhino3.acquisition.constants import LOGS_PATH
 from dcrhino3.acquisition.rhino_threads import NetworkThread, GPSThread
-from dcrhino3.helpers.general_helper_functions import calculate_battery_percentage
+from dcrhino3.acquisition.supporting_acquisition import calculate_battery_percentage
 from dcrhino3.models.config2 import Config
 import math
 from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
