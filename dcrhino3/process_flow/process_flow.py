@@ -35,7 +35,7 @@ from dcrhino3.process_flow.modules.features_extraction.j2 import J2FeaturesModul
 from dcrhino3.process_flow.modules.features_extraction.k0 import K0FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.b0 import B0FeaturesModule
 
-from dcrhino3.process_flow.modules.log_processing.binning_module import BinningModule
+#from dcrhino3.process_flow.modules.log_processing.binning_module import BinningModule
 from dcrhino3.process_flow.modules.log_processing.rhino_physics import RhinoPhysicsModule
 
 from dcrhino3.process_flow.modules.plotters.qc_plotter_module import QCPlotterModule
@@ -89,7 +89,7 @@ class ProcessFlow:
         self.datetime_str = self.now.strftime("%Y%m%d-%H%M%S")
         self.env_config = None
         self.modules = {
-            "binning": BinningModule,
+            #"binning": BinningModule,
             "rhino_physics": RhinoPhysicsModule,
             "j0": J0FeaturesModule,
             "j1": J1FeaturesModule,
