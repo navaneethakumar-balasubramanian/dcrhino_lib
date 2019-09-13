@@ -258,6 +258,8 @@ class Config(object):
         return int(self.sampling_rate * self.spiking_decon_filter_duration)
 
     def set_data_from_json(self, data):
+        if not isinstance(data, dict):
+            data = json.loads(data)
         for _key in data.keys():
             self.__dict__[_key] = data[_key]
 
