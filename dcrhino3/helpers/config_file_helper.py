@@ -39,6 +39,8 @@ def transform_oldconfigjson_to_config2(config_old):
                 elif key == "comments":
                     value = filter(lambda x: x in string.printable, value)
                     setattr(c, key, "".join(list(value)))
+                else:
+                    setattr(c, key, value)
             elif "trapezoidal" in key:
                 bpf[key] = value
             elif "sensitivity" in key:
@@ -65,8 +67,7 @@ def transform_configparser_to_config2(config, output_to_file=False):
             config_path = config
             cp = ConfigParser.ConfigParser()
             cp.read(config_path)
-        c = Config(acquisition_config=True)
-        c.clear_all_keys()
+        c = Config()
         bpf = dict()
         sensitivities = dict()
         components = list()
@@ -87,6 +88,8 @@ def transform_configparser_to_config2(config, output_to_file=False):
                     elif option == "comments":
                         value = filter(lambda x: x in string.printable, value)
                         setattr(c, option, "".join(list(value)))
+                    else:
+                        setattr(c, option, value)
 
                 elif "trapezoidal" in option:
                     value = cp.get(section, option)
