@@ -119,6 +119,7 @@ def save_to_db(sql_db_helper,h5_file_path,min_ts_df,global_config,min_ts,max_ts,
     logger.info("Adding this file traces to clickhouse sensor_file_acorr_traces")
     clickhouse_helper = ClickhouseHelper(conn=conn)
     autcorrelated_dataframe = prepare_to_save(autcorrelated_dataframe, file_id, original_file_record_day)
+    autcorrelated_dataframe.relative_timestamp = autcorrelated_dataframe.relative_timestamp.astype(int)
     clickhouse_helper.sensor_file_acorr_trace.add_pandas_to_table(autcorrelated_dataframe)
 
 
