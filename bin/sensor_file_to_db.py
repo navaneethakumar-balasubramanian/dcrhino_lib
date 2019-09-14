@@ -216,7 +216,7 @@ def acorr_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
         for file_id, file_config in global_config_jsons.items():
             #global_config = Config()
             #global_config.set_data_from_json(json.loads(file_config))
-            global_config = Config(acquisition_config=True)
+            global_config = Config()
             global_config.clear_all_keys()
             global_config.set_data_from_json(json.loads(file_config))
     else:
