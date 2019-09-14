@@ -39,14 +39,18 @@ class Config(object):
         """
         self.acquisition_config = acquisition_config
         self.files_keys = dict()
-        if acquisition_config:
-            config_files_json = json.load(open(os.path.join(ACQUISITION_PATH, "acquisition_config.cfg")))
-            for key in config_files_json.keys():
-                self.files_keys[key] = dict()
-                for config_file in config_files_json[key]:
-                    config_file_json = json.load(open(os.path.join(ACQUISITION_PATH, config_file)))
-                    self.files_keys[key][config_file] = config_file_json.keys()
-                    self.set_data_from_json(config_file_json)
+
+        config_files_json = json.load(open(os.path.join(ACQUISITION_PATH, "acquisition_config.cfg")))
+        for key in config_files_json.keys():
+            self.files_keys[key] = dict()
+            for config_file in config_files_json[key]:
+                config_file_json = json.load(open(os.path.join(ACQUISITION_PATH, config_file)))
+                self.files_keys[key][config_file] = config_file_json.keys()
+                self.set_data_from_json(config_file_json)
+
+        if not acquisition_config:
+            self.clear_all_keys()
+
         if json_data is not None:
             self.set_data_from_json(json_data)
         return
