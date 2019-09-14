@@ -210,19 +210,10 @@ def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000)
 
 def acorr_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
     h5f = h5py.File(h5_file_path, 'r+')
-    if 'global_config_jsons' in h5f.attrs.keys():
-        unicode_string = h5f.attrs['global_config_jsons']
-        global_config_jsons = json.loads(unicode_string)
-        for file_id, file_config in global_config_jsons.items():
-            #global_config = Config()
-            #global_config.set_data_from_json(json.loads(file_config))
-            global_config = Config()
-            global_config.clear_all_keys()
-            global_config.set_data_from_json(json.loads(file_config))
-    else:
-        h5_helper = H5Helper(h5f, False, False)
-        #global_config = Config(h5_helper.metadata)
-        global_config = h5_helper.config
+
+    h5_helper = H5Helper(h5f, False, False)
+    #global_config = Config(h5_helper.metadata)
+    global_config = h5_helper.config
 
 
     conn = env_config.get_rhino_db_connection_from_mine_name(global_config.mine_name)
