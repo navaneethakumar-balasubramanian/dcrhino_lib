@@ -45,7 +45,7 @@ class Config(object):
             self.files_keys[key] = dict()
             for config_file in config_files_json[key]:
                 config_file_json = json.load(open(os.path.join(ACQUISITION_PATH, config_file)))
-                self.files_keys[key][config_file] = config_file_json.keys()
+                self.files_keys[key][config_file] = list(config_file_json.keys())
                 self.set_data_from_json(config_file_json)
 
         if not acquisition_config:
@@ -81,7 +81,7 @@ class Config(object):
         :return:a dictionary with all the key/value pairs of all the files that are part of the files_type
         """
         if files_type in self.files_keys.keys():
-            pipeline_files = self.files_keys[files_type].keys()
+            pipeline_files = list(self.files_keys[files_type].keys())
             pipeline_json = dict()
             for pipeline_file in pipeline_files:
                 for key in self.files_keys[files_type][pipeline_file]:
@@ -303,7 +303,7 @@ class Config(object):
         self.files_keys["pipeline_files"] = dict()
         for config_file in config_files_json["pipeline_files"]:
             config_file_json = json.load(open(os.path.join(ACQUISITION_PATH, config_file)))
-            self.files_keys["pipeline_files"][config_file] = config_file_json.keys()
+            self.files_keys["pipeline_files"][config_file] = list(config_file_json.keys())
             self.set_data_from_json(data)
 
     def _get_num_decon_taps(self, deconvolution_filter_duration, sampling_rate):
