@@ -176,6 +176,9 @@ class ProcessFlow:
             for module in modules_json:
                 process_counter += 1
                 module_output_path = os.path.join(process_flow_output_path)
+                if module['type'] not in self.modules:
+                    logger.warn("Ignoring this type of module {}".format(module['type']) )
+                    continue
                 module = self.modules[module['type']](module, module_output_path,self,process_counter)
                 is_valid = module.validate()
                 if is_valid is False:
