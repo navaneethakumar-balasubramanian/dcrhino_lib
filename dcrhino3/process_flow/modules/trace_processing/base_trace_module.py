@@ -48,7 +48,7 @@ class BaseTraceModule(BaseModule):
                 transformed_args = self.get_transformed_args(trace_config)
                 previous_acorr_file_id = row_of_df['acorr_file_id']
 
-            for component_id in trace_config.components_to_process:
+            for component_id in self.process_flow.components_to_process:
                 component_column_on_df = component_id+"_trace"
                 trace_to_process = row_of_df[component_column_on_df]
                 processed_trace = self.process_component(component_id,
