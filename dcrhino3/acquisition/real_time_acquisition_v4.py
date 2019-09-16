@@ -78,6 +78,7 @@ run_folder_path = os.path.join(local_folder,
 class LogFileDaemonThread(threading.Thread):
     def __init__(self, logQ):
         threading.Thread.__init__(self)
+        self.daemon = True
         self.logQ = logQ
         self.filename = os.path.join(LOGS_PATH, datetime.now().strftime('%Y_%m_%d_%H')+'.log')
         self.output_file = open(self.filename, 'a')
@@ -176,6 +177,7 @@ class FileFlusher(threading.Thread):
 
     def __init__(self, flushq, logQ, displayQ):
         threading.Thread.__init__(self)
+        self.daemon = True
         self.flushq = flushq
         self.logQ = logQ
         self.displayQ = displayQ
@@ -346,6 +348,7 @@ class DummyComport:
 class SerialThread(threading.Thread):
     def __init__(self, comport, brate, pktlen, flushq, logQ, displayQ):
         threading.Thread.__init__(self)
+        self.daemon = True
         self.cport = serial.Serial(comport, brate, timeout=1.0)
         self.pktlen = pktlen
         self.portOpen = True
@@ -479,6 +482,7 @@ class SerialThread(threading.Thread):
 class SimulationThread(threading.Thread):
     def __init__(self, file_input, file_flusher):
         threading.Thread.__init__(self)
+        self.daemon = True
         self.file_input = file_input
         self.file_flusher = file_flusher
         self.h5 = H5Helper(h5py.File(file_input, "r"), load_ts=True, load_xyz=True)
@@ -519,6 +523,7 @@ class SimulationThread(threading.Thread):
 class CollectionDaemonThread(threading.Thread):
     def __init__(self, bufferQ, tracesQ, logQ, displayQ):
         threading.Thread.__init__(self)
+        self.daemon = True
         self.bufferQ = bufferQ
         self.bufferThisSecond = list()
         self.lastSecond = None
@@ -700,10 +705,6 @@ def main_run(run=True, **kwargs):
     else:
         simulation_thread = SimulationThread(file_input, fflush)
         comport = DummyComport()
-
-
-
-
 
     m = "Started Main\n"
     logger.debug(m)
