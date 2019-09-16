@@ -104,7 +104,7 @@ class RhinoDisplay(object):
 
 
         if output_path:
-            plt.savefig(output_path,dpi=72)
+            plt.savefig(output_path,format='png')
         if show:
             plt.show(block=True)
         #plt.close()
