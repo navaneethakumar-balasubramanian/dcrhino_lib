@@ -180,7 +180,7 @@ class RawTraceData(TraceData):
         logger.info("Took %s seconds to resample %s traces" % (time_interval, len(df)))
         return df
 
-    def interpolate_1d_component_array(self, raw_timestamps, component_array, ideal_timestamps, kind="quadratic"):
+    def interpolate_1d_component_array(self, raw_timestamps, component_array, ideal_timestamps, kind="linear"):
         # <Numpy is a lot faster and it was the legacy method we have been using so will continue using the
         # Extrapolation capabilities>
         # interp_data = np.interp(ideal_timestamps, raw_timestamps,component_array)
