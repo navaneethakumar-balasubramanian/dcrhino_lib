@@ -249,7 +249,10 @@ class H5Helper:
             c = transform_configparser_to_config2(old_metadata)
         else:
             global_config_json = json.loads(self.h5f.attrs["global_config_jsons"])
-            temp = json.loads(global_config_json[list(global_config_json.keys())[0]])
+            if type(global_config_json[list(global_config_json.keys())[0]]) == str:
+                temp = json.loads(global_config_json[list(global_config_json.keys())[0]])
+            else:
+                temp = global_config_json[list(global_config_json.keys())[0]]
 
             if 'drill_string_components' not in temp.keys():
                 c = transform_oldconfigjson_to_config2(temp)

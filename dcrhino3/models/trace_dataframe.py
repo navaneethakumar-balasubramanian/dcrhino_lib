@@ -404,7 +404,10 @@ class TraceData(object):
         global_config_jsons = json.loads(unicode_string)
         for file_id, file_config in global_config_jsons.items():
             global_config = Config()
-            global_config.set_data_from_json(json.loads(file_config))
+            if type(file_config) == str:
+                file_config = json.loads(file_config)
+            global_config.set_data_from_json(file_config)
+
             self.add_global_config(global_config, str(file_id))
         #</config>
 
