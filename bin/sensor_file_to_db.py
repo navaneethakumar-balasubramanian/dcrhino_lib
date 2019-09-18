@@ -241,16 +241,18 @@ def acorr_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
     l1h5_dataframe = raw_trace_data.dataframe
 
     for column in COMPONENT_IDS:
-        data_array = np.atleast_2d(list(l1h5_dataframe[column + "_trace"]))
-        count_non_zeroes = np.count_nonzero(data_array)
-        if count_non_zeroes == 0:
-            l1h5_dataframe.drop([column + "_trace"], axis=1, inplace=True)
-            min_accel = "min_"+column+"_acceleration"
-            max_accel = "max_" + column + "_acceleration"
-            if min_accel in l1h5_dataframe.columns:
-                l1h5_dataframe.drop([min_accel], axis=1, inplace=True)
-            if max_accel in l1h5_dataframe.columns:
-                l1h5_dataframe.drop([max_accel], axis=1, inplace=True)
+        trace_column_name = column + "_trace"
+        if trace_column_name in l1h5_dataframe.columns:
+            data_array = np.atleast_2d(list(l1h5_dataframe[column + "_trace"]))
+            count_non_zeroes = np.count_nonzero(data_array)
+            if count_non_zeroes == 0:
+                l1h5_dataframe.drop([column + "_trace"], axis=1, inplace=True)
+                min_accel = "min_"+column+"_acceleration"
+                max_accel = "max_" + column + "_acceleration"
+                if min_accel in l1h5_dataframe.columns:
+                    l1h5_dataframe.drop([min_accel], axis=1, inplace=True)
+                if max_accel in l1h5_dataframe.columns:
+                    l1h5_dataframe.drop([max_accel], axis=1, inplace=True)
 
     min_ts_df = l1h5_dataframe['timestamp'].min()
     l1h5_dataframe['timestamp'] = l1h5_dataframe['timestamp'] - min_ts_df
