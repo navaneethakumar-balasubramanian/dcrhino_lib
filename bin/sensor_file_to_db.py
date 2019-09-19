@@ -119,6 +119,7 @@ def save_to_db(sql_db_helper,h5_file_path,min_ts_df,global_config,min_ts,max_ts,
     logger.info("Adding this file traces to clickhouse sensor_file_acorr_traces")
     clickhouse_helper = ClickhouseHelper(conn=conn)
     autcorrelated_dataframe = prepare_to_save(autcorrelated_dataframe, file_id, original_file_record_day)
+    autcorrelated_dataframe.relative_timestamp = autcorrelated_dataframe.relative_timestamp.astype(int)
     clickhouse_helper.sensor_file_acorr_trace.add_pandas_to_table(autcorrelated_dataframe)
 
 
@@ -210,19 +211,10 @@ def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000)
 
 def acorr_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
     h5f = h5py.File(h5_file_path, 'r+')
-    if 'global_config_jsons' in h5f.attrs.keys():
-        unicode_string = h5f.attrs['global_config_jsons']
-        global_config_jsons = json.loads(unicode_string)
-        for file_id, file_config in global_config_jsons.items():
-            #global_config = Config()
-            #global_config.set_data_from_json(json.loads(file_config))
-            global_config = Config(acquisition_config=True)
-            global_config.clear_all_keys()
-            global_config.set_data_from_json(json.loads(file_config))
-    else:
-        h5_helper = H5Helper(h5f, False, False)
-        #global_config = Config(h5_helper.metadata)
-        global_config = h5_helper.config
+
+    h5_helper = H5Helper(h5f, False, False)
+    #global_config = Config(h5_helper.metadata)
+    global_config = h5_helper.config
 
 
     conn = env_config.get_rhino_db_connection_from_mine_name(global_config.mine_name)
@@ -249,16 +241,18 @@ def acorr_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
     l1h5_dataframe = raw_trace_data.dataframe
 
     for column in COMPONENT_IDS:
-        data_array = np.atleast_2d(list(l1h5_dataframe[column + "_trace"]))
-        count_non_zeroes = np.count_nonzero(data_array)
-        if count_non_zeroes == 0:
-            l1h5_dataframe.drop([column + "_trace"], axis=1, inplace=True)
-            min_accel = "min_"+column+"_acceleration"
-            max_accel = "max_" + column + "_acceleration"
-            if min_accel in l1h5_dataframe.columns:
-                l1h5_dataframe.drop([min_accel], axis=1, inplace=True)
-            if max_accel in l1h5_dataframe.columns:
-                l1h5_dataframe.drop([max_accel], axis=1, inplace=True)
+        trace_column_name = column + "_trace"
+        if trace_column_name in l1h5_dataframe.columns:
+            data_array = np.atleast_2d(list(l1h5_dataframe[column + "_trace"]))
+            count_non_zeroes = np.count_nonzero(data_array)
+            if count_non_zeroes == 0:
+                l1h5_dataframe.drop([column + "_trace"], axis=1, inplace=True)
+                min_accel = "min_"+column+"_acceleration"
+                max_accel = "max_" + column + "_acceleration"
+                if min_accel in l1h5_dataframe.columns:
+                    l1h5_dataframe.drop([min_accel], axis=1, inplace=True)
+                if max_accel in l1h5_dataframe.columns:
+                    l1h5_dataframe.drop([max_accel], axis=1, inplace=True)
 
     min_ts_df = l1h5_dataframe['timestamp'].min()
     l1h5_dataframe['timestamp'] = l1h5_dataframe['timestamp'] - min_ts_df

@@ -64,11 +64,11 @@ def make_spectral_qc_plot(h5_helper, components_to_plot=['x', 'y'],
         y_data = h5h.load_axis_mask("y", mask)
         z_data = h5h.load_axis_mask("z", mask)
     x_data = calibrate_data(x_data, h5_helper._get_sensitivity_xyz()[0],
-                            float(global_config.accelerometer_max_voltage),
+                            accelerometer_max_voltage=float(global_config.accelerometer_max_voltage),
                             rhino_version=float(rhino_version),
                             is_ide_file=ide_file)
     y_data = calibrate_data(y_data, h5_helper._get_sensitivity_xyz()[0],
-                            float(global_config.accelerometer_max_voltage),
+                            accelerometer_max_voltage=float(global_config.accelerometer_max_voltage),
                             rhino_version=float(rhino_version),
                             is_ide_file=ide_file)
 

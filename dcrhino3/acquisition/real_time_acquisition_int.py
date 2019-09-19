@@ -150,6 +150,7 @@ class RTAHandler(threading.Thread):
 
     def __init__(self, raw_trace_q, rta_q):
         threading.Thread.__init__(self)
+        self.daemon = True
         self._raw_trace_q = raw_trace_q
         self.rta_q = rta_q
 
@@ -241,6 +242,7 @@ class RawTraceGenerator(threading.Thread):
 
     def __init__(self, healthy_packets_q):
         threading.Thread.__init__(self)
+        self.daemon = True
         self._healty_packets_q = healthy_packets_q
         self.raw_trace_q = queue.Queue()
         self.current_trace_time = None
@@ -293,6 +295,7 @@ class PacketDecoder(threading.Thread):
 
     def __init__(self, raw_packets_q):
         threading.Thread.__init__(self)
+        self.daemon = True
         self._raw_packets_q = raw_packets_q
         self.healthy_packets_q = queue.Queue()
         self.info_packets_q = queue.Queue()
@@ -343,7 +346,10 @@ class PacketDecoder(threading.Thread):
                             self.healthy_packets_q.put(packet)
                 else:
                     #Todo: deal with info messages
-                    pass
+                    print("Received Info Message")
+                    self.current_batt = packet.batt
+                    self.current_temp = packet.temp
+                    self.tx_status = TXStatus.SLEEPING
             except:
                 print("Packet Decoder Exception: {}".format(sys.exc_info()))
 
@@ -351,6 +357,7 @@ class PacketDecoder(threading.Thread):
 class SerialThread(threading.Thread):
     def __init__(self, comport, config):
         threading.Thread.__init__(self)
+        self.daemon = True
         self.brate = config.baud_rate
         self.cport = serial.Serial(comport, self.brate, timeout=1.0)
         self.pktlen = config.packet_length
@@ -445,6 +452,7 @@ class RhinoMainAcquisition(threading.Thread):
 
     def __init__(self, trace_data_q):
         threading.Thread.__init__(self)
+        self.daemon = True
         self.trace_data_q = trace_data_q
         if not os.path.exists(run_folder_path):
             os.makedirs(run_folder_path)

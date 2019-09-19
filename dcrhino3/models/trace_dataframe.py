@@ -325,10 +325,10 @@ class TraceData(object):
             global_config = None
         """
         all_columns = list(self.dataframe.columns)
-        max_shape = (None,)
         h5f = h5py.File(path, 'a')
         for column in all_columns:
             dtype = np.float32
+            max_shape = (None,)
             if column[-9:] == "ial_trace":
                 # dtype = np.float32
                 data = list([self.dataframe[column][0],])
@@ -404,7 +404,10 @@ class TraceData(object):
         global_config_jsons = json.loads(unicode_string)
         for file_id, file_config in global_config_jsons.items():
             global_config = Config()
-            global_config.set_data_from_json(json.loads(file_config))
+            if type(file_config) == str:
+                file_config = json.loads(file_config)
+            global_config.set_data_from_json(file_config)
+
             self.add_global_config(global_config, str(file_id))
         #</config>
 

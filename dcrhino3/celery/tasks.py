@@ -8,6 +8,9 @@ from dcrhino3.process_flow.process_flow import ProcessFlow
 from dcrhino3.models.env_config import EnvConfig
 import json
 
+import matplotlib
+matplotlib.use('Svg')
+
 app = Celery('dcrhino3.celery.tasks', backend='rpc://', broker='pyamqp://guest@localhost//')
 
 #@app.task

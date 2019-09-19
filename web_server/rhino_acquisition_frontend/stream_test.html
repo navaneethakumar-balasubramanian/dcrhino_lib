@@ -60,7 +60,7 @@
         function bodyLoadHandler() {
             // Use require to load script.js. The object which the script returns
             // will be passed to your callback function
-            require(['js/stream_test.js'], function(App) {
+            require(['js/stream_test1.js'], function(App) {
                 // Call initialize function which we created in script.js
 
                 App.init();
@@ -73,7 +73,13 @@
     <body onload="bodyLoadHandler()">
     <canvas id="axial" style="width:100%"></canvas>
     <canvas id="tangential" style="width:100%"></canvas>
-<!--  <a class="btn btn-dark" role="button" href="/stop_acquisition">Stop Acquisition</a>-->
+    <canvas id="health" style="width:100%"></canvas>
+    <canvas id="rssi"></canvas>
+    <canvas id="packets"></canvas>
+    <canvas id="batt"></canvas>
+    <canvas id="temp"></canvas>
+    <canvas id="acceleration"></canvas>
+  <a class="btn btn-dark" role="button" href="/stop_acquisition">Stop Acquisition</a>
 </body>
 </html>
 
