@@ -359,7 +359,7 @@ def process_holes_with():
     holes = req_json['blasthole_obs']
     process_flow_name = str(req_json['process_flow'])
     process_flow_full_path = env_config.get_process_flow_folder(mine_name) + process_flow_name
-    now = datetime.datetime.now()
+    now = datetime.now()
     process_id = int(now.strftime("%s"))
     acorr_files_folder = env_config.get_hole_h5_interpolated_cache_folder(mine_name)
     for hole in holes:
