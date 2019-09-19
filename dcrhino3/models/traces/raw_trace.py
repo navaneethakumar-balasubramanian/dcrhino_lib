@@ -6,14 +6,18 @@ import pandas as pd
 import pdb
 import time
 
+import scipy.signal as ssig
 
+from dcrhino3.acquisition.supporting_acquisition import calibrate_data
 from dcrhino3.models.config import Config
 from dcrhino3.models.trace_dataframe import TraceData
-from dcrhino3.helpers.h5_helper import H5Helper, save_np_array_to_h5_file, save_dataframe_to_h5_file
-from dcrhino3.helpers.general_helper_functions import init_logging, interpolate_data, calibrate_data, fft_data
+from dcrhino3.helpers.h5_helper import H5Helper#, save_np_array_to_h5_file, save_dataframe_to_h5_file
+from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.process_flow.modules.trace_processing.autocorrelate import autocorrelate_trace
 from dcrhino3.signal_processing.filters import butter_bandpass, butter_highpass, butter_lowpass
-import scipy.signal as ssig
+from dcrhino3.signal_processing.interpolation import interpolate_data
+from dcrhino3.signal_processing.spectral_methods import fft_data
+
 
 logger = init_logging(__name__)
 
@@ -176,7 +180,7 @@ class RawTraceData(TraceData):
         logger.info("Took %s seconds to resample %s traces" % (time_interval, len(df)))
         return df
 
-    def interpolate_1d_component_array(self, raw_timestamps, component_array, ideal_timestamps, kind="quadratic"):
+    def interpolate_1d_component_array(self, raw_timestamps, component_array, ideal_timestamps, kind="linear"):
         # <Numpy is a lot faster and it was the legacy method we have been using so will continue using the
         # Extrapolation capabilities>
         # interp_data = np.interp(ideal_timestamps, raw_timestamps,component_array)

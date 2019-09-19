@@ -101,10 +101,11 @@ class RhinoDisplay(object):
                         ncol=int(round(len(leg_list)/3))
                     )
 
-
-
+        plt.ioff()
         if output_path:
-            plt.savefig(output_path,dpi=300)
+           # print("got here ")
+            plt.savefig(output_path,format='png')
+            #print("got here 2")
         if show:
             plt.show(block=True)
         #plt.close()

@@ -39,6 +39,7 @@
         </v-layout>
 
         <v-layout row wrap v-if="processed">
+          <v-btn outline color="dark-blue">Processed.csv</v-btn>
           <v-flex xs12 v-for="image in processed.images">
             <v-img :src="get_image(image)"></v-img>
           </v-flex>
@@ -211,6 +212,7 @@
               </v-layout>
             </v-card>
           </v-flex>
+
           <v-btn outline color="dark-blue">Processed.csv</v-btn>
           <v-btn outline color="dark-blue">Acorr.h5</v-btn>
         </v-layout>

@@ -20,8 +20,8 @@ import json
 import scipy.signal as ssig
 from dcrhino3.models.config2 import Config
 
+from dcrhino3.acquisition.supporting_acquisition import calibrate_data
 from dcrhino3.helpers.h5_helper import H5Helper
-from dcrhino3.helpers.general_helper_functions import calibrate_data
 home = os.path.expanduser("~/")
 
 def make_spectral_qc_plot(h5_helper, components_to_plot=['x', 'y'],

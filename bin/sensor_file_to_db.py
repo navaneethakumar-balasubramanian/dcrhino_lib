@@ -3,6 +3,7 @@ import os
 os.environ['MKL_NUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 os.environ['OMP_NUM_THREADS'] = '1'
+from multiprocessing import Process
 from multiprocessing import Pool
 import traceback
 import argparse
@@ -16,12 +17,14 @@ import numpy as np
 import h5py
 import time
 from dcrhino3.models.trace_dataframe import TraceData
-from dcrhino3.models.config import Config
+from dcrhino3.models.config2 import Config
 from dcrhino3.helpers.h5_helper import H5Helper
 from dcrhino3.helpers.sensor_file_manager import SensorFileManager
 from dcrhino3.models.traces.raw_trace import RawTraceData
 from dcrhino3.models.env_config import EnvConfig
-from dcrhino3.helpers.general_helper_functions import init_logging,splitDataFrameIntoSmaller,init_logging_to_file,file_as_bytes
+from dcrhino3.helpers.dataframe_helpers import split_data_frame_into_smaller
+from dcrhino3.helpers.general_helper_functions import init_logging
+from dcrhino3.helpers.general_helper_functions import init_logging_to_file, file_as_bytes
 import hashlib
 import os
 from dcrhino3.helpers.rhino_db_helper import RhinoDBHelper
@@ -105,7 +108,7 @@ def save_to_db(sql_db_helper,h5_file_path,min_ts_df,global_config,min_ts,max_ts,
                                              str(global_config.sensor_serial_number),
                                              str(global_config.digitizer_serial_number), min_ts,
                                              max_ts,
-                                             json.dumps(vars(global_config), indent=4), file_type,
+                                             global_config.pipeline_json_string, file_type,
                                              status='valid',
                                              file_name=os.path.basename(h5_file_path),
                                              original_file_record_day=original_file_record_day,
@@ -116,6 +119,7 @@ def save_to_db(sql_db_helper,h5_file_path,min_ts_df,global_config,min_ts,max_ts,
     logger.info("Adding this file traces to clickhouse sensor_file_acorr_traces")
     clickhouse_helper = ClickhouseHelper(conn=conn)
     autcorrelated_dataframe = prepare_to_save(autcorrelated_dataframe, file_id, original_file_record_day)
+    autcorrelated_dataframe.relative_timestamp = autcorrelated_dataframe.relative_timestamp.astype(int)
     clickhouse_helper.sensor_file_acorr_trace.add_pandas_to_table(autcorrelated_dataframe)
 
 
@@ -156,6 +160,9 @@ def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000)
     except AttributeError:
         logger.warning("this warning will be removed once the upsample factor is coming from the global cfg")
         global_config.output_sampling_rate = float(global_config.output_sampling_rate) * upsample_factor
+
+
+
 
     calibrated_dataframe = raw_trace_data.calibrate_l1h5(l1h5_dataframe, global_config)
     resampled_dataframe = raw_trace_data.resample_l1h5(calibrated_dataframe, global_config)
@@ -204,15 +211,11 @@ def raw_trace_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000)
 
 def acorr_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
     h5f = h5py.File(h5_file_path, 'r+')
-    if 'global_config_jsons' in h5f.attrs.keys():
-        unicode_string = h5f.attrs['global_config_jsons']
-        global_config_jsons = json.loads(unicode_string)
-        for file_id, file_config in global_config_jsons.items():
-            global_config = Config()
-            global_config.set_data_from_json(json.loads(file_config))
-    else:
-        h5_helper = H5Helper(h5f, False, False)
-        global_config = Config(h5_helper.metadata)
+
+    h5_helper = H5Helper(h5f, False, False)
+    #global_config = Config(h5_helper.metadata)
+    global_config = h5_helper.config
+
 
     conn = env_config.get_rhino_db_connection_from_mine_name(global_config.mine_name)
     sql_conn = env_config.get_rhino_sql_connection_from_mine_name(global_config.mine_name)
@@ -238,16 +241,18 @@ def acorr_h5_to_db(h5_file_path, env_config, min_ts, max_ts,chunk_size=5000):
     l1h5_dataframe = raw_trace_data.dataframe
 
     for column in COMPONENT_IDS:
-        data_array = np.atleast_2d(list(l1h5_dataframe[column + "_trace"]))
-        count_non_zeroes = np.count_nonzero(data_array)
-        if count_non_zeroes == 0:
-            l1h5_dataframe.drop([column + "_trace"], axis=1, inplace=True)
-            min_accel = "min_"+column+"_acceleration"
-            max_accel = "max_" + column + "_acceleration"
-            if min_accel in l1h5_dataframe.columns:
-                l1h5_dataframe.drop([min_accel], axis=1, inplace=True)
-            if max_accel in l1h5_dataframe.columns:
-                l1h5_dataframe.drop([max_accel], axis=1, inplace=True)
+        trace_column_name = column + "_trace"
+        if trace_column_name in l1h5_dataframe.columns:
+            data_array = np.atleast_2d(list(l1h5_dataframe[column + "_trace"]))
+            count_non_zeroes = np.count_nonzero(data_array)
+            if count_non_zeroes == 0:
+                l1h5_dataframe.drop([column + "_trace"], axis=1, inplace=True)
+                min_accel = "min_"+column+"_acceleration"
+                max_accel = "max_" + column + "_acceleration"
+                if min_accel in l1h5_dataframe.columns:
+                    l1h5_dataframe.drop([min_accel], axis=1, inplace=True)
+                if max_accel in l1h5_dataframe.columns:
+                    l1h5_dataframe.drop([max_accel], axis=1, inplace=True)
 
     min_ts_df = l1h5_dataframe['timestamp'].min()
     l1h5_dataframe['timestamp'] = l1h5_dataframe['timestamp'] - min_ts_df
@@ -268,7 +273,7 @@ if __name__ == '__main__':
 
     env_config = EnvConfig(args.env_file)
     files = glob2.glob(args.src_path)
-    
+
     logger.info("Found " + str(len(files)) + " files" )
 
     sensor_file_manager = SensorFileManager(env_config)

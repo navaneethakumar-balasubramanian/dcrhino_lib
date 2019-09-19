@@ -15,10 +15,11 @@ from dcrhino3.models.metadata import Metadata
 import json
 from dcrhino3.models.config2 import Config
 from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
-from dcrhino3.helpers.config_file_helper import update_global_config, transform_configparser_to_config2
+from dcrhino3.helpers.config_file_helper import update_global_config, transform_configparser_to_config2, transform_oldconfigjson_to_config2
 import h5py
 import pdb
 from dcrhino3.models.trace_dataframe import TraceData
+from dcrhino3.models.drill.drill_string_component import DrillStringComponent
 
 logger = init_logging(__name__)
 file_logger = init_logging_to_file(__name__)
@@ -248,10 +249,16 @@ class H5Helper:
             c = transform_configparser_to_config2(old_metadata)
         else:
             global_config_json = json.loads(self.h5f.attrs["global_config_jsons"])
-            keys = list(global_config_json.keys())
-            first_config = global_config_json[keys[0]]
-            c = Config()
-            c.set_data_from_json(first_config)
+            if type(global_config_json[list(global_config_json.keys())[0]]) == str:
+                temp = json.loads(global_config_json[list(global_config_json.keys())[0]])
+            else:
+                temp = global_config_json[list(global_config_json.keys())[0]]
+
+            if 'drill_string_components' not in temp.keys():
+                c = transform_oldconfigjson_to_config2(temp)
+            else:
+                c = Config()
+                c.set_data_from_json(temp)
         return c
 
     def save_field_config_to_h5(self, config=None):

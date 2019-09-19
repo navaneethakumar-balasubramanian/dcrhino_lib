@@ -126,6 +126,23 @@ def axis_lims_method_1(data, lim_type):
         return axis_lims
 
 
-        
+def get_xlims(X):
+    """
+    20190906: had some debugging issues with NaNs in the x-axis.  This should not happen, and
+    it is fixed now, but in future using this method for getting X[0] and X[-1] will catch those NaN
+    :param X: numpy array indepentent variable, usually depth, but could be time.
+    :return:
+    """
+    if np.isfinite(X[0]):
+        X0 = X[0]
+    else:
+        logger.warning("looks as if there are NaN in the x-axis values, not good")
+        X0 = np.nanmin(X)
+    if np.isfinite(X[-1]):
+        X1 = X[-1]
+    else:
+        logger.warning("looks as if there are NaN in the x-axis values, not good")
+        X1 = np.nanmax(X)
+    return X0, X1
         
     

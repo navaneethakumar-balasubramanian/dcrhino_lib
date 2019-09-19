@@ -39,14 +39,18 @@ class Config(object):
         """
         self.acquisition_config = acquisition_config
         self.files_keys = dict()
-        if acquisition_config:
-            config_files_json = json.load(open(os.path.join(ACQUISITION_PATH, "acquisition_config.cfg")))
-            for key in config_files_json.keys():
-                self.files_keys[key] = dict()
-                for config_file in config_files_json[key]:
-                    config_file_json = json.load(open(os.path.join(ACQUISITION_PATH, config_file)))
-                    self.files_keys[key][config_file] = config_file_json.keys()
-                    self.set_data_from_json(config_file_json)
+
+        config_files_json = json.load(open(os.path.join(ACQUISITION_PATH, "acquisition_config.cfg")))
+        for key in config_files_json.keys():
+            self.files_keys[key] = dict()
+            for config_file in config_files_json[key]:
+                config_file_json = json.load(open(os.path.join(ACQUISITION_PATH, config_file)))
+                self.files_keys[key][config_file] = list(config_file_json.keys())
+                self.set_data_from_json(config_file_json)
+
+        if not acquisition_config:
+            self.clear_all_keys()
+
         if json_data is not None:
             self.set_data_from_json(json_data)
         return
@@ -77,7 +81,7 @@ class Config(object):
         :return:a dictionary with all the key/value pairs of all the files that are part of the files_type
         """
         if files_type in self.files_keys.keys():
-            pipeline_files = self.files_keys[files_type].keys()
+            pipeline_files = list(self.files_keys[files_type].keys())
             pipeline_json = dict()
             for pipeline_file in pipeline_files:
                 for key in self.files_keys[files_type][pipeline_file]:
@@ -258,6 +262,8 @@ class Config(object):
         return int(self.sampling_rate * self.spiking_decon_filter_duration)
 
     def set_data_from_json(self, data):
+        if not isinstance(data, dict):
+            data = json.loads(data)
         for _key in data.keys():
             self.__dict__[_key] = data[_key]
 
@@ -297,7 +303,7 @@ class Config(object):
         self.files_keys["pipeline_files"] = dict()
         for config_file in config_files_json["pipeline_files"]:
             config_file_json = json.load(open(os.path.join(ACQUISITION_PATH, config_file)))
-            self.files_keys["pipeline_files"][config_file] = config_file_json.keys()
+            self.files_keys["pipeline_files"][config_file] = list(config_file_json.keys())
             self.set_data_from_json(data)
 
     def _get_num_decon_taps(self, deconvolution_filter_duration, sampling_rate):
@@ -333,7 +339,7 @@ class Config(object):
         Returns:
             (float): duration of trimmed trace
         """
-        duration = self.max_lag_trimmed_trace - self.min_lag_trimmed_trace
+        duration = float(self.max_lag_trimmed_trace) - float(self.min_lag_trimmed_trace)
         return duration
 
 

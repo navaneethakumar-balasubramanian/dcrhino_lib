@@ -11,7 +11,52 @@ file_logger = init_logging_to_file(__name__)
 
 
 
+def transform_oldconfigjson_to_config2(config_old):
+    try:
+        if isinstance(config_old, dict) is False:
+            config_old = json.loads(config_old)
 
+
+        c = Config()
+        c.set_data_from_json(config_old)
+        bpf = dict()
+        sensitivities = dict()
+        components = list()
+        for key in config_old.keys():
+            value = config_old[key]
+            #print (key,value)
+            if key in c.keys():
+                if key in ["drill_string_steel_od", "drill_string_total_length", "sensor_position", "bit_size"]:
+                    cp_value_items = str(value).split(",")
+                    cp_value = cp_value_items[0]
+                    if len(cp_value_items) > 1:
+                        cp_units = cp_value_items[1]
+                    else:
+                        cp_units = 3
+                    value_dict = {"value": cp_value, "units": cp_units}
+                    value = value_dict
+                    setattr(c, key, value)
+                elif key == "comments":
+                    value = filter(lambda x: x in string.printable, value)
+                    setattr(c, key, "".join(list(value)))
+                else:
+                    setattr(c, key, value)
+            elif "trapezoidal" in key:
+                bpf[key] = value
+            elif "sensitivity" in key:
+                sensitivities[key] = value
+            elif "_string_component" in key:
+                dsc = DrillStringComponent(gui_string=value)
+                components.append(dsc.to_dict())
+
+
+        setattr(c, "drill_string_components", components)
+        setattr(c, "bpf", bpf)
+        setattr(c, "sensor_sensitivity", sensitivities)
+
+        return c
+    except:
+        print(sys.exc_info())
 
 def transform_configparser_to_config2(config, output_to_file=False):
     try:
@@ -22,8 +67,7 @@ def transform_configparser_to_config2(config, output_to_file=False):
             config_path = config
             cp = ConfigParser.ConfigParser()
             cp.read(config_path)
-        c = Config(acquisition_config=True)
-        c.clear_all_keys()
+        c = Config()
         bpf = dict()
         sensitivities = dict()
         components = list()
@@ -40,9 +84,13 @@ def transform_configparser_to_config2(config, output_to_file=False):
                             cp_units = 3
                         value_dict = {"value": cp_value, "units": cp_units}
                         value = value_dict
+                        setattr(c, option, value)
                     elif option == "comments":
                         value = filter(lambda x: x in string.printable, value)
-                    setattr(c, option, value)
+                        setattr(c, option, "".join(list(value)))
+                    else:
+                        setattr(c, option, value)
+
                 elif "trapezoidal" in option:
                     value = cp.get(section, option)
                     bpf[option] = value

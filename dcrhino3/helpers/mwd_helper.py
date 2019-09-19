@@ -350,6 +350,8 @@ class MWDHelper():
     def try_creating_missing_columns(self,mwd_df):
         if 'hole_id' not in mwd_df.columns and 'hole_name' in mwd_df.columns:
             mwd_df['hole_id'] = mwd_df.hole_name
+        if 'hole_name' not in mwd_df.columns and 'hole' in mwd_df.columns:
+            mwd_df['hole_name'] = mwd_df.hole
         if 'hole_name' not in mwd_df.columns and 'hole_id' in mwd_df.columns:
             mwd_df['hole_name'] = mwd_df.hole_id
         return mwd_df

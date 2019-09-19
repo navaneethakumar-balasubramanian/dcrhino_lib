@@ -30,10 +30,15 @@ def mergey_mc_mergealot(new_features_df, old_dataframe):
     1. Find traces (array-type elements) in the new_features dataframe and
     and overwrite their corresponding old dataframe, then use pandas merge
     on the rest of the columns
+
+    20190906: Careful! The indices here can be messed up.
+    re-index the new_features_df to have same indices as old_dataframe
     """
     common_column_labels = list(set(new_features_df.columns).intersection(set(old_dataframe.columns)))
     old_dataframe.update(new_features_df, overwrite=True)
     new_features_df.drop(common_column_labels, axis=1, inplace=True)
+    #new_features_df.reindex(index=old_dataframe.index)
+    new_features_df.set_index(old_dataframe.index, inplace=True)
     merged = pd.concat([new_features_df, old_dataframe], axis=1)
     return merged
 

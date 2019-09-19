@@ -35,7 +35,7 @@ from dcrhino3.process_flow.modules.features_extraction.j2 import J2FeaturesModul
 from dcrhino3.process_flow.modules.features_extraction.k0 import K0FeaturesModule
 from dcrhino3.process_flow.modules.features_extraction.b0 import B0FeaturesModule
 
-from dcrhino3.process_flow.modules.log_processing.binning_module import BinningModule
+#from dcrhino3.process_flow.modules.log_processing.binning_module import BinningModule
 from dcrhino3.process_flow.modules.log_processing.rhino_physics import RhinoPhysicsModule
 
 from dcrhino3.process_flow.modules.plotters.qc_plotter_module import QCPlotterModule
@@ -59,7 +59,7 @@ from dcrhino3.unstable.multipass_util import update_acorr_with_resonance_info
 #from dcrhino3.unstable.hacks.bma_hack import bma_hack_20190606
 from dcrhino3.unstable.multipass_util import get_depths_at_which_steels_change
 
-
+import sys
 logger = init_logging(__name__)
 
 
@@ -89,7 +89,7 @@ class ProcessFlow:
         self.datetime_str = self.now.strftime("%Y%m%d-%H%M%S")
         self.env_config = None
         self.modules = {
-            "binning": BinningModule,
+            #"binning": BinningModule,
             "rhino_physics": RhinoPhysicsModule,
             "j0": J0FeaturesModule,
             "j1": J1FeaturesModule,
@@ -176,7 +176,16 @@ class ProcessFlow:
             for module in modules_json:
                 process_counter += 1
                 module_output_path = os.path.join(process_flow_output_path)
+                if module['type'] not in self.modules:
+                    logger.warn("Ignoring this type of module {}".format(module['type']) )
+                    continue
                 module = self.modules[module['type']](module, module_output_path,self,process_counter)
+                is_valid = module.validate()
+                if is_valid is False:
+                    raise Exception("Invalid module {}".format(module.id) )
+
+
+
                 if subset_index is not False:
                     module.subset_id = subset_index
                 module._components_to_process = self.components_to_process
@@ -332,7 +341,7 @@ class ProcessFlow:
         return trace_data , process_json
 
 
-    def split_subsets(self,process_json,subsets,trace_data):
+    def split_subsets(self, process_json, subsets, trace_data):
         subsets_objs = []
         start_depth = 0
         max_depth = trace_data.dataframe.measured_depth.max()
