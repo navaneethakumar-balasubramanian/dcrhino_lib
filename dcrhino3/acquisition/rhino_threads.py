@@ -26,6 +26,7 @@ dc_file_logger = init_logging_to_file(__name__)
 class NetworkThread(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
+        self.daemon = True
         self._network_status = "No Connection"
         # self._counter = 0
 
@@ -48,6 +49,7 @@ class NetworkThread(threading.Thread):
 class GPSThread(threading.Thread):
     def __init__(self, ignore_gpsd):
         threading.Thread.__init__(self)
+        self.daemon = True
         self._ignore_gpsd = ignore_gpsd
         if not ignore_gpsd:
             self.gps_socket = gps3.GPSDSocket()
@@ -79,6 +81,7 @@ class GPSThread(threading.Thread):
 class USBportThread(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
+        self.daemon = True
         self.context = pyudev.Context()
         self.monitor = pyudev.Monitor.from_netlink(self.context)
         self.monitor.filter_by(subsystem='usb')
@@ -118,6 +121,7 @@ class USBportThread(threading.Thread):
 class IDEConverterThread(threading.Thread):
     def __init__(self, global_config):
         threading.Thread.__init__(self)
+        self.daemon = True
         self.files_q = Queue.Queue()
         self.global_config = global_config
         thread = threading.Thread(target=self.run, args=())

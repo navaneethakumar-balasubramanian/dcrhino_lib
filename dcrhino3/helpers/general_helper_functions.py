@@ -581,3 +581,12 @@ def add_leading_zeors_to_timestamp_for_file_names(elapsed):
     if len(elapsed) < 5:
         leading_zeros = "0" * (5 - len(elapsed))
     return("{}{}".format(leading_zeros,elapsed))
+
+def remove_unicode(list_of_unicodes):
+    """
+    pandas columns always has u'name' style.  This can be a PITA when you have
+    many such columns and need to paste and work with them.  THis strips the u
+    list_of_unicodes:
+    """
+    list_of_strings = [str(x) for x in list_of_unicodes]
+    return list_of_strings

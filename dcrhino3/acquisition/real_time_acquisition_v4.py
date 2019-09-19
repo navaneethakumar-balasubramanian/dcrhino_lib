@@ -516,6 +516,7 @@ class SimulationThread(threading.Thread):
             packet.z = z[index]
             packet.packet_type = 0
             self.file_flusher.current_timestamp = ts[index]
+            self.file_flusher.sequence = seq[index]
             self.file_flusher.save_row_to_processing_q(packet)
         sys.exit(0)
 
@@ -557,6 +558,10 @@ class CollectionDaemonThread(threading.Thread):
                     counter_changes = buffer_entry["counter_changes"]
                     dataframe_row = [entry_timestamp, packet.tx_sequence, sequence, packet.x, packet.y, packet.z,
                                      packet.rssi, packet.temp, packet.batt]
+
+                    if not packet.valid_trace:
+                        interp_kind = "linear"
+
                     # if the packet does not belong to the current trace we process the data and then append
                     # the current packet to the freshly created bufferThisSecond
                     if self.lastSecond != int(entry_timestamp):
@@ -602,11 +607,6 @@ class CollectionDaemonThread(threading.Thread):
                             self.logQ.put(m)
                             self.displayQ.put(m)
 
-                            if packet.valid_trace:
-                                interp_kind = "quadratic"
-                            else:
-                                interp_kind = "linear"
-
                             raw_trace_data = RawTraceData()
                             component_trace_dict = {}
                             acceleration_dict = {}
@@ -624,7 +624,8 @@ class CollectionDaemonThread(threading.Thread):
 
                             number_of_samples = int(config.auto_correlation_trace_duration *
                                                     config.output_sampling_rate)
-                            component_labels = ["axial", "tangential", "radial"]
+                            # component_labels = ["axial", "tangential", "radial"]
+                            component_labels = config.components_to_process
                             for label in component_labels:
                                 calibrated_data = raw_trace_data.calibrate_1d_component_array(
                                     component_trace_raw_data[label], config,
@@ -661,6 +662,7 @@ class CollectionDaemonThread(threading.Thread):
                                               "disk_usage": disk_usage,
                                               "filename": filename})
                         self.bufferThisSecond = list()
+                        interp_kind = "quadratic"
                     self.bufferThisSecond.append(dataframe_row)
                 else:
                     # print("collection daemon buffer empty")
@@ -670,9 +672,11 @@ class CollectionDaemonThread(threading.Thread):
                 logger.error("WEIRD ERROR TRYING TO APPEND TO BUFFER THIS SECOND AFTER IT WAS CONVERTED TO NUMPY ON "
                              "CLOCK ROLLOVER")
                 self.bufferThisSecond = list()
+                interp_kind = "quadratic"
             except:
                 logger.error("Collection Daemon Exception: {}".format(sys.exc_info()))
                 self.bufferThisSecond = list()
+                interp_kind = "quadratic"
 
 
 def main_run(run=True, **kwargs):
@@ -788,7 +792,8 @@ def main_run(run=True, **kwargs):
     last_tracetime = time.time()
     counterchanges = 0
     channels = ["X", "Y", "Z"]
-    components = ["axial", "tangential", "radial"]
+    # components = ["axial", "tangential", "radial"]
+    components = config.components_to_process
     sensor_axial_axis = config.get_component_index("axial")
     sensor_tangential_axis = config.get_component_index("tangential")
     sensor_radial_axis = config.get_component_index("radial")
@@ -889,10 +894,11 @@ def main_run(run=True, **kwargs):
             now_array.pop(0)
             max_axial_acceleration.pop(0)
             max_tangential_acceleration.pop(0)
-            max_radial_acceleration.pop(0)
             min_axial_acceleration.pop(0)
             min_tangential_acceleration.pop(0)
-            min_radial_acceleration.pop(0)
+            if "radial" in config.components_to_process:
+                max_radial_acceleration.pop(0)
+                min_radial_acceleration.pop(0)
             disk_usage.pop(0)
             drift.pop(0)
 
@@ -905,10 +911,11 @@ def main_run(run=True, **kwargs):
             now_array.append(now)
             max_axial_acceleration.append(trace["acceleration"]["axial"]["max"])
             max_tangential_acceleration.append(trace["acceleration"]["tangential"]["max"])
-            max_radial_acceleration.append(trace["acceleration"]["radial"]["max"])
             min_axial_acceleration.append(trace["acceleration"]["axial"]["min"])
             min_tangential_acceleration.append(trace["acceleration"]["tangential"]["min"])
-            min_radial_acceleration.append(trace["acceleration"]["radial"]["min"])
+            if "radial" in config.components_to_process:
+                max_radial_acceleration.append(trace["acceleration"]["radial"]["max"])
+                min_radial_acceleration.append(trace["acceleration"]["radial"]["min"])
             disk_usage.append(trace["disk_usage"])
             drift.append(fflush.drift)
             counterchanges = trace["counter_changes"]
@@ -975,13 +982,16 @@ def main_run(run=True, **kwargs):
 
 def write_data_to_h5_files(h5f_path, trace_data, trace):
     # pdb.set_trace()
-    df = pd.DataFrame(columns=["timestamp", "rssi", "batt", "temp", "packets", "max_axial_acceleration",
-                               "max_tangential_acceleration", "max_radial_acceleration",
-                               "min_axial_acceleration", "min_tangential_acceleration", "min_radial_acceleration",
-                               "axial_trace", "tangential_trace", "radial_trace"])
+    columns = ["timestamp", "rssi", "batt", "temp", "packets"]
+
+    for component in config.components_to_process:
+        columns.append("max_{}_acceleration".format(component))
+        columns.append("min_{}_acceleration".format(component))
+        columns.append("{}_trace".format(component))
+
+    df = pd.DataFrame(columns=columns)
     axial_calibrated_trace = trace_data["trace_data"]["axial"]["axial_calibrated"]
     tangential_calibrated_trace = trace_data["trace_data"]["tangential"]["tangential_calibrated"]
-    radial_calibrated_trace = trace_data["trace_data"]["radial"]["radial_calibrated"]
     df["timestamp"] = trace_data["timestamp"]
     df["rssi"] = trace_data["rssi"]
     df["batt"] = trace_data["batt"]
@@ -989,13 +999,17 @@ def write_data_to_h5_files(h5f_path, trace_data, trace):
     df["packets"] = len(axial_calibrated_trace)
     df["max_axial_acceleration"] = np.asarray([np.max(axial_calibrated_trace)],)
     df["max_tangential_acceleration"] = np.asarray([np.max(tangential_calibrated_trace)],)
-    df["max_radial_acceleration"] = np.asarray([np.max(radial_calibrated_trace)],)
     df["min_axial_acceleration"] = np.asarray([np.min(axial_calibrated_trace)],)
     df["min_tangential_acceleration"] = np.asarray([np.min(tangential_calibrated_trace)],)
-    df["min_radial_acceleration"] = np.asarray([np.min(radial_calibrated_trace)],)
-    df["axial_trace"] = list([trace_data["trace_data"]["axial"]["axial_auto_correlated"], ])
-    df["tangential_trace"] = list([trace_data["trace_data"]["tangential"]["tangential_auto_correlated"], ])
-    df["radial_trace"] = list([trace_data["trace_data"]["radial"]["radial_auto_correlated"], ])
+    if "radial" in config.components_to_process:
+        radial_calibrated_trace = trace_data["trace_data"]["radial"]["radial_calibrated"]
+        df["min_radial_acceleration"] = np.asarray([np.min(radial_calibrated_trace)],)
+        df["max_radial_acceleration"] = np.asarray([np.max(radial_calibrated_trace)], )
+    for component in config.components_to_process:
+        df["{}_trace".format(component)] = list([trace_data["trace_data"][component]["{}_auto_correlated".format(
+            component)], ])
+    # df["tangential_trace"] = list([trace_data["trace_data"]["tangential"]["tangential_auto_correlated"], ])
+    # df["radial_trace"] = list([trace_data["trace_data"]["radial"]["radial_auto_correlated"], ])
     trace.dataframe = df
     trace.realtime_append_to_h5(h5f_path)
 

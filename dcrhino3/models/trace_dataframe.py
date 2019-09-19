@@ -325,10 +325,10 @@ class TraceData(object):
             global_config = None
         """
         all_columns = list(self.dataframe.columns)
-        max_shape = (None,)
         h5f = h5py.File(path, 'a')
         for column in all_columns:
             dtype = np.float32
+            max_shape = (None,)
             if column[-9:] == "ial_trace":
                 # dtype = np.float32
                 data = list([self.dataframe[column][0],])

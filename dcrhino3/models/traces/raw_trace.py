@@ -194,8 +194,10 @@ class RawTraceData(TraceData):
         is_ide_file = not int(global_config.sensor_type) == 2 or global_config.rhino_version is None
         if global_config.rhino_version is None:
             global_config.rhino_version = 0
-        output = calibrate_data(component_array, sensitivity, float(global_config.accelerometer_max_voltage),
-                                float(global_config.rhino_version), is_ide_file, remove_mean=remove_mean)
+        output = calibrate_data(component_array, sensitivity,
+                                accelerometer_max_voltage=float(global_config.accelerometer_max_voltage),
+                                rhino_version=float(global_config.rhino_version), is_ide_file=is_ide_file,
+                                remove_mean=remove_mean)
         return output
 
     def filter_1d_component_array(self, component_array, sampling_rate, filter_type="highpass", low=10, high=999):
