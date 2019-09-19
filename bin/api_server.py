@@ -359,15 +359,17 @@ def process_holes_with():
     holes = req_json['blasthole_obs']
     process_flow_name = str(req_json['process_flow'])
     process_flow_full_path = env_config.get_process_flow_folder(mine_name) + process_flow_name
-
+    now = datetime.datetime.now()
+    process_id = int(now.strftime("%s"))
     acorr_files_folder = env_config.get_hole_h5_interpolated_cache_folder(mine_name)
     for hole in holes:
         h5_filename = str(hole['bench_name']) + "_" + str(hole['pattern_name']) + "_" + str(hole['hole_name']) + "_" + str(hole['hole_id']) + "_" + str(hole['sensor_id']) + "_" + str(hole['digitizer_id']) + ".h5"
         acorr_file_path = acorr_files_folder + h5_filename
         #env_config_path = env_config.get_json_path()
         #env_config_path = str(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'env_config.json'))
+
         env_config_path = "/home/dev/dcrhino_lib/bin/env_config.json"
-        process_file_with_flow.delay(acorr_file_path, process_flow_full_path,env_config_path)
+        process_file_with_flow.delay(acorr_file_path, process_flow_full_path,env_config_path,process_id)
     return jsonify({"data":True})
 
 @app.route('/api/log_process_holes',methods=['GET', 'POST'])
