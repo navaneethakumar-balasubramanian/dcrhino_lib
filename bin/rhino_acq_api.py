@@ -14,12 +14,12 @@ import serial
 import queue
 import shutil
 import threading
-import pdb
+import sys
 import time
 import numpy as np
 import time
 from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
-# from dcrhino3.acquisition.real_time_acquisition_int import RhinoMainAcquisition
+from dcrhino3.acquisition.real_time_acquisition_int import RhinoMainAcquisition
 logger = init_logging(__name__)
 file_logger = init_logging_to_file(__name__)
 CACHE_IMAGE_FOLDER = "/tmp/image_cache_rhino_api/"
@@ -45,7 +45,7 @@ TRACE_DATA_Q = queue.Queue()
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>', methods=['GET', 'POST'])
 def index(path):
-    return render_template("stream_test.html")
+    return render_template("index.html")
 
 
 @app.route('/open_settings', methods=['GET'])
@@ -168,16 +168,27 @@ class SendDataThread(threading.Thread):
                     trace_dict["tangential"] = list(raw_trace_dict["trace_data"]["tangential"][
                                                         "tangential_interpolated"].astype(str))
                     trace_dict["timestamp"] = raw_trace_dict["timestamp"]
+                    trace_dict["rssi"] = raw_trace_dict["rssi"]
+                    trace_dict["packets"] = raw_trace_dict["raw_data"]["axial"].size
+                    batt = raw_trace_dict["batt"]
+                    if np.isnan(batt):
+                        batt = str(batt)
+                    trace_dict["batt"] = batt
+                    temp = raw_trace_dict["temp"]
+                    if np.isnan(temp):
+                        temp = str(temp)
+                    trace_dict["temp"] = temp
+                    trace_dict["acceleration"] = raw_trace_dict["acceleration"]
                     trace_dict["ideal_timestamps"] = list((raw_trace_dict["ideal_timestamps"]-raw_trace_dict[
                         "timestamp"]).astype(str))
-                    # trace_dict["ideal_timestamps"] = list(raw_trace_dict["ideal_timestamps"].astype(str))
-                    print(raw_trace_dict["timestamp"])
+                    print(batt, temp)
+                    # print(raw_trace_dict["timestamp"])
 
                     self.socketio.emit('data', trace_dict, broadcast=True)
                     self.idx += 1
                 time.sleep(0.5)
             except:
-                print("failed to send data")
+                print("failed to send data {}".format(sys.exec_info))
                 pass
 
 

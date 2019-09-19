@@ -19,7 +19,7 @@
       },
       {
         "name": "DATACLOUD",
-        "mines":["SBC","ATC", "DEMO1"]
+        "mines":["SBC","ATC", "DEMO1","test_mine_rhino"]
       },
       {
         "name": "DETOUR_GOLD",

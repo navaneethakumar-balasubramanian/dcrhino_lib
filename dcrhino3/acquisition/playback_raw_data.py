@@ -11,6 +11,7 @@ from dcrhino3.models.config2 import Config
 from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
 from dcrhino3.helpers.general_helper_functions import interpolate_data, calibrate_data
 from dcrhino3.acquisition.test_spectral_qc_plot import make_spectral_qc_plot
+from dcrhino3.signal_processing.filters import *
 from dcrhino3.helpers.h5_helper import H5Helper
 import shutil
 import scipy.signal as ssig
@@ -42,7 +43,7 @@ def main(args):
         # save_numpy = False
         show_plots = args.plot == "True"
         # show_plots = True
-        make_spectrum = args.spectrum
+        make_spectrum = args.spectrum == "True"
         # make_spectrum = True
 
     raw = args.raw == "True"
@@ -193,19 +194,20 @@ def main(args):
         # y_data = ((accelerometer_max_voltage/2.0)-(np.asarray(hf.get('y'),dtype=np.int32)*5.0/65535))/(x_sensitivity/1000.0)#/1e6
         # z_data = ((accelerometer_max_voltage/2.0)-(np.asarray(hf.get('z'),dtype=np.int32)*5.0/65535))/(x_sensitivity/1000.0)#/1e6
         print("IDE file")
-        x_data = calibrate_data(x_raw, sensitivity[0], is_ide_file, remove_mean=remove_mean)
-        y_data = calibrate_data(y_raw, sensitivity[0], is_ide_file, remove_mean=remove_mean)
-        z_data = calibrate_data(z_raw, sensitivity[0], is_ide_file, remove_mean=remove_mean)
+        # pdb.set_trace()
+        x_data = calibrate_data(x_raw, sensitivity[0], is_ide_file=is_ide_file, remove_mean=remove_mean)
+        y_data = calibrate_data(y_raw, sensitivity[0], is_ide_file=is_ide_file, remove_mean=remove_mean)
+        z_data = calibrate_data(z_raw, sensitivity[0], is_ide_file=is_ide_file, remove_mean=remove_mean)
     else:
         print("Rhino file")
         # import pdb
         # pdb.set_trace()
-        x_data = calibrate_data(x_raw, sensitivity[0], accelerometer_max_voltage,
-                                rhino_version, remove_mean=remove_mean)
-        y_data = calibrate_data(y_raw, sensitivity[1], accelerometer_max_voltage,
-                                rhino_version, remove_mean=remove_mean)
-        z_data = calibrate_data(z_raw, sensitivity[2], accelerometer_max_voltage,
-                                rhino_version, remove_mean=remove_mean)
+        x_data = calibrate_data(x_raw, sensitivity[0], accelerometer_max_voltage=accelerometer_max_voltage,
+                                rhino_version=rhino_version, remove_mean=remove_mean)
+        y_data = calibrate_data(y_raw, sensitivity[1], accelerometer_max_voltage=accelerometer_max_voltage,
+                                rhino_version=rhino_version, remove_mean=remove_mean)
+        z_data = calibrate_data(z_raw, sensitivity[2], accelerometer_max_voltage=accelerometer_max_voltage,
+                                rhino_version=rhino_version, remove_mean=remove_mean)
 
     # pdb.set_trace()
     output_path = os.path.dirname(fname)
@@ -295,6 +297,16 @@ def main(args):
     # data
     interp_data.append(interpolate_data(digitizer_timestamps, time_filtered_data[1], ideal_timestamps, kind=kind))#Y data
     interp_data.append(interpolate_data(digitizer_timestamps, time_filtered_data[2], ideal_timestamps, kind=kind))#Z data
+
+    bpf = args.filter
+    # pdb.set_trace()
+    if bpf is not None:
+        print("Applying BPF {}".format(bpf))
+        bpf_low, bpf_high = bpf.split(",")
+        b_filter, a_filter = butter_bandpass(float(bpf_low), float(bpf_high), float(config.output_sampling_rate))
+        interp_data[0] = ssig.filtfilt(b_filter, a_filter, interp_data[0])
+        interp_data[1] = ssig.filtfilt(b_filter, a_filter, interp_data[1])
+        interp_data[2] = ssig.filtfilt(b_filter, a_filter, interp_data[2])
 
     if save_numpy:
         print("Saving Numpy Files")
@@ -571,6 +583,7 @@ if __name__ == "__main__":
     argparser.add_argument('-spectrum', '--spectrum', help="Generate Spectrum Plot",  default=True)
     argparser.add_argument('-to', '--time_offset', help="Time offset for time axis", default=0)
     argparser.add_argument('-repeat', '--repeat_file', help='Path to the repeat file', default=None)
+    argparser.add_argument('-filter', '--filter', help="Bandpass filter to be applied to the raw data", default=None)
 
     args = argparser.parse_args()
 
