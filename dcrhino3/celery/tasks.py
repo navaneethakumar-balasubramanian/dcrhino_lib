@@ -2,6 +2,8 @@ import os
 os.environ['MKL_NUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 os.environ['OMP_NUM_THREADS'] = '1'
+os.environ['CELERYD_TASK_TIME_LIMIT'] = '300'
+
 
 from celery import Celery
 from dcrhino3.process_flow.process_flow import ProcessFlow
