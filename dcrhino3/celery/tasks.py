@@ -3,7 +3,7 @@ os.environ['MKL_NUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 os.environ['OMP_NUM_THREADS'] = '1'
 os.environ['CELERYD_TASK_TIME_LIMIT'] = '300'
-os.environ['CELERYD_MAX_TASKS_PER_CHILD'] = 1
+os.environ['CELERYD_MAX_TASKS_PER_CHILD'] = '1'
 
 
 from celery import Celery
