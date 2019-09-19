@@ -108,7 +108,7 @@ class RhinoDisplay(object):
             #print("got here 2")
         if show:
             plt.show(block=True)
-        #plt.close()
+        plt.close()
         #del fig
         #del ax
         return fig,ax
