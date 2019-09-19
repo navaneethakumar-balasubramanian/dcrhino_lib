@@ -268,7 +268,7 @@ class ProcessFlow:
 
 
     def process_file(self, process_json, acorr_h5_file_path, env_config = False, 
-                     seconds_to_process=False, return_dict=dict()):
+                     seconds_to_process=False, return_dict=dict(), process_id=False):
         """
         """
         logger.info("PROCESSING FILE:" + str(acorr_h5_file_path))
@@ -312,7 +312,8 @@ class ProcessFlow:
             print ("Saving processed results to database")
             seconds_processed = int(acorr_trace.max_ts - acorr_trace.min_ts)
             relative_output_path = "/".join(self.output_path.split('/')[-2:]) + "/"
-            process_id = int(self.now.strftime("%s"))
+            if process_id is False:
+                process_id = int(self.now.strftime("%s"))
             #print(process_id,relative_output_path,seconds_processed)
             self.rhino_sql_helper.processed_holes.add(int(self.now.strftime("%s")), seconds_processed,
                                                       acorr_trace.hole_id, acorr_trace.sensor_id,
