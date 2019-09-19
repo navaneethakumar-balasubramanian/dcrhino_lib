@@ -29,4 +29,7 @@ def process_file_with_flow(acorr_file_path,process_flow_json_path,env_config_pat
     print ("Using env config " + env_config_path)
     env_config = EnvConfig(env_config_path)
     process_flow.process_file(process_json, acorr_file_path, env_config=env_config)
+    del env_config
+    del process_flow
+    del process_json
 
