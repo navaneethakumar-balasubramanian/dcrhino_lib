@@ -28,7 +28,7 @@ logger = init_logging(__name__)
 class IntermediateFeatureDeriver(object):
     """
     Derives the following features:
-        
+
         + axial_primary_peak
         + axial_amplitude_ratio_1
         + axial_amplitude_ratio_2
@@ -49,7 +49,7 @@ class IntermediateFeatureDeriver(object):
         + tangential_reflection_coefficient_1
         + tangential_reflection_coefficient_2
         + tangential_pseudo_velocity_1
-        
+
     """
     def __init__(self, df_dict=None):#, df):
         """
@@ -67,16 +67,16 @@ class IntermediateFeatureDeriver(object):
 
     @property
     def axial_primary_peak(self):
-        return self.df_dict['axial_primary_max_amplitude']
+        return self.df_dict['axial-primary-max_amplitude']
 
 
     @property
     def axial_amplitude_ratio_1(self):
-        return self.df_dict['axial_multiple_1_max_amplitude'] / self.axial_primary_peak
+        return self.df_dict['axial-multiple_1-max_amplitude'] / self.axial_primary_peak
 
     @property
     def axial_amplitude_ratio_2(self):
-        return self.df_dict['axial_multiple_2_max_amplitude'] / self.df_dict['axial_multiple_1_max_amplitude']
+        return self.df_dict['axial-multiple_2-max_amplitude'] / self.df_dict['axial-multiple_1-max_amplitude']
 
     @property
     def axial_reflection_coefficient_1(self):
@@ -88,11 +88,11 @@ class IntermediateFeatureDeriver(object):
 
     @property
     def axial_delay_1(self):
-        return self.df_dict['axial_multiple_1_max_time'] - self.df_dict['axial_primary_max_time']
+        return self.df_dict['axial-multiple_1-max_time'] - self.df_dict['axial-primary-max_time']
 
     @property
     def axial_delay_2(self):
-        return self.df_dict['axial_multiple_2_max_time'] - self.df_dict['axial_multiple_1_max_time']
+        return self.df_dict['axial-multiple_2-max_time'] - self.df_dict['axial-multiple_1-max_time']
 
     @property
     def axial_pseudo_velocity_1(self):
@@ -117,27 +117,27 @@ class IntermediateFeatureDeriver(object):
 
     @property
     def tangential_primary_peak(self):
-        return self.df_dict['tangential_primary_max_amplitude']
+        return self.df_dict['tangential-primary-max_amplitude']
 
     @property
     def tangential_primary_peak_time(self):
-        return self.df_dict['tangential_primary_max_time']
+        return self.df_dict['tangential-primary-max_time']
 
     @property
     def tangential_delay_1(self):
-        return self.df_dict['tangential_multiple_1_max_time'] - self.tangential_primary_peak_time
+        return self.df_dict['tangential-multiple_1-max_time'] - self.tangential_primary_peak_time
 
     @property
     def tangential_delay_2(self):
-        return self.df_dict['tangential_multiple_2_max_time'] - self.df_dict['tangential_multiple_1_max_time']
+        return self.df_dict['tangential-multiple_2-max_time'] - self.df_dict['tangential-multiple_1-max_time']
 
     @property
     def tangential_amplitude_ratio_1(self):
-        return self.df_dict['tangential_multiple_1_max_amplitude'] / self.tangential_primary_peak
+        return self.df_dict['tangential-multiple_1-max_amplitude'] / self.tangential_primary_peak
 
     @property
     def tangential_amplitude_ratio_2(self):
-        return self.df_dict['tangential_multiple_2_max_amplitude'] / self.df_dict['tangential_multiple_3_max_amplitude']
+        return self.df_dict['tangential-multiple_2-max_amplitude'] / self.df_dict['tangential-multiple_3-max_amplitude']
 
     @property
     def tangential_reflection_coefficient_1(self):
@@ -156,22 +156,22 @@ class IntermediateFeatureDeriver(object):
     def derive_features(self, component_id):
         """
         Store certain features in dictionary, based on component_id.
-        
+
         Parameters:
             component_id (str): axial/tangential
-            
+
         Returns:
             (dict): derived features
-            
+
                 For axial:
-                    
+
                     + pseudo ucs
                     + axial pseudo velocity 1
                     + pseudo density
                     + axial reflection coeff
-                    
+
                 For tangential:
-                    
+
                     + tangential reflection coeff 1
                     + tangential reflection coeff 2
                     + tangential delay 1
@@ -179,24 +179,25 @@ class IntermediateFeatureDeriver(object):
         """
         if component_id == 'axial':
             self.df_dict['pseudo_ucs'] = self.pseudo_ucs
-            self.df_dict['axial_pseudo_velocity_1'] = self.axial_pseudo_velocity_1
+            self.df_dict['axial-pseudo_velocity_1'] = self.axial_pseudo_velocity_1
             self.df_dict['pseudo_density'] = self.pseudo_density
-            self.df_dict['axial_reflection_coefficient_1'] = self.axial_reflection_coefficient_1
+            self.df_dict['axial-reflection_coefficient_1'] = self.axial_reflection_coefficient_1
             try:
-                self.df_dict['axial_reflection_coefficient_2'] = self.axial_reflection_coefficient_2
+                self.df_dict['axial-reflection_coefficient_2'] = self.axial_reflection_coefficient_2
             except:
-                logger.warn("Couldnt calculate axial_reflection_coefficient_2")
-            self.df_dict['axial_delay_1'] = self.axial_delay_1
+
+                logger.warn("Couldnt calculate axial-reflection_coefficient_2")
+            self.df_dict['axial-delay_1'] = self.axial_delay_1
 
         elif component_id == 'tangential':
 
-            self.df_dict['tangential_reflection_coefficient_1'] = self.tangential_reflection_coefficient_1
+            self.df_dict['tangential-reflection_coefficient_1'] = self.tangential_reflection_coefficient_1
             try:
-                self.df_dict['tangential_reflection_coefficient_2'] = self.tangential_reflection_coefficient_2
+                self.df_dict['tangential-reflection_coefficient_2'] = self.tangential_reflection_coefficient_2
             except:
-                logger.warn("Couldnt calculate tangential_reflection_coefficient_2")
+                logger.warn("Couldnt calculate tangential-reflection_coefficient_2")
 
-            self.df_dict['tangential_delay_1'] = self.tangential_delay_1
-            self.df_dict['tangential_pseudo_velocity_1'] = self.tangential_pseudo_velocity_1
+            self.df_dict['tangential-delay_1'] = self.tangential_delay_1
+            self.df_dict['tangential-pseudo_velocity_1'] = self.tangential_pseudo_velocity_1
 
         return self.df_dict

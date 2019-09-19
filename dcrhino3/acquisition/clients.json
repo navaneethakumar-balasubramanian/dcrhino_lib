@@ -19,11 +19,19 @@
       },
       {
         "name": "DATACLOUD",
-        "mines":["TEST_MINE","NUC_TEST_MINE"]
+        "mines":["SBC","ATC", "DEMO1"]
       },
       {
         "name": "DETOUR_GOLD",
         "mines":["DETOUR_LAKE"]
+      },
+      {
+        "name": "BHP",
+        "mines":["EASTERN_RIDGE", "BMA", "GOONYELLA_RIVERSIDE"]
+      },
+      {
+        "name": "BMC",
+        "mines":["SOUTH_WALKER_CREEK"]
       }
     ]
 }

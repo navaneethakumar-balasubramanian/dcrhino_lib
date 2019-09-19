@@ -6,29 +6,117 @@ Author: kkappler
 
 Basic tools to help write Python script, mostly taken from websites.
 """
-import json
 import collections
 import datetime
 import fnmatch
 import glob
+import json
 import numpy as np
 import os
-from string import zfill
-import subprocess
+import pandas as pd
 import pdb
+#from string import zfill
+import subprocess
+import sys
 
 from collections import namedtuple
+#from scipy.interpolate import interp1d
 
 #<temporary logging>
 import logging
 
+
+def identify_time_columns(df, manual=False):
+    """
+    gets you a list of 'datelike' columns
+
+    in the case that you are reading from csv files, sometimes we have datetimes
+    and these need to be converted to pd.datetime format.  parse_dates=True
+    does not always work.  If you know the columns you want to cast as dates
+    that is OK, but if you don't then use this to get a list of datelike cols
+
+    Also Supports a manually supplied list.
+
+    Could make this use a list of accepted formats (%Y-%m-%d %H:%M:%S, etc)
+    for multiple lambda funcitons
+    """
+    #can make this iterate over strings#'%Y-%m-%d %H:%M:%S'
+    dateparse = lambda x: pd.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+
+    if manual is not False:
+        return manual
+    datetime_column_labels = []
+    row = df.iloc[0]
+    for col in df.columns:
+#        if col == 'Drilled Start Hole Timestamp':
+#            print('dd')
+#            pdb.set_trace()
+        try:
+            dateparse(row[col])
+            pd.to_datetime(row[col])
+            datetime_column_labels.append(col)
+        except:
+            message = "looks like {} is not a datetime".format(col)
+            print(message)
+    return datetime_column_labels
+
+def StandardString(s):
+    """
+    historical method from SEGY-land
+    Parameters:
+        s (str): string to be standardized
+
+    Returns:
+        (str): cleaned, standardized string with underscores instead of spaces
+    """
+    s = str(s).replace("_"," ")
+    components = s.split(" ")
+    clean_components=[]
+    string=""
+    for ch in components:
+        word = ''.join(e for e in ch if (e.isalnum() or (e in ['&','.'])))
+        clean_components.append(word)
+    for i,c in enumerate(clean_components):
+        string += c
+        if i<len(clean_components)-1:
+            string+= "_"
+    return string.upper()
+
+
+def df_column_uniquify(df):
+    df_columns = df.columns
+    new_columns = []
+    for item in df_columns:
+        counter = 0
+        newitem = item
+        while newitem in new_columns:
+            counter += 1
+            newitem = "{}_{}".format(item, counter)
+        new_columns.append(newitem)
+    df.columns = new_columns
+    return df
+
+def file_as_bytes(file):
+    with file:
+        return file.read()
+
+def is_string(val):
+    if (sys.version_info > (3, 0)):
+        return isinstance(val, str)
+
+    else:
+        # Python 2 code in this block
+        return isinstance(val, basestring)
+
+
+
 def init_logging(name):
     """
     Start a basic logger.
-    
+
     Parameters:
         name (str): name of logger
-        
+
     Returns:
         logger to record DataCloud-specific warnings, errors, and steps.
     """
@@ -36,6 +124,23 @@ def init_logging(name):
     logging.basicConfig(level = logging.INFO,format='%(asctime)s %(name)-12s \
                         %(levelname)-8s line:%(lineno)d %(funcName)s %(message)s', \
                         datefmt='%m-%d %H:%M:%S',filemode='w')
+    return logger
+
+
+def init_logging_to_file(name):
+    """
+    Start a basic logger.
+
+    Parameters:
+        name (str): name of logger
+
+    Returns:
+        logger to record DataCloud-specific warnings, errors, and steps.
+    """
+    logger = logging.getLogger(name)
+    logging.basicConfig(filename='./output.log',level=logging.INFO, format='%(asctime)s %(name)-12s \
+                        %(levelname)-8s line:%(lineno)d %(funcName)s %(message)s', \
+                        datefmt='%m-%d %H:%M:%S', filemode='w')
     return logger
 #<\temporary logging>
 
@@ -45,7 +150,7 @@ home = os.path.expanduser('~/')
 def create_folders_if_needed(path):
     """
     Creates a folder if one does not already exist.
-    
+
     Parameters:
         path(str): path to place folder
     """
@@ -55,10 +160,10 @@ def create_folders_if_needed(path):
 def var_or_dict_from_json_str(var):
     """
     Convert json string to variable or dictionary, returns them.
-    
+
     Parameters:
         var (var): json serialized string to be decoded
-        
+
     Returns:
         dictionary from json string or (var) if json.load(var) raises exception
     """
@@ -76,10 +181,10 @@ def var_or_dict_from_json_str(var):
 def dict_to_object(var):
     """
     Converts dictionary to object.
-    
+
     Raises:
         :code:`NameError: name 'namedtuple' is not defined`
-        
+
     .. warning:: Does not plug and play.
     """
     if type(var) == dict:
@@ -89,10 +194,10 @@ def dict_to_object(var):
 def json_string_to_object(_str):
     """
     Converts json string to object using json.loads()
-    
+
     Parameters:
         _str: Json string to be converted
-        
+
     Returns:
         (dict): dictionary created from json string
     """
@@ -104,38 +209,18 @@ def json_string_to_object(_str):
         for key in dict_json.keys():
             dict_json[key] = json_string_to_object(dict_json[key])
         dict_json = dict_to_object(dict_json)
-        
+
     return dict_json
 
-def splitDataFrameIntoSmaller(df, chunk_size = 10000):
-    """
-    Slices up DataFrame into small "chunks"
-    
-    Parameters:
-        df (DataFrame): to be sliced up
-        chunk_size (positive integer): max index length of each slice
-        
-    Returns:
-        (list): list of DataFrames (1 DataFrame = 1 slice)
-    """
-    listOfDf = list()
-    number_of_chunks = len(df) // chunk_size + 1
-    listOfDf = number_of_chunks * [None]
-    for i in range(number_of_chunks):
-        df_to_add_to_list = df[i*chunk_size:(i+1) * chunk_size]
-        df_to_add_to_list = df_to_add_to_list.reset_index()
-        #pdb.set_trace()
-        #df_to_add_to_list = df_to_add_to_list.copy()
-        listOfDf[i] = df_to_add_to_list
-    return listOfDf
+
 
 def count_lines(fileName):
     """
     Counts lines in file specified. (Acts like wc -l in unix)
-    
+
     Returns:
         (int): Number of lines present in fileName or -1 if file does not exist
-        
+
     Raises:
         IOError: if fileName does not exist.
     """
@@ -149,7 +234,7 @@ def count_lines(fileName):
 def count_directories(directory, **kwargs):
     """
     Count number of subdirectories in deirectory specified.
-    
+
     Parameters:
         directory (str): directory whose contents to count
     Returns:
@@ -175,18 +260,18 @@ def count_directories(directory, **kwargs):
 def execute_command(cmd,**kwargs):
     """
     Executes command in terminal from script.
-    
+
     Parameters:
         cmd (str): command to exectute from a terminal
         kwargs: exec_dir (str): the directory from which to execute
         kwargs: no_exception: suppress output if exception
-        
+
     Other Parameters:
         exit_status: :code:`0` is good, otherwise there is some problem
-        
+
     .. note:: When executing :code:`rm *` this crashes if the directory we are removing
         from is empty
-    
+
     .. note:: if you can you should probably use execute_subprocess() instead
     """
     exec_dir = kwargs.get('exec_dir',os.path.expanduser('~/'))
@@ -206,10 +291,10 @@ def execute_subprocess(cmd,**kwargs):
     """
     Parameters:
         cmd (str): command to exectute from a terminal
-        
+
     Other Parameters:
         exit_status: 0 is good, otherwise there is some problem
-        
+
     .. note:: When executing :code:`rm *` this crashes if the directory we are removing
         from is empty
     """
@@ -221,10 +306,11 @@ def execute_subprocess(cmd,**kwargs):
             raise Exception("Failed to successfully execute \n {}".format(cmd))
     return
 
+
 def expound(someObj):
     """
     This function prints the contents of an object so a user can see values.
-    
+
     Parameters:
         someObj (object): object to explore
     """
@@ -239,11 +325,10 @@ def expound(someObj):
             print(msg.format(field))
 
 
-
 def find_files(directory, pattern, **kwargs):
     """
     Recursively search for files matching pattern in directory:
-        
+
         `Stackoverflow find files <http://stackoverflow.com/questions/2186525/use-a-glob-to-find-files-recursively-in-python>`_
     """
     sort_list = kwargs.get('sort', True)
@@ -397,7 +482,7 @@ def pretty_print_array(RA):
 def check_timestamp(filename,**kwargs):
     """
     Check if a file was recently updated/created.
-    
+
     Parameters:
         filename (str): the file in quesion
         ** kwargs ageThreshold (float): how old a file can be before warn/raises exception
@@ -426,7 +511,7 @@ def get_modification_date(filename):
     """
     Parameters:
         filename (str): the file in question
-        
+
     Returns:
         (datetime): the last time the file was modified
     """
@@ -437,14 +522,14 @@ def get_modification_date(filename):
 def check_if_sequence_log_lin_orother(seq):
     """
     Check if sequence is logarithmic, linear, or other.
-    
+
     Parameters:
         seq (list): sequence to be checked
-        
+
     Yields:
         prints an answer string
-        
-    .. note:: Taken from some calibration file development stuff, not sure if 
+
+    .. note:: Taken from some calibration file development stuff, not sure if
         needed. This should work for lin or log progressions.
     """
     d2seq = np.diff(np.diff(seq))
@@ -459,9 +544,9 @@ def check_if_sequence_log_lin_orother(seq):
 def merge_two_dicts(x, y):
     """
     Merge two dictionaries.
-        
+
         `Stackoverflow Merge <https://stackoverflow.com/questions/38987/how-to-merge-two-dictionaries-in-a-single_expression>`_
-    
+
     .. note:: In python 3.5 and higher use :code:`z = {**x, **y}` But for now use this
     """
     z = x.copy() #start with x's keys and values
@@ -471,7 +556,7 @@ def merge_two_dicts(x, y):
 def flatten(d, parent_key='', sep='_'):
     """
     Flatten nested python dictionaries to unindent.
-    
+
         `Stackoverflow Flatten <https://stackoverflow.com/questions/6027558/flatten-nested-python-dictionaries-compressing-keys>`_
     """
     items = []
@@ -482,3 +567,17 @@ def flatten(d, parent_key='', sep='_'):
         else:
             items.append((new_key, v))
     return dict(items)
+
+def add_inverse_dictionary(my_map):
+    """
+    https://stackoverflow.com/questions/483666/python-reverse-invert-a-mapping
+    """
+    inv_map = {v: k for k, v in my_map.items()}
+    my_map = merge_two_dicts(my_map, inv_map)
+    return my_map
+
+def add_leading_zeors_to_timestamp_for_file_names(elapsed):
+    leading_zeros = ""
+    if len(elapsed) < 5:
+        leading_zeros = "0" * (5 - len(elapsed))
+    return("{}{}".format(leading_zeros,elapsed))

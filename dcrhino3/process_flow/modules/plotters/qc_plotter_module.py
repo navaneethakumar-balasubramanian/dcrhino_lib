@@ -10,10 +10,10 @@ import numpy as np
 #import json
 from dcrhino3.process_flow.modules.base_module import BaseModule
 from dcrhino3.plotters.qc_plotter import QCLogPlotter
-from dcrhino3.models.drill_types import DrillTypes
-from dcrhino3.models.bit_types import BitTypes
+from dcrhino3.models.drill.drill_types import DrillTypes
+from dcrhino3.models.drill.bit_types import BitTypes
 from dcrhino3.models.sensor_installation_locations import SensorInstallationLocations
-from dcrhino3.physics.util import get_expected_multiple_times
+from dcrhino3.physics.util import get_resonance_period
 
 def decide_what_components_to_plot(transformed_args,axial,tangential,radial):
     """
@@ -40,18 +40,21 @@ def decide_what_components_to_plot(transformed_args,axial,tangential,radial):
     return components_to_plot
 
 class QCPlotterModule(BaseModule):
-    def __init__(self, json, output_path):
-        BaseModule.__init__(self, json, output_path)
+    def __init__(self, json, output_path,process_flow,order):
+        BaseModule.__init__(self, json, output_path,process_flow,order)
         self.id = "qc_log_v1"
 
-    def plot_trace_data(self,trace,process_flow_id):
+    def process_trace(self, trace):
+        return self.plot_trace_data(trace)
+
+    def plot_trace_data(self,trace):
         """
         @note 20190214: Modify this so that it iterates NOT over all three components
         but rather over the components_to_plot
         todo: factor out all the assignments and header plot into a separate
         routine self.sort_out_what_to_plot_in_header()
         """
-
+        process_flow_id = self.process_flow.id
         row_of_df = trace.dataframe.iloc[0]
         first_global_conf = trace.global_config_by_index(row_of_df['acorr_file_id'])
         transformed_args = self.get_transformed_args(first_global_conf)
@@ -70,6 +73,7 @@ class QCPlotterModule(BaseModule):
         plot_title = self.get_plot_title(transformed_args, trace,process_flow_id)
 
         noise_threshold = self.get_noise_threshold(transformed_args)
+        print("why is this being calculated if the user does not always want it?")
         mult_pos = self.get_multiples(transformed_args,trace)
         mult_win_label = self.get_multiple_win_label(transformed_args)
         plot_panel_comp = transformed_args.plot.panels
@@ -79,16 +83,21 @@ class QCPlotterModule(BaseModule):
         if transformed_args.plot.peak_ampl_x_col_name in trace.dataframe.columns:
             peak_ampl_x = trace.dataframe[transformed_args.plot.peak_ampl_x_col_name]
         else:
-            peak_ampl_x = False
+            peak_ampl_x = np.zeros(len(trace.dataframe))
         if transformed_args.plot.peak_ampl_y_col_name in trace.dataframe.columns:
             peak_ampl_y = trace.dataframe[transformed_args.plot.peak_ampl_y_col_name]
         else:
-            peak_ampl_y = False
+            peak_ampl_y = np.zeros(len(trace.dataframe))
         if transformed_args.plot.peak_ampl_z_col_name in trace.dataframe.columns:
             peak_ampl_z = trace.dataframe[transformed_args.plot.peak_ampl_z_col_name]
         else:
-            peak_ampl_z = False
-        reflection_coefficient = trace.dataframe[transformed_args.plot.reflection_coefficient_col_name]
+            peak_ampl_z = np.zeros(len(trace.dataframe))
+        try:
+            reflection_coefficient = trace.dataframe[transformed_args.plot.reflection_coefficient_col_name]
+        except KeyError:
+            print('TOTAL HACK  - 1 why are we forcing this calculation when \
+                  the user may not want it? 2. why is it not axial_reflection_coefficient?')
+            reflection_coefficient = np.zeros(len(trace.dataframe))
         #pdb.set_trace()
         if transformed_args.plot.ax_vel_del_col_name:
             ax_vel_del = trace.dataframe[transformed_args.plot.ax_vel_del_col_name].copy()
@@ -102,12 +111,19 @@ class QCPlotterModule(BaseModule):
         if "axial_RC2_col_name" in vars(transformed_args.plot):
             axial_RC2  = trace.dataframe[transformed_args.plot.axial_RC2_col_name]
 
-        tangential_reflection_coefficient = trace.dataframe[transformed_args.plot.tangential_RC_col_name]
-
+        try:
+            tangential_reflection_coefficient = trace.dataframe[transformed_args.plot.tangential_RC_col_name]
+        except KeyError:
+            print('HACK!')
+            tangential_reflection_coefficient = reflection_coefficient = np.zeros(len(trace.dataframe))
         tang_RC2 = False
         if "tangential_RC2_col_name" in vars(transformed_args.plot):
             tang_RC2  = trace.dataframe[transformed_args.plot.tangential_RC2_col_name]
-        tang_vel_del = trace.dataframe[transformed_args.plot.tang_vel_del_col_name]
+        try:
+            tang_vel_del = trace.dataframe[transformed_args.plot.tang_vel_del_col_name]
+        except KeyError:
+            print('HACK! ... also , what is a vel_del? is it a velocity or a delay?')
+            tang_vel_del = reflection_coefficient = np.zeros(len(trace.dataframe))
         tang_vel_2 = False
         if "tang_vel_multiple_2_col_name" in vars(transformed_args.plot):
             tang_vel_2 = trace.dataframe[transformed_args.plot.tang_vel_multiple_2_col_name]
@@ -121,7 +137,7 @@ class QCPlotterModule(BaseModule):
 
         output_path = None
         if self.output_to_file:
-            output_path = self.output_path
+            output_path = self.output_file_basepath(extension=".png")
 
         show = transformed_args.show
 
@@ -143,6 +159,7 @@ class QCPlotterModule(BaseModule):
                  output_path
                  )
 
+        return trace
 
 
 
@@ -150,23 +167,38 @@ class QCPlotterModule(BaseModule):
         """
         @TODO: Review why we needed the try/Except loop here ... do we still want it???
         """
-        expected_multiple = get_expected_multiple_times(transformed_args, recipe='J1')
+        #expected_multiple = get_expected_multiple_times(transformed_args, recipe='J1')
+        sensor_distance_to_bit = transformed_args.sensor_distance_to_source
+        distance_sensor_to_shock_sub_bottom = transformed_args.sensor_distance_to_shocksub
+        axial_velocity_steel = transformed_args.ACOUSTIC_VELOCITY
+        shear_velocity_steel = transformed_args.SHEAR_VELOCITY
+        axial_resonance_period = get_resonance_period('axial', sensor_distance_to_bit,
+                                                      distance_sensor_to_shock_sub_bottom, axial_velocity_steel)
+        tangential_resonance_period = get_resonance_period('tangential', sensor_distance_to_bit,
+                                                      distance_sensor_to_shock_sub_bottom, shear_velocity_steel)
 
         try:
-            ax_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial-multiple_1']*1000)
-            ax_2_mult =  (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + expected_multiple['axial-multiple_2']*1000)
+            try:
+                ax_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + axial_resonance_period*1000)
+                ax_2_mult =  (trace.dataframe[transformed_args.plot.peak_ampl_x_col_name] + 2*axial_resonance_period*1000)
 
-            tang_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential-multiple_1']*1000)
-            tang_2_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + expected_multiple['tangential-multiple_2']*1000)
-        except KeyError:
-            print("logger.warning: we should no longer need this try-except loop!!!!!!")
-            #pdb.set_trace()
-            #raise Exception
-            ax_1_mult = (trace.dataframe.axial_primary_max_time + expected_multiple['axial-multiple_1']*1000)
-            ax_2_mult =  (trace.dataframe.axial_primary_max_time + expected_multiple['axial-multiple_2']*1000)
+                tang_1_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + tangential_resonance_period*1000)
+                tang_2_mult = (trace.dataframe[transformed_args.plot.peak_ampl_y_col_name] + 2*tangential_resonance_period*1000)
+            except KeyError:
+                print("logger.warning: we should no longer need this try-except loop!!!!!!")
+                #pdb.set_trace()
+                #raise Exception
+                ax_1_mult = (trace.dataframe.axial_primary_max_time + axial_resonance_period*1000)
+                ax_2_mult =  (trace.dataframe.axial_primary_max_time + 2*axial_resonance_period*1000)
 
-            tang_1_mult = (trace.dataframe.tangential_primary_max_time + expected_multiple['tangential-multiple_1']*1000)
-            tang_2_mult = (trace.dataframe.tangential_primary_max_time + expected_multiple['tangential-multiple_2']*1000)
+                tang_1_mult = (trace.dataframe.tangential_primary_max_time + tangential_resonance_period*1000)
+                tang_2_mult = (trace.dataframe.tangential_primary_max_time + 2*tangential_resonance_period*1000)
+        except AttributeError:
+            n_traces = len(trace.dataframe)
+            ax_1_mult = np.zeros(n_traces)
+            ax_2_mult = np.zeros(n_traces)
+            tang_1_mult = np.zeros(n_traces)
+            tang_2_mult = np.zeros(n_traces)
 
         mult_pos = pd.DataFrame({'ax_1_mult':ax_1_mult, 'ax_2_mult':ax_2_mult, 'tang_1_mult':tang_1_mult, 'tang_2_mult':tang_2_mult})
         return mult_pos

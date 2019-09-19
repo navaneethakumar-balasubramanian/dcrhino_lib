@@ -8,13 +8,17 @@ from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 import pdb
 
+from dcrhino3.feature_extraction.feature_windowing import WindowBoundaries
+#from dcrhino3.physics.util import get_expected_multiple_times
+from dcrhino3.physics.util import get_resonance_period
 from dcrhino3.plotters.colour_bar_axis_limits import ColourBarAxisLimits
+
 
 class QCLogPlotter():
 
     def __init__(self, axial, tangential, radial, depth, plot_title,
                  sampling_rate, mult_pos, mult_win_label, plot_panel_comp,
-                 components_to_plot, normalize=True, lower_num_ms=-5.0,
+                 components_to_plot, normalize=True, lower_num_ms=-10.0,
                  upper_num_ms=30.0, dt_ms=5, plot_by_depth=True, transformed_args=None):
         """
         todo: replace output_sampling_rate with sampling_rate;
@@ -39,14 +43,14 @@ class QCLogPlotter():
         self.transformed_args = transformed_args
         for component_id in components_to_plot.keys():
             if component_id == 'axial':
-                self.axial = self.prepare_trace(components_to_plot['axial'])
+                self.axial = self.prepare_trace_for_heatmap(components_to_plot['axial'])
             elif component_id == 'tangential':
-                self.tangential = self.prepare_trace(components_to_plot['tangential'])
+                self.tangential = self.prepare_trace_for_heatmap(components_to_plot['tangential'])
             elif component_id == 'radial':
-                self.radial = self.prepare_trace(components_to_plot['radial'])
+                self.radial = self.prepare_trace_for_heatmap(components_to_plot['radial'])
         self.num_traces_per_component, self.num_samples = self.axial.T.shape
 
-    def prepare_trace(self,component_trace):
+    def prepare_trace_for_heatmap(self,component_trace):
         """
         note here the 0.2 is hard-coded but should actually be taken from the
 
@@ -69,9 +73,13 @@ class QCLogPlotter():
         half_way = int(n_samples/2)
         component_trace = component_trace[half_way-samples_back:half_way+samples_fwd,:]
 
-
-        if math.isnan(component_trace.min()) == True and math.isnan(component_trace.min()) == True:
-            return component_trace
+        try:
+            if math.isnan(component_trace.min()) == True and math.isnan(component_trace.min()) == True:
+                return component_trace
+        except ValueError:
+            print("logger.error:  the last time I saw this error it was because the incorrect\
+                         sampling rate was being used")
+            raise Exception
         if component_trace.min() == 0 and component_trace.min() == 0:
             return component_trace
 
@@ -144,10 +152,45 @@ class QCLogPlotter():
         #components_to_plot and plot_panel_comp.axial_heatmap_plot are redundant
         #in the 'already pretty busy' json
 
+        #<Sort out window boundaries
+        window_boundaries = {}
+        for component_id in self.transformed_args.components_to_process:
+            window_boundaries[component_id] = None
+        try:
+            if self.transformed_args.plot.wavelet_windows_to_show is not None:
+                window_widths = self.transformed_args.window_widths
+                #expected_multiple_periods = get_expected_multiple_times(self.transformed_args)
+                window_boundaries = {}
+                sensor_distance_to_bit = self.transformed_args.sensor_distance_to_source
+                distance_sensor_to_shock_sub_bottom = self.transformed_args.sensor_distance_to_shocksub
+
+                for component_id in self.transformed_args.components_to_process:
+                    if component_id=='axial':
+                        velocity_steel = self.transformed_args.ACOUSTIC_VELOCITY
+                    elif component_id=='tangential':
+                        velocity_steel = self.transformed_args.SHEAR_VELOCITY
+                    resonance_period = get_resonance_period(component_id, sensor_distance_to_bit,
+                                                            distance_sensor_to_shock_sub_bottom,
+                                                            velocity_steel)
+
+                    primary_shift = -1.0 * getattr(window_widths, component_id).primary / 2.0
+                    wb = WindowBoundaries()
+                    wb.assign_window_boundaries(component_id, window_widths,
+                                                resonance_period,
+                                                primary_shift=primary_shift)
+                    window_boundaries[component_id] = wb.window_boundaries_time
+        except AttributeError:
+            print("need to add 'wavelet_windows_to_show' to json")
+        #pdb.set_trace()
+
         n = 0
-        if self.plot_panel_comp.axial_heatmap_plot is True and self.axial is not None :
-            self.axial_feature_plot(ax[n], X, peak_ampl_x,reflection_coefficient,axial_RC2,ax_vel_del,noise_threshold,ax_lim)
-            ax[n+1], heatmap1 = self.plot_hole_as_heatmap(ax[n+1], cbal.v_min_1, cbal.v_max_1, X, Y, self.axial, cmap_string, y_tick_locations,delay=ax_vel_del,delay_2=ax_vel_2)
+
+        if self.plot_panel_comp.axial_heatmap_plot is True and self.axial is not None:
+            self.axial_feature_plot(ax[n], X, peak_ampl_x, reflection_coefficient,
+                                    axial_RC2,ax_vel_del,noise_threshold,ax_lim)
+            ax[n+1], heatmap1 = self.plot_hole_as_heatmap(ax[n+1], cbal.v_min_1,
+              cbal.v_max_1, X, Y, self.axial, cmap_string, y_tick_locations,
+              delay=ax_vel_del,delay_2=ax_vel_2, window_boundaries=window_boundaries['axial'])
             n = n+2
         if self.plot_panel_comp.tangential_heatmap_plot is True and self.tangential is not None:
             self.tangential_feature_plot(ax[n], X, peak_ampl_y, tangential_reflection_coefficient,tang_RC2,
@@ -168,7 +211,7 @@ class QCLogPlotter():
 
     def plot_hole_as_heatmap(self, ax, v_min, v_max, X, Y, Z, cmap_string, y_tick_locations,
                          two_way_travel_time_ms=None, multiple_search_back_ms=None,
-                         multiple_search_forward_ms=None,delay=None,delay_2=None):
+                         multiple_search_forward_ms=None,delay=None,delay_2=None, window_boundaries=None):
         """
         """
         minor_locator = AutoMinorLocator(8)
@@ -202,6 +245,17 @@ class QCLogPlotter():
             ax.plot(X,self.mult_pos.tang_1_mult, color = 'k',linestyle = '-',linewidth = 2)
             ax.plot(X,self.mult_pos.tang_2_mult, color = 'k',linestyle = '-',linewidth = 2)
 
+        if window_boundaries is not None:
+            colours = {}
+            colours['primary'] = 'black'
+            colours['multiple_1'] = 'blue'
+            colours['multiple_2'] = 'red'
+            #pdb.set_trace()
+            for wavelet_id in self.transformed_args.plot.wavelet_windows_to_show:
+                y_values = window_boundaries[wavelet_id]
+                ax.hlines(1000*y_values, X[0], X[-1], color=colours[wavelet_id],linestyle = '-',linewidth = 1.05)
+
+        #pdb.set_trace()
         ax.set_xlim(X[0], X[-1])
         x_maj_tick = (np.arange(X[0],X[-1])-X[0])
         x_min_tick = (np.arange(X[0],X[-1],0.5)-X[0])

@@ -2,8 +2,7 @@ import ConfigParser
 import argparse
 import os, sys
 import numpy as np
-import pdb
-from dcrhino3.models.metadata import Metadata
+import json
 
 def update_structure(old,reference):
     new = old
@@ -38,7 +37,7 @@ def update_structure(old,reference):
     return new
 
 
-def update_options(old,reference):
+def update_options(old, reference):
     new = old
     for section in reference.sections():
         if section in new.sections():
@@ -60,7 +59,7 @@ def update_options(old,reference):
 
 def extract_config_file_from_h5_file(h5f):
     config = ConfigParser.ConfigParser()
-    for key,value in h5f.attrs.iteritems():
+    for key,value in h5f.attrs.items():
         #print(key,value)
         section = key.split("/")[0]
         param_name = key.split("/")[1]
@@ -72,33 +71,40 @@ def extract_config_file_from_h5_file(h5f):
             config.set(section,param_name,value)
     return config
 
-def extract_metadata_from_h5_file(h5f):
-    config = ConfigParser.ConfigParser()
-    for key,value in h5f.attrs.iteritems():
-        #print(key,value)
-        section = key.split("/")[0]
+def extract_config_file_from_h5_file_as_json(h5f):
+    config_dict = dict()
+    for key, value in h5f.attrs.items():
         param_name = key.split("/")[1]
-        #pdb.set_trace()
-        if config.has_section(section):
-            config.set(section,param_name,value)
-        else:
-            config.add_section(section)
-            config.set(section,param_name,value)
-    m =Metadata(config)
-    return m
+        config_dict[param_name] = value
+    return json.dumps(config_dict, indent=4)
+
+# def extract_metadata_from_h5_file(h5f):
+#     config = ConfigParser.ConfigParser()
+#     for key,value in h5f.attrs.items():
+#         #print(key,value)
+#         section = key.split("/")[0]
+#         param_name = key.split("/")[1]
+#         #pdb.set_trace()
+#         if config.has_section(section):
+#             config.set(section,param_name,value)
+#         else:
+#             config.add_section(section)
+#             config.set(section,param_name,value)
+#     m =Metadata(config)
+#     return m
 
 
-def config_file_to_attrs(config_parser,_h5f):
-    m=""
+def config_file_to_attrs(config_parser, _h5f):
+    m = ""
     for section in config_parser.sections():
         for option in config_parser.options(section):
-            value = config_parser.get(section,option)
+            value = config_parser.get(section, option)
             _h5f.attrs[str(section) + "/" + str(option)] = value
-            m += str(section) + "/" + str(option)+","+value +"\n"
-            #print (str(section) + "/" + str(option),value)
-    return _h5f,m
+            m += str(section) + "/" + str(option)+","+value + "\n"
+    return _h5f, m
 
-def update_h5f_key(h5f,key,value):
+
+def update_h5f_key(h5f, key, value):
     try:
         #pdb.set_trace()
         if key in h5f.keys():
@@ -113,21 +119,24 @@ def update_h5f_key(h5f,key,value):
         print (sys.exc_info())
 
 
-def update_h5f_headers(h5f,updated_cfg):
-
+def update_h5f_headers(h5f, updated_cfg):
     config = extract_config_file_from_h5_file(h5f)
-    config = update_options(config,updated_cfg)
-    h5f,attributes = config_file_to_attrs(config,h5f)
+    config = update_options(config, updated_cfg)
+    h5f, attributes = config_file_to_attrs(config, h5f)
 
-    sensor_type = config.getint('INSTALLATION', 'sensor_type')
+    # This function was only called if the global_config_jsons did not exist. So we add the new config method to it.
+    config_dict = {'0': updated_cfg.pipeline_files_to_dict}
+    h5f.attrs['global_config_jsons'] = json.dumps(config_dict)
 
-    if sensor_type == 1:
-        sensitivity = np.array([config.getfloat('PLAYBACK', 'ide_multiplier')],dtype=np.float32)
+    sensor_type = updated_cfg.sensor_type
+
+    if sensor_type == 1 or sensor_type == 3:
+        sensitivity = np.array([1.], dtype=np.float32)
     else:
-        sensitivity = np.array([config.getfloat('PLAYBACK', 'x_sensitivity'),config.getfloat('PLAYBACK', 'y_sensitivity'),config.getfloat('PLAYBACK', 'z_sensitivity')],dtype=np.float32)
-    axis = np.array([config.getfloat('INSTALLATION', 'sensor_axial_axis'),config.getfloat('INSTALLATION', 'sensor_tangential_axis')],dtype=np.float32)
-    h5f = update_h5f_key(h5f,"sensitivity",sensitivity)
-    h5f = update_h5f_key(h5f,"axis",axis)
+        sensitivity = np.array(updated_cfg.sensitivity_list_xyz, dtype=np.float32)
+    axis = np.array([updated_cfg.sensor_axial_axis, updated_cfg.sensor_tangential_axis], dtype=np.float32)
+    h5f = update_h5f_key(h5f, "sensitivity", sensitivity)
+    h5f = update_h5f_key(h5f, "axis", axis)
     print ("Sensitivity: {}".format(h5f["sensitivity"][:]))
     print ("Axis: {}".format(h5f["axis"][:]))
     print ("Done")

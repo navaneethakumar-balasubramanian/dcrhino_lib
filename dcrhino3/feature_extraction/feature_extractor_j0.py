@@ -17,13 +17,13 @@ from dcrhino3.signal_processing.symmetric_trace import SymmetricTrace
 
 
 class FeatureExtractorJ0():
-    
+
     """
     Extracts features from trace to make predictions downstream.
-    
+
     Parameters:
         transformed_args (Dataframe): contains drilling values (ex. 'output_sampling_rate')
-    
+
     .. warning:: The declaration of min_lag_trimmed_trace as its absolute
         value is not good form:  np.abs(transformed_args.min_lag_trimmed_trace)
     """
@@ -57,12 +57,12 @@ class FeatureExtractorJ0():
 
     def get_earliest_expected_mulitple_time(self):
         """
-        Use idealized, theoretical two way travel time to find the *earliest time* 
+        Use idealized, theoretical two way travel time to find the *earliest time*
         a multiple wave could arrive at the sensor.
-        
+
         Returns:
             (float): the earliest multiple arrival time (relative to primary peak time)
-        
+
         .. note:: to be deprecated and replaced by supporting_j1.get_expected_multiple_times()
         """
         travel_distance = 2 * self.sensor_distance_to_source
@@ -74,10 +74,10 @@ class FeatureExtractorJ0():
     def create_features_dictionary(self, component_id):
         """
         Create dictionary of features for component_id (axial/tangential).
-        
+
         Parameters:
             component_id (str): axial/tangential
-        
+
         Returns:
             (dict): Dictionary with feature_string to be filled with feature values
         """
@@ -85,7 +85,7 @@ class FeatureExtractorJ0():
 
         for wavelet_type in self.COMPONENT_WAVELET_MAP[component_id]:
             for wavelet_feature in self.WAVELET_FEATURES[component_id]:
-                feature_string = '{}_{}_{}'.format(component_id, wavelet_type, wavelet_feature)
+                feature_string = '{}-{}-{}'.format(component_id, wavelet_type, wavelet_feature)
                 feature_dict[feature_string] = None
 
         return feature_dict
@@ -96,15 +96,15 @@ class FeatureExtractorJ0():
         """
         Create features dictionary, extract features, derive features, output dictionary
         of derived features. Requires :class:`IntermediateFeatureDeriver`
-        
+
         Parameters:
             component_id (str): axial/tangential
             component_array (array): trace data on along one component
             transformed_args (Dataframe): contains drilling values (ex. 'output_sampling_rate')
-       
+
         Returns:
-            (dict): dictionary of derived features from intermediate feature deriver            
-        
+            (dict): dictionary of derived features from intermediate feature deriver
+
         .. note:: min lag has an ambiguity in sign
         """
         df_dict = self.create_features_dictionary(component_id)
@@ -148,7 +148,7 @@ class FeatureExtractorJ0():
                                                              self.WAVELET_FEATURES[component_id])
             #pdb.set_trace()
             for attr in self.WAVELET_FEATURES[component_id]:
-                label = '{}_{}_{}'.format(component_id, wavelet_type, attr)
+                label = '{}-{}-{}'.format(component_id, wavelet_type, attr)
                 df_dict[label] = wffe.__getattribute__(attr)
                 #print ("Setting label" + label +  " as " + str(wffe.__getattribute__(attr)))
 
@@ -161,7 +161,7 @@ class FeatureExtractorJ0():
 
 
         for key in df_dict.keys():
-            df_dict['J0_{}'.format(key)] = df_dict.pop('{}'.format(key))
+            df_dict['J0-{}'.format(key)] = df_dict.pop('{}'.format(key))
 
 
         return df_dict

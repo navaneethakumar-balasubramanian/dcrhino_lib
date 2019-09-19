@@ -5,23 +5,49 @@ import numpy as np
 import pandas as pd
 import pdb
 import time
-from scipy.interpolate import interp1d
 
+import scipy.signal as ssig
+
+from dcrhino3.acquisition.supporting_acquisition import calibrate_data
 from dcrhino3.models.config import Config
 from dcrhino3.models.trace_dataframe import TraceData
-from dcrhino3.helpers.h5_helper import H5Helper
+from dcrhino3.helpers.h5_helper import H5Helper#, save_np_array_to_h5_file, save_dataframe_to_h5_file
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.process_flow.modules.trace_processing.autocorrelate import autocorrelate_trace
+from dcrhino3.signal_processing.filters import butter_bandpass, butter_highpass, butter_lowpass
+from dcrhino3.signal_processing.interpolation import interpolate_data
+from dcrhino3.signal_processing.spectral_methods import fft_data
 
 
 logger = init_logging(__name__)
 
+
 class RawTraceData(TraceData):
-    def load_from_h5(self,path):
-        self.dataframe , global_config = self._cast_h5_to_dataframe(path)
+
+    def __init__(self, **kwargs):
+        TraceData.__init__(self, **kwargs)
+        self._liner_interpolation_required = False
+        self.trace_t0 = None
+
+    def require_linear_interpolation(self, value):
+        self._liner_interpolation_required = value
+
+    @property
+    def linear_interpolation_required(self):
+        return self._liner_interpolation_required
+
+    def load_config(self, path):
+        f1 = h5py.File(path, 'r+')
+        h5_helper = H5Helper(f1, False, False)
+        #global_config = Config(h5_helper.metadata)
+        global_config = h5_helper.config
+        return global_config
+
+    def load_from_h5(self, path):
+        self.dataframe, global_config = self._cast_h5_to_dataframe(path)
         self._global_configs["0"] = global_config
 
-    def _cast_h5_to_dataframe(self,h5_filename):
+    def _cast_h5_to_dataframe(self, h5_filename):
         """
 
         @property
@@ -32,130 +58,201 @@ class RawTraceData(TraceData):
 
         output_dict = {}
 
-        f1 = h5py.File(h5_filename,'r+')
+        f1 = h5py.File(h5_filename, 'r+')
         h5_helper = H5Helper(f1)
-        global_config = Config(h5_helper.metadata)
+        #global_config = Config(h5_helper.metadata)
+        global_config = h5_helper.config
         #pdb.set_trace()
-        trace_duration = global_config.trace_length_in_seconds
 
-        timestamp_offset = np.floor(h5_helper.min_ts)
-        relative_timestamps = h5_helper.ts - timestamp_offset
-        #typical_dt = np.median(np.diff(relative_timestamps))
-        integer_trace_sorted_timestamps = np.floor(relative_timestamps / trace_duration).astype(np.int32)
-        dtrace_array = np.diff(integer_trace_sorted_timestamps)
-        discontinuity_indices = np.where(dtrace_array > 0)[0]
-        num_traces = len(discontinuity_indices) +1 #maybe off by one
-        timestamp_indices = np.arange(num_traces) * global_config.trace_length_in_seconds
-
-        reference_array = np.split(np.arange(len(relative_timestamps)), discontinuity_indices+1)
 
         data = np.asarray(h5_helper.data_xyz)
-        logger.info("data shape = {}".format(data.shape))
+        temp_df = pd.DataFrame()
+        temp_df['timestamp'] = h5_helper.ts.astype(np.int64)
+        temp_df['raw_timestamp'] = h5_helper.ts.astype(np.float64)
+        temp_df["rssi"] = np.nan
+        # if "rssi" in h5_helper.h5f.keys():
+        #     temp_df["rssi"] = np.asarray(h5_helper.h5f.get("rssi"), dtype=np.float32)
+        # else:
 
-        output_dict['timestamp'] = timestamp_indices + timestamp_offset
+        # Remove the timestamps that have gapqs greater than
+        tx_sequence_diff = np.diff(h5_helper.h5f["cticks"].__array__())
+
+        filter_gaps = False # This is for further development if we want to filter traces that have large gaps
+        if filter_gaps:
+            try:
+                gap_indices = np.where(tx_sequence_diff > global_config.missed_packets_threshold)
+            except:
+                gap_indices = np.where(tx_sequence_diff > 40)
+                logger.warning("Missed packets Threshold not defined in global config. Using default of 40")
+            bad_timestamps = temp_df["timestamp"][temp_df["timestamp"].index.values[gap_indices]].unique()
+
+        for component_id in global_config.components_to_process:
+            component_index = global_config.component_index(component_id)
+            temp_df[component_id] = data[component_index]
+
+        ts_groups = temp_df.groupby('timestamp')
+
+        groups_list = list(ts_groups.groups)
+        num_traces = len(groups_list)
+        output_dict = dict()
+        output_dict['timestamp'] = np.asarray(groups_list)
         output_dict['raw_timestamps'] = num_traces * [None]
+        output_dict['rssi']=num_traces * [None]
         for component_id in global_config.components_to_process:
             output_dict[component_id] = num_traces * [None]
 
         for i_trace in range(num_traces):
-            non_uniform_time_stamps = relative_timestamps[reference_array[i_trace]] + timestamp_offset
-            output_dict['raw_timestamps'][i_trace] = non_uniform_time_stamps
+            group_id = groups_list[i_trace]
+            group = ts_groups.get_group(group_id)
+            output_dict['raw_timestamps'][i_trace] = np.array(group['raw_timestamp'])
+            output_dict["rssi"][i_trace] = np.mean(group["rssi"])
+            packets = len(group["rssi"])
             for component_id in global_config.components_to_process:
-                component_index = global_config.component_index(component_id)
-                non_uniform_time_series = data[component_index, reference_array[i_trace]]
-                output_dict[component_id][i_trace] = non_uniform_time_series
+                output_dict[component_id][i_trace] = np.array(group[component_id])
+
         output_df = pd.DataFrame(output_dict)
+        # if "batt" in h5_helper.h5f.keys():
+        #     output_df["batt"] = np.asarray(h5_helper.h5f.get("batt"), dtype=np.float32)
+        # else:
+        output_df["batt"] = np.nan
+
+        # if "temp" in h5_helper.h5f.keys():
+        #     output_df["temp"] = np.asarray(h5_helper.h5f.get("temp"), dtype=np.float32)
+        # else:
+        output_df["temp"] = np.nan
+
+        # if "packets" in h5_helper.h5f.keys():
+        #     output_df["packets"] = np.asarray(h5_helper.h5f.get("packets"), dtype=np.float32)
+        # else:
+        output_df["packets"] = packets
 
         output_df.index = output_df['timestamp']
+        if filter_gaps:
+            output_df = output_df[~output_df['timestamp'].isin(bad_timestamps)]
+        # pdb.set_trace()yes
         return output_df, global_config
 
-    def calibrate_l1h5(self,df,global_config):
+    def calibrate_l1h5(self, df, global_config):
         t0 = time.time()
-
 
         for line_idx in range(len(df)):
             row_of_df = df.iloc[line_idx]
             for component_id in global_config.components_to_process:
                 trace_to_process = row_of_df[component_id]
-                processed_trace = self.calibrate_1d_component_array(trace_to_process,global_config,global_config.sensor_sensitivity[component_id])
+                processed_trace = self.calibrate_1d_component_array(trace_to_process, global_config,
+                                                                    global_config.get_sensor_sensitivity_by_axis(component_id))
                 df.at[line_idx, component_id] = processed_trace
 
         time_interval = time.time() - t0
-        logger.info("Took %s seconds to calibrate %s traces" % (time_interval,len(df)))
+        logger.info("Took %s seconds to calibrate %s traces" % (time_interval, len(df)))
         return df
 
-
-    def resample_l1h5(self,df, global_config):
+    def resample_l1h5(self, df, global_config, kind="quadratic"):
 
         """
         @TODO: need to get the upsample factor from
         """
         data_processing_stage_designator = 'resampled'
 
-
         t0 = time.time()
         output_dict = {}
         samples_per_trace = global_config.samples_per_trace
         num_traces = len(df)
 
-
         for component_id in global_config.components_to_process:
-            output_dict[component_id] = np.full((num_traces, samples_per_trace), np.nan) #Allocate Memory
+            output_dict[component_id] = np.full((num_traces, samples_per_trace), np.nan) # Allocate Memory
 
             for i_trace in range(num_traces):
+                if int(df['timestamp'].iloc[i_trace]) != int(df['raw_timestamps'].iloc[i_trace][0]):
+                    print ("here!!!")
+
                 ideal_timestamps = global_config.dt * np.arange(samples_per_trace) + df['timestamp'].iloc[i_trace]
-                output_dict[component_id][i_trace, :] = self.interpolate_1d_component_array(df['raw_timestamps'].iloc[i_trace],
-                                                                                            df[component_id].iloc[i_trace],
-                                                                                            ideal_timestamps)
+                interpolated = self.interpolate_1d_component_array(df['raw_timestamps'].iloc[i_trace],
+                                                                   df[component_id].iloc[i_trace],
+                                                                   ideal_timestamps, kind)
+                if interpolated is not False:
+                    output_dict[component_id][i_trace, :] = interpolated
             output_dict[component_id] = list(output_dict[component_id])
             df[component_id] = output_dict[component_id]
 
         df.drop(['raw_timestamps', ], axis=1, inplace=True)
         time_interval = time.time() - t0
-        logger.info("Took %s seconds to resample %s traces" % (time_interval,len(df)))
+        logger.info("Took %s seconds to resample %s traces" % (time_interval, len(df)))
         return df
 
-    def interpolate_1d_component_array(self,raw_timestamps,component_array,ideal_timestamps):
-        #<Numpy is a lot faster and it was the legacy method we have been using so will continue using the
-        #Extrapolation capabilities>
-        interp_data = np.interp(ideal_timestamps, raw_timestamps,component_array)
-        #</numpy function>
+    def interpolate_1d_component_array(self, raw_timestamps, component_array, ideal_timestamps, kind="linear"):
+        # <Numpy is a lot faster and it was the legacy method we have been using so will continue using the
+        # Extrapolation capabilities>
+        # interp_data = np.interp(ideal_timestamps, raw_timestamps,component_array)
+        # </numpy function>
+        interp_data = interpolate_data(raw_timestamps, component_array, ideal_timestamps, kind)
+        if isinstance(interp_data,bool):
+            pass
         return interp_data
 
-    def calibrate_1d_component_array(self,component_array,global_config,sensitivity):
-        t0 = time.time()
-        output = component_array
-        is_ide_file = not int(global_config.sensor_type) == 2
+    def calibrate_1d_component_array(self, component_array, global_config, sensitivity, remove_mean=False):
+        is_ide_file = not int(global_config.sensor_type) == 2 or global_config.rhino_version is None
+        if global_config.rhino_version is None:
+            global_config.rhino_version = 0
+        output = calibrate_data(component_array, sensitivity, float(global_config.accelerometer_max_voltage),
+                                float(global_config.rhino_version), is_ide_file, remove_mean=remove_mean)
+        return output
 
-        if "rhino_version" not in vars(global_config):
-           global_config.rhino_version = 1.0
-
-        if is_ide_file or global_config.rhino_version == None:
-            return output / sensitivity
+    def filter_1d_component_array(self, component_array, sampling_rate, filter_type="highpass", low=10, high=999):
+        if filter_type == "highpass":
+            b, a = butter_highpass(low, sampling_rate)
+        elif filter_type == "lowpass":
+            b, a = butter_lowpass(high, sampling_rate)
         else:
-            if float(global_config.rhino_version) == 1.0:
-                output = (output * 5.0) / 65535 #Covert to Voltage
-                output = (float(global_config.accelerometer_max_voltage)/2.0) - output #Calculate difference from reference voltage
-            elif float(global_config.rhino_version) == 1.1:
-                #<Convert to Voltage>
-                tmp = output
-                output = output.astype(np.int32)#need to change the type so that the operation - pow_of_2 works
-                pow_of_2 = pow(2,32)
-                volt_per_bit = float(global_config.accelerometer_max_voltage)/pow(2.0,31)
-                # output = np.asarray([x - pow_of_2 if x& 0x80000000 == 0x80000000 else x for x in output])
-                mask_true_or_false = tmp&0x80000000==0x80000000
-                output[mask_true_or_false] = tmp[mask_true_or_false]-pow_of_2
-                output = np.round(output/2.0,0) * volt_per_bit
-                #</Convert to Voltage>
-            else:
-                raise ValueError("Calibration Error: The Rhino Hardware version should be 1.0 or 1.1")
-            output = output / (sensitivity/1000.0) #Convert to G's
-            return output
+            b, a = butter_bandpass(low, high, sampling_rate)
+        filt_data = ssig.filtfilt(b, a, component_array)
+        return filt_data
 
-    def autocorrelate_1d_component_array(self,input_trace, samples_per_trace):
-        return autocorrelate_trace(input_trace, samples_per_trace)
+    def autocorrelate_1d_component_array(self, input_trace, samples_per_trace, copy_input):
+        acorr = autocorrelate_trace(input_trace, samples_per_trace, copy_input)
+        return acorr
 
-    def autocorrelate_l1h5(self,df, global_config):
+    def raw_trace_fft(self, global_config, sensitivity):
+
+        sampling_rate = global_config.output_sampling_rate
+        t0 = time.time()
+        output_dict = {}
+        num_traces = len(self.dataframe['timestamp'])
+        # pdb.set_trace()
+        for component_id in global_config.components_to_process:
+            output_dict[component_id] = {}
+            for i_trace in range(len(self.dataframe['timestamp'])):
+                data_array = self.calibrate_1d_component_array(self.dataframe[component_id].iloc[i_trace],
+                                                               global_config,
+                                                               sensitivity)
+                condition_1 = len(data_array) <= global_config.output_sampling_rate * 1.01
+                condition_2 = len(data_array) >= global_config.output_sampling_rate * 0.9
+                if  condition_1 and condition_2:  # This is to ignore traces that are too long or too short
+                    tmp = fft_data(data_array, sampling_rate)
+                    output_dict[component_id][self.dataframe.timestamp.iloc[i_trace]] = tmp
+        time_interval = time.time() - t0
+        logger.info("Took %s seconds to create FFT of %s traces" % (time_interval, num_traces))
+        return output_dict
+
+    def filter_l1h5(self, df, global_config, filter_type="highpass"):
+        sampling_rate = global_config.output_sampling_rate
+        t0 = time.time()
+        output_dict = {}
+        num_traces = len(df['timestamp'])
+        for component_id in global_config.components_to_process:
+            output_dict[component_id] = np.full((num_traces, int(sampling_rate)), np.nan)  # Allocate
+            # Memory
+            for i_trace in range(len(df['timestamp'])):
+                input_trace = df[component_id].iloc[i_trace]
+                filtered_trace = self.filter_1d_component_array(input_trace, sampling_rate, filter_type)
+                output_dict[component_id][i_trace, :] = filtered_trace  # [0:samples_per_trace]
+            output_dict[component_id] = list(output_dict[component_id])
+        time_interval = time.time() - t0
+        logger.info("Took %s seconds to create Filter of %s traces" % (time_interval, num_traces))
+        df[component_id] = output_dict[component_id]
+        return df
+
+    def autocorrelate_l1h5(self, df, global_config):
         """
         @note 20190114: since we are not going all the way to final lag, we could
         speed this up slightly by only calculating lads we want ... but for now is OK
@@ -179,22 +276,20 @@ class RawTraceData(TraceData):
 
         num_traces = len(df['timestamp'])
 
-
         for component_id in global_config.components_to_process:
-            output_dict[component_id] = np.full((num_traces, samples_per_trace), np.nan) #Allocate Memory
+            output_dict[component_id] = np.full((num_traces, samples_per_trace), np.nan)  # Allocate Memory
 
             for i_trace in range(num_traces):
-                #pdb.set_trace()
-
                 input_trace = df[component_id].iloc[i_trace]
-                acorr_trace = self.autocorrelate_1d_component_array(input_trace, samples_per_trace)
+                acorr_trace = self.autocorrelate_1d_component_array(input_trace, samples_per_trace,False)
 
-                output_dict[component_id][i_trace, :] = acorr_trace#[0:samples_per_trace]
+                output_dict[component_id][i_trace, :] = acorr_trace  # [0:samples_per_trace]
             output_dict[component_id] = list(output_dict[component_id])
 
         output_dict['timestamp'] = df['timestamp']
 
         dff = pd.DataFrame(output_dict, index=df.index)
         time_interval = time.time() - t0
-        logger.info("Took %s seconds to autocorrelate %s traces" % (time_interval,len(dff)))
+        logger.info("Took %s seconds to autocorrelate %s traces" % (time_interval, len(dff)))
         return dff
+

@@ -1,45 +1,77 @@
 {
-  "id": "v3.2_processing_flow",
+  "id": "v3.2_processing_flow_hybrid",
   "output_to_file":true,
-  "trace_processing": {
+
     "modules": [
       {
-        "type": "unfold",
-        "output_to_file": false,
+        "type": "columns_to_df",
+        "output_to_file": true,
+        "args": {
+        "sampling_rate": "|global_config.sampling_rate|"
+        }
+      },
+      {
+        "type": "unfold_hybrid",
+        "output_to_file": true,
         "args": {}
       },
       {
-        "type": "lead_channel_deconvolution",
-        "output_to_file": false,
+        "type": "lead_channel_deconvolution_hybrid",
+        "output_to_file": true,
         "args": {
-          "num_taps_in_decon_filter": "|global_config.num_taps_in_decon_filter|"
-        }
+         "deconvolution_filter_duration": 0.1
+    }
+    },
+      {
+        "type": "export_segy",
+        "args": {}
+      },
+          {
+        "type": "band_pass_filter_hybrid",
+        "output_to_file": true,
+        "args": {
+             "trapezoidal_bpf_corner_1": "|global_config.trapezoidal_bpf_corner_1|",
+             "trapezoidal_bpf_corner_2": "|global_config.trapezoidal_bpf_corner_2|",
+             "trapezoidal_bpf_corner_3": "|global_config.trapezoidal_bpf_corner_3|",
+             "trapezoidal_bpf_corner_4": "|global_config.trapezoidal_bpf_corner_4|",
+             "trapezoidal_bpf_duration": "|global_config.trapezoidal_bpf_duration|"
+       }
       },
       {
-        "type": "band_pass_filter",
-        "output_to_file": false,
-        "args": {
-          "trapezoidal_bpf_corner_1": "|global_config.trapezoidal_bpf_corner_1|",
-          "trapezoidal_bpf_corner_2": "|global_config.trapezoidal_bpf_corner_2|",
-          "trapezoidal_bpf_corner_3": "|global_config.trapezoidal_bpf_corner_3|",
-          "trapezoidal_bpf_corner_4": "|global_config.trapezoidal_bpf_corner_4|",
-          "trapezoidal_bpf_duration": "|global_config.trapezoidal_bpf_duration|",
-          "sampling_rate": "|global_config.sampling_rate|"
-        }
-      },
-      {
-        "type": "trim",
+        "type": "trim_hybrid",
         "output_to_file": false,
         "args": {
           "max_lag_trimmed_trace": "|global_config.max_lag_trimmed_trace|",
           "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
-          "sampling_rate": "|global_config.sampling_rate|"
+          "manual_window_boundaries" : {
+              "axial": {
+                  "primary": [-0.002, 0.008],
+                  "multiple_1": [0.008, 0.011],
+                  "multiple_2": [0.017, 0.025],
+                  "multiple_3": [0.033, 0.044]
+              },
+              "tangential": {
+                "primary": [-0.002, 0.002],
+                "multiple_1": [0.013, 0.017],
+                "multiple_2": [0.030, 0.034],
+                "multiple_3": [0.044, 0.055]
+              }
+          }
         }
-      }
-    ]
-  },
-  "features_extraction": {
-    "modules": [
+      },
+      {
+        "type": "rhino_plotter",
+        "output_to_file": true,
+        "args":{
+          "panels": [
+            {
+              "type": "heatmap",
+              "component": "axial",
+              "wavelet_windows_to_show": ["primary", "multiple_1", "multiple_2"]
+            }
+          ]
+        }
+      },
       {
         "type": "j0",
         "output_to_file": false,
@@ -58,7 +90,7 @@
       },
       {
         "type": "j1",
-        "output_to_file": false,
+        "output_to_file": true,
         "args": {
 	     "acceptable_peak_wander": ["|global_config.acceptable_peak_wander|", 0.003],
          "dynamic_windows": ["|global_config.dynamic_windows|", true],
@@ -92,87 +124,50 @@
                "apply_primary_rotation": true,
                "apply_secondary_rotations": true
                }
-     }
-
-    ],
-    "output_to_file": true
-  },
-  "plotters": {
-    "modules": [
-      {
-        "type": "qc_log_v1",
+     },
+     {
+        "type": "rhino_plotter",
         "output_to_file": true,
-        "args": {
-          "show" : false,
-          "plot": {
-
-            "upper_num_ms": 30,
-            "lower_num_ms": -5,
-            "peak_ampl_x_col_name": "K0_axial_primary_max_amplitude",
-            "peak_ampl_y_col_name": "K0_tangential_primary_max_amplitude",
-            "peak_ampl_z_col_name": "K0_radial_primary_max_amplitude",
-            "tangential_RC_col_name": "K0_tangential_reflection_coefficient_1",
-            "tangential_RC2_col_name": "K0_tangential_reflection_coefficient_2",
-            "ax_vel_del_col_name": "J1_axial_multiple_1_max_time",
-            "ax_vel_multiple_2_col_name": "J1_axial_multiple_2_max_time",
-            "tang_vel_del_col_name": "J1_tangential_multiple_1_max_time",
-            "tang_vel_multiple_2_col_name": "J1_tangential_multiple_2_max_time",
-            "reflection_coefficient_col_name": "K0_axial_reflection_coefficient_1",
-            "axial_RC2_col_name": "K0_axial_reflection_coefficient_2",
-	     "panels":{
-		    "axial_amp_feature_plot":true,
-	    	"axial_delay_feature_plot":false,
-	    	"axial_rc_feature_plot":true,
-	    	"tangential_amp_feature_plot":true,
-	    	"tangential_delay_feature_plot":false,
-	    	"tangential_rc_feature_plot":true,
-	    	"radial_amp_feature_plot":false,
-	    	"radial_delay_feature_plot":false,
-	    	"radial_rc_feature_plot":false,
-	    	"axial_heatmap_plot":true,
-	    	"tangential_heatmap_plot":true,
-            "radial_heatmap_plot":false
-		},
-		"ax_lim":{
-			"axial_amp_lim":[0,1.5],
-			"axial_rc_lim":[0,1.0],
-			"axial_delay_lim":false,
-			"tangential_amp_lim":[0,1.5],
-			"tangential_rc_lim":[0,1.0],
-			"tangential_delay_lim":false,
-			"radial_amp_lim":[0,1.5],
-			"radial_rc_lim":[0,1.0],
-			"radial_delay_lim":[80,130]
-
-		}
-          },
-	  "components_to_process":"|global_config.components_to_process|",
-          "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
-          "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|",
-          "noise_threshold": ["|global_config.noise_threshold|",true],
-          "rig_id": "|global_config.rig_id|",
-          "drill_type": "|global_config.drill_type|",
-          "drill_string_total_length": "|global_config.drill_string_total_length|",
-          "bit_type": "|global_config.bit_type|",
-          "bit_size": "|global_config.bit_size|",
-          "bit_model": "|global_config.bit_model|",
-          "sensor_installation_location": "|global_config.sensor_installation_location|",
-          "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
-          "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
-          "sensor_serial_number": "|global_config.sensor_serial_number|",
-          "sensor_saturation_g": "|global_config.sensor_saturation_g|",
-	  "output_sampling_rate":"|global_config.output_sampling_rate|",
-	  "mine_name":"|global_config.mine_name|",
-	  "mult_neg_win": 0.5,
-	  "mult_pos_win": 3.5
+        "args":{
+          "padding_right": 0.03,
+          "panels": [
+            {
+              "type": "curves",
+              "curves": [
+                {"column_label":"J0-axial-primary-max_amplitude",       "color": "red",  "spine_side": "left",   "scale":"current" , "space": 0},
+                {"column_label":"J0-axial-reflection_coefficient_1",    "color": "blue", "spine_side": "right",  "scale":"new",  "space": 0},
+                {"column_label":"J0-axial-delay_1",                    "color": "lime", "spine_side": "right",  "scale":"new",  "space": 60}
+                ]
+            },
+            {
+              "type": "heatmap",
+              "component": "axial",
+              "wavelet_windows_to_show": ["primary", "multiple_1", "multiple_2"],
+              "curves": [
+                {"column_label":"J1-axial-multiple_1-max_time","formula":"data*1000", "label": "Delay 1", "linewidth": 1 , "color": "#FFFFFF"},
+                {"column_label":"J1-axial-multiple_2-max_time","formula":"data*1000", "label": "Delay 2", "linewidth": 1 , "color": "#FFFFFF"}
+              ]
+            },
+            {
+              "type": "curves",
+              "curves": [
+                {"column_label":"J0-tangential-primary-max_amplitude",       "color": "deeppink",        "spine_side": "left",   "scale":"current"},
+                {"column_label":"J0-tangential-reflection_coefficient_1",    "color": "deepskyblue",     "spine_side": "right",  "scale":"new"},
+                {"column_label":"J0-tangential-delay_1",                     "color": "green",           "spine_side": "right",  "scale":"new",  "space": 70}
+              ]
+            },
+            {
+              "type": "heatmap",
+              "component": "tangential",
+              "wavelet_windows_to_show": ["primary", "multiple_1", "multiple_2"],
+              "curves": [
+                {"column_label":"J1-tangential-multiple_1-max_time","formula":"data*1000", "label": "Delay 1", "linewidth": 1 , "color": "#FFFFFF"},
+                {"column_label":"J1-tangential-multiple_2-max_time","formula":"data*1000", "label": "Delay 2", "linewidth": 1 , "color": "#FFFFFF"}
+              ]
+            }
+          ]
         }
-      }
-    ]
-  },
-
-  "log_processing": {
-    "output_to_file": true,
-    "modules": [
+      },
       {
         "type": "binning",
         "output_to_file": false,
@@ -182,12 +177,54 @@
       },
       {
         "type": "rhino_physics",
-        "output_to_file": false,
+        "output_to_file": true,
         "args": {
           "recipe_to_use": "J1"
         }
+      },
+      {
+        "type": "rhino_plotter",
+        "output_to_file": true,
+        "args":{
+          "panels": [
+            {
+              "type": "curves",
+              "curves": [
+                "a_density"
+              ]
+            },
+            {
+              "type": "curves",
+              "curves": [
+                "a_velocity"
+              ]
+            },
+            {
+              "type": "curves",
+              "curves": [
+                "a_delay"
+              ]
+            },
+            {
+              "type": "curves",
+              "curves": [
+                "a_modulus"
+              ]
+            },
+            {
+              "type": "curves",
+              "curves": [
+                "a_ratio"
+              ]
+            },
+            {
+              "type": "curves",
+              "curves": [
+                "a_reflection_coef"
+              ]
+            }
+          ]
+        }
       }
-    ]
-  }
-
+      ]
 }

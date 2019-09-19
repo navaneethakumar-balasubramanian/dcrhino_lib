@@ -2,8 +2,9 @@
 """
 Created on Sat May 26 12:12:33 2018
 
-@author: kkappler
-beware maybe imprecise or errors in :
+Author: kkappler
+
+.. warning:: beware maybe imprecise or errors in :
     sample_interval_in_ms_for_this_trace
 
 """

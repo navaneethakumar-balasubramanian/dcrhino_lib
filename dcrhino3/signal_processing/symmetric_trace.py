@@ -2,7 +2,7 @@
 """
 Created on Mon Feb  4 21:28:04 2019
 
-@author: kkappler
+Author: kkappler
 """
 
 from __future__ import absolute_import, division, print_function
@@ -20,6 +20,11 @@ from dcrhino3.signal_processing.phase_rotation import rotate_phase
 logger = init_logging(__name__)
 
 class SymmetricTrace(object):
+    """
+    .. :NOTE: 20190528: this would actually make a not bad base class for a TimeSeries,
+    SymmetricTrace could then extend TimeSeries. to do this I would need:
+    - the t0 method to be overwritten
+    """
     def __init__(self, data, sampling_rate, **kwargs):
         #BaseTraceModule.__init__(self, json, output_path)
         #self.id = "lead_channel_deconvolution"
@@ -27,6 +32,7 @@ class SymmetricTrace(object):
         self.sampling_rate = sampling_rate#kwargs.get('sampling_rate', None)
         self.component_id = kwargs.get('component_id', None)
         self.timestamp = kwargs.get('timestamp', None)
+        self.n_samples_shift = 0
         #self.global_config = kwargs.get('global_config', None)
         if (self.data is not None) & (self.sampling_rate is not None):
             self.calculate_time_vector()
@@ -35,8 +41,10 @@ class SymmetricTrace(object):
 
     def _clone(self, **kwargs):
         """
-        create a new instance of same type.
+        Create a new instance of same type.
 
+        Keyword Arguments:
+            :Duplicate symmetric trace to be copy.deepcopy()
         """
         duplicate_symmetric_trace = copy.deepcopy(self)
         return duplicate_symmetric_trace
@@ -54,6 +62,10 @@ class SymmetricTrace(object):
         return (self.num_observations - 1) // 2
 
     def calculate_time_vector(self):
+        """
+        Calculate the equal step, ideal time vector using "dt" and "num_observations"
+        and shifting x-axis using t0_index.
+        """
         time_vector = self.dt * (np.arange(self.num_observations) - self.t0_index)
         self._time_vector = time_vector
         return
@@ -69,36 +81,70 @@ class SymmetricTrace(object):
     def center_index(self):
         return (len(self.data)-1) // 2
 
+    def trim_to_new_center_index(self, center_index):
+        lhs = self.data[:center_index]   # everything up to but not including the max
+        rhs = self.data[center_index + 1:] # everything after the max
+        n_keep = min(len(lhs), len(rhs))
+        keep_lhs = lhs[-n_keep:]
+        keep_rhs = rhs[:n_keep]
+        mini_trace_data = np.hstack((keep_lhs, self.data[center_index], keep_rhs))
+        mini_trace = SymmetricTrace(mini_trace_data, self.sampling_rate,
+                                component_id=self.component_id)
+        return mini_trace
+
+
     def trim_to_num_points_lr(self, n_points):
         """
+        Trim to index with width = 2 * n_points + 1, centered around
+        center_index.
         """
         self.data = self.data[self.center_index-n_points:self.center_index+n_points + 1]
         self.calculate_time_vector()
 
     def trim_to_indices(self, indices):
         """
+        Trim to specified indices, not necessarily equidistant around center_index
+        like :func:`trim_to_num_points_lr`
         """
         self.data = self.data[indices]
         self._time_vector = self._time_vector[indices]
 
 
-    def plot(self):
-        plt.plot(self.time_vector, self.data, 'bs');
-        plt.title('{} component'.format(self.component_id))
-        plt.xlabel('Time (s)')
+    def plot(self, ticks=[], block=True):
+        """
+        Plot time_vector vs. data, title, label, and show.
+        """
+        fig, ax = plt.subplots(1,1)
+        ax.plot(self.time_vector, self.data, 'bs');
+        ax.plot(self.time_vector, self.data, 'r');
+        ax.hlines(0, self.time_vector[0], self.time_vector[-1], color='k');
+        ax.set_title('{} component'.format(self.component_id))
+        ax.set_xlabel('Time (s)')
+        if len(ticks)>0:
+            tick_heights = 0.1 * np.ptp(self.data)
+            ax.vlines(ticks, -tick_heights/2, tick_heights/2)
         plt.show()
 
     def rotate_recenter_and_trim(self, phi):
         """
-        @note 20140214: Initially this method trimmed the trace.  BUT that could result in
-        different length traces within a blasthole.  Theoretically this is not a
-        problem,but practically it will cause problems if we wanted to use the
-        component_as_array() method of TraceDataframe().  So to work around this
-        I can either use np.roll or zeropad the trace.
+        Use :func:`phase_rotation.rotate_phase` to rotate data by phi degrees. Find
+        new center index of rotated data, and shift the trimmings to new center
+        index using `Numpy roll. <https://docs.scipy.org/doc/numpy/reference/generated/numpy.roll.html>`_
+        Revise data to reflect these changes.
+
+        Parameters:
+            phi (float): angle, in degrees, to shift data
+
+        .. note:: 20140214: Initially this method trimmed the trace.  BUT that could result in
+            different length traces within a blasthole.  Theoretically this is not a
+            problem,but practically it will cause problems if we wanted to use the
+            component_as_array() method of TraceDataframe().  So to work around this
+            I can either use np.roll or zeropad the trace.
         """
         rotated_data = rotate_phase(self.data, phi)
         new_center_index = np.argmax(rotated_data)
-        shifted_rotated_data = np.roll(rotated_data, self.center_index-new_center_index)
+        self.n_samples_shift = self.center_index-new_center_index
+        shifted_rotated_data = np.roll(rotated_data, self.n_samples_shift)
 #        left_side = rotated_data[:new_center_index]
 #        right_side = rotated_data[new_center_index+1:]
 #        new_half_len = min(len(left_side), len(right_side))
@@ -108,9 +154,14 @@ class SymmetricTrace(object):
         #self.calculate_time_vector()
         return
 
+    @property
+    def applied_shift(self):
+        return self.n_samples_shift * self.dt
+
 
 def my_function():
     """
+    Tester function for :func:`SymmetricTrace`
     """
     x = np.arange(11)
     st = SymmetricTrace(data=x, sampling_rate=10.0)

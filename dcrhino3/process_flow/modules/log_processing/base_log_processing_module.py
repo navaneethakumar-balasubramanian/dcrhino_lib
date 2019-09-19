@@ -1,12 +1,15 @@
 from dcrhino3.process_flow.modules.base_module import BaseModule
 
 class BaseLogProcessingModule(BaseModule):
-    def __init__(self, json, output_path):
+    def __init__(self, json, output_path,process_flow,order):
         """
         @ivar id: data_processing_stage_designator
         """
-        BaseModule.__init__(self, json, output_path)
+        BaseModule.__init__(self, json, output_path, process_flow,order)
         self.id = "base_log_processing_module"
+
+    def process_trace(self,trace):
+        return self.process_trace_data(trace)
 
     def process_trace_data(self, trace):
         df = trace.dataframe.copy()
@@ -24,7 +27,7 @@ class BaseLogProcessingModule(BaseModule):
         trace.add_applied_module(self.applied_module_string(self.args))
 
         if self.output_to_file:
-            trace.save_to_csv(self.output_path)
+            trace.save_to_csv(self.output_file_basepath())
 
         return trace
 

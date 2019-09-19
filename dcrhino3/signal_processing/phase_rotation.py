@@ -2,7 +2,7 @@
 """
 Created on Wed Nov 14 12:21:45 2018
 
-@author: kkappler
+Author: kkappler
 """
 
 from __future__ import absolute_import, division, print_function
@@ -20,10 +20,19 @@ jj = np.complex(0.0, 1.0)
 
 def rotate_phase(data, phase_shift, degrees=True):
     """
-    ::data:: numpy array (currently 1D, need to test as 2D might need to transpose)
-    ::phase shift:: float: #of degrees to shift signal phase
-    usage: phase_shifted_data_time = rotate_phase(data, phi)
+    Phase rotation by fast fourier transform, multiplication by phasor, inverse fft
+    and taking reals. Rotates data by negative phi
 
+    Parameters:
+        data (array): numpy array (currently 1D, need to test as 2D might need
+             to transpose)
+        phase shift (float): float: #of degrees to shift signal phase
+
+    Other Parameters:
+        degrees (bool): True for degrees, false for radians
+
+    Returns:
+        (real Numpy ndarray): Phase shifted data
     """
     if degrees is False:
         phase_shift_radians = phase_shift
@@ -32,23 +41,42 @@ def rotate_phase(data, phase_shift, degrees=True):
 
     N = len(data)
     sign_correction = np.sign(np.fft.fftfreq(N))
-    phasor = np.exp(-jj * phase_shift_radians * sign_correction)
+    phasor = np.exp(jj * phase_shift_radians * sign_correction)
     fft_data = np.fft.fft(data)
     phase_shifted_data_fft = fft_data*phasor
     phase_shifted_data_time = np.real(np.fft.ifft(phase_shifted_data_fft))
     return phase_shifted_data_time
 
 
+
 def determine_phase_state(data, trough_search_width):
     """
-    trough-search-width: this is how far to the left and right of the peak we will
-    look for a minumum.  It must be large enough for the minimum to be contained,
-    but not so large that we may find another minumum ... show up
+    Determine the phase state by searching for troughs to the left and right of the
+    peak. Indeterminate means no troughs or too small search width, balanced means
+    equal number of troughs on both sides, left_low/right_low means trough
+    count imbalance.
 
-    @note 20190211: I do not understand the condition  max_index<trough_search_width
-    which leads to balanced .. it works most of the time but for left low traces with
-    fewer observations to th left than the right it is returning balanced prematurely
-    -- I'm going to comment it out and see what happens
+    Parameters:
+        data (array): numpy array (currently 1D, need to test as 2D might need
+             to transpose)
+        trough-search-width (float): this is how far to the left and right of
+            the peak we will
+            look for a minumum.  It must be large enough for the minimum to be contained,
+            but not so large that we may find another minumum show up
+
+    Returns:
+        (str): Phase state status as one of the following:
+
+            + 'indeterminate'
+            + 'balanced'
+            + 'left_low'
+            + 'right_low'
+            + 'surprise - already balanced'
+
+    .. note:: 20190211: I do not understand the condition  max_index<trough_search_width
+        which leads to balanced .. it works most of the time but for left low traces with
+        fewer observations to th left than the right it is returning balanced prematurely
+        -- I'm going to comment it out and see what happens
     """
     phase_state = 'indeterminate'
     #print('trough_search_width {}'.format(trough_search_width))
@@ -67,7 +95,7 @@ def determine_phase_state(data, trough_search_width):
     try:
         left_min_index = np.argmin(left_trough_region)
     except ValueError:
-        logger.warning('{} phase state'.format(phase_state))
+        #logger.warning('{} phase state'.format(phase_state))
         return phase_state
 
     left_min_value = left_trough_region[left_min_index]
@@ -95,6 +123,8 @@ def determine_phase_state(data, trough_search_width):
 
 def test_phase_rotation():
     """
+    Loads pet_trace, plots original, shift by phi, and shift by 2phi to test
+    the functionality of :func:`rotate_phase`
     """
     data = np.load('pet_trace.npy')
     dt = 0.01;t = dt*np.arange(1000);data = np.sin(t)# + j*np.cos(t)

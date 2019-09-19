@@ -2,13 +2,10 @@
 """
 
 """
-import numpy as np
 import pandas as pd
-import time
 import pdb
 
 from dcrhino3.helpers.general_helper_functions import init_logging
-from dcrhino3.models.trace_dataframe import TraceData
 from dcrhino3.process_flow.modules.base_module import BaseModule
 
 logger = init_logging(__name__)
@@ -46,13 +43,16 @@ def strip_k0_from_trace_column_labels(df):
     return df
 
 class BaseFeatureModule(BaseModule):
-    def __init__(self, json, output_path):
+    def __init__(self, json, output_path,process_flow, order):
         """
         @ivar id: data_processing_stage_designator
         """
-        BaseModule.__init__(self, json, output_path)
+        BaseModule.__init__(self, json, output_path,process_flow, order)
         self.id = "base_feature_module"
 
+
+    def process_trace(self,trace):
+        return self.extract_features(trace)
 
     def extract_features(self,trace):
         """
@@ -69,7 +69,7 @@ class BaseFeatureModule(BaseModule):
             trace_config = trace.global_config_by_index(row_of_df['acorr_file_id'])
             transformed_args = self.get_transformed_args(trace_config)
 
-            for component_id in trace_config.components_to_process:
+            for component_id in self.components_to_process:
                 component_column_on_df = component_id+"_trace"
                 trace_to_process = row_of_df[component_column_on_df]
                 timestamp = row_of_df.timestamp
@@ -91,7 +91,7 @@ class BaseFeatureModule(BaseModule):
         trace.add_applied_module(self.applied_module_string(self.args))
 
         if self.output_to_file:
-            features_df.to_csv(self.output_path,index=False)
+            features_df.to_csv(self.output_file_basepath(extension=".csv"),index=False)
 
 
         return trace

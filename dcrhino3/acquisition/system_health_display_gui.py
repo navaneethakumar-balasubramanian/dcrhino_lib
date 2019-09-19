@@ -1,24 +1,25 @@
-import ConfigParser
-from Tkinter import *
-#import ttk
-import tkFont
+from tkinter import *
 from datetime import datetime
-import pdb
-import os,sys
-import Queue
+import os
+import sys
 import time
 from math import ceil
-import pdb
-from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
-from dcrhino3.acquisition.constants import DATA_PATH, LOGS_PATH
-cfg_fname = os.path.join(PATH,"collection_daemon.cfg")
+import numpy as np
+import psutil
+from dcrhino3.acquisition.constants import LOGS_PATH
+from dcrhino3.acquisition.rhino_threads import NetworkThread, GPSThread
+from dcrhino3.acquisition.supporting_acquisition import calculate_battery_percentage
+from dcrhino3.models.config2 import Config
+import math
+from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file
+logger = init_logging(__name__)
+file_logger = init_logging_to_file(__name__)
 
 
-config = ConfigParser.SafeConfigParser()
-config.read(cfg_fname)
+config = Config(acquisition_config=True)
+rhino_version = config.rhino_version
 
-rhino_version = config.getfloat("COLLECTION","rhino_version")
-
+ignore_gpsd = False
 
 
 class SystemHealthLogger():
@@ -26,16 +27,13 @@ class SystemHealthLogger():
         self.filename = ""
         self.output_file = None
 
-    def change_files(self,filename):
-        if self.output_file != None:
+    def change_files(self, filename):
+        if self.output_file is not None:
             self.output_file.close()
-        self.output_file = open(filename, 'ar', buffering=0)
+        self.output_file = open(filename, 'a')
 
-
-    def log(self,message):
-        #  pdb.set_trace()
-        filename = os.path.join(LOGS_PATH,datetime.now().strftime('%Y_%m_%d_%H')+'_health.log')
-        # print(self.filename,filename)
+    def log(self, message):
+        filename = os.path.join(LOGS_PATH, datetime.now().strftime('%Y_%m_%d_%H')+'_health.log')
         if self.filename != filename:
             self.change_files(filename)
         message = ",".join([str(x) for x in message])
@@ -44,7 +42,7 @@ class SystemHealthLogger():
         self.output_file.flush()
 
 class GUI():
-    def __init__(self,displayQ,system_healthQ):
+    def __init__(self, displayQ, system_healthQ):
         self.master = Tk()
         self.master.title("DataCloud Rhino System Health")
         self.master.option_add("*Font", "TkDefaultFont 16")
@@ -54,104 +52,278 @@ class GUI():
         self.initialization_time = int(time.time())
         self.system_health_logger = SystemHealthLogger()
         self.corrupt_packets = 0
+        self.drift = 0
+        self.network_thread = NetworkThread()
+        self.network_thread.start()
+        self.gps_thread = GPSThread(ignore_gpsd)
+        self.gps_thread.start()
+        screen_height = self.master.winfo_screenheight()
+        if screen_height > 1000:
+            screen_height = 1000
+        self.master.geometry('%dx%d+%d+%d' % (1200, screen_height, 0, 0))
+
+        column_span = 7
 
         row = 0
+        column = 7
         Label(self.master, text="Realtime Log Display").grid(row=row)
-        self.display = Text(self.master,width=60,height=60)
-        self.display.grid(row=row,columnspan=6,rowspan=30, column=1)
+        self.display = Text(self.master, width=60, height=60)
+        self.display.grid(row=row, columnspan=6, rowspan=30, column=1)
 
-
-        Label(self.master, text="Current UTC Time").grid(row=row,column=7)
-        row+=1
+        Label(self.master, text="Current UTC Time").grid(row=row, column=column, columnspan=column_span, sticky="news")
+        row += 1
         self.utc_time = StringVar(self.master)
-        self.time_label=Label(self.master, textvariable=self.utc_time)
+        self.time_label = Label(self.master, textvariable=self.utc_time)
         self.time_label.config(bg="#deebf7")
-        self.time_label.grid(row=row,column=7,sticky="news")
-        row+=1
-        Label(self.master, text="Rhino Version").grid(row=row,column=7)
-        row+=1
+        self.time_label.grid(row=row, column=column, sticky="news", columnspan=column_span)
+        row += 1
+
+        Label(self.master, text="Rhino Version").grid(row=row, column=7, columnspan=column_span)
+        row += 1
         self.rhino_version = StringVar(self.master)
-        self.rhino_version.set(config.get("COLLECTION","rhino_version"))
-        self.rhino_version_label=Label(self.master, textvariable=self.rhino_version)
+        self.rhino_version.set(rhino_version)
+        self.rhino_version_label = Label(self.master, textvariable=self.rhino_version)
         self.rhino_version_label.config(bg="#deebf7")
-        self.rhino_version_label.grid(row=row,column=7,sticky="news")
-        row+=1
-        Label(self.master, text="Transmitter Status").grid(row=row,column=7)
-        row+=1
+        self.rhino_version_label.grid(row=row, column=column, sticky="news", columnspan=column_span)
+        row += 1
+
+        column_span = 3
+
+        Label(self.master, text="Transmitter Status", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                          columnspan=column_span,
+                                                                                          sticky="news")
+        row += 1
         self.tx_status = StringVar(self.master)
         self.tx_status_label = Label(self.master, textvariable=self.tx_status)
-        self.tx_status_label.grid(row=row,column=7,sticky="news")
-        row+=1
+        self.tx_status_label.grid(row=row, column=7, sticky="news", columnspan=column_span)
+        row += 1
 
-        self.battery_plot_display_percentage = config.getboolean("SYSTEM_HEALTH_PLOTS","battery_plot_display_percentage")
+        Label(self.master, text="Acceleration Status", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                           columnspan=column_span,
+                                                                                           sticky="news")
+        row += 1
+        Label(self.master, text="A").grid(row=row, column=column, sticky="news")
+        Label(self.master, text="T").grid(row=row, column=column + 1, sticky="news")
+        Label(self.master, text="R").grid(row=row, column=column + 2, sticky="news")
+        row += 1
+        self.a_accel = StringVar(self.master)
+        self.a_accel_label = Label(self.master, textvariable=self.a_accel)
+        self.a_accel_label.grid(row=row, column=column, sticky="news")
+        self.t_accel = StringVar(self.master)
+        self.t_accel_label = Label(self.master, textvariable=self.t_accel)
+        self.t_accel_label.grid(row=row, column=column + 1, sticky="news")
+        self.r_accel = StringVar(self.master)
+        self.r_accel_label = Label(self.master, textvariable=self.r_accel)
+        self.r_accel_label.grid(row=row, column=column + 2, sticky="news")
+
+        row += 1
+
+        self.battery_plot_display_percentage = config.battery_plot_display_percentage
         if self.battery_plot_display_percentage:
-            Label(self.master, text="Battery Percentage").grid(row=row,column=7)
+            Label(self.master, text="Battery Percentage", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                              columnspan=column_span,
+                                                                                              sticky="news")
         else:
-            Label(self.master, text="Battery Voltage").grid(row=row,column=7)
-        row+=1
+            Label(self.master, text="Battery Voltage", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                           columnspan=column_span,
+                                                                                           sticky="news")
+        row += 1
         self.battery_life = StringVar(self.master)
         self.battery_label = Label(self.master, textvariable=self.battery_life)
-        self.battery_label.grid(row=row,column=7,sticky="news")
-        row+=1
-        Label(self.master, text="Board Temperature").grid(row=row,column=7)
-        row+=1
+        self.battery_label.grid(row=row, column=7, sticky="news", columnspan=column_span)
+        row += 1
+
+        Label(self.master, text="Board Temperature", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                         columnspan=column_span,
+                                                                                         sticky="news")
+        row += 1
         self.board_temperature = StringVar(self.master)
         self.temperature_label = Label(self.master, textvariable=self.board_temperature)
-        self.temperature_label.grid(row=row,column=7,sticky="news")
+        self.temperature_label.grid(row=row, column=column, sticky="news", columnspan=column_span)
         row += 1
-        Label(self.master, text="RSSI").grid(row=row,column=7)
-        row+=1
+
+        Label(self.master, text="RSSI", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                            columnspan=column_span,
+                                                                            sticky="news")
+        row += 1
         self.rssi = StringVar(self.master)
         self.rssi_label = Label(self.master, textvariable=self.rssi)
-        self.rssi_label.grid(row=row,column=7,sticky="news")
-        row+=1
-        Label(self.master, text="Sample Count").grid(row=row,column=7)
-        row+=1
+        self.rssi_label.grid(row=row, column=column, sticky="news", columnspan=column_span)
+        row += 1
+
+        Label(self.master, text="Sample Count", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                    columnspan=column_span,
+                                                                                    sticky="news")
+        row += 1
         self.sample_count = StringVar(self.master)
         self.samples_label = Label(self.master, textvariable=self.sample_count)
-        self.samples_label.grid(row=row,column=7,sticky="news")
-        row+=1
-        Label(self.master, text="Plotting Delay").grid(row=row,column=7)
-        row+=1
+        self.samples_label.grid(row=row, column=column, sticky="news", columnspan=column_span)
+        row += 1
+
+        Label(self.master, text="Plotting Delay", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                      columnspan=column_span,
+                                                                                      sticky="news")
+        row += 1
         self.delay = StringVar(self.master)
         self.delay_label = Label(self.master, textvariable=self.delay)
-        self.delay_label.grid(row=row,column=7,sticky="news")
-        row+=1
-        Label(self.master, text="Acquired Seconds").grid(row=row,column=7)
-        row+=1
+        self.delay_label.grid(row=row, column=column, sticky="news", columnspan=column_span)
+        row += 1
+
+        Label(self.master, text="Clock Drift", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                   columnspan=column_span,
+                                                                                   sticky="news")
+        row += 1
+        self.drift_var = StringVar(self.master)
+        self.drift_label = Label(self.master, textvariable=self.drift_var)
+        self.drift_label.grid(row=row, column=column, sticky="news", columnspan=column_span)
+        self.drift_label.config(bg="#deebf7")
+        row += 1
+
+        Label(self.master, text="Acquired Seconds", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                        columnspan=column_span,
+                                                                                        sticky="news")
+        row += 1
         self.acq_time = StringVar(self.master)
         self.elapsed_label = Label(self.master, textvariable=self.acq_time)
-        self.elapsed_label.grid(row=row,column=7,sticky="news")
+        self.elapsed_label.grid(row=row, column=column, sticky="news", columnspan=column_span)
         self.elapsed_label.config(bg="#deebf7")
-        row+=1
-        Label(self.master, text="System Up Time").grid(row=row,column=7)
-        row+=1
+        row += 1
+
+        Label(self.master, text="System Up Time", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                      columnspan=column_span,
+                                                                                      sticky="news")
+        row += 1
         self.sys_up_time = StringVar(self.master)
         self.sys_up_label = Label(self.master, textvariable=self.sys_up_time)
-        self.sys_up_label.grid(row=row,column=7,sticky="news")
+        self.sys_up_label.grid(row=row, column=column, sticky="news", columnspan=column_span)
         self.sys_up_label.config(bg="#deebf7")
-        row+=1
-        Label(self.master, text="Corrupt Packets").grid(row=row,column=7)
-        row+=1
+        row += 1
+
+        Label(self.master, text="Corrupt Packets", borderwidth=1, relief="solid").grid(row=row, column=7,
+                                                                                       columnspan=column_span,
+                                                                                       sticky="news")
+        row += 1
         self.corrupt_packets_var = StringVar(self.master)
-        # self.corrupt_packets_label = Label(self.master, textvariable=self.lines)
         self.corrupt_packets_label = Label(self.master, textvariable=self.corrupt_packets_var)
-        self.corrupt_packets_label.grid(row=row,column=7,sticky="news")
+        self.corrupt_packets_label.grid(row=row, column=column, sticky="news", columnspan=column_span)
         self.corrupt_packets_label.config(bg="#deebf7")
-        row+=1
-        # self.master.mainloop()
+        row += 1
+
+        column = 10
+        row = 4
+        column_span = 4
+        Label(self.master, text="Tablet Temperature", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                          columnspan=column_span,
+                                                                                          sticky="news")
+        row += 1
+        self.package_temp_var = StringVar(self.master)
+        self.package_temp = Label(self.master, textvar=self.package_temp_var)
+        self.package_temp.grid(row=row, column=column, columnspan=1, sticky="news")
+        self.package_temp.config(bg="#deebf7")
+        self.core1_temp_var = StringVar(self.master)
+        self.core1_temp = Label(self.master, textvar=self.core1_temp_var)
+        self.core1_temp.grid(row=row, column=column + 1, columnspan=1, sticky="news")
+        self.core1_temp.config(bg="#deebf7")
+        self.core2_temp_var = StringVar(self.master)
+        self.core2_temp = Label(self.master, textvar=self.core2_temp_var)
+        self.core2_temp.grid(row=row, column=column + 2, columnspan=1, sticky="news")
+        self.core2_temp.config(bg="#deebf7")
+        row += 1
+        Label(self.master, text="CPU Usage", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                 columnspan=column_span,
+                                                                                 sticky="news")
+        row += 1
+        self.cpu1_usage_var = StringVar(self.master)
+        self.cpu1_usage = Label(self.master, textvar=self.cpu1_usage_var)
+        self.cpu1_usage.grid(row=row, column=column, columnspan=1, sticky="news")
+        self.cpu1_usage.config(bg="#deebf7")
+        self.cpu2_usage_var = StringVar(self.master)
+        self.cpu2_usage = Label(self.master, textvar=self.cpu2_usage_var)
+        self.cpu2_usage.grid(row=row, column=column + 2, columnspan=1, sticky="news")
+        self.cpu2_usage.config(bg="#deebf7")
+        row += 1
+        self.cpu3_usage_var = StringVar(self.master)
+        self.cpu3_usage = Label(self.master, textvar=self.cpu3_usage_var)
+        self.cpu3_usage.grid(row=row, column=column, columnspan=1, sticky="news")
+        self.cpu3_usage.config(bg="#deebf7")
+        self.cpu4_usage_var = StringVar(self.master)
+        self.cpu4_usage = Label(self.master, textvar=self.cpu4_usage_var)
+        self.cpu4_usage.grid(row=row, column=column + 2, columnspan=1, sticky="news")
+        self.cpu4_usage.config(bg="#deebf7")
+        row += 1
+        Label(self.master, text="GPS Satellites", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                      columnspan=column_span,
+                                                                                      sticky="news")
+        row += 1
+        self.gps_var = StringVar(self.master)
+        self.gps = Label(self.master, textvar=self.gps_var)
+        self.gps.grid(row=row, column=column, columnspan=column_span, sticky="news")
+        self.gps.config(bg="#deebf7")
+        row += 1
+        Label(self.master, text="Network Connection", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                          columnspan=column_span,
+                                                                                          sticky="news")
+        row += 1
+        self.network_var = StringVar(self.master)
+        self.network = Label(self.master, textvar=self.network_var)
+        self.network.grid(row=row, column=column, columnspan=column_span, sticky="news")
+        self.network.config(bg="#deebf7")
+        row += 1
+        Label(self.master, text="Tablet Battery", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                      columnspan=column_span,
+                                                                                      sticky="news")
+        row += 1
+        self.tablet_batt_percentage_var = StringVar(self.master)
+        self.tablet_batt_percentage = Label(self.master, textvar=self.tablet_batt_percentage_var)
+        self.tablet_batt_percentage.grid(row=row, column=column, columnspan=1, sticky="news")
+        self.tablet_batt_percentage.config(bg="#deebf7")
+        self.tablet_batt_status_var = StringVar(self.master)
+        self.tablet_batt_status = Label(self.master, textvar=self.tablet_batt_status_var)
+        self.tablet_batt_status.grid(row=row, column=column+1, columnspan=1, sticky="news")
+        self.tablet_batt_status.config(bg="#deebf7")
+        self.tablet_batt_life_var = StringVar(self.master)
+        self.tablet_batt_life = Label(self.master, textvar=self.tablet_batt_life_var)
+        self.tablet_batt_life.grid(row=row, column=column+2, columnspan=1, sticky="news")
+        self.tablet_batt_life.config(bg="#deebf7")
+        row += 1
+        Label(self.master, text="Disk Usage %", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                    columnspan=column_span,
+                                                                                    sticky="news")
+        row += 1
+        self.disk_usage_var = StringVar(self.master)
+        self.disk_usage = Label(self.master, textvar=self.disk_usage_var)
+        self.disk_usage.grid(row=row, column=column, columnspan=column_span, sticky="news")
+        self.disk_usage.config(bg="#deebf7")
+        row += 1
+        Label(self.master, text="Ram Usage %", borderwidth=1, relief="solid").grid(row=row, column=column,
+                                                                                   columnspan=column_span,
+                                                                                   sticky="news")
+        row += 1
+        self.ram_usage_var = StringVar(self.master)
+        self.ram_usage = Label(self.master, textvar=self.ram_usage_var)
+        self.ram_usage.grid(row=row, column=column, columnspan=column_span, sticky="news")
+        self.ram_usage.config(bg="#deebf7")
+        row += 1
+
+        for i in range(100):
+            self.master.grid_columnconfigure(i, weight=1)
+            self.master.grid_rowconfigure(i, weight=1)
 
     def print_line(self):
         while not self.displayQ.empty():
             line = self.displayQ.get_nowait()
-            self.display.insert(END,line)
+            line_components = line.split(",")
+            if len(line_components) == 5 and 'Changed' in line_components[0]:
+                self.drift = float(line_components[3])
+                # print("Drift", self.drift)
+            self.display.insert(END, line)
             self.display.see("end")
         lines = int(self.display.index('end-1c').split('.')[0])
         #TODO:select the number of lines to display from config file
         max_lines = 1000
         if lines >= max_lines:
             end = float(lines-max_lines+1)
-            self.display.delete(1.0,end)
+            self.display.delete(1.0, end)
         self.master.update()
 
     def update_system_health(self):
@@ -159,42 +331,39 @@ class GUI():
         try:
             while not self.system_healthQ.empty():
                 health = self.system_healthQ.get_nowait()
-                # pdb.set_trace()
                 self.utc_time.set(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
 
-
-                battery = round(health[4][-1],2)
-                #battery = 20
+                battery = round(health[4][-1], 2)
                 if self.battery_plot_display_percentage:
-                    self.battery_life.set("{} %".format(battery))
+                    self.battery_life.set("{} %".format(self.calculate_battery_percentage(battery)))
+                    bgcolor, fgcolor = self.colors("battery", self.calculate_battery_percentage(battery))
                 else:
                     self.battery_life.set("{} V".format(battery))
-                bgcolor,fgcolor = self.colors("battery",battery)
-                self.battery_label.config(bg=bgcolor,fg=fgcolor)
+                    bgcolor, fgcolor = self.colors("battery", battery)
+                self.battery_label.config(bg=bgcolor, fg=fgcolor)
 
-                temp = round(health[3][-1],2)
-                #temp = 72
-                bgcolor,fgcolor = self.colors("temperature",temp)
+                temp = round(health[3][-1], 2)
+                bgcolor, fgcolor = self.colors("temperature", temp)
                 self.board_temperature.set("{} degC".format(temp))
-                self.temperature_label.config(bg=bgcolor,fg=fgcolor)
+                self.temperature_label.config(bg=bgcolor, fg=fgcolor)
 
-                rssi = round(health[0][-1],2)
-                #rssi = -73
-                bgcolor,fgcolor = self.colors("rssi",rssi)
+                rssi = round(health[0][-1], 2)
+                bgcolor, fgcolor = self.colors("rssi", rssi)
                 self.rssi.set("{} dB".format(rssi))
-                self.rssi_label.config(bg=bgcolor,fg=fgcolor)
+                self.rssi_label.config(bg=bgcolor, fg=fgcolor)
 
                 samples = health[1][-1]
-                #samples = 2700
-                bgcolor,fgcolor = self.colors("samples",samples)
+                bgcolor, fgcolor = self.colors("samples", samples)
                 self.sample_count.set(str(samples))
-                self.samples_label.config(bg=bgcolor,fg=fgcolor)
+                self.samples_label.config(bg=bgcolor, fg=fgcolor)
 
-                delay = round(health[2][-1],2)
-                #delay = 3
-                bgcolor,fgcolor = self.colors("delay",delay)
-                self.delay.set("{} sec".format(delay))
-                self.delay_label.config(bg=bgcolor,fg=fgcolor)
+                delay = health[2][-1]
+                calculated_delay = round(delay + self.drift,2)
+                bgcolor, fgcolor = self.colors("delay", calculated_delay)
+                self.delay.set("{} sec".format(calculated_delay))
+                self.delay_label.config(bg=bgcolor, fg=fgcolor)
+
+                self.drift_var.set("{} sec".format(self.drift))
 
                 counter_changes = health[5]
                 self.acq_time.set("{} sec".format(counter_changes))
@@ -207,105 +376,169 @@ class GUI():
                 tx_status = health[10]
 
                 if tx_status == 1:
-                    bgcolor,fgcolor = self.colors("transmitter",1)
+                    # bgcolor, fgcolor = self.colors("transmitter", 1)
                     self.tx_status.set("TRANSMITTING")
-                    self.tx_status_label.config(bg="green",fg="white")
+                    self.tx_status_label.config(bg="green", fg="white")
                 elif tx_status == 0:
-                    bgcolor,fgcolor = self.colors("transmitter",0)
+                    # bgcolor, fgcolor = self.colors("transmitter", 0)
                     self.tx_status.set("SLEEPING")
-                    self.tx_status_label.config(bg="black",fg="green")
+                    self.tx_status_label.config(bg="black", fg="green")
                 else:
                     self.tx_status.set("NFC")
-                    self.tx_status_label.config(bg="red",fg="black")
+                    self.tx_status_label.config(bg="red", fg="black")
 
                 tracetime = health[6]
-                line = [tracetime.strftime("%Y-%m-%d %H:%M:%S"),battery,temp,rssi,delay,counter_changes,self.corrupt_packets,tx_status]
-                self.system_health_logger.log(line)
 
-                if rhino_version == 1.0:
-                    self.disable_element(self.rssi_label)
-                    self.disable_element(self.temperature_label)
-                    self.disable_element(self.battery_label)
+                disk_usage = psutil.disk_usage("/")[3]
+                ram_usage = psutil.virtual_memory()[2]
+                tablet_temperature = ":".join(str(x.current) for x in psutil.sensors_temperatures()["coretemp"])
+                battery_sensor = psutil.sensors_battery()
+
+                if battery_sensor is not None:
+                    if battery_sensor[2]:
+                        tablet_battery_status = 1
+                    else:
+                        tablet_battery_status = 0
+                    tablet_battery_percentage = round(battery_sensor[0], 2)
+                    tablet_battery_life = int(battery_sensor[1])
+                    if tablet_battery_life < 0:
+                        tablet_battery_life = np.inf
+                else:
+                    tablet_battery_status = np.nan
+                    tablet_battery_percentage = np.nan
+                    tablet_battery_life = np.nan
+                tablet_cpu_usage = ":".join([str(x) for x in psutil.cpu_percent(percpu=True)])
+
+                self.disk_usage_var.set(disk_usage)
+                self.ram_usage_var.set(ram_usage)
+                self.gps_var.set(self.gps_thread.satellite_count)
+                self.package_temp_var.set(tablet_temperature.split(":")[0])
+                self.core1_temp_var.set(tablet_temperature.split(":")[1])
+                self.core2_temp_var.set(tablet_temperature.split(":")[2])
+                self.cpu1_usage_var.set(tablet_cpu_usage.split(":")[-4])
+                self.cpu2_usage_var.set(tablet_cpu_usage.split(":")[-3])
+                self.cpu3_usage_var.set(tablet_cpu_usage.split(":")[-2])
+                self.cpu4_usage_var.set(tablet_cpu_usage.split(":")[-1])
+                self.tablet_batt_life_var.set(tablet_battery_life)
+                self.tablet_batt_percentage_var.set(tablet_battery_percentage)
+                self.tablet_batt_status_var.set(tablet_battery_status)
+                self.network_var.set(self.network_thread.network_status)
+
+                health_line = [tracetime.strftime("%Y-%m-%d %H:%M:%S"), samples, battery, temp, rssi, delay,
+                               counter_changes, self.corrupt_packets, tx_status, self.drift, calculated_delay,
+                               disk_usage, ram_usage, tablet_temperature, tablet_battery_status,
+                               tablet_battery_percentage, tablet_battery_life, tablet_cpu_usage]
+
+                self.system_health_logger.log(health_line)
+
+                axial_accel = np.max([health[11][-1], health[12][-1]*-1])
+                bgcolor, fgcolor = self.colors("accel", axial_accel)
+                if not np.isnan(axial_accel):
+                    self.a_accel.set("{}".format(int(ceil(axial_accel))))
+                self.a_accel_label.config(bg=bgcolor, fg=fgcolor)
+
+                tangential_accel = np.max([health[13][-1], health[14][-1]*-1])
+                bgcolor, fgcolor = self.colors("accel", tangential_accel)
+                if not np.isnan(tangential_accel):
+                    self.t_accel.set("{}".format(int(ceil(tangential_accel))))
+                self.t_accel_label.config(bg=bgcolor, fg=fgcolor)
+
+                radial_accel = np.max([health[15][-1], health[16][-1]*-1])
+                bgcolor, fgcolor = self.colors("accel", radial_accel)
+                if not np.isnan(radial_accel):
+                    self.r_accel.set("{}".format(int(ceil(radial_accel))))
+                self.r_accel_label.config(bg=bgcolor, fg=fgcolor)
 
                 self.master.update()
         except:
-            print(sys.exc_info())
-            # pdb.set_trace()
+            logger.error("System Health Display GUI error: {}".format(sys.exc_info()))
 
-    def disable_element(self,element):
-        element.config(bg="gray",fg="gray")
+    def disable_element(self, element):
+        element.config(bg="gray", fg="gray")
 
     def do_nothing(self):
         pass
 
-    def colors(self,component,value):
+    def colors(self, component, value):
 
-        if self.tx_status.get() == "TRANSMITTING":
-            greater = True
+        if self.tx_status.get() == "TRANSMITTING" and not math.isnan(value):
             method = "normal"
             upper_limit_2 = None
             lower_limit_2 = None
             if component == "battery":
-                upper_limit = config.getfloat("SYSTEM_HEALTH_PLOTS","battery_upper_limit")
-                lower_limit = config.getfloat("SYSTEM_HEALTH_PLOTS","battery_lower_limit")
+                upper_limit = config.battery_upper_limit
+                lower_limit = config.battery_lower_limit
             elif component == "rssi":
-                upper_limit = config.getfloat("SYSTEM_HEALTH_PLOTS","rssi_upper_limit")
-                lower_limit = config.getfloat("SYSTEM_HEALTH_PLOTS","rssi_lower_limit")
+                upper_limit = config.rssi_upper_limit
+                lower_limit = config.rssi_lower_limit
             elif component == "temperature":
-                # greater = False
-                method="both"
-                upper_limit = config.getfloat("SYSTEM_HEALTH_PLOTS","temp_positive_upper_limit")
-                lower_limit = config.getfloat("SYSTEM_HEALTH_PLOTS","temp_positive_lower_limit")
-                upper_limit_2 = config.getfloat("SYSTEM_HEALTH_PLOTS","temp_negative_upper_limit")
-                lower_limit_2 = config.getfloat("SYSTEM_HEALTH_PLOTS","temp_negative_lower_limit")
+                method = "both"
+                upper_limit = config.temp_positive_upper_limit
+                lower_limit = config.temp_positive_lower_limit
+                upper_limit_2 = config.temp_negative_upper_limit
+                lower_limit_2 = config.temp_negative_lower_limit
             elif component == "delay":
-                # greater = False
-                method="inverted"
-                upper_limit = config.getfloat("SYSTEM_HEALTH_PLOTS","delay_upper_limit")
-                lower_limit = config.getfloat("SYSTEM_HEALTH_PLOTS","delay_lower_limit")
+                method = "inverted"
+                upper_limit = config.delay_upper_limit
+                lower_limit = config.delay_lower_limit
             elif component == "samples":
-                #greater = False
-                upper_limit = config.getfloat("SYSTEM_HEALTH_PLOTS","packets_upper_limit")
-                lower_limit = config.getfloat("SYSTEM_HEALTH_PLOTS","packets_lower_limit")
+                upper_limit = config.packets_upper_limit
+                lower_limit = config.packets_lower_limit
             elif component == "transmitter":
                 upper_limit = 0
                 lower_limit = 0
+            elif component == "accel":
+                method = "contained"
+                upper_limit = config.sensor_saturation_g
+                lower_limit = -config.sensor_saturation_g
 
-            if method=="normal":
+            if method == "normal":
                 if value >= upper_limit:
                     bgcolor = "green"
                     fgcolor = "white"
-                elif value >= lower_limit and value < upper_limit:
+                elif lower_limit <= value < upper_limit:
                     bgcolor = "yellow"
                     fgcolor = "black"
                 else:
                     bgcolor = "red"
                     fgcolor = "black"
-            elif method=="inverted":
+            elif method == "contained":
+                if upper_limit >= value >= lower_limit:
+                    bgcolor = "green"
+                    fgcolor = "white"
+                else:
+                    bgcolor = "red"
+                    fgcolor = "black"
+            elif method == "inverted":
                 if value <= lower_limit:
                     bgcolor = "green"
                     fgcolor = "white"
-                elif value <= upper_limit and value > lower_limit:
+                elif upper_limit >= value > lower_limit:
                     bgcolor = "yellow"
                     fgcolor = "black"
                 else:
                     bgcolor = "red"
                     fgcolor = "black"
-            elif method =="both":
+            elif method == "both":
                 if value >= upper_limit or value <= lower_limit_2:
                     bgcolor = "red"
                     fgcolor = "black"
-                elif (value < upper_limit and value >= lower_limit) or (value <= upper_limit_2 and value > lower_limit_2):
+                elif (upper_limit > value >= lower_limit) or (upper_limit_2 >= value > lower_limit_2):
                     bgcolor = "yellow"
                     fgcolor = "black"
                 else:
                     bgcolor = "green"
                     fgcolor = "white"
         else:
-            # pdb.set_trace()
             bgcolor = "black"
             fgcolor = "green"
-        return bgcolor,fgcolor
+        return bgcolor, fgcolor
+
+    def calculate_battery_percentage(self, current_voltage):
+        battery_max_voltage = config.battery_max_voltage
+        battery_lower_limit = config.battery_min_voltage
+        value = calculate_battery_percentage(battery_max_voltage, battery_lower_limit, current_voltage)
+        return value
 
 
 def main():

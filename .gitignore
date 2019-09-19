@@ -1,11 +1,33 @@
-*pyc
+*.pyc
+*.png
+*.npy
 dcrhino.egg-info/*
 dcrhino3/acquisition/logs/*.log
 dcrhino3/acquisition/logs/*.err
 *.json
 !dcrhino3/acquisition/clients.json
 bin/can_be_deleted
+bin/scratch
 
 \.idea/workspace\.xml
 
 \.idea/
+
+*.csv#
+
+bin/test\.py
+
+bin/\.ipynb_checkpoints/
+
+\.ipynb_checkpoints/
+
+bin/dr0345_minus_8_hrs\.csv
+
+bin/temp\.csv
+
+*.log
+
+dcrhino3/acquisition/external/dimmer/traindata/
+bin/original_mwd\.csv
+
+*.csv

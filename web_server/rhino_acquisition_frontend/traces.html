@@ -1,0 +1,101 @@
+<html>
+<head>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+    <script src="/js/jquery-3.3.1.js"></script>
+    <script src="/js/jquery.dataTables.min.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.intgeo.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.legacygauges.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.svg.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.cgm.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.pdf.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.gridding.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.data.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.seismic.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.seismic.analysis.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.seismic.cgmplus.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.welllog.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.seislog.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.welllog.las.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.controls.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.deviation.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.gauges.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.widgets.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.seismic.widgets.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.welllog.widgets.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.welllog.multiwell.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.welllog.widgets.ui.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.flowcharts.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.map.adv.js"></script>
+    <script src="/js/geotoolkit/geotoolkit.report.adv.js"></script>
+<script type="text/javascript" charset="utf-8">
+$( document ).ready(function() {
+    const socket = io('');
+
+    var y = [];
+
+    var x = []
+    for (i = 0; i < y.length; i++) {
+          x[i] = i
+        }
+    var dataseries_x = new geotoolkit.data.NumericalDataSeries({
+       'data': x
+    });
+
+    var dataseries_y = new geotoolkit.data.NumericalDataSeries({
+       'data': y
+    });
+
+    var limits = new geotoolkit.util.Rect(0, -0.01, 1250*500, 0.01);
+    var lineChart = new geotoolkit.controls.shapes.LineChart({
+        'x': [dataseries_x],
+        'y': [dataseries_y],
+       'bounds': limits,
+       'modelLimits': limits,
+       // 'gridvisible': false
+    });
+
+    var canvas = document.getElementById('plot');
+
+    var plot = new geotoolkit.plot.Plot({
+        'canvasElement': canvas,
+        'root': lineChart
+    });
+    var previous_ts = 0
+    socket.on('data', (data) => {
+        y = data['axial_trace']
+        x = []
+        for (i = 0; i < y.length; i++) {
+          x[i] = i + previous_ts
+          y[i] = y[i]
+        }
+        previous_ts += y.length
+        console.log("Received new trace axial")
+        console.log(previous_ts)
+        if (previous_ts > 50000){
+            dataseries_x.removeValues(0,y.length)
+            dataseries_y.removeValues(0,y.length)
+        }
+
+        dataseries_x.addValues(x)
+        dataseries_y.addValues(y.map(Number))
+        //var limits = new geotoolkit.util.Rect(0, -0.01, previous_ts, 0.01);
+        //lineChart.setData({
+        //    'x': [dataseries_x],
+        //    'y': [dataseries_y],
+        //    'bounds': limits,
+        //    'modelLimits': limits
+        //});
+        //console.log(previous_ts)
+        //var limits = new geotoolkit.util.Rect(0,-0,01,1275,0.01);
+        //lineChart.setModelLimits(limits)
+        //lineChart.setBounds(limits)
+    });
+
+});
+</script>
+</head>
+<body>
+<canvas id="plot" style="width:100%;height:100%"></canvas>
+</body>
+</html>

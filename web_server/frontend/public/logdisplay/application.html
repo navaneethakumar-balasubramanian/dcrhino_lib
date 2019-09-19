@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>INT HTML5 WellLog Display</title>
+    <link rel="SHORTCUT ICON" href="http://www.int.com/favicon.ico"/>
+
+    <link type="text/css" rel="stylesheet" href="styles/imports.css"/>
+
+    <script src="lib/require.js"></script>
+    <script src='src/main.js'></script>
+</head>
+
+<body onload="require(['src/display'], function(display) { display.init(); })"
+      onresize="require(['src/display'], function(display) { display.resize(); })">
+
+    <div class="demotitle">QC PLOT</div>
+
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="nav navbar-header">
+                <ul class="nav navbar-toggle" data-toggle="collapse" data-target="#main-navbar" aria-expanded="false">
+                    <li title="Toggle navigation">
+                        <span class="glyphicon geotoolkit-icon-list"></span>
+                    </li>
+                </ul>
+            </div>
+            <!--Navbar Icon Buttons-->
+            <div class="collapse navbar-collapse" id="main-navbar">
+                <ul class="nav navbar-nav">
+                    <li title="Toggle Data Tree" id="curveTree"><a href="#"><span class="glyphicon glyphicon-chevron-right"></span></a></li>
+                    <li title="Save Template to File" onclick="require(['src/display'], function(display) { display.saveTemplateToFile(); })"><a href="#"><span class="glyphicon glyphicon-save-file"></span></a></li>
+                    <li title="Load Template from File" onclick="require(['src/display'], function(display) { display.loadTemplateFromFile(); })"><a href="#"><span class="glyphicon glyphicon-open-file"></span></a></li>
+                    <li title="Open LAS File" onclick="$('input[id=las]').click()"><a href="#"><span class="glyphicon glyphicon-folder-open"></span></a></li>
+                    <li title="Print" onclick="require(['src/display'], function(display) { display.exportToPDF(); })"><a href="#"><span class="glyphicon geotoolkit-icon-print"></span></a></li>
+                    <li title="Export to CGM" onclick="require(['src/display'], function(display) { display.exportToCGM(); })"><a href="#"><span class="glyphicon glyphicon-download"></span></a></li>
+                    <li title="Zoom In" type="button" onclick="require(['src/display'], function(display) { display.zoomIn(); })"><a href="#"><span class="glyphicon geotoolkit-icon-zoom-in"></span></a></li>
+                    <li title="Zoom Out" type="button" onclick="require(['src/display'], function(display) { display.zoomOut(); })"><a href="#"><span class="glyphicon geotoolkit-icon-zoom-out"></span></a></li>
+                    <li title="Add Track" class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"><span class="glyphicon glyphicon-align-justify"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="#" onclick="require(['src/display'], function(display) { display.addTrack('linear'); })">Linear</a></li>
+                            <li><a href="#" onclick="require(['src/display'], function(display) { display.addTrack('index'); })">Index</a></li>
+                            <li><a href="#" onclick="require(['src/display'], function(display) { display.addTrack('log'); })">Logarithmic</a></li>
+                        </ul>
+                    </li>
+                    <li id="DragAndDropModeButton" title="Drag and Drop Tracks" type="button" onclick="require(['src/display'], function(display) { display.toggleDragAndDrop(); })"><a href="#"><span class="glyphicon glyphicon-transfer"></span></a></li>
+                    <li title="Annotations" class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"><span class="glyphicon glyphicon-pushpin"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="#" onclick="require(['src/display'], function(display) { display.createNewAnnotation(); })">Create new annotation</a></li>
+                            <li><a id="AnnotationModeMenu" href="#" onclick="require(['src/display'], function(display) { display.toggleAnnotationTool(); })">Enable annotation</a></li>
+                        </ul>
+                    </li>
+                    <li id="DeleteButton" class="disabled" title="Delete Selection" type="button" onclick="require(['src/display'], function(display) { display.deleteSelection(); })"><a href="#"><span class="glyphicon glyphicon-remove"></span></a></li>
+                    <li id="PropertiesButton" class="disabled" title="Show Properties"  type="button" onclick="require(['src/display'], function(display) { display.showProperties(); })"><a href="#"><span class="glyphicon glyphicon-wrench"></span></a></li>
+                    <li id="OrientationButton" title="Toggle Orientation"  type="button" onclick="require(['src/display'], function(display) { display.toggleOrientation(); })"><a href="#"><span class="glyphicon glyphicon-object-align-left"></span></a></li>
+                    <li title="Navigation Mode"  type="button" onclick="require(['src/display'], function(display) { display.toggleNavigation(); })"><a href="#"><span class="glyphicon glyphicon-globe"></span></a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="geotoolkit-demo">
+        <div id="geotoolkit-plot-host" class="geotoolkit-plot-host">
+            <canvas id="geotoolkit-plot" class="geotoolkit-plot" oncontextmenu="return false;"></canvas>
+            <input id="las" type="file" style="position: absolute; visibility: hidden;" accept=".las"/>
+        </div>
+        <div class="sidebar-nav" id="curvesSideBar">
+            <div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">Well</div>
+                    <ul class="list-group" id="curveslist"></ul>
+                </div>
+            </div>
+            
+        </div>
+
+    </div>
+
+    <div id="tooltip-container" class="geotoolkit-tooltip-container" style="display:none;pointer-events: none;"></div>
+
+    <div id="loadspinner" class="loading">Loading&#8230;</div>
+    <span class="context-menu-one btn btn-neutral"></span>
+    <div id="contextMenu" class="dropdown clearfix"></div>
+</body>
+</html>

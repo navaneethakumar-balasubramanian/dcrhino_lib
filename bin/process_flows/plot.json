@@ -11,13 +11,13 @@
           "plot": {
             "upper_num_ms": 30,
             "lower_num_ms": -5,
-            "peak_ampl_x_col_name": "J0_axial_primary_max_amplitude",
-            "peak_ampl_y_col_name": "J0_tangential_primary_max_amplitude",
-            "peak_ampl_z_col_name": "J0_radial_primary_max_amplitude",
-            "tangential_RC_col_name": "J0_tangential_reflection_coefficient_1",
-            "ax_vel_del_col_name": "J0_axial_pseudo_velocity_1",
-            "tang_vel_del_col_name": "J0_tangential_pseudo_velocity_1",
-            "reflection_coefficient_col_name": "J0_axial_reflection_coefficient_1",
+            "peak_ampl_x_col_name": "K0_axial_primary_max_amplitude",
+            "peak_ampl_y_col_name": "K0_tangential_primary_max_amplitude",
+            "peak_ampl_z_col_name": "K0_radial_primary_max_amplitude",
+            "tangential_RC_col_name": "K0_tangential_reflection_coefficient_1",
+            "ax_vel_del_col_name": "K0_axial_delay_1",
+            "tang_vel_del_col_name": "K0_tangential_pseudo_velocity_1",
+            "reflection_coefficient_col_name": "K0_axial_reflection_coefficient_1",
 	     "panels":{
 		"axial_amp_feature_plot":true,
 	    	"axial_delay_feature_plot":false,
@@ -61,6 +61,7 @@
           "sensor_serial_number": "|global_config.sensor_serial_number|",
           "sensor_saturation_g": "|global_config.sensor_saturation_g|",
 	  "output_sampling_rate":"|global_config.output_sampling_rate|",
+          "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
 	  "mine_name":"|global_config.mine_name|",
 	  "mult_neg_win": 0.5,
 	  "mult_pos_win": 3.5
