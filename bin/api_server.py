@@ -27,6 +27,8 @@ from dcrhino3.celery.tasks import process_file_with_flow
 from datetime import datetime
 import requests
 
+from dcrhino3.celery.tasks import apply_log_process
+
 from dcrhino3.helpers.cross_section_helper import CrossSectionHelper
 
 
@@ -352,6 +354,14 @@ def process_flows_list():
     process_flows_list = env_config.get_process_flows_list(mine_name)
     return jsonify({"process_flows": process_flows_list})
 
+
+@app.route('/api/log_process_flows',methods=['GET', 'POST'])
+def log_process_flows_list():
+    req_json = request.get_json()
+    mine_name = str(req_json['mine_name'])
+    process_flows_list = env_config.get_log_process_flows_list(mine_name)
+    return jsonify({"log_process_flows": process_flows_list})
+
 @app.route('/api/process_holes_with',methods=['GET', 'POST'])
 def process_holes_with():
     req_json = request.get_json()
@@ -376,25 +386,20 @@ def process_holes_with():
 def log_process():
     req_json = request.get_json()
     mine_name = str(req_json['mine_name'])
-    if mine_name == 'mont_wright':
-        #processed_holes = req_json['processed_holes']
-        #if processed_holes == False:
-        #    return jsonify(False)
+    env_config = EnvConfig()
+    lp_flow_path = env_config.get_log_process_flows_list(mine_name)[0]
+    lp_flow_path = os.path.join(env_config.get_log_process_folder(mine_name), lp_flow_path)
+    db_conn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
+    sql_helper = RhinoSqlHelper(**db_conn)
+    processed_holes = sql_helper.processed_holes.get_holes_to_mp()
+    processed_csv_list = []
+    for processed_hole in processed_holes.iterrows():
+        processed_hole = processed_hole[1]
+        processed_folder = os.path.join(env_config.get_hole_h5_processed_cache_folder(mine_name),
+                                        processed_hole['output_folder_name'])
+        processed_csv_list.append(os.path.join(processed_folder, 'processed.csv'))
+    apply_log_process.delay(processed_csv_list, lp_flow_path)
 
-        #processed_csv_list = []
-        #for processed_hole in processed_holes:
-        #    processed_folder = os.path.join(env_config.get_hole_h5_processed_cache_folder(mine_name),
-        #                                    processed_hole['output_folder_name'])
-        #    processed_csv = pd.read_csv(os.path.join(processed_folder, 'processed.csv'))
-        #    processed_csv_list.append(processed_csv)
-
-        #df = pd.concat(processed_csv_list)
-        df = pd.read_csv('/data/bob_processed_rpp.csv')
-        lp_df = get_lp_df(df)
-    lp_df.to_csv('./temp.csv',index=False)
-    rhyno_props = {}
-    mapping = update_or_create_config(subdomain_name, dataset_name, lp_df, rhyno_props)
-    deploy_data('./temp.csv', subdomain_name, dataset_name, mapping)
     return jsonify({"data":True})
 
 @app.route('/api/processed_holes',methods=['GET', 'POST'])
@@ -420,11 +425,7 @@ def hole_to_mp():
     to_mp = req_json['to_mp']
     db_conn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
     db_helper = RhinoSqlHelper(db_conn['host'], db_conn['user'], db_conn['password'], db_conn['database'])
-
     return jsonify(db_helper.processed_holes.hole_to_mp(processed_hole_id,to_mp))
-
-
-
 
 @app.route('/api/acorr_files',methods=['GET', 'POST'])
 def acorr_files():
