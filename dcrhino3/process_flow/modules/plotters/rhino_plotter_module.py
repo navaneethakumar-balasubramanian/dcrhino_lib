@@ -16,6 +16,7 @@ class RhinoPlotterModule(BaseModule):
     def __init__(self, json, output_path,process_flow,order):
         BaseModule.__init__(self, json, output_path,process_flow,order)
         self.id = "rhino_plotter"
+
         self.default_args = {
             "rig_id": "|global_config.rig_id|",
             "drill_type": "|global_config.drill_type|",
@@ -29,10 +30,176 @@ class RhinoPlotterModule(BaseModule):
             "sensor_serial_number": "|global_config.sensor_serial_number|",
             "sensor_saturation_g": "|global_config.sensor_saturation_g|",
             "mine_name": "|global_config.mine_name|",
-            "padding_right": 0,
+            "padding_right": 0.03,
             "padding_left": 0,
             "show": False,
-            "legend":False
+            "legend":True,
+            "panels": [
+                {
+                    "type": "curves",
+                    "curves": [
+                        {
+                            "scale": "new",
+                            "space": 60,
+                            "color": "lime",
+                            "spine_side": "right",
+                            "label": "timestamp",
+                            "column_label": "timestamp"
+                        }
+                    ]
+                },
+                {
+                    "type": "curves",
+                    "curves": [
+                        {
+                            "scale": "current",
+                            "space": 0,
+                            "color": "red",
+                            "spine_side": "left",
+                            "label": "J2-ax-prim-int-abs-amp",
+                            "column_label": "J2-axial-primary-integrated_absolute_amplitude"
+                        },
+                        {
+                            "color": "blue",
+                            "column_label": "J2-axial-reflection_coefficient_1",
+                            "spine_side": "right",
+                            "scale": "new",
+                            "space": 0
+                        },
+                        {
+                            "color": "lime",
+                            "column_label": "J2-axial-delay_1",
+                            "spine_side": "right",
+                            "scale": "new",
+                            "space": 60
+                        }
+                    ]
+                },
+                {
+                    "component": "axial",
+                    "manual_time_windows": {
+                        "axial": {
+                            "multiple_3": "|process_flow.axial_multiple_3|",
+                            "multiple_2": "|process_flow.axial_multiple_2|",
+                            "multiple_1": "|process_flow.axial_multiple_1|",
+                            "primary": "|process_flow.axial_primary|"
+                        }
+                    },
+                    "type": "heatmap",
+                    "curves": [
+                        {
+                            "color": "#FFFFFF",
+                            "column_label": "J2-axial-primary-maximum_time",
+                            "linewidth": 2,
+                            "label": "primary Max",
+                            "formula": "data*1000"
+                        },
+                        {
+                            "color": "#FFFFFF",
+                            "column_label": "J2-axial-multiple_1-maximum_time",
+                            "linewidth": 2,
+                            "label": "M1 Zx",
+                            "formula": "data*1000"
+                        },
+                        {
+                            "color": "#FFFFFF",
+                            "column_label": "J2-axial-multiple_2-maximum_time",
+                            "linewidth": 2,
+                            "label": "M2 Min",
+                            "formula": "data*1000"
+                        },
+                        {
+                            "color": "#FFFFFF",
+                            "column_label": "J2-axial-multiple_3-maximum_time",
+                            "linewidth": 2,
+                            "label": "M3 Zx",
+                            "formula": "data*1000"
+                        }
+                    ],
+                    "wavelet_windows_to_show": [
+                        "primary",
+                        "multiple_1",
+                        "multiple_2",
+                        "multiple_3"
+                    ]
+                },
+                {
+                    "type": "curves",
+                    "curves": [
+                        {
+                            "scale": "current",
+                            "space": 0,
+                            "color": "red",
+                            "spine_side": "left",
+                            "label": "J2-tang-prim-int-abs-amp",
+                            "column_label": "J2-tangential-primary-integrated_absolute_amplitude"
+                        },
+                        {
+                            "color": "blue",
+                            "column_label": "J2-tangential-reflection_coefficient_1",
+                            "spine_side": "right",
+                            "scale": "new",
+                            "space": 0
+                        },
+                        {
+                            "color": "lime",
+                            "column_label": "J2-tangential-delay_1",
+                            "spine_side": "right",
+                            "scale": "new",
+                            "space": 60
+                        }
+                    ]
+                },
+                {
+                    "upper_num_ms": 60,
+                    "wavelet_windows_to_show": [
+                        "primary",
+                        "multiple_1",
+                        "multiple_2",
+                        "multiple_3"
+                    ],
+                    "component": "tangential",
+                    "curves": [
+                        {
+                            "color": "#FFFFFF",
+                            "column_label": "J2-tangential-primary-maximum_time",
+                            "linewidth": 2,
+                            "label": "primary Max",
+                            "formula": "data*1000"
+                        },
+                        {
+                            "color": "#FFFFFF",
+                            "column_label": "J2-tangential-multiple_1-maximum_time",
+                            "linewidth": 2,
+                            "label": "M1 Zx",
+                            "formula": "data*1000"
+                        },
+                        {
+                            "color": "#FFFFFF",
+                            "column_label": "J2-tangential-multiple_2-maximum_time",
+                            "linewidth": 2,
+                            "label": "M2 Min",
+                            "formula": "data*1000"
+                        },
+                        {
+                            "color": "#FFFFFF",
+                            "column_label": "J2-tangential-multiple_3-maximum_time",
+                            "linewidth": 2,
+                            "label": "M3 Zx",
+                            "formula": "data*1000"
+                        }
+                    ],
+                    "manual_time_windows": {
+                        "tangential": {
+                            "multiple_3": "|process_flow.tangential_multiple_3|",
+                            "multiple_2": "|process_flow.tangential_multiple_2|",
+                            "multiple_1": "|process_flow.tangential_multiple_1|",
+                            "primary": "|process_flow.tangential_primary|"
+                        }
+                    },
+                    "type": "heatmap"
+                }
+            ]
         }
 
     def get_plot_title(self,transformed_args, trace):

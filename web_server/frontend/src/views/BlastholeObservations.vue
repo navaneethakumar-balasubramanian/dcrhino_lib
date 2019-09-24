@@ -19,7 +19,7 @@
         :loading="loading"
       ></v-text-field>
     </v-toolbar>
-    <v-data-table
+    <v-data-table 
       v-model="selected"
       :pagination.sync="pagination"
       :headers="headers"
@@ -27,7 +27,6 @@
       item-key="bo_id"
       select-all
       class="elevation-1"
-      hide-actions
     >
       <template slot="headerCell" slot-scope="props">
         <v-dialog v-model="props.header.dialog" scrollable max-width="300px">
@@ -94,19 +93,21 @@
 
   <v-btn v-if='visible_buttons' flat color="light-blue" v-on:click="process_selection()"
       >Process selected</v-btn>
-    <v-dialog v-model="select_process_flow" scrollable max-width="300px">
-          
+    <v-dialog v-model="select_process_flow" scrollable max-width="600px">
           <v-card>
             <v-card-title>Select the process flow to use</v-card-title>
             <v-divider></v-divider>
             <v-card-text style="height: 300px;" class="pa-0 pm-0">
-              <v-list class="pa-0 pm-0">
-                <v-list-tile style='margin:0;padding:0'
+              <v-list dense class="pa-0 pm-0">
+                <v-list-tile 
                   v-for="(item, i) in process_flows"
-                  :key="i" ripple>
-                 
-                  <v-btn v-on:click="process_using(item)" style='padding:0;font-size:10px' flat color="light-blue" >{{ item }}</v-btn >
-                </v-list-tile>
+                  :key="i" 
+                  @click="process_using(item)"
+                  ripple>
+                  <v-list-tile-content>
+                    <v-list-tile-title  v-text="item"></v-list-tile-title>
+                  </v-list-tile-content>                   
+                </v-list-tile>          
                 
               </v-list>
             </v-card-text>
@@ -148,12 +149,13 @@ export default {
     show_dialog: false,
     show_dialog_comparison: false,
     selected: [],
-    pagination: { rowsPerPage: -1 },
+    pagination: { rowsPerPage: 25 },
     warning: null,
     warning_text: null,
     message: null,
     message_text: null,
-    headers: []
+    headers: [],
+    confirm_process_flow:null
   }),
   created() {
     this.$store.dispatch("GET_BLASTHOLE_OBSERVATIONS", { mine_name: this.mine_name });
@@ -161,6 +163,10 @@ export default {
   props: ["mine_name"],
 
   methods: {
+    confirm_process:function(process_flow){
+      self.confirm_process_flow = process_flow
+      this.select_process_flow = false
+    },
     process_selection:function(){
       let temp = this;
       let payload = {

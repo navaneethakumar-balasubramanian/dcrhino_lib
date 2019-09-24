@@ -51,6 +51,101 @@ class FeatureExtractJ2Hybrid(BaseHybridModule):
     def __init__(self, json, output_path,process_flow,order):
         BaseHybridModule.__init__(self, json, output_path,process_flow,order)
         self.id = "j2"
+        self.default_args = {
+            "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
+            "additional_pick_based_amplitude_windows": {
+                "axial": {
+                    "multiple_1": {
+                        "left_upper_bound_offset": -0.002,
+                        "left_lower_bound_offset": -0.006,
+                        "right_upper_bound_offset": 0.006,
+                        "right_lower_bound_offset": 0.002
+                    },
+                    "primary": {
+                        "left_upper_bound_offset": -0.002,
+                        "left_lower_bound_offset": -0.006,
+                        "right_upper_bound_offset": 0.006,
+                        "right_lower_bound_offset": 0.002
+                    }
+                },
+                "tangential": {
+                    "multiple_1": {
+                        "left_upper_bound_offset": -0.002,
+                        "left_lower_bound_offset": -0.006,
+                        "right_upper_bound_offset": 0.006,
+                        "right_lower_bound_offset": 0.002},
+                    "primary": {
+                        "left_upper_bound_offset": -0.002,
+                        "left_lower_bound_offset": -0.006,
+                        "right_upper_bound_offset": 0.006,
+                        "right_lower_bound_offset": 0.002}
+                }
+            },
+            "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
+            "amplitude_half_widths": {
+                "axial": {
+                    "multiple_3": 0.00105,
+                    "multiple_2": 0.00105,
+                    "multiple_1": 0.00105,
+                    "primary": 0.00105
+                },
+                "tangential": {
+                    "multiple_3": 0.00105,
+                    "multiple_2": 0.00105,
+                    "multiple_1": 0.00105,
+                    "primary": 0.00105
+                }
+            },
+            "sensor_saturation_g": "|global_config.sensor_saturation_g|",
+            "manual_time_windows": {
+                "axial": {
+                    "multiple_3": "|process_flow.axial_multiple_3|",
+                    "multiple_2": "|process_flow.axial_multiple_2|",
+                    "multiple_1": "|process_flow.axial_multiple_1|",
+                    "primary": "|process_flow.axial_primary|"
+                },
+                "tangential": {
+                    "multiple_3": "|process_flow.tangential_multiple_3|",
+                    "multiple_2": "|process_flow.tangential_multiple_2|",
+                    "multiple_1": "|process_flow.tangential_multiple_1|",
+                    "primary": "|process_flow.tangential_primary|"
+                }
+            },
+            "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
+            "upsample_sampling_rate": [
+                "|global_config.upsample_sampling_rate|",
+                50000
+            ],
+            "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|",
+            "time_picks": {
+                "axial": {
+                    "multiple_3": "maximum",
+                    "multiple_2": "maximum",
+                    "multiple_1": "maximum",
+                    "primary": "maximum"
+                },
+                "tangential": {
+                    "multiple_3": "maximum",
+                    "multiple_2": "maximum",
+                    "multiple_1": "maximum",
+                    "primary": "maximum"
+                }
+            },
+            "amplitude_picks": {
+                "axial": {
+                    "multiple_3": "integrated_absolute_amplitude",
+                    "multiple_2": "integrated_absolute_amplitude",
+                    "multiple_1": "integrated_absolute_amplitude",
+                    "primary": "integrated_absolute_amplitude"
+                },
+                "tangential": {
+                    "multiple_3": "integrated_absolute_amplitude",
+                    "multiple_2": "integrated_absolute_amplitude",
+                    "multiple_1": "integrated_absolute_amplitude",
+                    "primary": "integrated_absolute_amplitude"
+                }
+            }
+        }
 
     def process_splitted_trace(self, splitted_traces):
     

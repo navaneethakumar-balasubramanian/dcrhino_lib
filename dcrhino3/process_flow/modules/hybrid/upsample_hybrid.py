@@ -17,8 +17,18 @@ class UpsampleModuleHybrid(BaseHybridModule):
         BaseHybridModule.__init__(self, json, output_path,process_flow,order)
         self.id = "upsample"
         self.default_args = {
-            "upsample_sampling_rate" : 50000.0
-                        }
+            "upsample_interpolation_kind": [
+              "|global_config.upsample_interpolation_kind|",
+              "quadratic"
+            ],
+            "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
+            "upsample_sampling_rate": [
+              "|process_flow.upsample_sampling_rate|",
+              50000.0
+            ],
+            "max_lag_trimmed_trace": "|global_config.max_lag_trimmed_trace|",
+            "trimmed_trace_duration": "|global_config.trimmed_trace_duration|"
+        }
 
     def get_time_vectors(self, trace_time_series, min_lag, max_lag,
                          input_sampling_rate, upsample_sampling_rate):

@@ -30,6 +30,13 @@ class BandPassFilterModuleHybrid(BaseHybridModule):
     def __init__(self, json, output_path,process_flow,order):
         BaseHybridModule.__init__(self, json, output_path,process_flow,order)
         self.id = "band_pass_filter_hybrid"
+        self.default_args = {
+            "trapezoidal_bpf_corner_4": ["|process_flow.trapezoidal_bpf_corner_4|",200],
+            "trapezoidal_bpf_corner_3": ["|process_flow.trapezoidal_bpf_corner_3|",160],
+            "trapezoidal_bpf_corner_2": ["|process_flow.trapezoidal_bpf_corner_2|",45],
+            "trapezoidal_bpf_corner_1": ["|process_flow.trapezoidal_bpf_corner_1|",30],
+            "trapezoidal_bpf_duration": ["|process_flow.trapezoidal_bpf_duration|",0.02]
+        }
 
     def validate(self):
         return self.have_global_config_args() == False

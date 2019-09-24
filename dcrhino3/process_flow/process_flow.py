@@ -229,6 +229,7 @@ class ProcessFlow:
             t0 = time.time()
             logger.info("Applying " + str(module.id) + " with: " + str(module.args))
             output_trace = module.process_trace(output_trace)
+            logger.info("Applied " + str(module.id) + " with: " + str(module.get_transformed_args(output_trace.first_global_config)))
             delta_t = time.time() - t0
             logger.info("{} ran in {}s ".format(module.id, delta_t))
             self.actual_module += 1
@@ -355,7 +356,11 @@ class ProcessFlow:
 
                 if 'vars' in subset_obj['process_json'].keys() and isinstance(subset_obj['process_json']['vars'],list) :
                     try:
-                        subset_obj['process_json']['vars'] = subset_obj['process_json']['vars'][i]
+                        # MERGE VARS FROM SUBSET 0 with OTHERS
+                        #subset_obj['process_json']['vars'] = subset_obj['process_json']['vars'][i]
+                        subset_obj['process_json']['vars'] = {**subset_obj['process_json']['vars'][0],**subset_obj['process_json']['vars'][i]}
+                        qq = subset_obj['process_json']['vars']
+                        print("aa")
                     except:
                         subset_obj['process_json']['vars'] = {}
 
@@ -369,7 +374,10 @@ class ProcessFlow:
             subset_obj['process_json'] = copy.deepcopy(process_json)
             if 'vars' in subset_obj['process_json'].keys() and isinstance(subset_obj['process_json']['vars'], list):
                 try:
-                    subset_obj['process_json']['vars'] = subset_obj['process_json']['vars'][i+1]
+                    #subset_obj['process_json']['vars'] = subset_obj['process_json']['vars'][i+1]
+                    subset_obj['process_json']['vars'] = {**subset_obj['process_json']['vars'][0],
+                                                          **subset_obj['process_json']['vars'][i+1]}
+                    qq = subset_obj['process_json']['vars']
                 except:
                     subset_obj['process_json']['vars'] = {}
             subsets_objs.append(subset_obj)

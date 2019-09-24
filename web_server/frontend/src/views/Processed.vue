@@ -51,7 +51,6 @@
       item-key="processed_hole_id"
       select-all
       class="elevation-1"
-      hide-actions
       v-if="!show_dialog_comparison"
     >
       <template slot="headerCell" slot-scope="props">
@@ -222,7 +221,7 @@ export default {
     show_dialog_comparison: false,
     selected: [],
     log_process_flows: [],
-    pagination: { rowsPerPage: -1 },
+    pagination: { rowsPerPage: 25 },
     warning: null,
     warning_text: null,
     message: null,

@@ -18,6 +18,7 @@ class ColumnsToDataframeModule(BaseHybridModule):
         self.id = "columns_to_df"
         self.can_alter_trace = False
         self.can_create_columns = True
+        self.default_args = {  "sampling_rate": "|global_config.sampling_rate|"  }
 
     def process_splitted_trace(self, splitted_trace):
         transformed_args = splitted_trace.transformed_args
