@@ -5,7 +5,8 @@ os.environ['OMP_NUM_THREADS'] = '1'
 os.environ['CELERYD_TASK_TIME_LIMIT'] = '300'
 os.environ['CELERYD_MAX_TASKS_PER_CHILD'] = '1'
 
-
+import warnings
+warnings.simplefilter("ignore", UserWarning)
 from celery import Celery
 from dcrhino3.process_flow.process_flow import ProcessFlow
 from dcrhino3.models.env_config import EnvConfig
