@@ -12,6 +12,7 @@ from dcrhino3.models.env_config import EnvConfig
 import json
 import datetime
 import pandas as pd
+from dcrhino3.helpers.dc_dataset_pusher import DcDatasetPusher
 
 import matplotlib
 from rhino_lp.pipeline import parse_config
@@ -38,11 +39,13 @@ def process_file_with_flow(acorr_file_path,process_flow_json_path,env_config_pat
     del process_json
 
 @app.task
-def apply_log_process(csv_files_to_use,log_process_flow_json_path):
+def apply_log_process(csv_files_to_use,log_process_flow_json_path,subdomain,dataset_name):
     df_list = []
     for file in csv_files_to_use:
         df_list.append(pd.read_csv(file))
     holes_dataframe = pd.concat(df_list)
     log_process_dict = json.load(open(log_process_flow_json_path, 'r'))
     hole_dataframe = parse_config(holes_dataframe, log_process_dict, is_rhino=True, class_kwds={"hole_id_column": ['pit_name','bench_name','pattern_name','hole_name']})
+
+    pushed = DcDatasetPusher(hole_dataframe,subdomain,dataset_name)
 
