@@ -336,6 +336,10 @@ def get_depths_at_which_steels_change(df):
     helper function to do with multipass stuff
     df is the dataframe from an TraceData()
     """
+
+    ## if have splits column on df use splits otherwise continue
+    if "splits" in df.columns:
+        return list(np.array(df['splits'].astype(str).values[0].replace(']','').replace('[','').split(',')).astype(float))
     resonant_lengths_array = df.drill_string_resonant_length.unique()
     resonant_lengths = [x for x in resonant_lengths_array]
     sub_dfs = [df[df.drill_string_resonant_length==x] for x in resonant_lengths]
