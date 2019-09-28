@@ -55,7 +55,7 @@ class GPSThread(threading.Thread):
             self.gps_socket = gps3.GPSDSocket()
             self.data_stream = gps3.DataStream()
             self.gps_socket.connect()
-            self.gps_socket.watch(devicepath="/dev/ttyACM0")
+            self.gps_socket.watch(devicepath="/dev/ttyACM1")
             self._satellite_count = 0
         else:
             self._satellite_count = "GPS OFF"
