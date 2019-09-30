@@ -25,7 +25,7 @@ class DcDatasetPusher:
             return "strprop"
         elif np.issubdtype(column_dtype, np.float_):
             return "floatprop"
-        elif np.issubdtype(column_dtype, np.int_):
+        elif np.issubdtype(column_dtype, np.int_) or column_dtype == np.dtype('uint64'):
             return "intprop"
         elif np.issubdtype(column_dtype, np.string_) or np.issubdtype(column_dtype, np.object_):
             return "strprop"
