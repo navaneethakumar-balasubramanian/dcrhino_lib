@@ -46,8 +46,9 @@ def apply_log_process(csv_files_to_use,log_process_flow_json_path,subdomain,data
         df_list.append(pd.read_csv(file))
     holes_dataframe = pd.concat(df_list)
     log_process_dict = json.load(open(log_process_flow_json_path, 'r'))
-    h = ['pit_name', 'bench_name', 'pattern_name', 'hole_name', 'hole_id']
+    h = ['pit_name', 'bench_name', 'pattern_name', 'hole_name']
     h = [c for c in h if c in holes_dataframe.columns]
-    hole_dataframe = parse_config(holes_dataframe, log_process_dict, is_rhino=True, class_kwds={"hole_id_column": h })
+    hole_dataframe = parse_config(holes_dataframe, log_process_dict, is_rhino=True, class_kwds={"hole_id_column": h})
+
     pushed = DcDatasetPusher(hole_dataframe,subdomain,dataset_name)
 
