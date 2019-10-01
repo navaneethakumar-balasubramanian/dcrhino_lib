@@ -19,7 +19,7 @@ import calendar
 import json
 import subprocess
 from subprocess import Popen
-
+import numpy as np
 from dcrhino3.acquisition.constants import ACQUISITION_PATH as PATH
 from dcrhino3.acquisition.constants import DATA_PATH
 from dcrhino3.helpers.general_helper_functions import init_logging, init_logging_to_file, StandardString
@@ -1258,7 +1258,15 @@ class GUI():
         self.config.sensor_ideal_sampling_rate = int(self.sensor_ideal_sampling_rate.get())
         self.config.sensor_saturation_g = int(self.sensor_saturation_g.get())
 
-        m = Measurement((self.calculate_sensor_position(),3))
+        m = Measurement((self.sensor_distance_to_ss_btm_shoulder.get(),
+                         measurement_units_options.index(self.sensor_distance_to_ss_btm_shoulder_units.get()) + 1))
+        self.config.sensor_distance_to_ss_btm_shoulder = m.to_dict()
+
+        m = Measurement((self.shocksub_tail_length.get(),
+                         measurement_units_options.index(self.shocksub_tail_length_units.get()) + 1))
+        self.config.shocksub_tail_length = m.to_dict()
+
+        m = Measurement((self.calculate_sensor_position(), 3))
         self.config.sensor_position = m.to_dict()
 
         self.config.sensor_axial_axis = int(sensor_channel_options.index(self.sensor_axial_axis.get())+1)
@@ -1462,7 +1470,7 @@ class GUI():
 
     def calculate_sensor_distance_to_shocksub(self):
         value = self.shocksub_tail_length.get()
-        if value != "" or value != " ":
+        if value not in ["", " ", '']:
             tail = Measurement((float(value), measurement_units_options.index(
                 self.shocksub_tail_length_units.get())+1))
             if self.shocksub_length == 0:
@@ -1470,6 +1478,8 @@ class GUI():
             distance_to_btm_shoulder = Measurement((float(self.sensor_distance_to_ss_btm_shoulder.get()),
                                                     measurement_units_options.index(self.sensor_distance_to_ss_btm_shoulder_units.get())+1))
             return round(tail.value_in_meters() + distance_to_btm_shoulder.value_in_meters(), 2)
+        else:
+            return np.nan
 
     def create_ts(self):
         dt = [self.year.get(),self.month.get(),self.day.get(),self.hour.get(),self.minute.get(),self.second.get()]
