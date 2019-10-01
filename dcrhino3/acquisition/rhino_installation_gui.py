@@ -81,8 +81,8 @@ class GUI():
         self.rx_configuration_process = None
         self.shocksub_length = 0
         self._config = config
-        self.config = config.duplicate_config()
-        # self.config = config
+        # self.config = config.duplicate_config() # This is for python 2
+        self.config = copy.deepcopy(config)
         row = 0
 
         master.title("Rhino Configuration Settings")
@@ -1330,17 +1330,22 @@ class GUI():
 
 
         if write_to_disk:
-            for file_type in self.config.files_keys.keys():
-                for cfg_file in self.config.files_keys[file_type].keys():
-                    file_dict = dict()
-                    for i, key in enumerate(self.config.files_keys[file_type][cfg_file]):
-                        file_dict[key] = self.config[key]
-                    with open(os.path.join(PATH, cfg_file), "w") as output:
-                        json.dump(file_dict, output)
-            for key in self.config.__dict__.keys():
-                self._config.__dict__[key] = self.config.__dict__[key]
-            print("File Saved Successfully")
-            return
+            try:
+                for file_type in self.config.files_keys.keys():
+                    for cfg_file in self.config.files_keys[file_type].keys():
+                        file_dict = dict()
+                        for i, key in enumerate(self.config.files_keys[file_type][cfg_file]):
+                            file_dict[key] = self.config[key]
+                        with open(os.path.join(PATH, cfg_file), "w") as output:
+                            json.dump(file_dict, output)
+                for key in self.config.__dict__.keys():
+                    self._config.__dict__[key] = self.config.__dict__[key]
+                print("File Saved Successfully")
+                tkMessageBox.showinfo("Success", "File Saved Successfully")
+                return
+            except:
+                tkMessageBox.showerror("Error", "File Not Saved")
+                return
         print("Config File Updated Successfully")
         return
 
@@ -1490,7 +1495,7 @@ class GUI():
     def update_ts_label(self,*args):
         self.timestamp.set(str(self.create_ts()))
 
-    def get_status_from_index(self,index):
+    def get_status_from_index(self, index):
         if index == 3:
             return -1
         elif index == 2:
@@ -1499,17 +1504,21 @@ class GUI():
             return 1
 
     def save_as(self):
-        extension = [('JSON','*.json')]
-        f = tkFileDialog.asksaveasfile(initialdir = PATH, mode='w', defaultextension=".json",filetypes = extension)
-        if f is None: # asksaveasfile return `None` if dialog closed with "cancel".
-            return
-        # global cfg_fname
-        # tmp_cfg = cfg_fname
-        # cfg_fname = f.name # starts from `1.0`, not `0.0`
-        self.save_file(write_to_disk=False)
-        # cfg_fname =tmp_cfg
-        self.config.export_config_for_h5_files(f.name)
-        logger.info("File Exported successfully as {}".format(f.name))
+        try:
+            extension = [('JSON','*.json')]
+            f = tkFileDialog.asksaveasfile(initialdir=PATH, mode='w', defaultextension=".json", filetypes=extension)
+            if f is None:  # asksaveasfile return `None` if dialog closed with "cancel".
+                return
+            # global cfg_fname
+            # tmp_cfg = cfg_fname
+            # cfg_fname = f.name # starts from `1.0`, not `0.0`
+            self.save_file(write_to_disk=False)
+            # cfg_fname =tmp_cfg
+            self.config.export_config_for_h5_files(f.name)
+            logger.info("File Exported successfully as {}".format(f.name))
+            tkMessageBox.showinfo("Success", "File Exported Successfully")
+        except:
+            tkMessageBox.showerror("Error", "File not saved")
 
     def load_from(self):
         extension = [('JSON', '*.json')]
