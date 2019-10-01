@@ -42,6 +42,12 @@ export default new Router({
       name: "acorr_files",
       props: true,
       component: () => import("./views/AcorrFiles.vue")
+    },
+    {
+      path: "/process_flows/:mine_name",
+      name: "process_flows",
+      props: true,
+      component: () => import("./views/AcorrFiles.vue")
     }
   ]
 });

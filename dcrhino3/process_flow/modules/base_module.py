@@ -82,13 +82,20 @@ class BaseModule(object):
                 transformed[key] =  self.get_transformed_args(global_config,val)
             elif type(val) == list:
 
-                ## USE GLOBAL_CONFIG OR DEFAULT
+                ## USE GLOBAL_CONFIG OR PROCESS_FLOW OR DEFAULT
                 if is_string(val[0]) and "|global_config." in str(val[0]):
                     gc_var_name = val[0].replace("|", "").replace("global_config.", "")
                     if gc_var_name in vars(global_config):
                         transformed[key] = getattr(global_config, gc_var_name)
                     else:
                         transformed[key] = val[1]
+                elif is_string(val[0]) and "|process_flow." in str(val[0]):
+                    gc_var_name = val[0].replace("|", "").replace("process_flow.", "")
+                    if "vars" in self.process_flow.process_json.keys() and gc_var_name in self.process_flow.process_json["vars"].keys():
+                        transformed[key] = self.process_flow.process_json["vars"][gc_var_name]
+                    else:
+                        transformed[key] = val[1]
+
                 else:
                     for i, item in enumerate(val):
                         if type(item) == dict:

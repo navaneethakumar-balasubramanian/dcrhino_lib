@@ -27,7 +27,25 @@ class EnvConfig(object):
             self.json_path = env_conf_json_path
         self.blacklist_files = []
         self._parse_json(env_conf_json_path)
-        
+
+
+    def get_log_process_flows_list(self,mine_name):
+        directory = self.get_log_process_folder(mine_name)
+        files = glob.glob(directory +"/*.json")
+        files.sort(key=os.path.getmtime)
+        files.reverse()
+        files = [os.path.basename(x) for x in files]
+        return files
+
+    def get_log_process_folder(self,mine_name):
+        mine_cfg = self._get_mine_config(mine_name)
+        if not mine_cfg or 'paths' not in mine_cfg.keys() or 'log_process_flows' not in mine_cfg[
+            'paths']:
+            return False
+        return mine_cfg['paths']['log_process_flows']
+
+    def get_default_lp_json(self,mine_name):
+        return self.get_process_flow_folder(mine_name) + "../default_process_flow.json"
 
     def get_json_path(self):
         return self.json_path

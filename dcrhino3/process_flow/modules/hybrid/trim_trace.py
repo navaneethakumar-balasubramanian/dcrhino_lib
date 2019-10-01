@@ -22,6 +22,10 @@ class TrimTraceModuleHybrid(BaseHybridModule):
     def __init__(self, json, output_path, process_flow,order):
         BaseHybridModule.__init__(self, json, output_path, process_flow, order)
         self.id = "trim"
+        self.default_args =  {
+            "min_lag_trimmed_trace": "|global_config.min_lag_trimmed_trace|",
+            "max_lag_trimmed_trace": "|global_config.max_lag_trimmed_trace|"
+        }
 
     def process_splitted_trace(self, splitted_traces):
         """

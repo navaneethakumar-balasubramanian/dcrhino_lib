@@ -229,6 +229,7 @@ class ProcessFlow:
             t0 = time.time()
             logger.info("Applying " + str(module.id) + " with: " + str(module.args))
             output_trace = module.process_trace(output_trace)
+            logger.info("Applied " + str(module.id) + " with: " + str(module.get_transformed_args(output_trace.first_global_config)))
             delta_t = time.time() - t0
             logger.info("{} ran in {}s ".format(module.id, delta_t))
             self.actual_module += 1
@@ -268,7 +269,7 @@ class ProcessFlow:
 
 
     def process_file(self, process_json, acorr_h5_file_path, env_config = False, 
-                     seconds_to_process=False, return_dict=dict()):
+                     seconds_to_process=False, return_dict=dict(), process_id=False):
         """
         """
         logger.info("PROCESSING FILE:" + str(acorr_h5_file_path))
@@ -312,7 +313,8 @@ class ProcessFlow:
             print ("Saving processed results to database")
             seconds_processed = int(acorr_trace.max_ts - acorr_trace.min_ts)
             relative_output_path = "/".join(self.output_path.split('/')[-2:]) + "/"
-            process_id = int(self.now.strftime("%s"))
+            if process_id is False:
+                process_id = int(self.now.strftime("%s"))
             #print(process_id,relative_output_path,seconds_processed)
             self.rhino_sql_helper.processed_holes.add(int(self.now.strftime("%s")), seconds_processed,
                                                       acorr_trace.hole_id, acorr_trace.sensor_id,
@@ -354,7 +356,11 @@ class ProcessFlow:
 
                 if 'vars' in subset_obj['process_json'].keys() and isinstance(subset_obj['process_json']['vars'],list) :
                     try:
-                        subset_obj['process_json']['vars'] = subset_obj['process_json']['vars'][i]
+                        # MERGE VARS FROM SUBSET 0 with OTHERS
+                        #subset_obj['process_json']['vars'] = subset_obj['process_json']['vars'][i]
+                        subset_obj['process_json']['vars'] = {**subset_obj['process_json']['vars'][0],**subset_obj['process_json']['vars'][i]}
+                        qq = subset_obj['process_json']['vars']
+                        print("aa")
                     except:
                         subset_obj['process_json']['vars'] = {}
 
@@ -368,7 +374,10 @@ class ProcessFlow:
             subset_obj['process_json'] = copy.deepcopy(process_json)
             if 'vars' in subset_obj['process_json'].keys() and isinstance(subset_obj['process_json']['vars'], list):
                 try:
-                    subset_obj['process_json']['vars'] = subset_obj['process_json']['vars'][i+1]
+                    #subset_obj['process_json']['vars'] = subset_obj['process_json']['vars'][i+1]
+                    subset_obj['process_json']['vars'] = {**subset_obj['process_json']['vars'][0],
+                                                          **subset_obj['process_json']['vars'][i+1]}
+                    qq = subset_obj['process_json']['vars']
                 except:
                     subset_obj['process_json']['vars'] = {}
             subsets_objs.append(subset_obj)

@@ -65,7 +65,8 @@ export default {
             //{ title: "MWD", link: "/mwd/" + element },
             //{ title: "Sensor files", link: "/sensor_files/" + element },
             { title: "Processed files", link: "/processed/" + element },
-            { title: "Blasthole observations", link: "/blasthole_observations/" + element }
+            { title: "Blasthole observations", link: "/blasthole_observations/" + element },
+            { title: "Trace Process Flows", link: "/process_flows/" + element }
           ]
         });
       });

@@ -22,6 +22,7 @@ class LeadChannelDeconvolutionModuleHybrid(BaseHybridModule):
     def __init__(self, json, output_path, process_flow,order):
         BaseHybridModule.__init__(self, json, output_path, process_flow, order)
         self.id = "lead_channel_deconvolution"
+        self.default_args = { "deconvolution_filter_duration": ["|process_flow.deconvolution_filter_duration|",0.1] }
 
     def sort_out_filter_length(self, splitted_traces):
         """
@@ -94,6 +95,8 @@ class LeadChannelDeconvolutionModuleHybrid(BaseHybridModule):
         @type component_array: numpy array
         @note: Creates a symmetric and centered data acorr decendant data vector
         """
+
+
         logger.warning("lead channel decon assumes the first trace has same sampling rate\
                        as all traces passed in splitted_trace")
         logger.info("lead channel decon only supports even length filters right now")

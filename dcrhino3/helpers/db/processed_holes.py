@@ -24,7 +24,9 @@ class ProcessedHoles(BaseDbModel):
         return self.query_to_df(query)
 
     def get_holes_to_mp(self):
-        return self.get_latests_process_for_each_hole()
+        #return self.get_latests_process_for_each_hole()
+        query = 'SELECT * FROM processed_holes WHERE to_mp = 1'
+        return self.query_to_df(query)
 
     def get_latests(self,limit=1000):
         return self.query_to_df("select * from " + self.table_name + " order by processed_hole_id DESC limit " + str(limit))

@@ -51,7 +51,6 @@
       item-key="processed_hole_id"
       select-all
       class="elevation-1"
-      hide-actions
       v-if="!show_dialog_comparison"
     >
       <template slot="headerCell" slot-scope="props">
@@ -140,9 +139,27 @@
         </td>
       </template>
     </v-data-table>
+    
     <v-btn flat color="light-blue" v-on:click="log_process_selection()"
-      >Log process</v-btn
-    >
+      >Log process</v-btn>
+    <v-dialog v-model="select_process_flow" scrollable max-width="300px">
+          
+          <v-card>
+            <v-card-title>Select the lp process to use</v-card-title>
+            <v-divider></v-divider>
+            <v-card-text style="height: 300px;" class="pa-0 pm-0">
+              <v-list class="pa-0 pm-0">
+                <v-list-tile style='margin:0;padding:0'
+                  v-for="(item, i) in log_process_flows"
+                  :key="i" ripple>
+                 
+                  <v-btn v-on:click="log_process_to_lp(item)" style='padding:0;font-size:10px' flat color="light-blue" >{{ item }}</v-btn >
+                </v-list-tile>
+                
+              </v-list>
+            </v-card-text>
+          </v-card>
+        </v-dialog>
     <v-btn flat color="light-blue" v-on:click="compare_selection()"
       >Compare selection</v-btn
     >
@@ -172,7 +189,16 @@
       :timeout="3000"
       >{{ warning_text }}</v-snackbar
     >
+    <v-snackbar
+      v-model="message"
+      bottom
+      right
+      multi-line
+      :timeout="3000"
+      >{{ message_text }}</v-snackbar
+    >
   </div>
+
   </div>
 
 </template>
@@ -194,11 +220,15 @@ export default {
     show_dialog: false,
     show_dialog_comparison: false,
     selected: [],
-    pagination: { rowsPerPage: -1 },
+    log_process_flows: [],
+    pagination: { rowsPerPage: 25 },
     warning: null,
     warning_text: null,
+    message: null,
+    message_text: null,
     headers: [],
     filtered_data: [],
+    select_process_flow: false,
     dateRange: { startDate: "",
                 endDate: ""}
   }),
@@ -208,22 +238,32 @@ export default {
   props: ["mine_name"],
 
   methods: {
-    log_process_selection:function (){
-       if (this.selected.length > 0) {
+    log_process_selection:function(){
+      let temp = this;
+      let payload = {
+          mine_name: this.mine_name,
+          responseType: "arraybuffer"
+        };
+        axios.post("/api/log_process_flows", payload).then(
+          response => {
+            temp.log_process_flows = response.data.log_process_flows
+          }
+        );
+        this.select_process_flow = true
+    },
+    log_process_to_lp:function(lp_json_name){
+        let temp = this
+        this.select_process_flow = false
         let payload = {
           mine_name: this.mine_name,
-          processed_holes: this.selected,
+          log_process_flow: lp_json_name
         };
-        let temp = this;
-        this.loading_lp = true;
         axios.post("/api/log_process_holes", payload).then(response => {
-          temp.loading_lp = false;
+          temp.message = true;
+          temp.message_text = "Added lp to processing queue."
         });
-      } else {
-        this.warning = true;
-        this.warning_text = "Select a few holes to log process.";
-      }
     },
+    
     format_available_dates:function(classes,date){
       
       if (this.processed_at_ts.includes(moment(date).format("YYYY-MM-DD"))){
@@ -441,7 +481,7 @@ export default {
             allChecked: true
           },
           {
-            text: "MP",
+            text: "TO LP",
             value: "to_mp",
             sortable: false,
             values: {
