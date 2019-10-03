@@ -139,27 +139,6 @@
         </td>
       </template>
     </v-data-table>
-    
-    <v-btn flat color="light-blue" v-on:click="log_process_selection()"
-      >Log process</v-btn>
-    <v-dialog v-model="select_process_flow" scrollable max-width="300px">
-          
-          <v-card>
-            <v-card-title>Select the lp process to use</v-card-title>
-            <v-divider></v-divider>
-            <v-card-text style="height: 300px;" class="pa-0 pm-0">
-              <v-list class="pa-0 pm-0">
-                <v-list-tile style='margin:0;padding:0'
-                  v-for="(item, i) in log_process_flows"
-                  :key="i" ripple>
-                 
-                  <v-btn v-on:click="log_process_to_lp(item)" style='padding:0;font-size:10px' flat color="light-blue" >{{ item }}</v-btn >
-                </v-list-tile>
-                
-              </v-list>
-            </v-card-text>
-          </v-card>
-        </v-dialog>
     <v-btn flat color="light-blue" v-on:click="compare_selection()"
       >Compare selection</v-btn
     >
@@ -169,6 +148,24 @@
     <v-btn flat color="light-blue" v-on:click="get_processed_selection()">
       <v-icon left dark>cloud_download</v-icon>Selection csv</v-btn
     >
+    <v-btn flat color="light-blue" v-on:click="log_process_selection()"
+      >Log process</v-btn>
+    <v-dialog v-model="select_process_flow" scrollable max-width="300px">
+          <v-card>
+            <v-card-title>Select the lp process to use</v-card-title>
+            <v-divider></v-divider>
+            <v-card-text style="height: 300px;" class="pa-0 pm-0">
+              <v-list class="pa-0 pm-0">
+                <v-list-tile style='margin:0;padding:0'
+                  v-for="(item, i) in log_process_flows"
+                  :key="i" ripple>
+                  <v-btn v-on:click="log_process_to_lp(item)" style='padding:0;font-size:10px' flat color="light-blue" >{{ item }}</v-btn >
+                </v-list-tile>
+              </v-list>
+            </v-card-text>
+          </v-card>
+        </v-dialog>
+    
     <HoleCard
       :key="clicked_processed_hole_id"
       :clicked_processed_hole_id="clicked_processed_hole_id"

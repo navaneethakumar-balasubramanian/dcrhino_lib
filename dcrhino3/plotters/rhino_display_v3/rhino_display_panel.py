@@ -196,7 +196,10 @@ class Curve(object):
 
     def assign_data_values(self, df, x_axis=None):
         try:
-            self.data = np.asarray(df[self.column_label])
+            if self.column_label in df.columns:
+                self.data = np.asarray(df[self.column_label])
+            else:
+                self.data = np.asarray(df[self.column_label.replace('maximum_time','minimum_time')])
         except:
             logger.warn('problem accessing data from dataframe in Curve()')
             logger.warn('column label = {}'.format(self.column_label))
