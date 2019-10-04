@@ -84,16 +84,16 @@ class FeatureExtractJ2Hybrid(BaseHybridModule):
             "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
             "amplitude_half_widths": {
                 "axial": {
-                    "multiple_3": 0.00105,
-                    "multiple_2": 0.00105,
-                    "multiple_1": 0.00105,
-                    "primary": 0.00105
+                    "multiple_3": ["|process_flow.amplitude_half_widths.axial.multiple_3|",0.00105],
+                    "multiple_2": ["|process_flow.amplitude_half_widths.axial.multiple_2|",0.00105],
+                    "multiple_1": ["|process_flow.amplitude_half_widths.axial.multiple_1|",0.00105],
+                    "primary": ["|process_flow.amplitude_half_widths.axial.primary|",0.00105]
                 },
                 "tangential": {
-                    "multiple_3": 0.00105,
-                    "multiple_2": 0.00105,
-                    "multiple_1": 0.00105,
-                    "primary": 0.00105
+                    "multiple_3": ["|process_flow.amplitude_half_widths.tangential.multiple_3|",0.00105],
+                    "multiple_2": ["|process_flow.amplitude_half_widths.tangential.multiple_2|",0.00105],
+                    "multiple_1": ["|process_flow.amplitude_half_widths.tangential.multiple_1|",0.00105],
+                    "primary": ["|process_flow.amplitude_half_widths.tangential.primary|",0.00105]
                 }
             },
             "sensor_saturation_g": "|global_config.sensor_saturation_g|",
@@ -119,30 +119,30 @@ class FeatureExtractJ2Hybrid(BaseHybridModule):
             "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|",
             "time_picks": {
                 "axial": {
-                    "multiple_3": "maximum",
-                    "multiple_2": "maximum",
-                    "multiple_1": "maximum",
-                    "primary": "maximum"
+                    "multiple_3": ["|process_flow.time_picks.axial.multiple_3|","maximum"],
+                    "multiple_2": ["|process_flow.time_picks.axial.multiple_2|","maximum"],
+                    "multiple_1": ["|process_flow.time_picks.axial.multiple_1|","maximum"],
+                    "primary": ["|process_flow.time_picks.axial.primary|","maximum"]
                 },
                 "tangential": {
-                    "multiple_3": "maximum",
-                    "multiple_2": "maximum",
-                    "multiple_1": "maximum",
-                    "primary": "maximum"
+                    "multiple_3": ["|process_flow.time_picks.tangential.multiple_3|","maximum"],
+                    "multiple_2": ["|process_flow.time_picks.tangential.multiple_2|","maximum"],
+                    "multiple_1": ["|process_flow.time_picks.tangential.multiple_1|","maximum"],
+                    "primary": ["|process_flow.time_picks.tangential.primary|","maximum"]
                 }
             },
             "amplitude_picks": {
                 "axial": {
-                    "multiple_3": "integrated_absolute_amplitude",
-                    "multiple_2": "integrated_absolute_amplitude",
-                    "multiple_1": "integrated_absolute_amplitude",
-                    "primary": "integrated_absolute_amplitude"
+                    "multiple_3": ["|process_flow.amplitude_picks.axial.multiple_3|","integrated_absolute_amplitude"],
+                    "multiple_2": ["|process_flow.amplitude_picks.axial.multiple_2|","integrated_absolute_amplitude"],
+                    "multiple_1": ["|process_flow.amplitude_picks.axial.multiple_1|","integrated_absolute_amplitude"],
+                    "primary": ["|process_flow.amplitude_picks.axial.primary|","integrated_absolute_amplitude"]
                 },
                 "tangential": {
-                    "multiple_3": "integrated_absolute_amplitude",
-                    "multiple_2": "integrated_absolute_amplitude",
-                    "multiple_1": "integrated_absolute_amplitude",
-                    "primary": "integrated_absolute_amplitude"
+                    "multiple_3": ["|process_flow.amplitude_picks.tangential.multiple_3|","integrated_absolute_amplitude"],
+                    "multiple_2": ["|process_flow.amplitude_picks.tangential.multiple_2|","integrated_absolute_amplitude"],
+                    "multiple_1": ["|process_flow.amplitude_picks.tangential.multiple_1|","integrated_absolute_amplitude"],
+                    "primary": ["|process_flow.amplitude_picks.tangential.primary|","integrated_absolute_amplitude"]
                 }
             }
         }

@@ -114,6 +114,27 @@
           </v-card>
         </v-dialog>
     
+
+    <v-dialog v-model="edit_process_flow" scrollable max-width="600px">
+          <v-card>
+            <v-card-title>Select the process flow to use</v-card-title>
+            <v-divider></v-divider>
+            <v-card-text style="height: 300px;" class="pa-0 pm-0">
+              <v-list dense class="pa-0 pm-0">
+                <v-list-tile 
+                  v-for="(item, i) in process_flows"
+                  :key="i" 
+                  @click="process_using(item)"
+                  ripple>
+                  <v-list-tile-content>
+                    <v-list-tile-title  v-text="item"></v-list-tile-title>
+                  </v-list-tile-content>                   
+                </v-list-tile>          
+                
+              </v-list>
+            </v-card-text>
+          </v-card>
+        </v-dialog>
     
     <v-snackbar
       v-model="warning"
@@ -140,6 +161,7 @@
 
 export default {
   data: () => ({
+    edit_process_flow:false,
     select_process_flow:false,
     process_flows:[],
     search: null,
