@@ -8,11 +8,14 @@ import argparse
 from dcrhino3.acquisition.constants import LOGS_PATH
 
 
-def main(start_date=None, end_date=None):
+def main(start_date=None, end_date=None, input_path=None):
     # path = "/home/natal/toconvert/waio/tablet_logs/Logs_83361/*health.log"
     # path = "/home/natal/toconvert/bma/tablet_logs/*health.log"
     # path = "/media/natal/256/BMC/logs/*health.log"
-    path = os.path.join(LOGS_PATH, "*health.log")
+    if input_path is None:
+        path = os.path.join(LOGS_PATH, "*health.log")
+    else:
+        path = os.path.join(input_path, "*health.log")
 
     files = glob2.glob(path)
 
@@ -98,14 +101,13 @@ def main(start_date=None, end_date=None):
     battery_plot.plot(time_axis, df.battery, linestyle="none", marker=".")
     battery_plot.set_title("Battery Voltage")
     battery_plot.set_ylim(8, 13)
-    temperature_plot.plot(time_axis, df.temperature, linestyle="none", marker=".")
-    temperature_plot.set_title("Board Temperature")
-    temperature_plot.set_ylim(0, 50)
+    temperature_plot.set_title("Rhino Temperature")
+    temperature_plot.plot(time_axis,df.temperature,linestyle="none", marker=".")
+    drift_plot.set_title("Rhino Drift")
     drift_plot.plot(time_axis, df.drift, linestyle="none", marker=".")
-    drift_plot.set_title("Clock Drift")
-    tx_status_plot.plot(time_axis, df.tx_status, linestyle="none", marker=".")
-    tx_status_plot.set_title("Transmitter Status")
     tx_status_plot.set_ylim(-0.5, 1.5)
+    tx_status_plot.set_title("TX Status")
+    tx_status_plot.plot(time_axis, df.tx_status, linestyle="none", marker=".")
     real_delay_plot.plot(time_axis, df.real_delay, linestyle="none", marker=".")
     real_delay_plot.set_title("Processing Delay")
     total_seconds = df.timestamps.max() - df.timestamps.min()
@@ -114,16 +116,33 @@ def main(start_date=None, end_date=None):
                                                                                                 total_seconds)
     plt.suptitle(title)
 
-    plt.figure("Histogram")
-    signal_loss_plot = plt.subplot2grid((6, 1), (0, 0), colspan=1)
+    plt.figure("Signal Loss Histogram Hi Res")
+    signal_loss_plot = plt.subplot2grid((2, 1), (0, 0), colspan=1)
     signal_loss = (1-(df.samples.dropna()/2000))*100
-    bins = np.arange(0, 7, 1)
+    bins = np.arange(0, 7, .1)
     signal_loss_plot.set_xticks(bins)
-    signal_loss_plot.set_xticklabels(["0", "1", "2", "3", "4", "5", "6+"])
+    # signal_loss_plot.set_xticklabels(["0", "1", "2", "3", "4", "5", "6+"])
     signal_loss = np.asarray(signal_loss, dtype=np.float32)
     signal_loss_plot.hist(signal_loss, bins=bins, histtype="step", weights=np.ones(len(signal_loss)) / len(
         signal_loss))
-    signal_loss_plot.set_title("Signal Loss")
+    signal_loss_plot.set_title("Signal Loss High Resolution")
+    plt.suptitle("System Health Histograms from {} to {}".format(df.date.min(), df.date.max()))
+
+    signal_loss_plot_lo_res = plt.subplot2grid((2, 1), (1, 0), colspan=1)
+    signal_loss = (1 - (df.samples.dropna() / 2000)) * 100
+    bins = np.arange(0, 7, 1)
+    signal_loss_plot_lo_res.set_xticks(bins)
+    signal_loss_plot_lo_res.set_xticklabels(["0", "1", "2", "3", "4", "5", "6+"])
+    signal_loss = np.asarray(signal_loss, dtype=np.float32)
+    signal_loss_plot_lo_res.hist(signal_loss, bins=bins, histtype="step", weights=np.ones(len(signal_loss)) / len(
+        signal_loss))
+    signal_loss_plot_lo_res.set_title("Signal Loss")
+    plt.suptitle("System Health Histograms from {} to {}".format(df.date.min(), df.date.max()))
+
+    plt.figure("Trace Packets Histogram")
+    trace_packets_plot = plt.subplot2grid((1, 1), (0, 0), colspan=1)
+    trace_packets_plot.hist(df.samples.dropna(), bins=np.arange(1980, 2002, 1), histtype="step")
+    trace_packets_plot.set_title("Packets Distribution")
     plt.suptitle("System Health Histograms from {} to {}".format(df.date.min(), df.date.max()))
 
     plt.figure("Tablet Time Series")
@@ -145,7 +164,7 @@ def main(start_date=None, end_date=None):
     plt.suptitle("Tablet System Health Time Series from {} to {}".format(df.date.min(), df.date.max()))
 
     plt.show()
-    # print(df.temperature.describe())
+    print(df.samples.dropna().describe())
     print("Done")
 
 
@@ -153,5 +172,6 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="Collection Deamon v%d.%d.%d - Copyright (c) 2018 DataCloud")
     argparser.add_argument('-sd', '--start_date', help="Start Date To Plot", default=None)
     argparser.add_argument('-ed', '--end_date', help="End Date To Plot", default=None)
+    argparser.add_argument('-p', '--path', help="Path other than default", default=None)
     args = argparser.parse_args()
-    main(args.start_date, args.end_date)
+    main(args.start_date, args.end_date, args.path)
