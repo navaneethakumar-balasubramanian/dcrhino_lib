@@ -2641,6 +2641,7 @@ class EventList(Transformable):
     def create_h5_helper(self, output_path, config):
         h5f = h5py.File(output_path, 'a')
         h5_helper = H5Helper(h5f, load_ts=False, load_xyz=False, config=config)
+        h5_helper.save_field_config_to_h5()
         h5_helper.save_np_array_to_h5_file("sensitivity", numpy.asarray([1.], dtype=numpy.float32))
         axis = numpy.asarray([config.sensor_axial_axis, config.sensor_tangential_axis], dtype=numpy.int32)
         h5_helper.save_np_array_to_h5_file("axis", axis)
