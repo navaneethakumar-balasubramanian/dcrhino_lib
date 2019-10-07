@@ -48,6 +48,12 @@ export default new Router({
       name: "process_flows",
       props: true,
       component: () => import("./components/ProcessFlowEditor.vue")
+    },
+    {
+      path: "/field_data/:mine_name",
+      name: "field_data",
+      props: true,
+      component: () => import("./views/FieldDataList.vue")
     }
   ]
 });
