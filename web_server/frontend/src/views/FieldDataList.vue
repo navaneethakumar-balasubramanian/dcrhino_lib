@@ -8,7 +8,7 @@
                 <v-card>
                     <v-img @click="redirect_to(item)" :src="item" aspect-ratio="1.5" ></v-img>
                     <v-card-actions>
-                        <div class="caption text-truncate" small>.../{{item.split("/").slice(5,0).join("/")}}</div>
+                        <div class="caption text-truncate" small>.../{{item.split("/").slice(5,item.split("/").length).join("/")}}</div>
                     </v-card-actions>
                 </v-card>
             </v-flex>
