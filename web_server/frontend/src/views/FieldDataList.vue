@@ -1,6 +1,6 @@
 <template>
  <v-container fluid grid-list-sm>
-     <h4 style='headline'>Field data from {{mine_name}}</h4>
+     <h4 style='headline'>Field data from {{mine_name }}</h4>
     <v-layout row wrap>
         <template v-for="(item) in field_files_list">
             
@@ -8,7 +8,7 @@
                 <v-card>
                     <v-img @click="redirect_to(item)" :src="item" aspect-ratio="1.5" ></v-img>
                     <v-card-actions>
-                        <div class="caption" small>{{item.replace("/data/","")}}</div>
+                        <div class="caption text-truncate" small>.../{{item.split("/").slice(5,-1).join("/")}}</div>
                     </v-card-actions>
                 </v-card>
             </v-flex>
