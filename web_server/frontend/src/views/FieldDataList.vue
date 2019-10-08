@@ -4,7 +4,7 @@
     <v-layout row wrap>
         <template v-for="(item) in field_files_list">
             
-            <v-flex :key="item" xs6 sm4 lg3 >
+            <v-flex :key="item" md6 lg3 >
                 <v-card>
                     <v-img @click="redirect_to(item)" :src="item" aspect-ratio="1.5" ></v-img>
                     <v-card-actions>
