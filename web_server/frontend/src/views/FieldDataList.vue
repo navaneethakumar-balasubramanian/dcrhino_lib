@@ -4,9 +4,9 @@
     <v-layout row wrap>
         <template v-for="(item) in field_files_list">
             
-            <v-flex :key="item" xs6>
+            <v-flex :key="item" xs6 sm4 lg3 xl2>
                 <v-card>
-                    <v-img @click="redirect_to(item)" :src="'http://localhost:5000' + item" aspect-ratio="1.5" ></v-img>
+                    <v-img @click="redirect_to(item)" :src="item" aspect-ratio="1.5" ></v-img>
                     <v-card-actions>
                         <div class="caption" small>{{item.replace("/data/","")}}</div>
                     </v-card-actions>
