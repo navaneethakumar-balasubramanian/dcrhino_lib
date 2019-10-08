@@ -1,16 +1,20 @@
 <template>
-         <v-list two-line>
-             <template v-for="(item) in field_files_list">
-             <v-list-tile
-              :key="item"
-              @click="redirect_to(item)"
-                >
-                <v-list-tile-content>
-                <v-list-tile-title v-html="item"></v-list-tile-title>
-              </v-list-tile-content>
-                </v-list-tile>
-                </template>
-         </v-list>
+ <v-container fluid grid-list-sm>
+     <h4 style='headline'>Field data from {{mine_name}}</h4>
+    <v-layout row wrap>
+        <template v-for="(item) in field_files_list">
+            
+            <v-flex :key="item" xs6>
+                <v-card>
+                    <v-img @click="redirect_to(item)" :src="'http://localhost:5000' + item" aspect-ratio="1.5" ></v-img>
+                    <v-card-actions>
+                        <div class="caption" small>{{item.replace("/data/","")}}</div>
+                    </v-card-actions>
+                </v-card>
+            </v-flex>
+        </template>
+    </v-layout>
+  </v-container>
 </template>
 <script>
 
@@ -33,7 +37,8 @@ export default {
   methods:{
       redirect_to:function(url){
         window.open(url)
-      }
+      },
+      
   }
 
 }
