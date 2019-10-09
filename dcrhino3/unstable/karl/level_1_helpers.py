@@ -29,6 +29,30 @@ class NonUniformTimeAxis(object):
         self.first_index = None
         self.final_index = None
 
+#    @property
+#    def ts(self):
+#        return self.time_stamps
+
+    def infer_sampling_rate(self, force=False):
+        ts = self.time_stamps
+        if ts is None:
+            logger.error("Time Axis Object has no timestamps - cannot set sps")
+        if self.sampling_rate is None:
+            sps = np.round(len(ts)/(ts[-1]-ts[0]))
+            self.sampling_rate = sps
+        if force:
+            logger.warning("forcing setting sampling rate")
+            sps = np.round(len(ts)/(ts[-1]-ts[0]))
+            self.sampling_rate = sps
+
+    @property
+    def dt(self):
+        return 1. / self.sampling_rate
+
+    def generate_ideal_timestamps(self):
+        ts = self.time_stamps
+        ideal_timestamps = np.arange(np.ceil(ts[0]), np.floor(ts[-1]), self.dt)
+        return ideal_timestamps
 
 def get_relevant_array_indices_from_h5(h5f, min_time_stamp, max_time_stamp):
     """

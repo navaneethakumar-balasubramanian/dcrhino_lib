@@ -104,10 +104,10 @@ for i_sf in range(len(sensor_file_ids)):
         #with h5py.File('random.hdf5', 'r') as f:
         data_set = h5f['x']
         data = data_set[time_axis.first_index:time_axis.final_index]
-        dt = 1. / time_axis.sampling_rate
+        ideal_timestamps = time_axis.generate_ideal_timestamps()
         pdb.set_trace()
-        ideal_timestamps = np.arange(np.ceil(time_axis.time_stamps[0]), np.floor(time_axis.time_stamps[-1]), dt)
-        resampled_data = interpolate_data(time_axis.time_stamps, data, ideal_timestamps, kind="quadratic", dtype=np.float64)
+        resampled_data = interpolate_data(time_axis.time_stamps, data,
+                                          ideal_timestamps, kind="quadratic", dtype=np.float64)
 
 #        plt.plot(ts, data)
 #        plt.plot(ideal_timestamps, qq)
