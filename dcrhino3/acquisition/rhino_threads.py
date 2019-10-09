@@ -70,7 +70,8 @@ class GPSThread(threading.Thread):
                             if self.data_stream.satellites == "n/a":
                                 self._satellite_count = 0
                             else:
-                                self._satellite_count = self.data_stream.satellites
+                                self._satellite_count = len(self.data_stream.satellites)
+                        time.sleep(.5)
                 except:
                     self._satellite_count = sys.exc_info()
 
