@@ -149,6 +149,7 @@ class GUI():
             acq_script = 'real_time_acquisition_v4.py'
             health_script = 'system_health_plotter.py'
             sensor_stats = 'sensor_stats_plotter.py'
+            gps_tracker = 'rhino_gps_tracker.py'
             if debug:
                 self.acquisition_process = Popen(['python', os.path.abspath(os.path.join(PATH, acq_script))])
                 self.system_health_process = Popen(['python', os.path.abspath(os.path.join(PATH, health_script))])
@@ -163,6 +164,8 @@ class GUI():
                                                         health_script))], stderr=self.err)
                     self.sensor_stats_process = Popen(['python', os.path.abspath(os.path.join(PATH, sensor_stats))],
                                                       stderr=self.err)
+                    self.gps_tracker_process = Popen(['python', os.path.abspath(os.path.join(PATH, gps_tracker))],
+                                                      stderr=self.err)
                 logging.info("Acquisition started in regular mode")
 
             processor_number = multiprocessing.cpu_count()-1
@@ -175,6 +178,11 @@ class GUI():
                                   str(self.sensor_stats_process.pid)], stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
             logging.debug("Sensor Stats Plotter Running in processor {} \n".format(processor_number))
+            processor_number = multiprocessing.cpu_count() - 2
+            p = subprocess.Popen(['taskset', '-cp', '{}'.format(processor_number),
+                                  str(self.gps_tracker_process.pid)], stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
+            logging.debug("GPS Tracker Running in processor {} \n".format(processor_number))
 
     def acquisition_daemon_stop(self):
         if self.acquisition_process is not None:
@@ -186,6 +194,8 @@ class GUI():
             self.system_health_process = None
             self.sensor_stats_process.terminate()
             self.sensor_stats_process = None
+            self.gps_tracker_process.terminate()
+            self.gps_tracker_process = None
             self.stop_rx(True)
             self.rename_temp_files()
             os.remove(os.path.join(RAM_PATH, "system_health.npy"))
