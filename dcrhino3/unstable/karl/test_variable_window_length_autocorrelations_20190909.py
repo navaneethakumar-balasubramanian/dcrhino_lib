@@ -33,6 +33,9 @@ from dc_mwd.mine_data_cache_paths import MineDataCachePaths
 from dcrhino3.helpers.general_helper_functions import init_logging
 from dcrhino3.helpers.h5_helper import H5Helper
 from dcrhino3.signal_processing.interpolation import interpolate_data
+from dcrhino3.unstable.karl.level_1_helpers import NonUniformTimeAxis
+from dcrhino3.unstable.karl.level_1_helpers import get_relevant_array_indices_from_h5
+
 
 logger = init_logging(__name__)
 client = 'bmc'
@@ -93,21 +96,19 @@ for i_sf in range(len(sensor_file_ids)):
         else:
             print('SKIPPING observed blasthole NOT entirely within sensor file')
             continue
-        ts = np.asarray(h5f.get('ts'), dtype=np.float64)
-        sps = np.round(len(ts)/(ts[-1]-ts[0]))
-        dt = 1./sps
-        cond1 = ts > observed_blasthole.start_time_min
-        cond2 = ts < observed_blasthole.start_time_max
-        relevant_indices = np.where(cond1 & cond2)[0]
-        ndx0 = relevant_indices[0]
-        ndx1 = relevant_indices[-1]+1
-        ts = ts[ndx0:ndx1]
+        time_axis = get_relevant_array_indices_from_h5(h5f,
+                                                        observed_blasthole.start_time_min,
+                                                        observed_blasthole.start_time_max)
+
  #       pdb.set_trace()
         #with h5py.File('random.hdf5', 'r') as f:
         data_set = h5f['x']
-        data = data_set[ndx0:ndx1]
-        ideal_timestamps = np.arange(np.ceil(ts[0]), np.floor(ts[-1]), dt)
-        resampled_data = interpolate_data(ts, data, ideal_timestamps, kind="quadratic", dtype=np.float64)
+        data = data_set[time_axis.first_index:time_axis.final_index]
+        dt = 1. / time_axis.sampling_rate
+        pdb.set_trace()
+        ideal_timestamps = np.arange(np.ceil(time_axis.time_stamps[0]), np.floor(time_axis.time_stamps[-1]), dt)
+        resampled_data = interpolate_data(time_axis.time_stamps, data, ideal_timestamps, kind="quadratic", dtype=np.float64)
+
 #        plt.plot(ts, data)
 #        plt.plot(ideal_timestamps, qq)
 #        plt.show()
