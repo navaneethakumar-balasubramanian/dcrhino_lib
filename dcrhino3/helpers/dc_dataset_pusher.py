@@ -12,6 +12,10 @@ class DcDatasetPusher:
         self.dc_subdomain = dc_subdomain
         self.dataset_name = dataset_name
         self.df = df
+        self.df['bench'] = self.df['bench_name']
+        self.df['pit'] = self.df['pit_name']
+        self.df['pattern'] = self.df['pattern_name']
+        self.df = self.boolean_to_int_columns(self.df)
         self.csv_file_path = "/tmp/" + str(next(tempfile._get_candidate_names())) + ".csv"
         if config is None:
             self.config = self.update_or_create_config(df,rhino_props={})
@@ -20,12 +24,19 @@ class DcDatasetPusher:
 
         self.deploy_data(self.config)
 
+    def boolean_to_int_columns(self,df):
+        for col in df.columns:
+            if df[col].dtype == np.dtype('bool'):
+                df[col] = df[col].astype(int)
+        return df
+
+
     def prop_type_from_column_dtype(self, column_dtype):
         if isinstance(column_dtype, pd.core.dtypes.dtypes.CategoricalDtype):
             return "strprop"
         elif np.issubdtype(column_dtype, np.float_):
             return "floatprop"
-        elif np.issubdtype(column_dtype, np.int_) or column_dtype == np.dtype('uint64'):
+        elif np.issubdtype(column_dtype, np.int_) or column_dtype == np.dtype('uint64') or column_dtype == np.dtype('bool') :
             return "intprop"
         elif np.issubdtype(column_dtype, np.string_) or np.issubdtype(column_dtype, np.object_):
             return "strprop"

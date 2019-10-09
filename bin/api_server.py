@@ -26,6 +26,7 @@ from dcrhino3.helpers.mwd_helper import MWDHelper
 from dcrhino3.celery.tasks import process_file_with_flow
 from datetime import datetime
 import requests
+from dcrhino3.models.mine.mine import Mine
 
 from dcrhino3.celery.tasks import apply_log_process
 
@@ -55,6 +56,7 @@ dataset_name = 'montwright_rhino_' + datetime.today().strftime('%Y%m%d')
 API_BASE_URL = "http://104.42.216.162:5002/api"
 
 
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def index(path):
@@ -71,6 +73,11 @@ def get_mines():
 @app.route('/css/<path:path>')
 def send_css(path):
     return send_from_directory('../web_server/frontend/dist/css/', path)
+
+@app.route('/data/<path:path>')
+def data_files(path):
+    return send_from_directory('/data/', path.replace("/data/",""))
+
 
 @app.route('/js/<path:path>')
 def send_js(path):
@@ -324,6 +331,19 @@ def get_nparray():
     response = make_response(data.tobytes())
     response.headers.set('Content-Type', 'application/octet-stream')
     return response
+
+@app.route('/api/field_data_images',methods=['GET', 'POST'])
+def field_data_images():
+    req_json = request.get_json()
+    if 'mine_name' not in req_json.keys():
+        return jsonify(False)
+
+    mine = Mine()
+    mine_name = req_json['mine_name']
+    mine.set_data(env_config._get_mine_config(mine_name))
+    files = glob2.glob(mine.paths.field_data_folder + "/**/*.png")
+    files.sort(key=os.path.getmtime)
+    return jsonify(files)
 
 @app.route('/api/split_cross_sections',methods=['GET', 'POST'])
 def split_cross_sections():
