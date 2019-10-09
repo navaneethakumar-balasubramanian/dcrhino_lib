@@ -5,7 +5,7 @@ if sys.version_info.major == 2:
 else:
     from urllib.request import urlopen, URLError
 import time
-from gps3 import gps3
+from gps3 import agps3
 import pyudev
 import subprocess
 # from dcrhino3.acquisition.external.dimmer import dimmer
@@ -49,29 +49,30 @@ class NetworkThread(threading.Thread):
 class GPSThread(threading.Thread):
     def __init__(self, ignore_gpsd):
         threading.Thread.__init__(self)
-        self.daemon = True
+        # self.daemon = True
         self._ignore_gpsd = ignore_gpsd
         if not ignore_gpsd:
-            self.gps_socket = gps3.GPSDSocket()
-            self.data_stream = gps3.DataStream()
-            self.gps_socket.connect()
-            self.gps_socket.watch(devicepath="/dev/ttyACM1")
+            self.gps_socket = agps3.GPSDSocket()
+            self.data_stream = agps3.DataStream()
+            self.gps_socket.connect(host='localhost', port=2947)
+            self.gps_socket.watch()
             self._satellite_count = 0
         else:
             self._satellite_count = "GPS OFF"
 
     def run(self):
         if not self._ignore_gpsd:
-            try:
-                for new_data in self.gps_socket:
-                    if new_data:
-                        self.data_stream.unpack(new_data)
-                        if self.data_stream.SKY['satellites'] == "n/a":
-                            self._satellite_count = 0
-                        else:
-                            self._satellite_count = len(self.data_stream.SKY['satellites'])
-            except:
-                self._satellite_count = sys.exc_info()
+            while True:
+                try:
+                    for new_data in self.gps_socket:
+                        if new_data:
+                            self.data_stream.unpack(new_data)
+                            if self.data_stream.satellites == "n/a":
+                                self._satellite_count = 0
+                            else:
+                                self._satellite_count = self.data_stream.satellites
+                except:
+                    self._satellite_count = sys.exc_info()
 
     @property
     def satellite_count(self):
