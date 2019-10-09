@@ -15,8 +15,7 @@ import os
 import pandas as pd
 import pdb
 
-from dc_mwd.mine_data_cache_paths import MineDataCachePaths
-from dc_mwd.logging_util import init_logging
+from dcrhino3.helpers.general_helper_functions import init_logging
 
 logger = init_logging(__name__)
 
@@ -76,8 +75,6 @@ def get_relevant_array_indices_from_h5(h5f, min_time_stamp, max_time_stamp):
     time_axis.final_index  = ndx1
     return time_axis
 
-#MINE_DATA_CACHE_PATH = MineDataCachePaths('bmc', 'south_walker_creek')
-#home = os.path.expanduser("~/")
 
 
 def my_function():
