@@ -50,7 +50,9 @@ class NonUniformTimeAxis(object):
 
     def generate_ideal_timestamps(self):
         ts = self.time_stamps
-        ideal_timestamps = np.arange(np.ceil(ts[0]), np.floor(ts[-1]), self.dt)
+        #ideal_timestamps = np.arange(np.ceil(ts[0]), np.floor(ts[-1]+1), self.dt) #conservative
+        ideal_timestamps = np.arange(np.floor(ts[0]), np.ceil(ts[-1]+1), self.dt) #aggressive
+        #ideal_timestamps = np.arange(np.ceil(ts[0]), np.ceil(ts[-1]+1), self.dt) #aggressive
         return ideal_timestamps
 
 def get_relevant_array_indices_from_h5(h5f, min_time_stamp, max_time_stamp):
@@ -61,8 +63,8 @@ def get_relevant_array_indices_from_h5(h5f, min_time_stamp, max_time_stamp):
     ts = np.asarray(h5f.get('ts'), dtype=np.float64)
     sps = np.round(len(ts)/(ts[-1]-ts[0]))
 #    dt = 1./sps
-    cond1 = ts > min_time_stamp#observed_blasthole.start_time_min
-    cond2 = ts < max_time_stamp#observed_blasthole.start_time_max
+    cond1 = ts >= min_time_stamp#observed_blasthole.start_time_min
+    cond2 = ts <= max_time_stamp#observed_blasthole.start_time_max
     relevant_indices = np.where(cond1 & cond2)[0]
     ndx0 = relevant_indices[0]
     ndx1 = relevant_indices[-1]+1
