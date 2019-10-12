@@ -30,7 +30,7 @@ from dc_mwd.logging_util import init_logging
 logger = init_logging(__name__)
 
 ALPHA = 0.5
-N = 1000
+N = 10000
 dt = 1./N
 t = np.arange(N) * dt
 xx = (4 + 2*cos(5*pi*t))*cos(100*pi*t) + 6*cos(20*pi*t) + 2*cos(4*pi*t)
@@ -54,7 +54,7 @@ def calc_extreme_indices(x):
     else:
         extrema_indices = extrema_indices[0]
         pdb.set_trace()
-        print('')
+        print('EXTREMA INDICES HAVE ONLY ONE ELEMENT -- DONE!')
     return extrema_indices
 
 def generate_conditions_for_piecewise(extrema_indices, t):
@@ -116,11 +116,11 @@ def scalar_L_values(tau_k, x_k, alpha):
 (Pdb) 0.5*(XX_k[1] +  ratio * (XX_k[3] - X[1])) + (1-0.5)*XX_k[2]
     """
     N = len(tau_k)
-    L = np.ones(len(tau_k))
+    L = np.zeros(len(tau_k))
     for k in range(N-2):
         if k==0:# or k==1:
             continue #not defined
-        print(k)
+        #print(k)
         #pdb.set_trace()
         ratio = (tau_k[k+1] -  tau_k[k]) / (tau_k[k+2] -  tau_k[k])
         term1 = x_k[k] + ratio * (x_k[k+2] - x_k[k])
@@ -150,7 +150,7 @@ lxt = L2 + ((L3-L2)/(X3-X2))*(X - X2)
     #<EQUATION2> (k)
     LL = scalar_L_values(TAU_k, XX_k, ALPHA)  #these are the L_values we apply on each interval (from eqn3)
     #pdb.set_trace()
-    print('ok to here ... check indexing correct ')
+    #print('ok to here ... check indexing correct ')
     Xk_piecewise = np.piecewise(t, cond_list, XX_k)
     Xt_minus_Xk = XX - Xk_piecewise #agrees with Eqn2
     Lk_piecewise = np.piecewise(t, cond_list, LL) #agrees with Eqn2
@@ -159,7 +159,7 @@ lxt = L2 + ((L3-L2)/(X3-X2))*(X - X2)
     #LL_diff = np.hstack((0, LL_diff ))
     #Xk_diff = np.hstack((1.0, Xk_diff ))
     LL_diff = np.hstack(( LL_diff, 0 ))
-    Xk_diff = np.hstack((Xk_diff, 1.0 ))
+    Xk_diff = np.hstack((Xk_diff, 1. ))
     ratio  = LL_diff /  Xk_diff
     ratio_piecewise  = np.piecewise(t, cond_list, ratio)
 
@@ -167,18 +167,26 @@ lxt = L2 + ((L3-L2)/(X3-X2))*(X - X2)
     #pdb.set_trace()
     return LXt
 
-def make_nice_plot(n_iterations, PR_history, baseline_history):
+def make_nice_plot(n_iterations, PR_history, residual):
     """
     """
     YLIMS = [[-20,20], [-10,10],[-10,10],[-2,2], [-1,1]]
-    fig, ax = plt.subplots(nrows=n_iterations)
+    YLABELS = ['x(t)', 'PR$_1$','PR$_2$','PR$_3$','res.']
+    fig, ax = plt.subplots(nrows=n_iterations+1, sharex=True, figsize=(7, 6))
     for i in range(n_iterations):
-        ax[i].plot(t, PR_history[i,:],'b', label='PR HF')
-        ax[i].plot(t, baseline_history[i,:],'g', label='baseline LF')
+        ax[i].plot(t, PR_history[i,:],'b')
+        #ax[i].plot(t, baseline_history[i,:],'g', label='baseline LF')
 
 
         ax[i].set_ylim(YLIMS[i][0],YLIMS[i][1])
-        ax[i].legend()
+        ax[i].set_ylabel(YLABELS[i])
+        #ax[i].legend()
+    ax[n_iterations].plot(t, residual,'b')
+    ax[n_iterations].set_ylabel(YLABELS[n_iterations])
+    ax[n_iterations].set_xlabel('time (s)')
+    #ax[i].set_ylim(YLIMS[i][0],YLIMS[i][1])
+#    ax[n_iterations].legend()
+    plt.savefig('ITD.png')
         #pdb.set_trace()
     plt.show()
 def my_function():
@@ -188,29 +196,38 @@ def my_function():
 #    extrema_indices = calc_extreme_indices(X)
 #    cond_list = generate_conditions_for_piecewise(extrema_indices, t)
 #    LXt = calculate_baseline(X, t, extrema_indices, cond_list)
-    pdb.set_trace()
+    #pdb.set_trace()
     PR = deepcopy(xx)
     baseline = deepcopy(xx)
-    n_iterations = 5
+    n_iterations = 4
     ctr = 0
-    PR_history = np.full((n_iterations, len(xx)), np.nan)
+    PR_history = np.full((n_iterations+2, len(xx)), np.nan)
     PR_history[0,:] = PR
-    baseline_history = np.full((n_iterations, len(xx)), np.nan)
+    baseline_history = np.full((n_iterations+1, len(xx)), np.nan)
     baseline_history[0,:] = PR
 
 
-    QQ = xx
+    LF = xx
     while ctr < n_iterations:
         ctr += 1
-        pdb.set_trace()
-        extrema_indices = calc_extreme_indices(QQ)
+        #pdb.set_trace()
+        input_signal = deepcopy(LF)
+        extrema_indices = calc_extreme_indices(LF)
         cond_list = generate_conditions_for_piecewise(extrema_indices, t)
-        QQ = calculate_baseline(QQ, t, extrema_indices, cond_list)
+        LF = calculate_baseline(LF, t, extrema_indices, cond_list)
 
-        baseline_history[ctr] = QQ
-        #PR_history[ctr,:] = PR_history[ctr-1] - QQ
-        PR_history[ctr,:] = baseline_history[ctr-1] - QQ
-        make_nice_plot(n_iterations, PR_history, baseline_history)
+        PR = input_signal - LF
+        #pdb.set_trace()
+        PR_history[ctr,:] = PR
+        baseline_history[ctr,:] = LF
+        print(ctr)
+        if ctr == n_iterations:
+            residual = xx - np.sum(PR_history[1:n_iterations+1], axis=0)
+            #residual = LF
+
+
+#    make_nice_plot(n_iterations, baseline_history, residual)
+    make_nice_plot(n_iterations, PR_history, residual)
         #QQ = baseline
         #QQ = PR_history[ctr,:]
         #history[ctr,:] = PR
