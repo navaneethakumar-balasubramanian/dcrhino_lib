@@ -14,12 +14,11 @@ import numpy as np
 class RhinoGPSTracker(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
-        # self.daemon = True
+        self.daemon = True
         self.gps_socket = agps3.GPSDSocket()
         self.data_stream = agps3.DataStream()
         self.gps_socket.connect(host='localhost', port=2947)
         self.gps_socket.watch()
-        #self.gps_socket.watch(devicepath="/dev/ttyACM1")
         self.buffer = list()
         self.max_buffer_length = 1
         self.h5_helper = None
@@ -42,8 +41,14 @@ class RhinoGPSTracker(threading.Thread):
                                 time_info = self.data_stream.time
                                 time_info_obj = datetime.strptime(time_info, "%Y-%m-%dT%H:%M:%S.%fZ")
                                 lat = self.data_stream.lat
+                                if lat == 'n/a':
+                                    lat = np.nan
                                 long = self.data_stream.lon
+                                if long == 'n/a':
+                                    long = np.nan
                                 alt = self.data_stream.alt
+                                if alt == 'n/a':
+                                    alt = np.nan
                                 row = [time_info_obj.timestamp(), lat, long, alt]
                                 print(row)
                                 same_file = time_for_filename.hour == time_info_obj.hour
