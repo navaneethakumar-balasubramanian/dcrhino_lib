@@ -148,8 +148,8 @@
     <v-btn flat color="light-blue" v-on:click="get_processed_selection()">
       <v-icon left dark>cloud_download</v-icon>Selection csv</v-btn
     >
-    <v-btn flat color="light-blue" v-on:click="log_process_selection()"
-      >Log process</v-btn>
+    <v-btn flat color="light-blue" v-on:click="log_process_selection()">Log process</v-btn>
+    <v-btn v-if='visible_buttons' flat color="light-blue" @click.stop="confirm_archive_dialog = true">Archive selection</v-btn>
     <v-dialog v-model="select_process_flow" scrollable max-width="300px">
           <v-card>
             <v-card-title>Select the lp process to use</v-card-title>

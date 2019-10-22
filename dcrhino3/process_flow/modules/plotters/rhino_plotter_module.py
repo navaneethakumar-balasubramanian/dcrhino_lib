@@ -45,12 +45,45 @@ class RhinoPlotterModule(BaseModule):
                             "spine_side": "right",
                             "label": "timestamp",
                             "column_label": "timestamp"
-                        }
+                        },
+                        {
+                            "scale": "new",
+                            "space": 0,
+                            "color": "red",
+                            "spine_side": "right",
+                            "label": "rate_of_penetration",
+                            "column_label": "rate_of_penetration"
+                        },
+                        {
+                            "scale": "new",
+                            "space": 40,
+                            "color": "purple",
+                            "spine_side": "left",
+                            "label": "weight_on_bit",
+                            "column_label": "weight_on_bit"
+                        },
+                        {
+                            "space": 0,
+                            "color": "blue",
+                            "spine_side": "left",
+                            "label": "packets",
+                            "column_label": "packets"
+                        },
+
                     ]
                 },
                 {
                     "type": "curves",
                     "curves": [
+                        {
+                            "scale": "new",
+                            "space": 50,
+                            "color": "purple",
+                            "spine_side": "right",
+                            "label": "J2-ax-prim-max_time",
+                            "column_label": "J2-axial-primary-maximum_time",
+                            "formula": "data*10"
+                        },
                         {
                             "scale": "current",
                             "space": 0,
@@ -65,18 +98,15 @@ class RhinoPlotterModule(BaseModule):
                             "spine_side": "right",
                             "scale": "new",
                             "space": 0
-                        },
-                        {
-                            "color": "lime",
-                            "column_label": "J2-axial-delay_1",
-                            "spine_side": "right",
-                            "scale": "new",
-                            "space": 60
                         }
                     ]
                 },
                 {
                     "component": "axial",
+                    "upper_num_ms": [
+                        "|process_flow.axial_upper_num_ms|",
+                        35
+                    ],
                     "manual_time_windows": {
                         "axial": {
                             "multiple_3": "|process_flow.axial_multiple_3|",
@@ -151,7 +181,10 @@ class RhinoPlotterModule(BaseModule):
                     ]
                 },
                 {
-                    "upper_num_ms": 60,
+                    "upper_num_ms": [
+                        "|process_flow.tangential_upper_num_ms|",
+                        60
+                    ],
                     "wavelet_windows_to_show": [
                         "primary",
                         "multiple_1",

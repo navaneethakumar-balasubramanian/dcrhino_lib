@@ -1,14 +1,20 @@
 <template>
   <div class="about">
-    <v-toolbar flat color="white">
-      <v-toolbar-title>Blasthole Observations from : {{ mine_name }}<br /><span
-          class="body-2 font-weight-light"
-          >{{ filtered_data.length }} results found.</span
-        > </v-toolbar-title>
-
+        <v-toolbar flat color="white">
+      <v-toolbar-title>Blasthole Observations from : {{ mine_name }}<br /><span class="body-2 font-weight-light">{{ filtered_data.length }} results found.</span></v-toolbar-title>
       <v-spacer></v-spacer>
-
+      <v-layout align-right justify-end column fill-height>
+      <v-flex xs12 md6>
+      <date-range-picker
+            ref="picker" v-model="dateRange" @update="updated_date_picker" :locale-data="{ firstDay: 1, format: 'YYYY-MM-DD' }" opens="left" style="width:240px; float:right;z-index:1000" :dateFormat="format_available_dates">
+        <div slot="input" slot-scope="picker" style="min-width: 200px; text-align:center;">
+            From : {{ dateRange.startDate.substring(0,10) }}  To: {{ dateRange.endDate.substring(0,10) }} 
+        </div>
+    </date-range-picker>
+      </v-flex>
+      <v-flex xs12 md6>
       <v-text-field
+        style="min-width: 240px; float:right;"
         v-model.lazy="search"
         append-icon="search"
         label="Search"
@@ -18,6 +24,8 @@
         v-on:keyup.enter="searchWeb"
         :loading="loading"
       ></v-text-field>
+      </v-flex>
+      </v-layout>
     </v-toolbar>
     <v-data-table 
       v-model="selected"
@@ -90,29 +98,15 @@
         
       </template>
     </v-data-table>
+    
+    
+    <v-btn v-if='visible_buttons' flat color="light-blue" v-on:click="process_selection()">Process selection</v-btn>
+    <v-btn v-if='visible_buttons' flat color="light-blue" @click.stop="confirm_archive_dialog = true">Archive selection</v-btn>
 
-  <v-btn v-if='visible_buttons' flat color="light-blue" v-on:click="process_selection()"
-      >Process selected</v-btn>
-    <v-dialog v-model="select_process_flow" scrollable max-width="600px">
-          <v-card>
-            <v-card-title>Select the process flow to use</v-card-title>
-            <v-divider></v-divider>
-            <v-card-text style="height: 300px;" class="pa-0 pm-0">
-              <v-list dense class="pa-0 pm-0">
-                <v-list-tile 
-                  v-for="(item, i) in process_flows"
-                  :key="i" 
-                  @click="process_using(item)"
-                  ripple>
-                  <v-list-tile-content>
-                    <v-list-tile-title  v-text="item"></v-list-tile-title>
-                  </v-list-tile-content>                   
-                </v-list-tile>          
-                
-              </v-list>
-            </v-card-text>
-          </v-card>
-        </v-dialog>
+    <ConfirmArchive :show="confirm_archive_dialog"
+    ></ConfirmArchive>
+  
+    
     
 
     <v-dialog v-model="edit_process_flow" scrollable max-width="600px">
@@ -157,10 +151,14 @@
 </template>
 
 <script>
-
+import ConfirmArchive from "../components/modals/ConfirmArchive.vue";
 
 export default {
+  components: {
+    ConfirmArchive
+  },
   data: () => ({
+    confirm_archive_dialog:false,
     edit_process_flow:false,
     select_process_flow:false,
     process_flows:[],
@@ -177,7 +175,9 @@ export default {
     message: null,
     message_text: null,
     headers: [],
-    confirm_process_flow:null
+    confirm_process_flow:null,
+     dateRange: { startDate: "",
+                endDate: ""}
   }),
   created() {
     this.$store.dispatch("GET_BLASTHOLE_OBSERVATIONS", { mine_name: this.mine_name });
@@ -245,7 +245,6 @@ export default {
             Object.keys(header.values).includes(item[header.value]) &&
             header.values[item[header.value]].checked == false
           ) {
-            //console.log("cannot push ", item,header,header.values[item[header.value]].checked)
             canPush = false;
           }
         }

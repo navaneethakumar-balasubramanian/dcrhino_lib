@@ -36,7 +36,7 @@ class RhinoDisplayPanel(object):
 
 
     def plot_curve(self,curve,ax):
-        if len(curve.data) == 1:
+        if curve.data is None or len(curve.data) == 1:
             logger.warn("Not possible to plot 1 value array:" + str(curve.label))
             return ax
         #pdb.set_trace()
@@ -199,7 +199,9 @@ class Curve(object):
             if self.column_label in df.columns:
                 self.data = np.asarray(df[self.column_label])
             else:
-                self.data = np.asarray(df[self.column_label.replace('maximum_time','minimum_time')])
+                #self.data = np.asarray(df[self.column_label.replace('maximum_time','minimum_time')])
+                self.data = None
+                return
         except:
             logger.warn('problem accessing data from dataframe in Curve()')
             logger.warn('column label = {}'.format(self.column_label))
@@ -219,7 +221,7 @@ class Curve(object):
             self.data = self.data.astype(np.float64)
 
     def apply_formula(self):
-        if self.formula != None:
+        if self.formula != None and self.data is not None:
             temp = self.__dict__
             self.data  = ne.evaluate(self.formula, local_dict=temp)
 
@@ -298,7 +300,7 @@ class Heatmap(RhinoDisplayPanel):
 
         """
         data = self.trace_data.component_as_array(self.component)
-        data = data.copy()
+        #data = data.copy()
         num_traces_in_blasthole, samples_per_trace = data.shape
         #pdb.set_trace()
 
