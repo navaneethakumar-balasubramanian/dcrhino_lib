@@ -33,18 +33,26 @@ class RhinoPlotterModule(BaseModule):
             "padding_right": 0.03,
             "padding_left": 0,
             "show": False,
-            "legend":True,
+            "legend":False,
             "panels": [
                 {
                     "type": "curves",
                     "curves": [
                         {
                             "scale": "new",
-                            "space": 60,
+                            "space": 50,
                             "color": "lime",
                             "spine_side": "right",
                             "label": "timestamp",
                             "column_label": "timestamp"
+                        },
+                        {
+                            "scale": "new",
+                            "space": 70,
+                            "color": "yellow",
+                            "spine_side": "right",
+                            "label": "number_of_added_steels",
+                            "column_label": "number_of_added_steels"
                         },
                         {
                             "scale": "new",
