@@ -128,6 +128,7 @@ class ProcessFlow:
         self.output_path = output_path
         self.rhino_db_helper = False
         self.rhino_sql_helper = False
+        self.qc_plot_module = None
 
 
     def set_process_flow(self,process_json,subset_index=False):
@@ -190,6 +191,8 @@ class ProcessFlow:
                     module.subset_id = subset_index
                 module._components_to_process = self.components_to_process
                 self.modules_flow.append(module)
+        self.qc_plot_module = plotter = RhinoPlotterModule({'output_to_file': True, 'type': 'rhino_plotter'}, module_output_path,self,99)
+        self.qc_plot_module._components_to_process = self.components_to_process
 
     def make_database_connection(self, mine_name):
 
@@ -201,6 +204,14 @@ class ProcessFlow:
             self.rhino_sql_helper = RhinoSqlHelper(sql_conn['host'], sql_conn['user'], sql_conn['password'],
                                                    str(sql_conn['database']).lower(),port=sql_conn['port'])
         return
+
+    def drop_components(self,trace_data):
+        for col in trace_data.dataframe.columns:
+            if "_trace" in col:
+                component = col.replace("_trace",'')
+                if component not in self.components_to_process:
+                    trace_data.dataframe = trace_data.dataframe.drop(col,axis=1)
+        return trace_data
 
 
     def process(self, trace_data,subset_index=False):
@@ -221,7 +232,7 @@ class ProcessFlow:
         process_flow_output_path = self.output_path
         logger.info("Processing files to :" + process_flow_output_path)
         create_folders_if_needed(process_flow_output_path)
-        output_trace = trace_data
+        output_trace = self.drop_components(trace_data)
 
         self.actual_module = 0
         while self.actual_module != self.num_modules_to_process:
@@ -233,6 +244,8 @@ class ProcessFlow:
             delta_t = time.time() - t0
             logger.info("{} ran in {}s ".format(module.id, delta_t))
             self.actual_module += 1
+
+
 
         if self.output_to_file:
             process_flow_json_output_path = os.path.join(process_flow_output_path, "process_flow.json")
@@ -292,7 +305,6 @@ class ProcessFlow:
         logger.info("FoUnD {} subsets".format(len(splitted_subsets))  )
 
         for i,subset in enumerate(splitted_subsets):
-
             self.set_process_flow(subset['process_json'],subset_index=i)
             self.env_config = env_config
             self.make_database_connection(subset['acorr_trace'].mine_name)
@@ -305,6 +317,8 @@ class ProcessFlow:
 
         acorr_trace.save_to_h5(os.path.join(self.output_path,'processed.h5'))
         acorr_trace.save_to_csv(os.path.join(self.output_path,'processed.csv'))
+
+        self.qc_plot_module.process_trace(acorr_trace)
         with open(os.path.join(self.output_path,'process_flow.json'), 'w') as outfile:
             json.dump(process_json, outfile)
 
