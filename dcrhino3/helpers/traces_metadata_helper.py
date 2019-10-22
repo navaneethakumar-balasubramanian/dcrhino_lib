@@ -12,7 +12,7 @@ class TracesMetadataHelper:
         self.clickhouse_connection = env_config.get_rhino_db_connection_from_mine_name(mine_name)
         self.clickhouse_helper = ClickhouseHelper(conn=self.clickhouse_connection)
 
-    def get_traces_metadata_from_to(self,timestamp_start,timestamp_end,columns=['max_tangential_acceleration','min_tangential_acceleration','max_axial_acceleration','min_axial_acceleration']):
+    def get_traces_metadata_from_to(self,timestamp_start,timestamp_end,columns=['max_tangential_acceleration','min_tangential_acceleration','max_axial_acceleration','min_axial_acceleration', 'rssi']):
         all_valid_sensor_files = self.sql_db_helper.sensor_files.get_all_valid()
         all_valid_sensor_files = all_valid_sensor_files[((all_valid_sensor_files.min_ts.astype(float) >= timestamp_start) & (all_valid_sensor_files.min_ts.astype(float) <= timestamp_end)) | ((all_valid_sensor_files.max_ts.astype(float) >= timestamp_start) & (all_valid_sensor_files.max_ts.astype(float) <= timestamp_end))  ]
         meta = self.clickhouse_helper.sensor_file_acorr_trace.get_meta_from_multiple_sensor_file_ids(all_valid_sensor_files.sensor_file_id.unique(), columns=columns)
