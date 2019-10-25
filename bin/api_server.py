@@ -305,6 +305,8 @@ def processed_hole():
         files.sort()
         files.insert(0, files[-1])
         del files[-1]
+        if len(files) == 2:
+            files = [files[0]]
         processed_hole['images'] = files
        # print processed_hole
 
