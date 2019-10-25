@@ -303,7 +303,7 @@ def processed_hole():
         for i,file in enumerate(files):
             files[i] = os.path.basename(file)
         files.sort()
-        files.prepend(files[-1])
+        files.insert(0, files[-1])
         del files[-1]
         processed_hole['images'] = files
        # print processed_hole
