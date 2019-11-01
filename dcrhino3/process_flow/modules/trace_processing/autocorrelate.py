@@ -65,3 +65,24 @@ class AutoCorrelateModule(BaseTraceModule):
     def __init__(self, json, output_path, process_flow,order):
         BaseTraceModule.__init__(self, json, output_path, process_flow,order)
         self.id = "autocorrelate"
+        
+
+def test():
+    import numpy as np
+    import matplotlib.pyplot as plt
+    trace_data = np.random.rand(1000);
+    trace_data[10] = 10;
+    n_samples_output = 400;
+    
+    acorr1 = autocorrelate_trace(trace_data, n_samples_output, copy_input=False)
+    acorr2 = autocorrelate_trace(trace_data, n_samples_output, copy_input=False, n_med_clip=3.0)
+    plt.plot(acorr1, label='no clip')
+    plt.plot(acorr2, label='clip')
+    plt.legend()
+    plt.show()
+    
+def __main__():
+    test()
+    
+if __name__ == '__main__':
+    __main__()
