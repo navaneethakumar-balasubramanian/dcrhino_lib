@@ -25,21 +25,40 @@ def autocorrelate_trace(trace_data, n_pts):
         return acorr[zero_time_index:zero_time_index+n_pts]
 '''
 
-
-def autocorrelate_trace(trace_data, n_pts, copy_input=False):
+def clip_to_absolute_median(x, n_med):
     """
-    FASTER METHOD NEED VALIDATION
     """
+    med_abs = np.median(np.abs(x))
+    threshold = n_med * med_abs
+    x = np.clip(x, -threshold, threshold)
+    return x
 
-    zero_time_index = len(trace_data) // 2
+
+def autocorrelate_trace(trace_data, n_samples_output, copy_input=False, n_med_clip=np.inf):
+    """
+    ::TODO:: add doc on what copy_input is used for, why is it here?  
+    numeric result appears to be the same ... 
+    n_samples_output: decided by cfg.PROCESSING.auto_correlation_trace_duration
+    and the data sampling rate.  Must be greater than or equal to the number of
+    taps in the decon filter
+    ::var:: reference_index, is there to make sure both odd and even numbered 
+    traces are returned with acorr at lag 0 in the output[0]
+    """        
+    
     dc_offset = np.mean(trace_data)
     if copy_input:
         temp = trace_data - dc_offset
+        temp = clip_to_absolute_median(temp, n_med_clip)
         acorr = correlate(temp, temp)
     else :
         trace_data -= dc_offset  # needs to go on the data frame
+        trace_data = clip_to_absolute_median(trace_data, n_med_clip)
         acorr = correlate(trace_data, trace_data)
-    return acorr[zero_time_index * 2 - 1:zero_time_index * 2 - 1 + n_pts]
+    
+    reference_index = len(trace_data) // 2
+    ndx_zero_lag = reference_index * 2 - 1
+    output = acorr[ndx_zero_lag:ndx_zero_lag + n_samples_output]
+    return output
 
 
 class AutoCorrelateModule(BaseTraceModule):
