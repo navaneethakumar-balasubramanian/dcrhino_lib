@@ -4,6 +4,8 @@ import tempfile
 import pandas as pd
 import numpy as np
 import os
+from clickhouse_driver import Client
+
 
 class DcDatasetPusher:
     def __init__(self,df,dc_subdomain,dataset_name,config = None):
@@ -11,12 +13,23 @@ class DcDatasetPusher:
         self.token = MWDHelper('').get_token()
         self.dc_subdomain = dc_subdomain
         self.dataset_name = dataset_name
+        self.table_name = self.get_table_name(self.dataset_name)
         self.df = df
-        self.df['bench'] = self.df['bench_name']
-        self.df['pit'] = self.df['pit_name']
-        self.df['pattern'] = self.df['pattern_name']
+
         self.df = self.boolean_to_int_columns(self.df)
         self.csv_file_path = "/tmp/" + str(next(tempfile._get_candidate_names())) + ".csv"
+        conn = self.get_db_conn(self.dc_subdomain,self.token)
+        self.client = Client(conn['host'], user=conn['username'], password=conn['password'], database=conn['database'], port=conn['port'])
+        result = self.client.execute("show tables", with_column_types=True)
+        self.tables_in_db = np.asarray(result[0]).T[0]
+
+        if self.table_name in self.tables_in_db:
+            print ("Dropping table " + self.table_name)
+            self.client.execute("drop table " + self.table_name, with_column_types=True)
+
+        self.create_empty_table()
+
+
         if config is None:
             self.config = self.update_or_create_config(df,rhino_props={})
         else:
@@ -24,12 +37,56 @@ class DcDatasetPusher:
 
         self.deploy_data(self.config)
 
+    def get_table_name(self,dataset_name):
+        return dataset_name.lower().replace('-','_') + "_prod"
+
+    @property
+    def create_table_sql(self):
+        sql = ''
+        dirname = os.path.dirname(__file__)
+        f = open(os.path.join(dirname, "clickhouse_db/sqls/create_mp_dataset_table.sql"), "r")
+        sql = f.read()
+        return sql
+
+    def create_empty_table(self):
+        print ("Creating table " + self.table_name)
+        query = self.create_table_sql.format(self.table_name)
+        self.client.execute(query, with_column_types=True)
+
+
+
     def boolean_to_int_columns(self,df):
         for col in df.columns:
             if df[col].dtype == np.dtype('bool'):
                 df[col] = df[col].astype(int)
         return df
 
+
+    def get_db_conn(self,subdomain,token):
+        """
+        Requests data from database, with credentials built in (for now), creates
+        a temorary json file for data recieved, and returns data.
+
+        Parameters:
+            subdomain (str): data location in the database
+
+        Returns:
+            (dict): connection dictionary with host and port to be used in :func:`~get_mwd_from_db`
+        """
+        #r = requests.post('https://prod.datacloud.rocks/v1/auth', json={"username":'admin', "password":'pass123$$$'})
+        #token = r.json()['token']
+        headers = {'Authorization':'Bearer ' + token,'x-dc-subdomain':subdomain}
+        r = requests.get('https://prod.datacloud.rocks/v1/viz/config',headers=headers)
+        temp = r.json()
+        conn_dict = dict()
+        conn_dict['host'] = temp['ch_conn'].replace("tcp://","").split("?")[0].split(":")[0]
+        conn_dict['port'] = int(temp['ch_conn'].replace("tcp://","").split("?")[0].split(":")[1])
+        args = temp['ch_conn'].replace("tcp://","").split("?")[1].split("&")
+        for arg in args:
+            splitted = arg.split('=')
+            conn_dict[splitted[0]]=splitted[1]
+
+        return conn_dict
 
     def prop_type_from_column_dtype(self, column_dtype):
         if isinstance(column_dtype, pd.core.dtypes.dtypes.CategoricalDtype):
@@ -57,7 +114,7 @@ class DcDatasetPusher:
 
         """
         datasets_confs = MWDHelper('').get_dc_datasets_configs(self.dc_subdomain)
-
+        original_dataset_confs = datasets_confs
         dataset_conf = {
             "mapping": [
                 {"node_level": 0, "is_hierarchy": "Y", "column": "pit", "is_filter_by": "N", "label": "pit",
@@ -88,12 +145,18 @@ class DcDatasetPusher:
             "paraview": {"pipeline": "generic",
                          "options": {"threshold": "z", "extension": "vtp", "field_location": "POINTS",
                                      "threshold_range": [-50000, 50000]}, "pipeline_type": "pointset"},
-            "table_name": self.dataset_name + "_prod",
+            "table_name": self.table_name,
             "name": self.dataset_name,
             "format":"custom"
         }
 
-        columns_in_mapping = [o['label'] for o in dataset_conf['mapping']]
+        columns_in_mapping = []
+        for col in dataset_conf['mapping']:
+            if 'rhino_prop' in col.keys():
+                columns_in_mapping.append(col['rhino_prop'])
+            else:
+                columns_in_mapping.append(col['label'])
+
         floatprops_counter = 0
         intprops_counter = 0
         strprops_counter = 0
@@ -133,15 +196,40 @@ class DcDatasetPusher:
             datasets_confs[dataset_names.index(self.dataset_name)] = dataset_conf
         else:
             datasets_confs.append(dataset_conf)
-
-        self.deploy_config( datasets_confs)
+      #  if original_dataset_confs != datasets_confs:
+      #      print ("Changed config... Updating")
+      #      self.deploy_config( datasets_confs )
+        self.deploy_config(datasets_confs)
         return dataset_conf['mapping']
+
 
     def deploy_data(self, mapping):
         df = self.df
         columns_rename = {}
         for col in mapping:
-            columns_rename[col['label']] = col['prop']
+            if 'rhino_prop' in col.keys():
+                columns_rename[col['rhino_prop']] = col['column']
+            else:
+                columns_rename[col['label']] = col['column']
+        df.rename(columns=columns_rename, inplace=True)
+        print("Pushing data to clickhouse table " , self.table_name)
+        self.client.execute('insert into ' + self.table_name + ' (' + ','.join(df.columns) + ') values',
+                            df.values.tolist())
+        print("Pushing vtp generation request")
+        headers = {'auth_token': self.token, 'x-dc-subdomain': self.dc_subdomain}
+        r = requests.post(self.API_BASE_URL + '/generate_vtp_from_prod_table', json={'dataset_name': self.dataset_name} , headers=headers)
+        response = (r.json())
+        print("Pushed vtp generation request")
+        print(response)
+
+    def _deploy_data(self, mapping):
+        df = self.df
+        columns_rename = {}
+        for col in mapping:
+            if col['rhino_prop']:
+                columns_rename[col['rhino_prop']] = col['prop']
+            else:
+                columns_rename[col['label']] = col['prop']
         df = df.rename(columns=columns_rename)
         df.to_csv(self.csv_file_path, index=False)
 
