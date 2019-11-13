@@ -19,7 +19,7 @@ file_logger = init_logging_to_file(__name__)
 config = Config(acquisition_config=True)
 rhino_version = config.rhino_version
 
-ignore_gpsd = True
+ignore_gpsd = False
 
 
 class SystemHealthLogger():
