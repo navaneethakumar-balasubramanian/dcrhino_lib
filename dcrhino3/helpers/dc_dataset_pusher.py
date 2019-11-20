@@ -25,7 +25,7 @@ class DcDatasetPusher:
 
         if self.table_name in self.tables_in_db:
             print ("Dropping table " + self.table_name)
-            self.client.execute("drop table " + self.table_name, with_column_types=True)
+            self.client.execute('drop table "{}"'.format(self.table_name), with_column_types=True)
 
         self.create_empty_table()
 
@@ -38,7 +38,7 @@ class DcDatasetPusher:
         self.deploy_data(self.config)
 
     def get_table_name(self,dataset_name):
-        return dataset_name.lower().replace('-','_') + "_prod"
+        return "tb_" + dataset_name.lower().replace('-','_') + "_prod"
 
     @property
     def create_table_sql(self):
@@ -52,6 +52,7 @@ class DcDatasetPusher:
         print ("Creating table " + self.table_name)
         query = self.create_table_sql.format(self.table_name)
         self.client.execute(query, with_column_types=True)
+        print("Created")
 
 
 
@@ -113,8 +114,13 @@ class DcDatasetPusher:
         dataset_conf: mapping is the part that will be changed in the dev cleanup
 
         """
-        datasets_confs = MWDHelper('').get_dc_datasets_configs(self.dc_subdomain)
-        original_dataset_confs = datasets_confs
+        datasets_confs = False
+        try:
+            datasets_confs = MWDHelper('').get_dc_datasets_configs(self.dc_subdomain)
+            original_dataset_confs = datasets_confs
+        except:
+            print ("DATASETS PROBLEM ON MP")
+
         dataset_conf = {
             "mapping": [
                 {"node_level": 0, "is_hierarchy": "Y", "column": "pit", "is_filter_by": "N", "label": "pit",
@@ -154,6 +160,7 @@ class DcDatasetPusher:
         for col in dataset_conf['mapping']:
             if 'rhino_prop' in col.keys():
                 columns_in_mapping.append(col['rhino_prop'])
+                columns_in_mapping.append(col['label'])
             else:
                 columns_in_mapping.append(col['label'])
 
@@ -191,15 +198,24 @@ class DcDatasetPusher:
 
                 dataset_conf['mapping'].append(column_obj)
 
-        dataset_names = [o['name'] for o in datasets_confs]
-        if self.dataset_name in dataset_names:
-            datasets_confs[dataset_names.index(self.dataset_name)] = dataset_conf
-        else:
-            datasets_confs.append(dataset_conf)
+        if datasets_confs:
+            dataset_names = [o['name'] for o in datasets_confs]
+            if self.dataset_name in dataset_names:
+                datasets_confs[dataset_names.index(self.dataset_name)] = dataset_conf
+            else:
+                datasets_confs.append(dataset_conf)
+
+        for prop in dataset_conf['mapping']:
+            if (prop['prop'] == 'pit'):
+                print (prop)
       #  if original_dataset_confs != datasets_confs:
       #      print ("Changed config... Updating")
       #      self.deploy_config( datasets_confs )
-        self.deploy_config(datasets_confs)
+        if datasets_confs:
+            self.deploy_config(datasets_confs)
+        else:
+            print ("Error pushing config")
+
         return dataset_conf['mapping']
 
 
@@ -212,9 +228,31 @@ class DcDatasetPusher:
             else:
                 columns_rename[col['label']] = col['column']
         df.rename(columns=columns_rename, inplace=True)
+        for col in df.columns:
+            if "strprop" in col:
+                df[col] = df[col].astype(str)
+                df[col] = df[col].fillna("").replace('nan', "")
+
+        df = df[df['x'].notnull()]
+        df = df[df['y'].notnull()]
+        df = df[df['z'].notnull()]
+        df = df.fillna(np.nan)
+
         print("Pushing data to clickhouse table " , self.table_name)
-        self.client.execute('insert into ' + self.table_name + ' (' + ','.join(df.columns) + ') values',
-                            df.values.tolist())
+        last_pos = 0
+        batch_size = 1000000
+        temp = df[last_pos:last_pos+batch_size]
+        while temp.shape[0] > 0:
+            #temp = temp.replace({pd.np.nan: None})
+            print ("Pushing from {} to {} of {} ".format(last_pos,last_pos+batch_size,df.shape[0]))
+
+            self.client.execute('insert into "' + self.table_name + '" (' + ','.join(temp.columns) + ') values',
+                                temp.values.tolist(),types_check=True)
+            last_pos += batch_size
+            temp = df[last_pos:last_pos + batch_size]
+
+        #self.client.execute('insert into "' + self.table_name + '" (' + ','.join(df.columns) + ') values',
+         #                   df.values.tolist())
         print("Pushing vtp generation request")
         headers = {'auth_token': self.token, 'x-dc-subdomain': self.dc_subdomain}
         r = requests.post(self.API_BASE_URL + '/generate_vtp_from_prod_table', json={'dataset_name': self.dataset_name} , headers=headers)
