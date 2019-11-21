@@ -27,7 +27,7 @@ class RhinoGPSTracker(threading.Thread):
     def run(self):
         time_info = None
         time_for_filename = datetime.utcnow()
-        file_name = "GPS_{}.h5".format(time_for_filename.strftime("%Y-%m-%d_%H:%M:%S"))
+        file_name = "GPS_{}.h5".format(time_for_filename.strftime("%Y%m%d_%H%M%S"))
         h5f = h5py.File(os.path.join(LOGS_PATH, file_name), "a")
         self.h5_helper = H5Helper(h5f, config=Config(acquisition_config=True), load_xyz=False, load_ts=False)
         self.h5_helper.save_field_config_to_h5()
@@ -76,7 +76,7 @@ class RhinoGPSTracker(threading.Thread):
                                     self.buffer = list()
                                     self.buffer.append(row)
                                     time_for_filename = datetime.utcfromtimestamp(time_info_obj.timestamp())
-                                    file_name = "GPS_{}.h5".format(time_for_filename.strftime("%Y-%m-%d_%H:%M:%S"))
+                                    file_name = "GPS_{}.h5".format(time_for_filename.strftime("%Y%m%d_%H%M%S"))
                                     h5f = h5py.File(os.path.join(LOGS_PATH, file_name), "a")
                                     self.h5_helper = H5Helper(h5f, config=Config(acquisition_config=True), load_xyz=False, load_ts=False)
                                     self.h5_helper.save_field_config_to_h5()

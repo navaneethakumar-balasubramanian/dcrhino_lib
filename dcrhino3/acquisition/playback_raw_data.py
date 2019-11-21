@@ -65,7 +65,7 @@ def main(args):
     original_name = fname.split(".")[0]
 
     if time_offset != 0:
-        copy_name = original_name + "_time_offset_{}.h5".format(time_offset)
+        copy_name = original_name + "_TO_{}.h5".format(time_offset)
         shutil.copyfile(fname, copy_name)
     else:
         copy_name = fname
@@ -98,8 +98,8 @@ def main(args):
     if end_time == 0:
         end_time = int(ts[-1]) + 1
 
-    from_dt = datetime.utcfromtimestamp(start_time)
-    to_dt = datetime.utcfromtimestamp(end_time)
+    from_dt = datetime.utcfromtimestamp(start_time).strftime("%Y%m%d_%H%M%S")
+    to_dt = datetime.utcfromtimestamp(end_time).strftime("%Y%m%d_%H%M%S")
 
     time_indices = (ts >= start_time) & (ts < end_time)
     ts = pd.DataFrame(h5_helper.load_axis_mask("ts", time_indices), columns=["ts"])
@@ -225,7 +225,7 @@ def main(args):
         output_data = pd.DataFrame(data=d)
         output_data = output_data[cols]
         csv_path = os.path.join(output_path,
-                                original_name + "_raw_from_{}_to_{}_time_offset_{}.csv".format(from_dt,
+                                original_name + "-raw-from_{}-to_{}-TO_{}.csv".format(from_dt,
                                                                                                to_dt,
                                                                                                time_offset))
         csv_path = csv_path.replace(" ", "_")
@@ -336,7 +336,7 @@ def main(args):
         output_data = pd.DataFrame(data=d)
         output_data = output_data[cols]
         csv_path = os.path.join(output_path,
-                                original_name+"_{}_interpolated_{}_from_{}_to_{}_time_offset_{}.csv".format(kind,
+                                original_name+"-{}-{}-from_{}-to_{}-TO_{}.csv".format(kind,
                                                                                                          output_sampling_rate,
                                                                                                          from_dt,
                                                                                                          to_dt,
@@ -444,7 +444,7 @@ def main(args):
     working_dir = os.path.dirname(fname)
     png_path = os.path.join(working_dir,
                             basename.replace(".h5",
-                                             "_{}_interpolated_from_{}_to_{}_time_offset_{}.png".format(kind, from_dt,
+                                             "-{}-from_{}-to_{}-TO_{}.png".format(kind, from_dt,
                                                                                                         to_dt,
                                                                                                         time_offset)))
     png_path = png_path.replace(" ", "_")
@@ -452,7 +452,7 @@ def main(args):
     if make_spectrum:
         spectrum.savefig(os.path.join(working_dir,
                                       "spectrum_{}".format(basename.replace(".h5",
-                                                                            "_time_offset_{}.png".format(time_offset)))))
+                                                                            "_TO_{}.png".format(time_offset)))))
 
     if repeat is not None:
         rh5f = h5py.File(repeat, "r")
