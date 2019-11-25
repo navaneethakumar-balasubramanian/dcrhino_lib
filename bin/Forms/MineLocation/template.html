@@ -1,0 +1,11 @@
+<div>
+  <dc-input-text-field  v-model="form_data['level']"  label="Level" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['sublevel']"  label="Sublevel" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['location']"  label="Location" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['stope_heading']"  label="Stope Heading" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['area']"  label="Area" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['geo_call']"  label="Geo Call" @input="updated"/>
+  <dc-date-picker  v-model="form_data['effective_from_date']" label="Effective from Date" @input="updated"/>
+  <dc-date-picker  v-model="form_data['effective_to_date']" label="Effective to Date" @input="updated"/>
+  <dc-select  :items="status_types" v-model="form_data['status']"  label="Status" @input="updated"/>
+</div>

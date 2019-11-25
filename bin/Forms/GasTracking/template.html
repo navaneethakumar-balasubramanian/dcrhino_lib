@@ -1,0 +1,12 @@
+<div>
+  <dc-input-text-field  v-model="form_data['gas_present']"  label="Gas Present" @input="updated"/>
+  <dc-date-picker  v-model="form_data['datetime']" label="DateTime" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['shift']"  label="Shift" @input="updated"/>
+  <dc-date-picker  v-model="form_data['team_1_enter_time']" label="Team 1 Enter Time" @input="updated"/>
+  <dc-date-picker  v-model="form_data['team_2_enter_time']" label="Team 2 Enter Time" @input="updated"/>
+  <dc-date-picker  v-model="form_data['mine_released_time']" label="Mine Released Time" @input="updated"/>
+  <dc-date-picker  v-model="form_data['mine_cleared_time']" label="Mine Cleared Time" @input="updated"/>
+  <dc-input-number  v-model="form_data['delay_hours']" label="Delay Hours" @input="updated"/>
+  <dc-input-number  v-model="form_data['production_blast_on_shift']" label="Production Blast on Shift" @input="updated"/>
+  <dc-input-number  v-model="form_data['number_of_gas_check_teams']" label="Number of Gas Check Teams" @input="updated"/>
+</div>

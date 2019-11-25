@@ -1,0 +1,9 @@
+<div>
+  <dc-input-text-field  v-model="form_data['equipment_name']"  label="Equipment Name" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['equipment_code']"  label="Equipment Code" @input="updated"/>
+  <dc-autocomplete  v-model="form_data['supplier']" label="Supplier" endpoint="/suppliers" nameprop="supplier_name" idprop="supplier_code" @input="updated"/>
+  <dc-select  :items="equipment_type_types" v-model="form_data['equipment_type']"  label="Equipment Type" @input="updated"/>
+  <dc-date-picker  v-model="form_data['commission_date']" label="Commission Date" @input="updated"/>
+  <dc-date-picker  v-model="form_data['start_hrs_when_commissioned']" label="Start Hrs When commissioned" @input="updated"/>
+  <dc-select  :items="status_types" v-model="form_data['status']"  label="Status" @input="updated"/>
+</div>

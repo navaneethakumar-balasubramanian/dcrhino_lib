@@ -1,0 +1,11 @@
+<div>
+  <dc-input-text-field  v-model="form_data['employee_code']"  label="Employee Code" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['first_name']"  label="First Name" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['last_name']"  label="Last Name" @input="updated"/>
+  <dc-date-picker  v-model="form_data['dob']" label="DOB" @input="updated"/>
+  <dc-date-picker  v-model="form_data['effective_from_date']" label="Effective from date" @input="updated"/>
+  <dc-date-picker  v-model="form_data['effective_to_date']" label="Effective to date" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['job']"  label="Job" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['role']"  label="Role" @input="updated"/>
+  <dc-autocomplete  v-model="form_data['supervisor']" label="Supervisor" endpoint="/employees" nameprop="first_name" idprop="employee_code" @input="updated"/>
+</div>

@@ -1,0 +1,12 @@
+<div>
+  <dc-input-text-field  v-model="form_data['company_name']"  label="Company Name" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['company_abbreviation']"  label="Company Abbreviation" @input="updated"/>
+  <dc-select  :items="domain_types" v-model="form_data['domain']"  label="Domain" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['address1']"  label="Address 1" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['address2']"  label="Address 2" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['city']"  label="City" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['state']"  label="State" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['zip_code']"  label="Zip Code" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['country']"  label="Country" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['geo_code']"  label="Geo Code" @input="updated"/>
+</div>

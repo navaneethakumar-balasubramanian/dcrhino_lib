@@ -1,0 +1,18 @@
+<div>
+  <dc-input-text-field  v-model="form_data['equipment_code']"  label="Equipment Code" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['equipment_type']"  label="Equipment Type" @input="updated"/>
+  <dc-date-picker  v-model="form_data['date_of_operation']" label="Date of Operation" @input="updated"/>
+  <dc-date-picker  v-model="form_data['start_time']" label="Start Time" @input="updated"/>
+  <dc-date-picker  v-model="form_data['end_time']" label="End Time" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['operator_name']"  label="Operator Name" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['crew']"  label="Crew" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['shift_code']"  label="Shift Code" @input="updated"/>
+  <dc-date-picker  v-model="form_data['start_hours']" label="Start Hours" @input="updated"/>
+  <dc-date-picker  v-model="form_data['end_hours']" label="End Hours" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['activity']"  label="Activity" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['start_location']"  label="Start Location" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['end_location']"  label="End Location" @input="updated"/>
+  <dc-input-number  v-model="form_data['downtime_in_mins']" label="Downtime in Mins" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['waiting_time_in_mins']"  label="Waiting time in Mins" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['remarks']"  label="Remarks" @input="updated"/>
+</div>

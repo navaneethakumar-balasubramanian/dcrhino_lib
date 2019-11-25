@@ -31,7 +31,9 @@ class ProcessedHoles(BaseDbModel):
     def get_latests(self,limit=1000):
         return self.query_to_df("select * from " + self.table_name + " order by processed_hole_id DESC limit " + str(limit))
 
-
+    def get_archived_folders(self):
+        return self.query_to_df(
+            "select * from " + self.table_name + " where archived = 1 order by processed_hole_id ");
 
     def hole_to_mp(self,processed_hole_id,to_mp):
         sql = "UPDATE " + self.table_name + " set to_mp = %s where processed_hole_id = %s"

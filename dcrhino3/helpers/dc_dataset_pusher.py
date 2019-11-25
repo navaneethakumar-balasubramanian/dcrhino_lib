@@ -233,6 +233,9 @@ class DcDatasetPusher:
                 df[col] = df[col].astype(str)
                 df[col] = df[col].fillna("").replace('nan', "")
 
+        df['hole'] = df['hole'].astype(str)
+        df['bench'] = df['bench'].astype(str)
+        df['pattern'] = df['pattern'].astype(str)
         df = df[df['x'].notnull()]
         df = df[df['y'].notnull()]
         df = df[df['z'].notnull()]

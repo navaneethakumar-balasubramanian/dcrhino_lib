@@ -1,0 +1,19 @@
+<div>
+  <dc-date-picker  v-model="form_data['date_of_operation']" label="Date of Operation" @input="updated"/>
+  <dc-date-picker  v-model="form_data['start_time']" label="Start Time" @input="updated"/>
+  <dc-date-picker  v-model="form_data['end_time']" label="End Time" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['location']"  label="Location" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['crew']"  label="Crew" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['shift_code']"  label="Shift Code" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['team_number']"  label="Team Number" @input="updated"/>
+  <dc-input-number  v-model="form_data['h2s']" label="H2S" @input="updated"/>
+  <dc-input-number  v-model="form_data['so2']" label="SO2" @input="updated"/>
+  <dc-input-number  v-model="form_data['co']" label="CO" @input="updated"/>
+  <dc-input-number  v-model="form_data['no2']" label="NO2" @input="updated"/>
+  <dc-input-number  v-model="form_data['lel']" label="LEL" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['area_clear']"  label="Area Clear" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['entering_mine']"  label="Entering Mine" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['mine_released']"  label="Mine Released" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['mine_cleared']"  label="Mine Cleared" @input="updated"/>
+  <dc-input-textarea-field  v-model="form_data['notes']"  label="Notes" @input="updated"/>
+</div>

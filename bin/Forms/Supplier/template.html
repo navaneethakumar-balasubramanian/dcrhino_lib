@@ -1,0 +1,13 @@
+<div>
+  <dc-input-text-field  v-model="form_data['supplier_name']"  label="Supplier Name" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['supplier_code']"  label="Supplier Code" @input="updated"/>
+  <dc-select  :items="type_types" v-model="form_data['type']"  label="Type" @input="updated"/>
+  <div :class="$style.fieldset">
+  <legend>Address</legend>
+  <dc-input-text-field  v-model="form_data['contact_name']"  label="Contact Name" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['contact_email']"  label="Contact Email" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['contact_phone_no']"  label="Contact Phone No" @input="updated"/>
+  </div>
+  <dc-date-picker  v-model="form_data['contract_start_date']" label="Contract Start Date" @input="updated"/>
+  <dc-date-picker  v-model="form_data['contract_end_date']" label="Contract End Date" @input="updated"/>
+</div>

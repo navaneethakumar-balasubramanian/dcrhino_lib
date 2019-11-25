@@ -1,0 +1,10 @@
+<div>
+  <dc-select  :items="shift_code_types" v-model="form_data['shift_code']"  label="Shift Code" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['shift_type']"  label="Shift Type" @input="updated"/>
+  <dc-date-picker  v-model="form_data['shift_date']" label="Shift Date" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['planned_crew']"  label="Planned Crew" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['planned_role']"  label="Planned Role" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['actual_crew']"  label="Actual Crew" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['actual_role']"  label="Actual Role" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['employee_code']"  label="Employee Code" @input="updated"/>
+</div>

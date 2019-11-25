@@ -1,0 +1,19 @@
+<div>
+  <div :class="$style.row">
+  <dc-input-text-field :inputClass="[$style.input]" v-model="form_data['mine_name']"  label="Mine Name" @input="updated"/>
+  <dc-input-text-field :inputClass="[$style.input,$style.smallInput]" v-model="form_data['mic_code']"  label="MIC Code" @input="updated"/>
+  </div>
+  <dc-input-text-field  v-model="form_data['address']"  label="Address" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['city']"  label="City" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['zip']"  label="ZIP" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['state']"  label="State" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['country']"  label="Country" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['mine_owner']"  label="Mine Owner" @input="updated"/>
+  <div :class="$style.fieldset">
+  <legend>Contact info</legend>
+  <dc-input-text-field  v-model="form_data['contact_person']"  label="Contact Person" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['contact_email']"  label="Contact Email" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['contact_phone']"  label="Contact Phone" @input="updated"/>
+  </div>
+  <dc-select  :items="status_types" v-model="form_data['status']"  label="Status" @input="updated"/>
+</div>

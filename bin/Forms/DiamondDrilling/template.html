@@ -1,0 +1,15 @@
+<div>
+  <dc-input-text-field  v-model="form_data['equipment_code']"  label="Equipment Code" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['equipment_type']"  label="Equipment Type" @input="updated"/>
+  <dc-date-picker  v-model="form_data['date_of_operation']" label="Date of Operation" @input="updated"/>
+  <dc-date-picker  v-model="form_data['start_time']" label="Start Time" @input="updated"/>
+  <dc-date-picker  v-model="form_data['end_time']" label="End Time" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['location']"  label="Location" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['operator_name']"  label="Operator Name" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['crew']"  label="Crew" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['shift_code']"  label="Shift Code" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['holetype']"  label="HoleType" @input="updated"/>
+  <dc-input-number  v-model="form_data['meterage']" label="Meterage" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['layoutnumber']"  label="LayoutNumber" @input="updated"/>
+  <dc-input-text-field  v-model="form_data['notes']"  label="Notes" @input="updated"/>
+</div>
