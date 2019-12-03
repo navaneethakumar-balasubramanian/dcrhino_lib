@@ -41,8 +41,7 @@ import struct
 import sys
 import types
 from collections import OrderedDict, Sequence
-
-import dcrhino3.ide_utilities.mide_ebml.calibration
+import dcrhino3.ide_utilities.mide_ebml.calibration as calibration
 # from util import parse_ebml, decode_attributes
 from dcrhino3.ide_utilities.mide_ebml.util import decode_attributes
 
