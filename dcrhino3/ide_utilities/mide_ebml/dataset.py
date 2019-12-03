@@ -2756,11 +2756,14 @@ class EventList(Transformable):
                     split_file = True
                     file_start_ts = sample_ts
 
+
+# TODO: We are assuming that X and Y are always on, but that may not be the case.  Need to figure out how the data
+                #  looks when different channels are turned off and assign them properly
                 if _self.channelId == 8:
                     x = evt[1][0]
                     y = evt[1][1]
                     z = 0
-                    if len(evt) > 2:
+                    if len(evt[1]) > 2:
                         z = evt[1][2]
                     row = [sample_ts, counter, counter, x, y, z]
                 else:
