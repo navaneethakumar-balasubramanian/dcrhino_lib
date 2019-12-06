@@ -275,6 +275,7 @@ class MWDHelper():
         Parameters:
             mwd_df (dataframe): dataframe from which copy is made
             mapping (dict): dictionary with 'column' key and column name values
+            The dictionary KEYS are the OUTPUT column names, the dictionar
 
         Returns:
             (Dataframe): remapped mwd dataframe with empty columns dropped
@@ -282,7 +283,8 @@ class MWDHelper():
         #temp = mwd_df
         inverted_kv_mapping = dict([(value, key) for key, value in mapping.items()])
         mwd_df = mwd_df.copy()
-        return mwd_df.rename(inverted_kv_mapping,axis=1)
+        output_df = mwd_df.rename(inverted_kv_mapping,axis=1)
+        return output_df#mwd_df.rename(inverted_kv_mapping,axis=1)
 
     def _have_required_columns(self,mwd_df):
         """

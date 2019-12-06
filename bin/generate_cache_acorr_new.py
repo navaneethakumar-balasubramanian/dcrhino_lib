@@ -112,6 +112,8 @@ def generate_cache_acorr(matches_line,files,mwd_df,mwd_helper,env_config,mine_na
     hole_mwd = mwd_helper.get_hole_mwd_from_mine_mwd(mwd_df, matches_line.bench_name,
                                                      matches_line.pattern_name, matches_line.hole_name,
                                                      matches_line.hole_id)
+    if len(hole_mwd) == 0:
+        print('MWD Query Returned No Data')
     hole_mwd.reset_index(drop=True,inplace=True)
     td.dataframe = merge_mwd_with_trace(hole_mwd, td, merger)
 
@@ -214,14 +216,17 @@ if __name__ == '__main__':
         files_df = sql_db_helper.sensor_files.get_all()
         #generate_cache_acorr(mine_name, env_config_path,args.matches_output_path)
         processes_queue = []
+        ii=0
         for line in matches_df.iterrows():
+            print("BEGIN: \n\n\n {} If we had a standard nomenclature for hole more info would be provided here, sigh ... dc_uuid...".format(ii))
+            #print("BEGIN: \n\n\n {} {} {}".format(ii, line[1].hole_id, line[1].hole_name))
             if bo_id is False or str(line[1].bo_id) == bo_id:
                 line = line[1]
                 if processes is not False:
                     processes_queue.append([line,env_config,args.mine_name,files_df,mwd_df,mwd_helper,sql_db_helper])
                 else:
                     process_match_line(line, env_config, mine_name, files_df, mwd_df, mwd_helper,sql_db_helper)
-
+            ii+=1
         if processes is not False:
             p = Pool(int(processes))
             p.map(process, processes_queue)

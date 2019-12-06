@@ -321,10 +321,11 @@ class MWDRhinoMerger():
         """
         t_mwd = pd.DatetimeIndex(mwd_hole_df[end_time_column_label])
         t_mwd = t_mwd.astype(np.int64)
-
-        interp_function = interp1d(t_mwd, mwd_hole_df[column_label], kind='linear',
+        try:
+            interp_function = interp1d(t_mwd, mwd_hole_df[column_label], kind='linear',
                                    bounds_error=False, fill_value='extrapolate')
-
+        except ValueError:
+            print('wtf interp error??')
         time_vector = pd.DatetimeIndex(time_vector).astype(np.int64)
         interped_data = interp_function(time_vector)
         return interped_data
