@@ -38,8 +38,12 @@
         "mines": ["AR_WILSON_QUARRY"]
       },
       {
-        "name": "ANGLOGOLD ASHANTI",
+        "name": "ANGLOGOLD_ASHANTI",
         "mines": ["TROPICANA"]
+      },
+      {
+        "name": "FIRST_QUANTUM_MINERALS",
+        "mines": ["COBRE_PANAMA"]
       }
     ]
 }
