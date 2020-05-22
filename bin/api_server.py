@@ -190,7 +190,7 @@ def deploy_data(csv_file_path, subdomain_name, dataset_name, mapping):
 def get_lp_df(df):
     # load into log processing
     print ("Loading data")
-    logs = LogCollection.load_rhino(df, dtype={'hole_name': str})
+    logs = LogCollection.load_rhino(df, dtype={'hole_name': str}, save_states=False)
     # drop spatial outliers
     print("Drop spatial outliers")
     logs.cleaning.drop_holes(8295)
@@ -228,8 +228,8 @@ def get_lp_df(df):
     # column clean up
     print("Column clean up")
     logs.cleaning.columns_matching(('multiple', 'J2', '0', 'c_',
-                                 'Northing_1', 'original_file_record_day',
-                                 'Easting_1', 'acceleration'))
+                                    'Northing_1', 'original_file_record_day',
+                                    'Easting_1', 'acceleration'))
 
     # clean primary amplitudes
     print("Clean primary amplitudes")
@@ -282,11 +282,11 @@ def get_lp_df(df):
 
     # binning
     print("Binning interval 0.01")
-    logs = logs.binning(binning_interval=0.1,binning_type='knn',debug=False)
+    logs.binning.median(binning_interval=0.1)
 
     # smoothing modulus
     print("Smoothing modulus")
-    logs.mean_filter(
+    logs.filtering.mean(
         columns=['CompressionalModulus(GPa)', 'ShearModulus(GPa)'],
         to_columns=['CompressionalModulus(GPa)_mean5', 'ShearModulus(GPa)_mean5'], size=5)
 
@@ -295,7 +295,7 @@ def get_lp_df(df):
     logs.dataframe['Modulus_Ratio_m5'] = (logs.dataframe['CompressionalModulus(GPa)_mean5']) / (
     logs.dataframe['ShearModulus(GPa)_mean5'])
     logs.refresh()
-    logs.mean_filter(
+    logs.filtering.mean(
         columns=['Modulus_Ratio_m5'],
         to_columns=['Modulus_Ratio_mean5'], size=5)
     try:
