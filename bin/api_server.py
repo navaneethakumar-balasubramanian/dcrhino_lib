@@ -394,6 +394,7 @@ def process_holes_with():
 def log_process():
     req_json = request.get_json()
     mine_name = str(req_json['mine_name'])
+    print(mine_name)
     env_config = EnvConfig()
     lp_flow_path = env_config.get_log_process_flows_list(mine_name)[0]
     lp_flow_path = os.path.join(env_config.get_log_process_folder(mine_name), lp_flow_path)
