@@ -57,6 +57,255 @@ API_BASE_URL = "http://104.42.216.162:5002/api"
 
 
 
+def prop_type_from_column_dtype(column_dtype):
+
+    if isinstance(column_dtype , pd.core.dtypes.dtypes.CategoricalDtype):
+        return "strprop"
+    elif np.issubdtype(column_dtype, np.float_):
+        return "floatprop"
+    elif np.issubdtype(column_dtype, np.int_):
+        return "intprop"
+    elif np.issubdtype(column_dtype, np.string_) or np.issubdtype(column_dtype, np.object_):
+        return "strprop"
+    elif column_dtype.kind == 'M':
+        return "datetimeprop"
+
+def label_to_prop(label):
+    return label.lower().replace(" ","_").replace("(","").replace(")","")
+
+def update_or_create_config(subdomain_name, dataset_name, df, rhino_props):
+    """
+    dataset_conf: mapping is the part that will be changed in the dev cleanup
+    """
+    datasets_confs = MWDHelper('').get_dc_datasets_configs(subdomain_name)
+
+    dataset_conf = {
+        "mapping": [
+            {"node_level": 0, "is_hierarchy": "Y", "column": "pit", "is_filter_by": "N", "label": "pit",
+             "is_display": "Y", "uom": "", "is_welllog": "Y", "rhino_prop": "pit_name", "prop": "pit",
+             "is_color_by": "N"},
+            {"column": "hole", "is_filter_by": "Y", "label": "hole_name",
+             "is_display": "Y", "uom": "", "is_welllog": "N", "rhino_prop": "hole_name", "prop": "hole",
+             "is_color_by": "Y"},
+            {"node_level": 1, "is_hierarchy": "Y", "column": "bench", "is_filter_by": "N", "label": "bench",
+             "is_display": "Y", "uom": "", "is_welllog": "N", "rhino_prop": "bench_name", "prop": "bench",
+             "is_color_by": "N"},
+            {"node_level": 2, "is_hierarchy": "Y", "column": "pattern", "is_filter_by": "N", "label": "pattern",
+             "is_display": "Y", "uom": "", "is_welllog": "N", "rhino_prop": "pattern_name", "prop": "pattern",
+             "is_color_by": "N"},
+            {"is_hierarchy": "N", "column": "x", "is_filter_by": "Y", "label": "easting", "is_display": "Y", "uom": "",
+             "is_welllog": "N", "prop": "x", "is_color_by": "Y"},
+            {"is_hierarchy": "N", "column": "y", "is_filter_by": "Y", "label": "northing", "is_display": "Y", "uom": "",
+             "is_welllog": "N", "prop": "y", "is_color_by": "Y"},
+            {"is_hierarchy": "N", "column": "z", "is_filter_by": "Y", "label": "elevation", "is_display": "Y", "uom": "",
+             "is_welllog": "N", "prop": "z", "is_color_by": "Y"},
+            {"is_hierarchy": "N", "column": "measured_depth", "is_filter_by": "Y", "label": "measured_depth",
+             "is_display": "Y", "uom": "",
+             "is_welllog": "N", "prop": "measured_depth", "is_color_by": "Y","is_default":"Y"},
+            {"is_hierarchy": "N", "column": "true_vertical_depth", "is_filter_by": "Y", "label": "true_vertical_depth",
+             "is_display": "Y", "uom": "",
+             "is_welllog": "N", "prop": "true_vertical_depth", "is_color_by": "Y"}
+        ],
+        "paraview": {"pipeline": "generic",
+                     "options": {"threshold": "z", "extension": "vtp", "field_location": "POINTS",
+                                 "threshold_range": [-50000, 50000]}, "pipeline_type": "pointset"},
+        "table_name": dataset_name + "_prod",
+        "name": dataset_name
+    }
+
+    columns_in_mapping = [o['label'] for o in dataset_conf['mapping']]
+    floatprops_counter = 0
+    intprops_counter = 0
+    strprops_counter = 0
+    datetimeprops_counter = 0
+    for column in df.columns:
+        if column not in columns_in_mapping :
+            column_obj = {}
+            column_dtype_str = prop_type_from_column_dtype(df[column].dtype)
+            if column_dtype_str == 'floatprop':
+                floatprops_counter += 1
+                column_obj["column"] = column_dtype_str + str(floatprops_counter)
+            elif column_dtype_str == 'intprop':
+                intprops_counter += 1
+                column_obj["column"] = column_dtype_str + str(intprops_counter)
+            elif column_dtype_str == 'strprop':
+                strprops_counter += 1
+                column_obj["column"] = column_dtype_str + str(strprops_counter)
+            elif column_dtype_str == 'datetimeprop':
+                datetimeprops_counter += 1
+                column_obj["column"] = column_dtype_str + str(datetimeprops_counter)
+
+            column_obj["label"] = column
+            column_obj["prop"] = label_to_prop(column)
+            column_obj["is_filter_by"] = "Y"
+            column_obj["is_hierarchy"] = "N"
+            column_obj["is_display"] = "Y"
+            column_obj["is_welllog"] = "Y"
+            column_obj["is_color_by"] = "Y"
+            #print(column, rhino_props.keys())
+            if column in rhino_props.keys():
+                column_obj['rhino_prop'] = rhino_props[column]
+
+            dataset_conf['mapping'].append(column_obj)
+
+    dataset_names = [o['name'] for o in datasets_confs]
+    if dataset_name in dataset_names:
+        datasets_confs[dataset_names.index(dataset_name)] = dataset_conf
+    else:
+        datasets_confs.append(dataset_conf)
+
+    token = MWDHelper('').get_token()
+    deploy_config(token, subdomain_name, dataset_name, datasets_confs)
+    return dataset_conf['mapping']
+
+
+def deploy_config(token, subdomain_name, active_dataset, datasets):
+    headers = {'auth_token': token, 'x-dc-subdomain': subdomain_name, 'dataset_name': active_dataset}
+    r = requests.post(API_BASE_URL + '/new_dataset', json=(datasets), headers=headers)
+    response = (r.json())
+    print ("Pushing config")
+    print (response)
+    return response
+
+
+def deploy_data(csv_file_path, subdomain_name, dataset_name, mapping):
+    df = pd.read_csv(csv_file_path)
+    columns_rename = {}
+    for col in mapping:
+        columns_rename[col['label']] = col['prop']
+    df = df.rename(columns=columns_rename)
+    df.to_csv(csv_file_path, index=False)
+
+    try:
+        token = MWDHelper('').get_token()
+        files = {'file': open(csv_file_path, 'rb')}
+        headers = {'auth_token': token, 'x-dc-subdomain': subdomain_name, 'dataset_name': dataset_name}
+        r = requests.post(API_BASE_URL + '/upload_dataset', files=files, headers=headers)
+        response = (r.json())
+        print ("Pushing data to mp")
+        print(response)
+    except Exception as e:
+        print("Failed: " + str(e))
+
+def get_lp_df(df):
+    # load into log processing
+    print ("Loading data")
+    logs = LogCollection.load_rhino(df, dtype={'hole_name': str})
+    # drop spatial outliers
+    print("Drop spatial outliers")
+    logs.cleaning.drop_holes(8295)
+
+    # cleaning rop
+    print("Cleaning by rop")
+    logs.cleaning.by_value('ROP', 0.0016, 0.017, drop=True)
+
+    # coordinate fix
+    print("Fixing coordinates")
+    logs.collar_columns = ['easting', 'northing', 'Collar Elevation']
+    logs.refresh()
+
+    # removes the bottom 0.5 meter from each hole
+    print("Removes the bottom 0.5 meter from each hole")
+    logs.cleaning.from_bottom(distance=0.5)
+
+    # Remove the top 3.0 meters from each hole
+    print("Remove the top 3.0 meters from each hole")
+    logs.cleaning.from_top(distance=3)
+
+    # cleaning rhino physics columns
+    print("Cleaning rhino physics columns")
+    logs.cleaning.columns_matching(('a_', 't_'))
+
+    # short names for primary features
+    print("Short names for primary features")
+    logs.add_rhino('J2')
+    logs.dataframe['a_primary_time'] = logs.rhino.axial.primary.time_pick.astype('float')
+    logs.dataframe['t_primary_time'] = logs.rhino.tangential.primary.time_pick.astype('float')
+    logs.dataframe['a_primary_amplitude'] = logs.rhino.axial.primary.amplitude.astype('float')
+    logs.dataframe['t_primary_amplitude'] = logs.rhino.tangential.primary.amplitude.astype('float')
+    logs.refresh()
+
+    # column clean up
+    print("Column clean up")
+    logs.cleaning.columns_matching(('multiple', 'J2', '0', 'c_',
+                                 'Northing_1', 'original_file_record_day',
+                                 'Easting_1', 'acceleration'))
+
+    # clean primary amplitudes
+    print("Clean primary amplitudes")
+    logs.cleaning.by_value('a_primary_amplitude', 0.05, 0.35, drop=True)
+    logs.cleaning.by_value('t_primary_amplitude', 0.025, 0.135, drop=True)
+
+    # clean primary times
+    print("Clean primary amplitudes")
+    logs.cleaning.by_value('a_primary_time', -0.00025, 0.00125, drop=True)
+    logs.cleaning.by_value('t_primary_time', -0.00110, 0.0009, drop=True)
+
+    # time shifts for modeling
+    print("Time shifts for modeling")
+    time_shift = 0.00040  # Median Comp Modulus =   mean  25 (30.5  median)
+    time_shrink = 1
+
+    logs.dataframe['a_primary_time_shifted'] = (logs.dataframe['a_primary_time']) / time_shrink + time_shift
+    logs.refresh()
+
+    time_shift = -0.00093  # Median Shear Modulus =  mean   (  median )
+    time_shrink = 1
+
+    logs.dataframe['t_primary_time_shifted'] = (logs.dataframe['t_primary_time']) / time_shrink + time_shift
+    logs.refresh()
+
+
+    # modeling
+    def line_function(x, a, b):
+        return np.asarray(x) * a + b
+
+
+    axial_function = partial(line_function, a=-80102.80751868684, b=72.18356439564553)
+    tangential_function = partial(line_function, a=-25761.5221005896, b=-31.659588620669705)
+
+    logs.dataframe['CompressionalModulus(GPa)'] = axial_function(logs.dataframe['a_primary_time_shifted'])
+    logs.dataframe['ShearModulus(GPa)'] = tangential_function(logs.dataframe['t_primary_time_shifted'])
+    logs.refresh()
+
+    # cleaning modulus
+    print("Cleaning modulus")
+    logs.cleaning.by_value('CompressionalModulus(GPa)', 1, 100, drop=True)
+    logs.cleaning.by_value('ShearModulus(GPa)', 0.5, 33, drop=True)
+
+    # compute ratio
+    print("Compute ratio")
+    logs.dataframe['Modulus_Ratio'] = (logs.dataframe['CompressionalModulus(GPa)']) / (
+    logs.dataframe['ShearModulus(GPa)'])
+    logs.dataframe['Modulus_Ratio'].describe()
+    logs.refresh()
+
+    # binning
+    print("Binning interval 0.01")
+    logs = logs.binning(binning_interval=0.1,binning_type='knn',debug=False)
+
+    # smoothing modulus
+    print("Smoothing modulus")
+    logs.mean_filter(
+        columns=['CompressionalModulus(GPa)', 'ShearModulus(GPa)'],
+        to_columns=['CompressionalModulus(GPa)_mean5', 'ShearModulus(GPa)_mean5'], size=5)
+
+    # compute new ratio
+    print("Computing new ratio")
+    logs.dataframe['Modulus_Ratio_m5'] = (logs.dataframe['CompressionalModulus(GPa)_mean5']) / (
+    logs.dataframe['ShearModulus(GPa)_mean5'])
+    logs.refresh()
+    logs.mean_filter(
+        columns=['Modulus_Ratio_m5'],
+        to_columns=['Modulus_Ratio_mean5'], size=5)
+    try:
+        logs.dataframe = logs.dataframe.drop(columns=['Elevation'])
+    except:
+        pass
+    print("Saving")
+    return logs.dataframe
+
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def index(path):
@@ -145,19 +394,41 @@ def process_holes_with():
 def log_process():
     req_json = request.get_json()
     mine_name = str(req_json['mine_name'])
+    print(mine_name)
     env_config = EnvConfig()
     lp_flow_path = env_config.get_log_process_flows_list(mine_name)[0]
     lp_flow_path = os.path.join(env_config.get_log_process_folder(mine_name), lp_flow_path)
     db_conn = env_config.get_rhino_sql_connection_from_mine_name(mine_name)
     sql_helper = RhinoSqlHelper(**db_conn)
-    processed_holes = sql_helper.processed_holes.get_holes_to_mp()
-    processed_csv_list = []
-    for processed_hole in processed_holes.iterrows():
-        processed_hole = processed_hole[1]
-        processed_folder = os.path.join(env_config.get_hole_h5_processed_cache_folder(mine_name),
-                                        processed_hole['output_folder_name'])
-        processed_csv_list.append(os.path.join(processed_folder, 'processed.csv'))
-    apply_log_process.delay(processed_csv_list, lp_flow_path,'devdatacloud',mine_name + '_LP')
+
+    if mine_name == 'mont_wright':
+        #processed_holes = req_json['processed_holes']
+        #if processed_holes == False:
+        #    return jsonify(False)
+
+        #processed_csv_list = []
+        #for processed_hole in processed_holes:
+        #    processed_folder = os.path.join(env_config.get_hole_h5_processed_cache_folder(mine_name),
+        #                                    processed_hole['output_folder_name'])
+        #    processed_csv = pd.read_csv(os.path.join(processed_folder, 'processed.csv'))
+        #    processed_csv_list.append(processed_csv)
+
+        #df = pd.concat(processed_csv_list)
+        df = pd.read_csv('/data/bob_processed_rpp.csv')
+        lp_df = get_lp_df(df)
+        lp_df.to_csv('./temp.csv',index=False)
+        rhyno_props = {}
+        mapping = update_or_create_config(subdomain_name, dataset_name, lp_df, rhyno_props)
+        deploy_data('./temp.csv', subdomain_name, dataset_name, mapping)
+    else:
+        processed_holes = sql_helper.processed_holes.get_holes_to_mp()
+        processed_csv_list = []
+        for processed_hole in processed_holes.iterrows():
+            processed_hole = processed_hole[1]
+            processed_folder = os.path.join(env_config.get_hole_h5_processed_cache_folder(mine_name),
+                                            processed_hole['output_folder_name'])
+            processed_csv_list.append(os.path.join(processed_folder, 'processed.csv'))
+        apply_log_process.delay(processed_csv_list, lp_flow_path,'devdatacloud',mine_name + '_LP')
 
     return jsonify({"data":True})
 
