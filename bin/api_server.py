@@ -148,6 +148,7 @@ def update_or_create_config(subdomain_name, dataset_name, df, rhino_props):
 
             dataset_conf['mapping'].append(column_obj)
 
+    dataset_conf['bounds'] = {'x': [330886.25, 331081.875], 'y': [300997.28125, 301131.5], 'z': [564.3499755859375, 579.3599853515625]}
     dataset_names = [o['name'] for o in datasets_confs]
     if dataset_name in dataset_names:
         datasets_confs[dataset_names.index(dataset_name)] = dataset_conf
