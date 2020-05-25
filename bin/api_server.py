@@ -155,7 +155,7 @@ def update_or_create_config(subdomain_name, dataset_name, df, rhino_props):
         datasets_confs.append(dataset_conf)
 
     token = MWDHelper('').get_token()
-    print(datasets_confs)
+    print("datasetconfs",datasets_confs)
     deploy_config(token, subdomain_name, dataset_name, datasets_confs)
     return dataset_conf['mapping']
 
