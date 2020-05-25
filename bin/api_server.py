@@ -111,8 +111,7 @@ def update_or_create_config(subdomain_name, dataset_name, df, rhino_props):
                                  "threshold_range": [-50000, 50000]}, "pipeline_type": "pointset"},
         "table_name": dataset_name + "_prod",
         "name": dataset_name,
-        "group": 'Blast Hole',
-        "format":"custom"
+        "group": 'Blast Hole'
     }
 
     columns_in_mapping = [o['label'] for o in dataset_conf['mapping']]
