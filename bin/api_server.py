@@ -112,7 +112,7 @@ def update_or_create_config(subdomain_name, dataset_name, df, rhino_props):
         "table_name": dataset_name + "_prod",
         "name": dataset_name,
         "group": 'Blast Hole',
-        "format":""
+        "format":"custom"
     }
 
     columns_in_mapping = [o['label'] for o in dataset_conf['mapping']]
