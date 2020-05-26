@@ -420,9 +420,19 @@ def log_process():
         df = pd.read_csv('/data/bob_processed_rpp.csv')
         lp_df = get_lp_df(df)
         lp_df.to_csv('./temp.csv',index=False)
-        rhyno_props = {}
-        mapping = update_or_create_config(subdomain_name, dataset_name, lp_df, rhyno_props)
-        deploy_data('./temp.csv', subdomain_name, dataset_name, mapping)
+        #rhyno_props = {}
+        #mapping = update_or_create_config(subdomain_name, dataset_name, lp_df, rhyno_props)
+        #deploy_data('./temp.csv', subdomain_name, dataset_name, mapping)
+        token = MWDHelper('').get_token()
+        headers = {'auth_token': token, 'x-dc-subdomain': 'imdex'}
+        data = {'dataset_name': dataset_name, 'group':'rhino'}
+        files = [
+            ('file', open('./temp.csv','rb'))
+        ]
+        r = requests.request("POST",'https://dcworkflow.datacloud.rocks/v2/import/is_get_config/y/is_deploy/y/is_generate_vtk/y', data = data, files=files, headers=headers)
+        print (token,r.text)
+        #response = (r.json())
+
     else:
         processed_holes = sql_helper.processed_holes.get_holes_to_mp()
         processed_csv_list = []
