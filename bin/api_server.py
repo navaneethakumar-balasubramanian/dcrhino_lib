@@ -423,7 +423,7 @@ def log_process():
         #rhyno_props = {}
         #mapping = update_or_create_config(subdomain_name, dataset_name, lp_df, rhyno_props)
         #deploy_data('./temp.csv', subdomain_name, dataset_name, mapping)
-        dataset_name = 'montwright_rhino_' + datetime.today().strftime('%Y%m%d%_%H%M')
+        dataset_name = 'montwright_rhino_' + datetime.today().strftime('%Y%m%d%')
         token = MWDHelper('').get_token()
         headers = {'auth_token': token, 'x-dc-subdomain': 'imdex'}
         data = {'dataset_name': dataset_name, 'group':'rhino'}
