@@ -52,7 +52,7 @@ COMPRESS_MIN_SIZE = 500
 Compress(app)
 
 subdomain_name = 'imdex'
-dataset_name = 'montwright_rhino_' + datetime.today().strftime('%Y%m%d')
+
 API_BASE_URL = "http://104.42.216.162:5002/api"
 
 
@@ -423,6 +423,7 @@ def log_process():
         #rhyno_props = {}
         #mapping = update_or_create_config(subdomain_name, dataset_name, lp_df, rhyno_props)
         #deploy_data('./temp.csv', subdomain_name, dataset_name, mapping)
+        dataset_name = 'montwright_rhino_' + datetime.today().strftime('%Y%m%d')
         token = MWDHelper('').get_token()
         headers = {'auth_token': token, 'x-dc-subdomain': 'imdex'}
         data = {'dataset_name': dataset_name, 'group':'rhino'}
