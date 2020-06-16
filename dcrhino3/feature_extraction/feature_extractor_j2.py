@@ -1,67 +1,70 @@
 """
 Author kkappler
-.. todo:: The logic for amplitude picking is still dependant on some assumptions about time picking.  This should be changed.
-Will do after time-picking for polarity-aware zero-crossings is implemented.
 
-.. todo:: Add support for max, min as well as integrated absolute amplitude for ampltiude_picks
+Example json control block follows
 
-.. todo:: Differentiate between integrated absolute amplitude and integrated average amplitude
+.. code-block:: JSON
 
-.. todo:: Add to doc the choices for the json and what is needed or not; Especially
-time_picks is one of {maxmium, minimum, zero_crossing, zero_crossing_positive_slope, zero_crossing_negative_slope,
-amplitude_picks  is one of {integrated_absolute_amplitude, maximum_value, minimum_value}
+  {
+    "key": "value"
+  }
 
-.. todo:: Describe the logic for phase rotation and calculation of ampltiudes based on time_pick and wavelet_id;
-i.e. primary, integrated_absolute_amplitude, is centered on the time_pick,
-multiple_1, integrated_absolute_amplitude, is centered on the zero_crossing time_pick, with data -90deg rotated
-but in general we should have a tree of {time_pick_type, amplitude_pick_type} --> algortihm description
+.. code-block:: json
 
-.. note:: Originally this was picking values on windows based on multiple, theoretical times
-and then picks based on manual windows.  Then we switched to jazz1 (originally called
-"additional_pick_based" features).  Then jazz2 was requested, this is basically a way
-to non-manually pick the windows for jazz1 but rather to select them based on zero-crossings.
-This was implemented but before it ran we we changed it again to jazz3.  This is like jazz2
-but we only consider the region between the peak of the primary and the first trough to the left and right.
+ {
+        "key": "value",
+        "key2": "value2"
+ }
 
-.. todo:: factor the additional_pick_based_amplitude_windows (original manual jazz hack out)
-Example json control block:
+.. code-block:: json
 
-    {
-        "type": "j2",
-        "output_to_file": true,
-        "args": {
-          "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
-          "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
-          "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
-          "sensor_saturation_g": "|global_config.sensor_saturation_g|",
-          "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
-          "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|",
-          "time_picks" : {
-              "axial": {
-                  "primary": "maximum",
-                  "multiple_1": "zero_crossing",
-                  "multiple_2": "minimum",
-                  "multiple_3": "zero_crossing"
-              },
-              "tangential": {
+{
+ "type": "j2",
+ "output_to_file": true,
+
+ "args": {
+      "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
+      "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
+      "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
+      "sensor_saturation_g": "|global_config.sensor_saturation_g|",
+      "ACOUSTIC_VELOCITY": "|global_config.ACOUSTIC_VELOCITY|",
+      "SHEAR_VELOCITY": "|global_config.SHEAR_VELOCITY|",
+
+      "time_picks":{
+        "axial":
+            {
                 "primary": "maximum",
-                  "multiple_1": "zero_crossing",
-                  "multiple_2": "minimum",
-                  "multiple_3": "zero_crossing"
-              }
-              },
-          "manual_time_windows" : {
+                "multiple_1": "zero_crossing",
+                "multiple_2": "minimum",
+                "multiple_3": "zero_crossing"
+
+            },
+
+        "tangential":
+            {
+                "primary": "maximum",
+                "multiple_1": "zero_crossing",
+                "multiple_2": "minimum",
+                "multiple_3": "zero_crossing"
+
+            }
+
+         },
+
+        "manual_time_windows" : {
               "axial": {
                   "primary": "|process_flow.axial_primary|",
                   "multiple_1": "|process_flow.axial_multiple_1|",
                   "multiple_2": "|process_flow.axial_multiple_2|",
                   "multiple_3": "|process_flow.axial_multiple_3|"
-              },
+
+                      },
               "tangential": {
                 "primary": [-0.002, 0.002],
                 "multiple_1": [0.013, 0.017],
                 "multiple_2": [0.030, 0.034],
                 "multiple_3": [0.044, 0.055]
+
               }
               },
         "amplitude_picks" : {
@@ -76,6 +79,7 @@ Example json control block:
             "multiple_1": "integrated_absolute_amplitude",
             "multiple_2": "integrated_absolute_amplitude",
             "multiple_3": "integrated_absolute_amplitude"
+
         }
       },
             "amplitude_half_widths" : {
@@ -84,19 +88,50 @@ Example json control block:
             "multiple_1": 0.00105,
             "multiple_2": 0.00105,
             "multiple_3": 0.00105
+
         },
             "tangential":{
             "primary": 0.00105,
             "multiple_1": 0.00105,
             "multiple_2": 0.00105,
             "multiple_3": 0.00105
+
         }
+
       }
+
     }
-    },
+    }
 
 
+.. note:: Originally this was picking values on windows based on multiple, theoretical times \
+and then picks based on manual windows.  Then we switched to jazz1 (originally called \
+"additional_pick_based" features).  Then jazz2 was requested, this is basically a way \
+to non-manually pick the windows for jazz1 but rather to select them based on zero-crossings. \
+This was implemented but before it ran we we changed it again to jazz3.  This is like jazz2 \
+but we only consider the region between the peak of the primary and the first trough to the left and right.
+
+
+.. todo:: The logic for amplitude picking is still dependant on some assumptions about time picking.  This should be changed.\
+Will do after time-picking for polarity-aware zero-crossings is implemented.
+
+.. todo:: Add support for max, min as well as integrated absolute amplitude for ampltiude_picks
+
+.. todo:: Differentiate between integrated absolute amplitude and integrated average amplitude
+
+.. todo:: Add to doc the choices for the json and what is needed or not; Especially \
+time_picks is one of {maxmium, minimum, zero_crossing, zero_crossing_positive_slope, \
+zero_crossing_negative_slope, amplitude_picks  is one of {integrated_absolute_amplitude,\
+maximum_value, minimum_value}
+
+.. todo:: Describe the logic for phase rotation and calculation of ampltiudes based on time_pick and wavelet_id;\
+i.e. primary, integrated_absolute_amplitude, is centered on the time_pick,\
+multiple_1, integrated_absolute_amplitude, is centered on the zero_crossing time_pick, with data -90deg rotated\
+but in general we should have a tree of {time_pick_type, amplitude_pick_type} --> algortihm description
+
+.. todo:: factor the additional_pick_based_amplitude_windows (original manual jazz hack out)
 """
+
 #import matplotlib.pyplot as plt
 import numpy as np
 import pdb
@@ -119,20 +154,21 @@ logger = init_logging(__name__)
 
 def full_feature_label(component_id, wavelet_id, feature_id):
     """
-
-    :param component_id:
+    :param component_id: 'axial', 'tangential', or 'radial'
     :param wavelet_id:
     :param feature_id:
-    :return:
+    :return: string label for feature
     """
     output_label = '{}-{}-{}'.format(component_id, wavelet_id, feature_id)
     return output_label
 
 class FeatureExtractorJ2(object):
     """
+    Class with parameters and methods for extracting features from individual traces.
     """
     def __init__(self, component_id, trimmed_trace, transformed_args, timestamp, sampling_rate):
         """
+
         .. todo:: window_boundaries time should just have a .to_index() method
         .. note:: given this is run component-by-component we can simplify window_boundaries
             to a simple dict {} rather than having 'axial', 'tangential',
@@ -189,6 +225,15 @@ class FeatureExtractorJ2(object):
 
 
     def extract_integrated_amplitudes(self, time_center, window_half_width, rotate_angle=False):
+        """
+        returns integrated area and integrated-absolute-area under peak centered
+        at time_center, of width 2*window_half_width
+
+        Args:
+            time_center: float, this is the time at which to center the window\
+            on the time axis of the symmetric trace object
+            window_half_width: float, units of seconds (TBC)
+        """
         trace_data = self.trace.data.copy()
         if rotate_angle:
             trace_data = rotate_phase(trace_data, rotate_angle)
