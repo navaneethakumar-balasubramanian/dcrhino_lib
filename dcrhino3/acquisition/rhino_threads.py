@@ -1,3 +1,9 @@
+"""
+Author: natal
+
+here is an example of doc
+"""
+
 import threading
 import sys
 if sys.version_info.major == 2:
@@ -24,6 +30,9 @@ dc_file_logger = init_logging_to_file(__name__)
 
 
 class NetworkThread(threading.Thread):
+    """
+    threading class, to be described high level here
+    """
     def __init__(self):
         threading.Thread.__init__(self)
         self.daemon = True
@@ -47,6 +56,9 @@ class NetworkThread(threading.Thread):
 
 
 class GPSThread(threading.Thread):
+    """
+    :ivar ignore_gpsd: boolean, if True turns GPS monitoring off
+    """
     def __init__(self, ignore_gpsd):
         threading.Thread.__init__(self)
         # self.daemon = True

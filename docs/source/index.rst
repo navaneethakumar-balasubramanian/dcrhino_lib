@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to dcrhino_lib's documentation!
+Welcome to dcrhino_lib's documentation!!
 =======================================
 
 
@@ -14,6 +14,8 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+.. automodule:: dcrhino3.acquisition.rhino_threads
+   :members:
 
 .. automodule:: dcrhino3.feature_extraction.external_feature_derivations
    :members:

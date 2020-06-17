@@ -30,6 +30,7 @@ functools32==3.2.3.post2
 future==0.17.1
 futures==3.2.0
 glob2==0.6
+gps3
 h5py==2.9.0
 identify==1.2.1
 idna==2.8
@@ -86,6 +87,7 @@ pyrsistent==0.14.9
 PySocks==1.6.8
 python-dateutil==2.7.5
 pytz==2018.9
+pyudev
 PyWavelets==1.0.1
 PyYAML==3.13
 pyzmq==17.1.2

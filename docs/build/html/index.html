@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Welcome to dcrhino_lib’s documentation! &#8212; dcrhino_lib 0.0.1 documentation</title>
+    <title>Welcome to dcrhino_lib’s documentation!! &#8212; dcrhino_lib 0.0.1 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -31,7 +31,7 @@
           <div class="body" role="main">
             
   <div class="section" id="welcome-to-dcrhino-lib-s-documentation">
-<h1>Welcome to dcrhino_lib’s documentation!<a class="headerlink" href="#welcome-to-dcrhino-lib-s-documentation" title="Permalink to this headline">¶</a></h1>
+<h1>Welcome to dcrhino_lib’s documentation!!<a class="headerlink" href="#welcome-to-dcrhino-lib-s-documentation" title="Permalink to this headline">¶</a></h1>
 </div>
 <div class="section" id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
@@ -40,6 +40,74 @@
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
+<span class="target" id="module-dcrhino3.acquisition.rhino_threads"></span><p>Author: natal</p>
+<p>here is an example of doc</p>
+<dl class="class">
+<dt id="dcrhino3.acquisition.rhino_threads.GPSThread">
+<em class="property">class </em><code class="sig-prename descclassname">dcrhino3.acquisition.rhino_threads.</code><code class="sig-name descname">GPSThread</code><span class="sig-paren">(</span><em class="sig-param">ignore_gpsd</em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.rhino_threads.GPSThread" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><p><strong>ignore_gpsd</strong> – boolean, if True turns GPS monitoring off</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="dcrhino3.acquisition.rhino_threads.GPSThread.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.rhino_threads.GPSThread.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method representing the thread’s activity.</p>
+<p>You may override this method in a subclass. The standard run() method
+invokes the callable object passed to the object’s constructor as the
+target argument, if any, with sequential and keyword arguments taken
+from the args and kwargs arguments, respectively.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dcrhino3.acquisition.rhino_threads.IDEConverterThread">
+<em class="property">class </em><code class="sig-prename descclassname">dcrhino3.acquisition.rhino_threads.</code><code class="sig-name descname">IDEConverterThread</code><span class="sig-paren">(</span><em class="sig-param">global_config</em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.rhino_threads.IDEConverterThread" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="dcrhino3.acquisition.rhino_threads.IDEConverterThread.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.rhino_threads.IDEConverterThread.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method representing the thread’s activity.</p>
+<p>You may override this method in a subclass. The standard run() method
+invokes the callable object passed to the object’s constructor as the
+target argument, if any, with sequential and keyword arguments taken
+from the args and kwargs arguments, respectively.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dcrhino3.acquisition.rhino_threads.NetworkThread">
+<em class="property">class </em><code class="sig-prename descclassname">dcrhino3.acquisition.rhino_threads.</code><code class="sig-name descname">NetworkThread</code><a class="headerlink" href="#dcrhino3.acquisition.rhino_threads.NetworkThread" title="Permalink to this definition">¶</a></dt>
+<dd><p>threading class, to be described high level here</p>
+<dl class="method">
+<dt id="dcrhino3.acquisition.rhino_threads.NetworkThread.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.rhino_threads.NetworkThread.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method representing the thread’s activity.</p>
+<p>You may override this method in a subclass. The standard run() method
+invokes the callable object passed to the object’s constructor as the
+target argument, if any, with sequential and keyword arguments taken
+from the args and kwargs arguments, respectively.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dcrhino3.acquisition.rhino_threads.USBportThread">
+<em class="property">class </em><code class="sig-prename descclassname">dcrhino3.acquisition.rhino_threads.</code><code class="sig-name descname">USBportThread</code><a class="headerlink" href="#dcrhino3.acquisition.rhino_threads.USBportThread" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="dcrhino3.acquisition.rhino_threads.USBportThread.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.rhino_threads.USBportThread.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method representing the thread’s activity.</p>
+<p>You may override this method in a subclass. The standard run() method
+invokes the callable object passed to the object’s constructor as the
+target argument, if any, with sequential and keyword arguments taken
+from the args and kwargs arguments, respectively.</p>
+</dd></dl>
+
+</dd></dl>
+
 <span class="target" id="module-dcrhino3.feature_extraction.external_feature_derivations"></span><p>Created on Tue Dec 18 19:29:08 2018</p>
 <p>&#64;author: kkappler</p>
 <dl class="class">
@@ -4326,9 +4394,7 @@ center_index.</p>
 <code class="sig-prename descclassname">dcrhino3.signal_processing.time_picker.</code><code class="sig-name descname">my_function</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.signal_processing.time_picker.my_function" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<span class="target" id="module-dcrhino3.signal_processing.windowing_scheme"></span><p>Created on Wed Apr 12 09:46:53 2017</p>
-<p>&#64;author: lmaclean</p>
-<dl class="class">
+<span class="target" id="module-dcrhino3.signal_processing.windowing_scheme"></span><dl class="class">
 <dt id="dcrhino3.signal_processing.windowing_scheme.WindowingScheme">
 <em class="property">class </em><code class="sig-prename descclassname">dcrhino3.signal_processing.windowing_scheme.</code><code class="sig-name descname">WindowingScheme</code><span class="sig-paren">(</span><em class="sig-param">window_length</em>, <em class="sig-param">window_overlap</em>, <em class="sig-param">time_series_length</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.signal_processing.windowing_scheme.WindowingScheme" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tracks L and V - length of the window and the window overlap</p>
