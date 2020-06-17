@@ -3,26 +3,12 @@ Author kkappler
 
 Example json control block follows
 
-.. code-block:: JSON
-
-  {
-    "key": "value"
-  }
-
 .. code-block:: json
 
- {
-        "key": "value",
-        "key2": "value2"
- }
-
-.. code-block:: json
-
-{
- "type": "j2",
- "output_to_file": true,
-
- "args": {
+   {
+    "type": "j2",
+    "output_to_file": true,
+    "args": {
       "upsample_sampling_rate": ["|global_config.upsample_sampling_rate|", 50000.0],
       "sensor_distance_to_source": "|global_config.sensor_distance_to_source|",
       "sensor_distance_to_shocksub": "|global_config.sensor_distance_to_shocksub|",
