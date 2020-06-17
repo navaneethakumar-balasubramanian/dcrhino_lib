@@ -1,7 +1,73 @@
 """
 Author kkappler
 
-Example json control block follows
+
+
+
+"""
+
+#import matplotlib.pyplot as plt
+import numpy as np
+import pdb
+
+#from feature_windowing import TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION
+from dcrhino3.feature_extraction.feature_windowing import AmplitudeWindows
+from dcrhino3.feature_extraction.feature_windowing import ManualTimeWindows
+from dcrhino3.feature_extraction.intermediate_derived_features_j2 import IntermediateFeatureDeriver
+#from dcrhino3.helpers.general_helper_functions import flatten
+from dcrhino3.helpers.general_helper_functions import init_logging
+from dcrhino3.signal_processing.time_picker import TimePicker
+from dcrhino3.signal_processing.phase_rotation import rotate_phase
+from dcrhino3.feature_extraction.jazz_with_zero_crossings import jazz2
+from dcrhino3.feature_extraction.jazz_with_zero_crossings import estimate_trough_width
+from dcrhino3.feature_extraction.jazz3 import jazz3
+#from feature_extractor_j1a import calculate_boolean_features
+
+
+logger = init_logging(__name__)
+
+def full_feature_label(component_id, wavelet_id, feature_id):
+    """
+    :param component_id: 'axial', 'tangential', or 'radial'
+    :param wavelet_id:
+    :param feature_id:
+    :return: string label for feature
+    """
+    output_label = '{}-{}-{}'.format(component_id, wavelet_id, feature_id)
+    return output_label
+
+class FeatureExtractorJ2(object):
+    """
+    Class with parameters and methods for extracting features from individual traces.
+
+    .. note:: Originally this was picking values on windows based on multiple, theoretical times \
+    and then picks based on manual windows.  Then we switched to jazz1 (originally called \
+    "additional_pick_based" features).  Then jazz2 was requested, this is basically a way \
+    to non-manually pick the windows for jazz1 but rather to select them based on zero-crossings. \
+    This was implemented but before it ran we we changed it again to jazz3.  This is like jazz2 \
+    but we only consider the region between the peak of the primary and the first trough to the left and right.
+
+
+    .. todo:: The logic for amplitude picking is still dependant on some assumptions about time picking.  This should be changed.\
+    Will do after time-picking for polarity-aware zero-crossings is implemented.
+
+    .. todo:: Add support for max, min as well as integrated absolute amplitude for ampltiude_picks
+
+    .. todo:: Differentiate between integrated absolute amplitude and integrated average amplitude
+
+    .. todo:: Add to doc the choices for the json and what is needed or not; Especially \
+    time_picks is one of {maxmium, minimum, zero_crossing, zero_crossing_positive_slope, \
+    zero_crossing_negative_slope, amplitude_picks  is one of {integrated_absolute_amplitude,\
+    maximum_value, minimum_value}
+
+    .. todo:: Describe the logic for phase rotation and calculation of ampltiudes based on time_pick and wavelet_id;\
+    i.e. primary, integrated_absolute_amplitude, is centered on the time_pick,\
+    multiple_1, integrated_absolute_amplitude, is centered on the zero_crossing time_pick, with data -90deg rotated\
+    but in general we should have a tree of {time_pick_type, amplitude_pick_type} --> algortihm description
+
+    .. todo:: factor the additional_pick_based_amplitude_windows (original manual jazz hack out)
+
+    Example json control block follows
 
 .. code-block:: json
 
@@ -88,69 +154,6 @@ Example json control block follows
 
     }
     }
-
-
-.. note:: Originally this was picking values on windows based on multiple, theoretical times \
-and then picks based on manual windows.  Then we switched to jazz1 (originally called \
-"additional_pick_based" features).  Then jazz2 was requested, this is basically a way \
-to non-manually pick the windows for jazz1 but rather to select them based on zero-crossings. \
-This was implemented but before it ran we we changed it again to jazz3.  This is like jazz2 \
-but we only consider the region between the peak of the primary and the first trough to the left and right.
-
-
-.. todo:: The logic for amplitude picking is still dependant on some assumptions about time picking.  This should be changed.\
-Will do after time-picking for polarity-aware zero-crossings is implemented.
-
-.. todo:: Add support for max, min as well as integrated absolute amplitude for ampltiude_picks
-
-.. todo:: Differentiate between integrated absolute amplitude and integrated average amplitude
-
-.. todo:: Add to doc the choices for the json and what is needed or not; Especially \
-time_picks is one of {maxmium, minimum, zero_crossing, zero_crossing_positive_slope, \
-zero_crossing_negative_slope, amplitude_picks  is one of {integrated_absolute_amplitude,\
-maximum_value, minimum_value}
-
-.. todo:: Describe the logic for phase rotation and calculation of ampltiudes based on time_pick and wavelet_id;\
-i.e. primary, integrated_absolute_amplitude, is centered on the time_pick,\
-multiple_1, integrated_absolute_amplitude, is centered on the zero_crossing time_pick, with data -90deg rotated\
-but in general we should have a tree of {time_pick_type, amplitude_pick_type} --> algortihm description
-
-.. todo:: factor the additional_pick_based_amplitude_windows (original manual jazz hack out)
-"""
-
-#import matplotlib.pyplot as plt
-import numpy as np
-import pdb
-
-#from feature_windowing import TRACE_WINDOW_LABELS_FOR_FEATURE_EXTRACTION
-from dcrhino3.feature_extraction.feature_windowing import AmplitudeWindows
-from dcrhino3.feature_extraction.feature_windowing import ManualTimeWindows
-from dcrhino3.feature_extraction.intermediate_derived_features_j2 import IntermediateFeatureDeriver
-#from dcrhino3.helpers.general_helper_functions import flatten
-from dcrhino3.helpers.general_helper_functions import init_logging
-from dcrhino3.signal_processing.time_picker import TimePicker
-from dcrhino3.signal_processing.phase_rotation import rotate_phase
-from dcrhino3.feature_extraction.jazz_with_zero_crossings import jazz2
-from dcrhino3.feature_extraction.jazz_with_zero_crossings import estimate_trough_width
-from dcrhino3.feature_extraction.jazz3 import jazz3
-#from feature_extractor_j1a import calculate_boolean_features
-
-
-logger = init_logging(__name__)
-
-def full_feature_label(component_id, wavelet_id, feature_id):
-    """
-    :param component_id: 'axial', 'tangential', or 'radial'
-    :param wavelet_id:
-    :param feature_id:
-    :return: string label for feature
-    """
-    output_label = '{}-{}-{}'.format(component_id, wavelet_id, feature_id)
-    return output_label
-
-class FeatureExtractorJ2(object):
-    """
-    Class with parameters and methods for extracting features from individual traces.
     """
     def __init__(self, component_id, trimmed_trace, transformed_args, timestamp, sampling_rate):
         """

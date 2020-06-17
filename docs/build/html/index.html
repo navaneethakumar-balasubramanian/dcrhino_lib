@@ -593,7 +593,41 @@ derived features</p>
 <dd></dd></dl>
 
 <span class="target" id="module-dcrhino3.feature_extraction.feature_extractor_j2"></span><p>Author kkappler</p>
+<dl class="class">
+<dt id="dcrhino3.feature_extraction.feature_extractor_j2.FeatureExtractorJ2">
+<em class="property">class </em><code class="sig-prename descclassname">dcrhino3.feature_extraction.feature_extractor_j2.</code><code class="sig-name descname">FeatureExtractorJ2</code><span class="sig-paren">(</span><em class="sig-param">component_id</em>, <em class="sig-param">trimmed_trace</em>, <em class="sig-param">transformed_args</em>, <em class="sig-param">timestamp</em>, <em class="sig-param">sampling_rate</em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.feature_extraction.feature_extractor_j2.FeatureExtractorJ2" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Class with parameters and methods for extracting features from individual traces.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Originally this was picking values on windows based on multiple, theoretical times     and then picks based on manual windows.  Then we switched to jazz1 (originally called     “additional_pick_based” features).  Then jazz2 was requested, this is basically a way     to non-manually pick the windows for jazz1 but rather to select them based on zero-crossings.     This was implemented but before it ran we we changed it again to jazz3.  This is like jazz2     but we only consider the region between the peak of the primary and the first trough to the left and right.</p>
+</div>
+<div class="admonition-todo admonition" id="id7">
+<p class="admonition-title">Todo</p>
+<p>The logic for amplitude picking is still dependant on some assumptions about time picking.  This should be changed.    Will do after time-picking for polarity-aware zero-crossings is implemented.</p>
+</div>
+<div class="admonition-todo admonition" id="id8">
+<p class="admonition-title">Todo</p>
+<p>Add support for max, min as well as integrated absolute amplitude for ampltiude_picks</p>
+</div>
+<div class="admonition-todo admonition" id="id9">
+<p class="admonition-title">Todo</p>
+<p>Differentiate between integrated absolute amplitude and integrated average amplitude</p>
+</div>
+<div class="admonition-todo admonition" id="id10">
+<p class="admonition-title">Todo</p>
+<p>Add to doc the choices for the json and what is needed or not; Especially     time_picks is one of {maxmium, minimum, zero_crossing, zero_crossing_positive_slope,     zero_crossing_negative_slope, amplitude_picks  is one of {integrated_absolute_amplitude,    maximum_value, minimum_value}</p>
+</div>
+<div class="admonition-todo admonition" id="id11">
+<p class="admonition-title">Todo</p>
+<p>Describe the logic for phase rotation and calculation of ampltiudes based on time_pick and wavelet_id;    i.e. primary, integrated_absolute_amplitude, is centered on the time_pick,    multiple_1, integrated_absolute_amplitude, is centered on the zero_crossing time_pick, with data -90deg rotated    but in general we should have a tree of {time_pick_type, amplitude_pick_type} –&gt; algortihm description</p>
+</div>
+<div class="admonition-todo admonition" id="id12">
+<p class="admonition-title">Todo</p>
+<p>factor the additional_pick_based_amplitude_windows (original manual jazz hack out)</p>
+</div>
 <p>Example json control block follows</p>
+</div></blockquote>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
  <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;j2&quot;</span><span class="p">,</span>
  <span class="nt">&quot;output_to_file&quot;</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
@@ -679,38 +713,6 @@ derived features</p>
  <span class="p">}</span>
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Originally this was picking values on windows based on multiple, theoretical times and then picks based on manual windows.  Then we switched to jazz1 (originally called “additional_pick_based” features).  Then jazz2 was requested, this is basically a way to non-manually pick the windows for jazz1 but rather to select them based on zero-crossings. This was implemented but before it ran we we changed it again to jazz3.  This is like jazz2 but we only consider the region between the peak of the primary and the first trough to the left and right.</p>
-</div>
-<div class="admonition-todo admonition" id="id7">
-<p class="admonition-title">Todo</p>
-<p>The logic for amplitude picking is still dependant on some assumptions about time picking.  This should be changed.Will do after time-picking for polarity-aware zero-crossings is implemented.</p>
-</div>
-<div class="admonition-todo admonition" id="id8">
-<p class="admonition-title">Todo</p>
-<p>Add support for max, min as well as integrated absolute amplitude for ampltiude_picks</p>
-</div>
-<div class="admonition-todo admonition" id="id9">
-<p class="admonition-title">Todo</p>
-<p>Differentiate between integrated absolute amplitude and integrated average amplitude</p>
-</div>
-<div class="admonition-todo admonition" id="id10">
-<p class="admonition-title">Todo</p>
-<p>Add to doc the choices for the json and what is needed or not; Especially time_picks is one of {maxmium, minimum, zero_crossing, zero_crossing_positive_slope, zero_crossing_negative_slope, amplitude_picks  is one of {integrated_absolute_amplitude,maximum_value, minimum_value}</p>
-</div>
-<div class="admonition-todo admonition" id="id11">
-<p class="admonition-title">Todo</p>
-<p>Describe the logic for phase rotation and calculation of ampltiudes based on time_pick and wavelet_id;i.e. primary, integrated_absolute_amplitude, is centered on the time_pick,multiple_1, integrated_absolute_amplitude, is centered on the zero_crossing time_pick, with data -90deg rotatedbut in general we should have a tree of {time_pick_type, amplitude_pick_type} –&gt; algortihm description</p>
-</div>
-<div class="admonition-todo admonition" id="id12">
-<p class="admonition-title">Todo</p>
-<p>factor the additional_pick_based_amplitude_windows (original manual jazz hack out)</p>
-</div>
-<dl class="class">
-<dt id="dcrhino3.feature_extraction.feature_extractor_j2.FeatureExtractorJ2">
-<em class="property">class </em><code class="sig-prename descclassname">dcrhino3.feature_extraction.feature_extractor_j2.</code><code class="sig-name descname">FeatureExtractorJ2</code><span class="sig-paren">(</span><em class="sig-param">component_id</em>, <em class="sig-param">trimmed_trace</em>, <em class="sig-param">transformed_args</em>, <em class="sig-param">timestamp</em>, <em class="sig-param">sampling_rate</em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.feature_extraction.feature_extractor_j2.FeatureExtractorJ2" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class with parameters and methods for extracting features from individual traces.</p>
 <dl class="method">
 <dt id="dcrhino3.feature_extraction.feature_extractor_j2.FeatureExtractorJ2.extract_features">
 <code class="sig-name descname">extract_features</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.feature_extraction.feature_extractor_j2.FeatureExtractorJ2.extract_features" title="Permalink to this definition">¶</a></dt>
