@@ -1,0 +1,45 @@
+.. dcrhino_lib documentation master file, created by
+   sphinx-quickstart on Fri Jun 12 19:40:59 2020.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Welcome to dcrhino_lib's documentation!
+=======================================
+.. automodule:: dcrhino3.feature_extraction.external_feature_derivations
+   :members:
+.. automodule:: dcrhino3.feature_extraction.feature_extractor_j2
+   :members:
+.. automodule:: dcrhino3.feature_extraction.feature_windowing
+   :members:
+#.. automodule:: dcrhino3.feature_extraction.intermediate_derived_features
+   :members:
+.. automodule:: dcrhino3.feature_extraction.intermediate_derived_features_j2
+   :members:
+
+.. automodule:: dcrhino3.helpers.general_helper_functions
+   :members:
+
+
+.. automodule:: dcrhino3.signal_processing.array_util
+   :members:
+.. automodule:: dcrhino3.signal_processing.filters
+   :members:
+.. automodule:: dcrhino3.signal_processing.interpolation
+   :members:
+.. automodule:: dcrhino3.signal_processing.phase_rotation
+   :members:
+.. automodule:: dcrhino3.signal_processing.time_picker
+   :members:
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
