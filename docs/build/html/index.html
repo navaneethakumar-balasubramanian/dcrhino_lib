@@ -665,32 +665,52 @@ derived features</p>
 <dt id="dcrhino3.feature_extraction.feature_extractor_j2.FeatureExtractorJ2">
 <em class="property">class </em><code class="sig-prename descclassname">dcrhino3.feature_extraction.feature_extractor_j2.</code><code class="sig-name descname">FeatureExtractorJ2</code><span class="sig-paren">(</span><em class="sig-param">component_id</em>, <em class="sig-param">trimmed_trace</em>, <em class="sig-param">transformed_args</em>, <em class="sig-param">timestamp</em>, <em class="sig-param">sampling_rate</em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.feature_extraction.feature_extractor_j2.FeatureExtractorJ2" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
-<div><p>Class with parameters and methods for extracting features from individual traces.</p>
+<div><p>Class with parameters and methods for extracting features from individual traces.
+Parameters:</p>
+<blockquote>
+<div><p>component_id (str): ‘axial’, ‘tangential’, ‘radial’
+trimmed_trace (float): SymmetricTrace() object
+transformed_args (Thiago to describe): specialty class for passing args to process flow
+timestamp (datetime, unix format?): the time associated with the trace at the
+granularity of time series “chunk” processing
+sampling_rate (float) : sampling rate of the trace.  Carried with Symmetric trace
+and can be merged</p>
+</div></blockquote>
+<p>Parameters here are ivars of the class.</p>
+<div class="admonition-todo admonition" id="id7">
+<p class="admonition-title">Todo</p>
+<p>window_boundaries time should just have a .to_index() method</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>given this is run component-by-component we can simplify window_boundaries
+to a simple dict {} rather than having ‘axial’, ‘tangential’,</p>
+</div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Originally this was picking values on windows based on multiple, theoretical times     and then picks based on manual windows.  Then we switched to jazz1 (originally called     “additional_pick_based” features).  Then jazz2 was requested, this is basically a way     to non-manually pick the windows for jazz1 but rather to select them based on zero-crossings.     This was implemented but before it ran we we changed it again to jazz3.  This is like jazz2     but we only consider the region between the peak of the primary and the first trough to the left and right.</p>
 </div>
-<div class="admonition-todo admonition" id="id7">
+<div class="admonition-todo admonition" id="id8">
 <p class="admonition-title">Todo</p>
 <p>The logic for amplitude picking is still dependant on some assumptions about time picking.  This should be changed.    Will do after time-picking for polarity-aware zero-crossings is implemented.</p>
 </div>
-<div class="admonition-todo admonition" id="id8">
+<div class="admonition-todo admonition" id="id9">
 <p class="admonition-title">Todo</p>
 <p>Add support for max, min as well as integrated absolute amplitude for ampltiude_picks</p>
 </div>
-<div class="admonition-todo admonition" id="id9">
+<div class="admonition-todo admonition" id="id10">
 <p class="admonition-title">Todo</p>
 <p>Differentiate between integrated absolute amplitude and integrated average amplitude</p>
 </div>
-<div class="admonition-todo admonition" id="id10">
+<div class="admonition-todo admonition" id="id11">
 <p class="admonition-title">Todo</p>
 <p>Add to doc the choices for the json and what is needed or not; Especially     time_picks is one of {maxmium, minimum, zero_crossing, zero_crossing_positive_slope,     zero_crossing_negative_slope, amplitude_picks  is one of {integrated_absolute_amplitude,    maximum_value, minimum_value}</p>
 </div>
-<div class="admonition-todo admonition" id="id11">
+<div class="admonition-todo admonition" id="id12">
 <p class="admonition-title">Todo</p>
 <p>Describe the logic for phase rotation and calculation of ampltiudes based on time_pick and wavelet_id;    i.e. primary, integrated_absolute_amplitude, is centered on the time_pick,    multiple_1, integrated_absolute_amplitude, is centered on the zero_crossing time_pick, with data -90deg rotated    but in general we should have a tree of {time_pick_type, amplitude_pick_type} –&gt; algortihm description</p>
 </div>
-<div class="admonition-todo admonition" id="id12">
+<div class="admonition-todo admonition" id="id13">
 <p class="admonition-title">Todo</p>
 <p>factor the additional_pick_based_amplitude_windows (original manual jazz hack out)</p>
 </div>
@@ -784,15 +804,15 @@ derived features</p>
 <dl class="method">
 <dt id="dcrhino3.feature_extraction.feature_extractor_j2.FeatureExtractorJ2.extract_features">
 <code class="sig-name descname">extract_features</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.feature_extraction.feature_extractor_j2.FeatureExtractorJ2.extract_features" title="Permalink to this definition">¶</a></dt>
-<dd><div class="admonition-todo admonition" id="id13">
+<dd><div class="admonition-todo admonition" id="id14">
 <p class="admonition-title">Todo</p>
 <p>lists of time_wavelets to pick should be taken from json, rather than explicitly hard coded here</p>
 </div>
-<div class="admonition-todo admonition" id="id14">
+<div class="admonition-todo admonition" id="id15">
 <p class="admonition-title">Todo</p>
 <p>review rotation angles for mult1/3 zerocrossings</p>
 </div>
-<div class="admonition-todo admonition" id="id15">
+<div class="admonition-todo admonition" id="id16">
 <p class="admonition-title">Todo</p>
 <p>remove support for ambiguous zero_crossing pick type</p>
 </div>
@@ -944,14 +964,14 @@ change old class to use this, or make this match the old …</p>
 </dd>
 </dl>
 <span class="target" id="module-dcrhino3.feature_extraction.intermediate_derived_features_j2"></span><p>Author: kkappler</p>
-<div class="admonition-todo admonition" id="id16">
+<div class="admonition-todo admonition" id="id17">
 <p class="admonition-title">Todo</p>
 <p>20190220: The features extracted here are not pulled directly from wavelets, so
 we refer to them as derived features rather than ‘direct’ features.  THey
 will in future versions of the rhino software be superceded log processing,
 and possibly reinstututed once log-processing and calibrations are better understood.</p>
 </div>
-<div class="admonition-todo admonition" id="id17">
+<div class="admonition-todo admonition" id="id18">
 <p class="admonition-title">Todo</p>
 <p>20190403: factor this into an axial and a tangential function that takes</p>
 </div>
@@ -1257,7 +1277,7 @@ from is empty</p>
 <dl class="function">
 <dt id="dcrhino3.helpers.general_helper_functions.generate_enumerated_folder">
 <code class="sig-prename descclassname">dcrhino3.helpers.general_helper_functions.</code><code class="sig-name descname">generate_enumerated_folder</code><span class="sig-paren">(</span><em class="sig-param">target_dir</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.helpers.general_helper_functions.generate_enumerated_folder" title="Permalink to this definition">¶</a></dt>
-<dd><div class="admonition-todo admonition" id="id18">
+<dd><div class="admonition-todo admonition" id="id19">
 <p class="admonition-title">Todo</p>
 <p>change count_directories() function here to support using
 glob.glob and allowing a particular directory string to be matched</p>
@@ -1354,7 +1374,7 @@ for multiple lambda funcitons</p>
 <dl class="function">
 <dt id="dcrhino3.helpers.general_helper_functions.pretty_print_array">
 <code class="sig-prename descclassname">dcrhino3.helpers.general_helper_functions.</code><code class="sig-name descname">pretty_print_array</code><span class="sig-paren">(</span><em class="sig-param">RA</em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.helpers.general_helper_functions.pretty_print_array" title="Permalink to this definition">¶</a></dt>
-<dd><div class="admonition-todo admonition" id="id19">
+<dd><div class="admonition-todo admonition" id="id20">
 <p class="admonition-title">Todo</p>
 <p>20151223: need this to compare arrays</p>
 </div>
@@ -1581,7 +1601,7 @@ a temorary json file for data recieved, and returns data.</p>
 <dd class="field-odd"><p>(DataFrame)</p>
 </dd>
 </dl>
-<div class="admonition-todo admonition" id="id20">
+<div class="admonition-todo admonition" id="id21">
 <p class="admonition-title">Todo</p>
 <p>Ask for user credentials and input them in all database-connecting functions</p>
 </div>
@@ -1859,7 +1879,7 @@ are a list of one line per element.
 <dd class="field-odd"><p>(str)</p>
 </dd>
 </dl>
-<div class="admonition-todo admonition" id="id21">
+<div class="admonition-todo admonition" id="id22">
 <p class="admonition-title">Todo</p>
 <p>figure out what min/max ts is</p>
 </div>
@@ -1906,14 +1926,14 @@ are a list of one line per element.
 <dd class="field-even"><p>(Dataframe)</p>
 </dd>
 </dl>
-<div class="admonition-todo admonition" id="id22">
+<div class="admonition-todo admonition" id="id23">
 <p class="admonition-title">Todo</p>
 <p>20190122; modified assignment of df columns which contain
 tupples so that 2d arrays can be accessed by calling
 my_2darray = np.atleast_2d(list(df[column_label])) where column label
 is for example ‘axial_trace’</p>
 </div>
-<div class="admonition-todo admonition" id="id23">
+<div class="admonition-todo admonition" id="id24">
 <p class="admonition-title">Todo</p>
 <p>add functionality so that we can ask for any subset of components
 not forcing user to get all components.</p>
@@ -2148,7 +2168,7 @@ executes the query to the database. <a class="reference external" href="https://
 <em class="property">property </em><code class="sig-name descname">num_taps_in_decon_filter</code><a class="headerlink" href="#dcrhino3.models.config.Config.num_taps_in_decon_filter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save number of coefficients in the deconvolution filter, calculated with
 <code class="xref py py-func docutils literal notranslate"><span class="pre">_get_num_decon_taps()</span></code></p>
-<div class="admonition-todo admonition" id="id25">
+<div class="admonition-todo admonition" id="id26">
 <p class="admonition-title">Todo</p>
 <p>confirm type is int returned by get_num_decon_taps()</p>
 </div>
@@ -2309,7 +2329,7 @@ Path from <code class="xref py py-func docutils literal notranslate"><span class
 <em class="property">property </em><code class="sig-name descname">num_taps_in_decon_filter</code><a class="headerlink" href="#dcrhino3.models.config2.Config.num_taps_in_decon_filter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save number of coefficients in the deconvolution filter, calculated with
 <code class="xref py py-func docutils literal notranslate"><span class="pre">_get_num_decon_taps()</span></code></p>
-<div class="admonition-todo admonition" id="id26">
+<div class="admonition-todo admonition" id="id27">
 <p class="admonition-title">Todo</p>
 <p>confirm type is int returned by get_num_decon_taps()</p>
 </div>
@@ -3790,7 +3810,7 @@ running along rows (zero-index).  Useful for slicing data and linalg.</p>
 ‘observed-blasthole’.  Normally len(files_ids) will equal 1, but we need to
 consider the case where the hole is in more than one file …</p>
 </div>
-<div class="admonition-todo admonition" id="id27">
+<div class="admonition-todo admonition" id="id28">
 <p class="admonition-title">Todo</p>
 <p>push thhe handling of the files_ids, and timestamps back a layer so the
 user doesn’t use this method outside of exceptional circumstances …
@@ -3861,7 +3881,7 @@ be maintained in database models?</p>
 <li><p>Save the global_config (as json dumps?)</p></li>
 </ol>
 </div>
-<div class="admonition-todo admonition" id="id28">
+<div class="admonition-todo admonition" id="id29">
 <p class="admonition-title">Todo</p>
 <p>clean up iteration over trace labels to use only the
 components specified in global_config</p>
@@ -4048,11 +4068,11 @@ normalizing by max(abs()))</p>
 <em class="property">class </em><code class="sig-prename descclassname">dcrhino3.signal_processing.filters.</code><code class="sig-name descname">FIRLSFilter</code><span class="sig-paren">(</span><em class="sig-param">corners</em>, <em class="sig-param">duration</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.signal_processing.filters.FIRLSFilter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Basically you need the data_key to make the filter because you dont know
 the sampling rate.</p>
-<div class="admonition-todo admonition" id="id29">
+<div class="admonition-todo admonition" id="id30">
 <p class="admonition-title">Todo</p>
 <p>This needs to be function of nyq</p>
 </div>
-<div class="admonition-todo admonition" id="id30">
+<div class="admonition-todo admonition" id="id31">
 <p class="admonition-title">Todo</p>
 <p>length and desired_duration have to be self consistent… maybe
 add a unit test or check for this consistency</p>
@@ -4515,7 +4535,7 @@ is not the Overlap, but rather its difference from L.</p>
 <code class="sig-prename descclassname">dcrhino3.signal_processing.zero_crossing_tools.</code><code class="sig-name descname">get_zx_result_time</code><span class="sig-paren">(</span><em class="sig-param">zero_cross_times</em>, <em class="sig-param">window_time</em>, <em class="sig-param">window_data</em>, <em class="sig-param">pick_type</em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.signal_processing.zero_crossing_tools.get_zx_result_time" title="Permalink to this definition">¶</a></dt>
 <dd><p>logical and exception handling, this isn’t really doing any calcuations, it’s checking the validity of the
 calculations and the appropriateness of the methods applied to the data</p>
-<div class="admonition-todo admonition" id="id32">
+<div class="admonition-todo admonition" id="id33">
 <p class="admonition-title">Todo</p>
 <p>make this support boolean column in dataframe</p>
 </div>
@@ -4563,7 +4583,7 @@ upgoing or downgoing zero crossings.</p>
 list of strings: the zero crossing types</p>
 </dd>
 </dl>
-<div class="admonition-todo admonition" id="id33">
+<div class="admonition-todo admonition" id="id34">
 <p class="admonition-title">Todo</p>
 <p>Output is an array and a list, maybe better to make a df, or zip them, or make a list of tuples?</p>
 </div>
