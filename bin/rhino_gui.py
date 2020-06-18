@@ -1,7 +1,9 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-"""
+"""Rhino GUI
 Created on Tue Aug 14 00:58:14 2018
+
+User interface to manage the acquisition of Rhino data and transmission to cloud
 
 @author: natal
 """
@@ -40,11 +42,23 @@ import sys
 logger.info("Python version is {}".format(sys.version))
 
 def goodbye():
+    """
+        Clean-up when the GUI is closed.  It wull run stop_rx and will finalize the realtime temporary h5 files
+
+    """
     global BAUD_RATE
     stop_rx(True, BAUD_RATE)
     rename_temp_files(LOCAL_FOLDER)
 
 def stop_rx(active, baud_rate):
+    """
+    Will close the usb serial port and send a command to Rhino receiver to stop sending data to ege device
+
+    Args:
+        active: bool:  Represents the active status of data transmission from Rhino receiver and edge device. If
+        true, transmission was active
+        baud_rate: int: baud rate of usb serial connection
+    """
     try:
         rhino_ttyusb = subprocess.check_output('ls -l /dev/serial/by-id/ | grep "usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_" | grep -Po -- "../../\K\w*"',shell=True)
         rhino_ttyusb = rhino_ttyusb.decode("utf-8")
@@ -67,6 +81,14 @@ import atexit
 atexit.register(goodbye)
 
 def rename_temp_files(data_path):
+    """
+    Realtime files are saved locally in the Edge device with a tmp extension so that they are not transmitted to the
+    cloud until they are finalized.  This methold will rename those files so they are ready to be uploaded.  This
+    method is called when the GUI is closed or when there is a filename change based on the file recording length
+
+    Args:
+        data_path: str: Path to local directory where files exist
+    """
     try:
         temp_files = glob2.glob((os.path.join(data_path, "**", "*.tmp")))
         for file in temp_files:
@@ -78,8 +100,17 @@ def rename_temp_files(data_path):
         pass
 
 class GUI():
+    """
+    Graphical User Interface that allows creation of the configuration file, start/stop acquisition, upload files to
+    the cloud, playback of local files, editing of header information, merging h5 files.  It is built upon the
+    tkinter platform
+    """
 
     def __init__(self, master):
+        """
+        Args:
+            master: obj: Instance of tkinter.Tk()
+        """
         row = 0
         self.config = Config(acquisition_config=True)
         self.master = master
@@ -143,6 +174,11 @@ class GUI():
         logging.info("GUI Started")
 
     def acquisition_daemon(self):
+        """
+            Main daemon that controls the data acquisition of rhino data.  It will start the other required
+            subprocesses, system_health_plotter, sensor_stats_plotter, and the experimental rhino_gps_tracker.  These
+            subprocesses are assigned to different processors to avoid interference with the main acquisition routine.
+        """
         # load_config_file()
         if self.acquisition_process is None:
             timestamp = datetime.now().strftime('%Y_%m_%d_%H')
@@ -185,6 +221,9 @@ class GUI():
             logging.debug("GPS Tracker Running in processor {} \n".format(processor_number))
 
     def acquisition_daemon_stop(self):
+        """
+            Terminates the main acquisition process as well as the additional subprocesses
+        """
         if self.acquisition_process is not None:
             if not debug:
                 self.err.close()
@@ -202,6 +241,23 @@ class GUI():
             logging.info("Acquisition stopped")
 
     def rsync_daemon(self):
+        """
+            Data transmission daemon.  Will run the shell script 'send_files.sh' enabling an rsync command to upload
+            files to the cloud.
+
+            Note:
+                All the required control parameters passed to shell script are read directly from the
+                configuration file. If there are any changes in the configuration file, the upload process must be
+                restarted.  The configuration file where these parameters can be found is
+                dcrhino3/acquisition/data_transmission_settings.cfg
+
+            Args:
+                  local_folder: str: path to the local folder where the files exist
+                  server: str: in the form of user@server.ip.address for rsync connection
+                  remote_folder: str: path to the folder in the server where the pre-established folder structure will be created and files uploaded
+                  sleep_interval: int: waiting period in seconds between looking for new data after upload has been completed
+                  stats_folder: str: path to the local folder where the stats numpy folder is being generated.
+        """
         if self.rsync_daemon_process is None:
             local_folder = self.config.local_folder
             remote_folder = os.path.join(self.config.remote_folder, self.config.level_0_path)

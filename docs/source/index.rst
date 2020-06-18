@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to dcrhino_lib's documentation!!
+Welcome to dcrhino_lib's documentation!
 =======================================
 
 
@@ -14,7 +14,17 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+
+.. automodule:: bin.rhino_gui
+   :members:
+
 .. automodule:: dcrhino3.acquisition.rhino_threads
+   :members: NetworkThread, GPSThread
+
+.. automodule:: dcrhino3.acquisition.merge_raw_data_h5
+   :members:
+
+.. automodule:: dcrhino3.acquisition.daily_health_plotter
    :members:
 
 .. automodule:: dcrhino3.feature_extraction.external_feature_derivations
@@ -154,6 +164,7 @@ Indices and tables
    :members:
 .. automodule:: dcrhino3.signal_processing.zero_crossing_tools
    :members:
+
 
 
 .. toctree::

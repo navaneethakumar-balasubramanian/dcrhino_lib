@@ -1,10 +1,11 @@
-"""
-@author Natal
+"""Daily Health Plotter
 
 This module will plot the following columns as time series to analyze rhino and edge device performance :"date",
     "samples", "battery", "temperature", "rssi", "delay", "counter_changes", "corrupt", "tx_status", "drift",
     "real_delay", "disk_usage", "ram_usage", "tablet_temperature", "tablet_battery_status",
     "tablet_battery_percentage", "tablet_battery_life", "tablet_cpu_usage"
+
+@author Natal
 """
 import glob2
 import os
@@ -19,13 +20,10 @@ from dcrhino3.acquisition.constants import LOGS_PATH
 def main(start_date=None, end_date=None, input_path=None):
     """
 
-    :param start_date: String, in the format "%Y_%m_%d". This will chose the initial date for the plots.  If None is
-    passed, the earliest date found in the logs will be used
-    :param end_date: String, in the format "%Y_%m_%d". This will chose the final date for the plots.  If None is
-    passed, the latest date found in the logs will be used
-    :param input_path: String, path to where the health logs are found.  If None is passed, the default LOGS_PATH
-    declared in constants.py will be used
-    :return: Nothing
+    Args:
+        start_date: String, in the format "%Y_%m_%d". This will chose the initial date for the plots.  If None is passed, the earliest date found in the logs will be used
+        end_date: String, in the format "%Y_%m_%d". This will chose the final date for the plots. If None is passed, the latest date found in the logs will be used
+        input_path: String, path to where the health logs are found.  If None is passed, the default LOGS_PATH declared in constants.py will be used
     """
     # path = "/home/natal/toconvert/waio/tablet_logs/Logs_83361/*health.log"
     # path = "/home/natal/toconvert/bma/tablet_logs/*health.log"
