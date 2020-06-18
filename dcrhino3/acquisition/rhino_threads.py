@@ -1,20 +1,23 @@
 """
-Author: natal
+@author natal
 
-here is an example of doc
+Monitoring threads for Rhino Edge Device
 """
 
 import threading
 import sys
+
+#TODO: remove imports of urllib2 and only support python 3
 if sys.version_info.major == 2:
-    from urllib2 import urlopen, URLError
+    #from urllib2 import urlopen, URLError
+    pass
 else:
     from urllib.request import urlopen, URLError
 import time
 from gps3 import agps3
 import pyudev
 import subprocess
-# from dcrhino3.acquisition.external.dimmer import dimmer
+from dcrhino3.acquisition.external.dimmer import dimmer
 import queue as Queue
 if sys.version_info.major == 2:
     from bin.ide2h5 import ideExport, SimpleUpdater
@@ -31,7 +34,8 @@ dc_file_logger = init_logging_to_file(__name__)
 
 class NetworkThread(threading.Thread):
     """
-    threading class, to be described high level here
+    This thread will monitor the internet connection every 10 seconds.  It has a property network_status that reports if
+    the internet connection is OK or if there is No Connection
     """
     def __init__(self):
         threading.Thread.__init__(self)
@@ -52,12 +56,20 @@ class NetworkThread(threading.Thread):
 
     @property
     def network_status(self):
+        """
+        Property
+        :return: Status of internet connection on the edge device
+        """
         return self._network_status
 
 
 class GPSThread(threading.Thread):
     """
-    :ivar ignore_gpsd: boolean, if True turns GPS monitoring off
+    This thread will monitor GPS signal.  It will continuosly watch a socket on port 2947 (GPSd).  Accessing the
+    porperty satellite_count will provide the number of satellites that are visible by the receiver and can be used
+    as a measure of signal quality.
+
+    :param ignore_gpsd: boolean, if True turns GPS monitoring off
     """
     def __init__(self, ignore_gpsd):
         threading.Thread.__init__(self)
@@ -73,6 +85,12 @@ class GPSThread(threading.Thread):
             self._satellite_count = "GPS OFF"
 
     def run(self):
+        """
+        Continuousy unpacks every stream of new data and extracts the number of satellites visible by the receiver and
+        updates the property satellite_count accordingly.  If :param ignore_gpsd is set to True, then the run method
+        will be bypassed and there will be no continuous monitoring.
+        :return: Nothing
+        """
         if not self._ignore_gpsd:
             while True:
                 try:
@@ -89,10 +107,18 @@ class GPSThread(threading.Thread):
 
     @property
     def satellite_count(self):
+        """
+        Property
+        :return: number of satellites that are visible by the GPS receiver
+        """
         return self._satellite_count
 
 
 class USBportThread(threading.Thread):
+    """
+    WIP. This thread is intended to be used during acquisition to identify any disconnection between the edge device
+    and the Rhino receiver
+    """
     def __init__(self):
         threading.Thread.__init__(self)
         self.daemon = True
@@ -124,15 +150,22 @@ class USBportThread(threading.Thread):
                 self.rhino_disconnected = True
                 print(sys.exc_info())
 
-# class DimmerThread(threading.Thread):
-#     def __init__(self):
-#         threading.Thread.__init__(self)
-#
-#     def run(self):
-#         dimmer.main()
+class DimmerThread(threading.Thread):
+    """
+    WIP. This thread is intended to adjust the screen brightness depending on how light/dark is outside
+    """
+    def __init__(self):
+        threading.Thread.__init__(self)
+
+    def run(self):
+        dimmer.main()
 
 
 class IDEConverterThread(threading.Thread):
+    """
+    WIP. This thread is intended to be used with WiFi SSX to convert to h5 all the IDE files transmitted to the edge
+    device
+    """
     def __init__(self, global_config):
         threading.Thread.__init__(self)
         self.daemon = True

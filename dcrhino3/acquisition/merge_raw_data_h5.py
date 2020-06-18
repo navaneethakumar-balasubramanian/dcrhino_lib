@@ -1,3 +1,10 @@
+"""
+@author Natal
+
+This module is used to merge various h5 files into a single one.  It can be used in a reduced form from the Rhino GUI
+but it provides more flexibility when used in a command line interface
+
+"""
 import h5py
 import os
 import fnmatch
@@ -18,6 +25,14 @@ import pdb
 
 
 def main(args):
+    """
+
+    :param args: Argparser instance.    -i: String, Input path to the source h5 files
+                                        -o: String, Output path for merged file
+                                        -s: String, Sensor type. Supported values are 'ssx' and 'rhino'
+                                        -cfg: String, Path to the config file that will be saved in the merged h5 file
+    :return: Nothing
+    """
     try:
         # pdb.set_trace()
         path = args.input_path

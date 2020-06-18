@@ -1,3 +1,9 @@
+"""
+@author Natal
+
+WIP. This module is intended to perform disk management of rhino data on edge device
+"""
+
 import glob
 import os
 import shutil
