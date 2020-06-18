@@ -39,6 +39,24 @@ def full_feature_label(component_id, wavelet_id, feature_id):
 class FeatureExtractorJ2(object):
     """
     Class with parameters and methods for extracting features from individual traces.
+    Parameters:
+        component_id (str): 'axial', 'tangential', 'radial'
+        trimmed_trace (float): SymmetricTrace() object
+        transformed_args (Thiago to describe): specialty class for passing args to process flow
+        timestamp (datetime, unix format?): the time associated with the trace at the
+        granularity of time series "chunk" processing
+        sampling_rate (float) : sampling rate of the trace.  Carried with Symmetric trace
+        and can be merged
+
+    Parameters here are ivars of the class.
+
+    .. todo:: window_boundaries time should just have a .to_index() method
+    .. note:: given this is run component-by-component we can simplify window_boundaries
+            to a simple dict {} rather than having 'axial', 'tangential',
+    .. todo: access sampling_rate from process_flow
+    .. todo: merge extract_max_time, extract_min_time, extract_zero_crossing_time
+        to get a single function that takes the "time_pick" argument.  Call it
+        pick_time(start, end, pick_type).  Also, these can be methods of SymmetricTrace()
 
     .. note:: Originally this was picking values on windows based on multiple, theoretical times \
     and then picks based on manual windows.  Then we switched to jazz1 (originally called \
@@ -157,14 +175,7 @@ class FeatureExtractorJ2(object):
     """
     def __init__(self, component_id, trimmed_trace, transformed_args, timestamp, sampling_rate):
         """
-
-        .. todo:: window_boundaries time should just have a .to_index() method
-        .. note:: given this is run component-by-component we can simplify window_boundaries
-            to a simple dict {} rather than having 'axial', 'tangential',
-        .. todo: access sampling_rate from process_flow
-        .. todo: merge extract_max_time, extract_min_time, extract_zero_crossing_time
-            to get a single function that takes the "time_pick" argument.  Call it
-            pick_time(start, end, pick_type).  Also, these can be methods of SymmetricTrace()
+        these notes were moved up to class level so sphinx would detect them.
         """
 
 #        try:
