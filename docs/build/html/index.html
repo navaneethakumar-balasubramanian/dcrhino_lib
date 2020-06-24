@@ -66,6 +66,44 @@ subprocesses are assigned to different processors to avoid interference with the
 </dd></dl>
 
 <dl class="py method">
+<dt id="bin.rhino_gui.GUI.exit">
+<code class="sig-name descname">exit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bin.rhino_gui.GUI.exit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clean-up routine executed when the exit button is pressed.  Stops all other subprocesses and closes the
+GUI window.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="bin.rhino_gui.GUI.merge_files">
+<code class="sig-name descname">merge_files</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bin.rhino_gui.GUI.merge_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Launches the File Merging GUI</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="bin.rhino_gui.GUI.playback_daemon">
+<code class="sig-name descname">playback_daemon</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bin.rhino_gui.GUI.playback_daemon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompts the file that needs to be played back and runs another python script. This only works for raw
+data (RTR*.h5 files).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="bin.rhino_gui.GUI.playback_daemon_stop">
+<code class="sig-name descname">playback_daemon_stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bin.rhino_gui.GUI.playback_daemon_stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Kill the payback process if there is one active</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="bin.rhino_gui.GUI.rename_temp_files">
+<code class="sig-name descname">rename_temp_files</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bin.rhino_gui.GUI.rename_temp_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renames temporary rhino files by calling this module’s rename_temp_files method</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="bin.rhino_gui.GUI.rhino_installation_settings">
+<code class="sig-name descname">rhino_installation_settings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bin.rhino_gui.GUI.rhino_installation_settings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Launches the Configuration File GUI</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="bin.rhino_gui.GUI.rsync_daemon">
 <code class="sig-name descname">rsync_daemon</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bin.rhino_gui.GUI.rsync_daemon" title="Permalink to this definition">¶</a></dt>
 <dd><p>Data transmission daemon.  Will run the shell script ‘send_files.sh’ enabling an rsync command to upload
@@ -83,11 +121,36 @@ dcrhino3/acquisition/data_transmission_settings.cfg</p>
 <li><p><strong>local_folder</strong> – str: path to the local folder where the files exist</p></li>
 <li><p><strong>server</strong> – str: in the form of <a class="reference external" href="mailto:user&#37;&#52;&#48;server&#46;ip&#46;address">user<span>&#64;</span>server<span>&#46;</span>ip<span>&#46;</span>address</a> for rsync connection</p></li>
 <li><p><strong>remote_folder</strong> – str: path to the folder in the server where the pre-established folder structure will be created and files uploaded</p></li>
-<li><p><strong>sleep_interval</strong> – int: waiting period between looking for new data after upload has been completed</p></li>
+<li><p><strong>sleep_interval</strong> – int: waiting period in seconds between looking for new data after upload has been completed</p></li>
 <li><p><strong>stats_folder</strong> – str: path to the local folder where the stats numpy folder is being generated.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="bin.rhino_gui.GUI.rsync_daemon_stop">
+<code class="sig-name descname">rsync_daemon_stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bin.rhino_gui.GUI.rsync_daemon_stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Kills the rsync process to stop uploading files to the cloud</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="bin.rhino_gui.GUI.stop_rx">
+<code class="sig-name descname">stop_rx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">active</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bin.rhino_gui.GUI.stop_rx" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Stops the data transfer from the Rhino receiver to the edge device by calling this module’s stop_rx method</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>active</strong> – bool. Represents the active status of data transmission from Rhino receiver and edge device. If true, transmission was active</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="bin.rhino_gui.GUI.update_h5_headers">
+<code class="sig-name descname">update_h5_headers</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bin.rhino_gui.GUI.update_h5_headers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Launches the Header Updating GUI</p>
 </dd></dl>
 
 </dd></dl>
@@ -95,7 +158,8 @@ dcrhino3/acquisition/data_transmission_settings.cfg</p>
 <dl class="py function">
 <dt id="bin.rhino_gui.goodbye">
 <code class="sig-prename descclassname">bin.rhino_gui.</code><code class="sig-name descname">goodbye</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bin.rhino_gui.goodbye" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clean-up when the GUI is closed.  It wull run stop_rx and will finalize the realtime temporary h5 files</p>
+<dd><p>Clean-up when the GUI is closed without properly stoping all other subprocesses and using the exit button.  It
+will run stop_rx and finalize the realtime temporary h5 files</p>
 </dd></dl>
 
 <dl class="py function">
@@ -114,14 +178,132 @@ method is called when the GUI is closed or when there is a filename change based
 <dl class="py function">
 <dt id="bin.rhino_gui.stop_rx">
 <code class="sig-prename descclassname">bin.rhino_gui.</code><code class="sig-name descname">stop_rx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">active</span></em>, <em class="sig-param"><span class="n">baud_rate</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bin.rhino_gui.stop_rx" title="Permalink to this definition">¶</a></dt>
-<dd><p>Will close the usb serial port and send a command to Rhino receiver to stop sending data to ege device</p>
+<dd><p>Will close the usb serial port and send a command to Rhino receiver to stop sending data to ege device and
+prepares it to listen for a new start_rx command</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>active</strong> – bool:  Represents the active status of data transmission from Rhino receiver and edge device. If</p></li>
-<li><p><strong>transmission was active</strong> (<em>true</em><em>,</em>) – </p></li>
+<li><p><strong>active</strong> – bool:  Represents the active status of data transmission from Rhino receiver and edge device. If true, transmission was active</p></li>
 <li><p><strong>baud_rate</strong> – int: baud rate of usb serial connection</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-dcrhino3.acquisition.merge_gui"></span><p>Merge Files GUI
+Created on Tue Aug 14 00:58:14 2018</p>
+<p>This module is a GUI for the user to select RTR.h5 files that will be merged into a single file.  The user will
+select the parent folder where the files exist, an output folder and the configuration file that will be saved in the resulting merged file</p>
+<p>&#64;author: natal</p>
+<dl class="py class">
+<dt id="dcrhino3.acquisition.merge_gui.GUI">
+<em class="property">class </em><code class="sig-prename descclassname">dcrhino3.acquisition.merge_gui.</code><code class="sig-name descname">GUI</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">master</span></em>, <em class="sig-param"><span class="n">config</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.merge_gui.GUI" title="Permalink to this definition">¶</a></dt>
+<dd><p>This form contains three fields, one for the path to the parent folder of the files that will be merged,
+one for the path of the output folder where the resulting merged file will be saved and one for the path to
+the configuration file that will be saved in the merged file.  Each field has an action button that will
+launch a file dialog for the user to browse for the appropriate locations.  If the user does not want to use
+the dialogs, they can write the full path in the text fields</p>
+<dl class="py method">
+<dt id="dcrhino3.acquisition.merge_gui.GUI.get_cfg_path">
+<code class="sig-name descname">get_cfg_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.merge_gui.GUI.get_cfg_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Launches a file dialog for the user to select the configuration file that will be saved in the merged file
+Returns:
+str: Absolute path to desired folder</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dcrhino3.acquisition.merge_gui.GUI.get_dir_path">
+<code class="sig-name descname">get_dir_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.merge_gui.GUI.get_dir_path" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Generic folder selection dialog</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Absolute path of folder selected</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The initial_path is read from the configuration file</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dcrhino3.acquisition.merge_gui.GUI.get_file_path">
+<code class="sig-name descname">get_file_path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">extension</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.merge_gui.GUI.get_file_path" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Generic file selection dialog</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>extension</strong> – str: File extension used to filter only desired files</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Absolute path of file selected</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The initial_path is read from the configuration file</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dcrhino3.acquisition.merge_gui.GUI.get_merge_path">
+<code class="sig-name descname">get_merge_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.merge_gui.GUI.get_merge_path" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Launches a file dialog for the user to select the parent directory of the files to merge and writes it in the text field</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Absolute path to source folder</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dcrhino3.acquisition.merge_gui.GUI.get_output_path">
+<code class="sig-name descname">get_output_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.merge_gui.GUI.get_output_path" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Launches a file dialog for the user to select the output directory for the merged file and writes it in the text field</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Absolute path to output folder</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dcrhino3.acquisition.merge_gui.GUI.merge_files">
+<code class="sig-name descname">merge_files</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.merge_gui.GUI.merge_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts the file merging process by executing the python script merge_raw_data_h5.py</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="dcrhino3.acquisition.merge_gui.main">
+<code class="sig-prename descclassname">dcrhino3.acquisition.merge_gui.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.merge_gui.main" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Main method used to generate and instance of the GUI class and load it.  It acts as the interface to other
+modules</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> – obj. Instance of Config2</p>
 </dd>
 </dl>
 </dd></dl>
@@ -226,6 +408,402 @@ but it provides more flexibility when used in a command line interface</p>
 <li><p><strong>end_date</strong> – String, in the format “%Y_%m_%d”. This will chose the final date for the plots. If None is passed, the latest date found in the logs will be used</p></li>
 <li><p><strong>input_path</strong> – String, path to where the health logs are found.  If None is passed, the default LOGS_PATH declared in constants.py will be used</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-dcrhino3.acquisition.real_time_acquisition_v4"></span><p>Real Time Acquisition Module</p>
+<p>This module handles all the rhino data acuisition related tasks.  It is divided in 5 threads:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>SerialThread: Receives individual data packets from Rhino receiver, filters corrupt packets and places the remaining good packets in a queue for further processing.</p></li>
+<li><p>FileFlusher.  Receives packets from serial queue, decodes them and splits them into info and data packets.  Data packets are saved into a flushQ for further processing</p></li>
+<li><p>CollectionDaemonThread: Reads packets from flushQ, generates the traces</p></li>
+<li></li>
+</ul>
+</div></blockquote>
+<dl class="py class">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.CollectionDaemonThread">
+<em class="property">class </em><code class="sig-prename descclassname">dcrhino3.acquisition.real_time_acquisition_v4.</code><code class="sig-name descname">CollectionDaemonThread</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bufferQ</span></em>, <em class="sig-param"><span class="n">tracesQ</span></em>, <em class="sig-param"><span class="n">logQ</span></em>, <em class="sig-param"><span class="n">displayQ</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.CollectionDaemonThread" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.CollectionDaemonThread.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.CollectionDaemonThread.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method representing the thread’s activity.</p>
+<p>You may override this method in a subclass. The standard run() method
+invokes the callable object passed to the object’s constructor as the
+target argument, if any, with sequential and keyword arguments taken
+from the args and kwargs arguments, respectively.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.DummyComport">
+<em class="property">class </em><code class="sig-prename descclassname">dcrhino3.acquisition.real_time_acquisition_v4.</code><code class="sig-name descname">DummyComport</code><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.DummyComport" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dummy class needed only to run acquisition simulations.  It only has one variable, corrupt_packets and it’s
+always set at zero.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.FileFlusher">
+<em class="property">class </em><code class="sig-prename descclassname">dcrhino3.acquisition.real_time_acquisition_v4.</code><code class="sig-name descname">FileFlusher</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">flushq</span></em>, <em class="sig-param"><span class="n">logQ</span></em>, <em class="sig-param"><span class="n">displayQ</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.FileFlusher" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class will read a raw packet from the serial Q (flushQ), unpack it, and classify it as an info or data
+packet.  If it is a data packet, it will save a dictionary with the decoded packet along with other necessary
+identifying information into a bufferQ for further processing in another thread.  In case of an info packet,
+a message will be displayed in the log display console and the system’s temperature, battery level and sleep
+interval will be updated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>flushq</strong> – obj: Instance of a Queue.  Contains the raw packets that have been received by the SerialThread</p></li>
+<li><p><strong>logQ</strong> – obj: Instance of a Queue.  Global variable that is accessed by all threads for logging purposes</p></li>
+<li><p><strong>displayQ</strong> – obj: Instance of a Queue.  Global variable that is accessed by all threads to display information on the system’s log display console.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.FileFlusher.calculate_packet_timestamp">
+<code class="sig-name descname">calculate_packet_timestamp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">packet</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.FileFlusher.calculate_packet_timestamp" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Receives a packet and calculates the timestamp associated with it based on the sequence number generated
+on the Rhino transmitter.  This method calculates the elapsed_tx_sequences by comparing the system’s last
+saved sequence and the current packet’s sequence. Ideally only one sequence has elapsed meaning that
+there was no missed packets in the transmission. The current packet’s timestamp is calculating by
+multiplying elapsed_tx_sequences by delta_t (this global variable is 1/sampling_rate, 500 ms for a 2000
+Hz sampling rate) and adding that to the system’s last saved timestamp.</p>
+<p>Another important aspect of this method is that it updates a flag on each packet to identify if there
+were more than a predetermined number of allowed missing packets in a row.  This flag will be used later
+in the trace processing to select an appropriate interpolation method.</p>
+<p>We know that we are expecting sampling_rate samples per second (usually 2000).  So we can use the
+elapsed_tx_sequences to calculate an index of each packet in the trace.  We use this index instead
+of a simple counter because we have to account for the possibility of missed pakets.  However,
+sometimes that index number can be slightly larger, so we track that surplus of packets in the variable
+offset.  This variable will be used once we change from one second in time to the next to adjust the
+position of the first packet received for the next second.</p>
+<p>Once we reach the expected number of packets per second, we check and adjust for clock drift. Since each
+packet’s timestamp is calculated based on the edge device’s clock, there is drift associated
+with this calculation.  We have determined an acceptable clock drift. When the calculated drift is
+greater than the pre-established threshold, the current’s packet time will not be calculated anymore but
+instead will be set as the system’s current time.</p>
+<p>Every time we swithc from one second to the next or there is a clock drift adjustment, a message is
+displayed in the log display console.  The variable counter_changes represents the number of times we
+have switched from one second in time to the next.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>packet</strong> – obj: Instance of Packet_v11</p>
+</dd>
+</dl>
+<p>Returns: obj: Same packet that was received with an updated timestamp</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.FileFlusher.drift">
+<em class="property">property </em><code class="sig-name descname">drift</code><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.FileFlusher.drift" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns:
+float: Calculated clock drift on the last second in time processed</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.FileFlusher.first_packet_received">
+<code class="sig-name descname">first_packet_received</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">packet</span></em>, <em class="sig-param"><span class="n">timestamp</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.FileFlusher.first_packet_received" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>This method is run when the first packet of the the acquisition session is received or when the Rhino
+transmitter’s clock counter rolls over, and it assigns the packet an epoch timestamp based on the
+system’s clock. This timestamp is recorded when the packet is read from the serial queue.  This timestamp
+does not take into account the latency between the packet generation in the Rhino Transmitter and when
+this process takes place.  However, this time offset is negligible for our application.</p>
+<p>A few class variables are updated for subsequent timing calculations.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>packet</strong> – obj: Instance of class Packet_V11</p></li>
+<li><p><strong>timestamp</strong> – float: Epoch based timestamp generated when the packet was read from the serial queue</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.FileFlusher.get_data_from_q">
+<code class="sig-name descname">get_data_from_q</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.FileFlusher.get_data_from_q" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Reads a raw packet from the flushQ (serial queue)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Raw packet</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>struct</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.FileFlusher.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.FileFlusher.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Thread activity.  It will run the method run_v11</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.FileFlusher.run_v11">
+<code class="sig-name descname">run_v11</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.FileFlusher.run_v11" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves a packet from the serial q, unpacks it’s information and classifies it as a
+data or info packet.  If it is an info packet, the values for current_temperature (degC), current_batt
+(voltage) and sleep_time (sec) will be updated. These values will be used for all subsequent packets
+until a new info message is received.</p>
+<p>if it is a data packet, the timestamp is calculated and saved in a dictionary to a bufferQ for further
+processing on the CollectionDaemonThread.</p>
+<p>This method will log/display a message when the first packet in the acquisition session is received,
+it will ignore duplicated packets (same tx_sequence as previous packet) and will adjust for clock
+rollover (tx_sequence less than previous packet).  Another message will be displayed when the an info
+packet is received.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.FileFlusher.save_row_to_processing_q">
+<code class="sig-name descname">save_row_to_processing_q</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">packet</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.FileFlusher.save_row_to_processing_q" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Saves dictionary with the packet and extra identifiers information to the bufferQ that will be accessed
+by other threads to generate traces</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>packet</strong> – obj. Instance of Packet_v11</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.FileFlusher.stop">
+<code class="sig-name descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.FileFlusher.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Intended to trigger an event when the thread is stopped.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.LogFileDaemonThread">
+<em class="property">class </em><code class="sig-prename descclassname">dcrhino3.acquisition.real_time_acquisition_v4.</code><code class="sig-name descname">LogFileDaemonThread</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">logQ</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.LogFileDaemonThread" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Writes messages from the logQ to a log file.  Each file is one hour long and it changes on the hour.</p>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The path where the logs are stored is read from constants.py</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>logQ</strong> – obj. Instance of a queue used to collect logging messages from various threads and write them to a file</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.LogFileDaemonThread.change_files">
+<code class="sig-name descname">change_files</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.LogFileDaemonThread.change_files" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Close the current file and create one with the new filename</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> – str. Full path for the new file to be created.  The it will have the following format ‘%Y_%m_%d_%H.log’</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.LogFileDaemonThread.log">
+<code class="sig-name descname">log</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.LogFileDaemonThread.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write all the messages from logQ into the current file, but does not close the file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.LogFileDaemonThread.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.LogFileDaemonThread.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Thread activity.  Will change filenames when necessary and call the log method to write all the log
+messages to a file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.LogFileDaemonThread.stop">
+<code class="sig-name descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.LogFileDaemonThread.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs at the end of the logging process.  It will write all the messages from the logQ to the current file
+until the queue is empty and close the file.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.Packet_v11">
+<em class="property">class </em><code class="sig-prename descclassname">dcrhino3.acquisition.real_time_acquisition_v4.</code><code class="sig-name descname">Packet_v11</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">q_data</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.Packet_v11" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Class used to handle the raw data transmitted from the Rhino receiver (Firmware version 1.1) and
+convert it into a packet object that contains all the necessary information as attributes and is easier to
+handle and pass long.</p>
+<p>Each raw packet is 21 bits long (for v1.1) and contains a begin of frame bit, a message identifyer bit (data or
+info), rx_sequence (sequence number assigned at the receiver), data bits (tx_sequence, x, y, z, rssi for data
+packets and rssi, temp, voltage, and sleep_time for info packets) and an end of frame bit.</p>
+<p>tx_sequence is assigned at the Rhino Transmitter.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>q_data</strong> – struct: raw data packet from Rhino receiver</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.Packet_v11.calc_batt">
+<code class="sig-name descname">calc_batt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.Packet_v11.calc_batt" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Converts the battery level value reported by the Rhino receiver to voltage. This formula was provided by
+the firmware developer as is</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>val</strong> – int: Value representing the battery level</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Calculated battery voltage</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.Packet_v11.calc_rssi_value">
+<code class="sig-name descname">calc_rssi_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rssi_val</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.Packet_v11.calc_rssi_value" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Convert the reported signal strength to dBs.  This formula was provided by the firmware developer as is.
+In order to conver the signal strength to dB’s there needs to be an offset of -72 applied to the
+calculated value.  Ideally, this offset is applied in the Rhino receiver, but if for any reason it is
+not, then it can be applied in this conversion. This rssi_offset is read directly from the configuration
+file and can be found and edited in the acquisition_settings.cfg</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>rssi_val</strong> – int: Signal strength value as reported by the Rhino receiver</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Calculated signal strength in dB’s</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.Packet_v11.calc_temp_in_c">
+<code class="sig-name descname">calc_temp_in_c</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.Packet_v11.calc_temp_in_c" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Converts the temperature value reported by the Rhino receiver to Celsius. This formula was provided by the
+firmware developer as is</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>val</strong> – int: Value representing the board temperature</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Calculated board temperature in Celsius</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.Packet_v11.packet_decoder">
+<code class="sig-name descname">packet_decoder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pkt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.Packet_v11.packet_decoder" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Decodes the raw packet struct into a packet object and sets it’s attributes accordingly</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>pkt</strong> – struct: Raw value as transmitted to the edge device by the Rhino Receiver</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.SerialThread">
+<em class="property">class </em><code class="sig-prename descclassname">dcrhino3.acquisition.real_time_acquisition_v4.</code><code class="sig-name descname">SerialThread</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">comport</span></em>, <em class="sig-param"><span class="n">brate</span></em>, <em class="sig-param"><span class="n">pktlen</span></em>, <em class="sig-param"><span class="n">flushq</span></em>, <em class="sig-param"><span class="n">logQ</span></em>, <em class="sig-param"><span class="n">displayQ</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.SerialThread" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Class that handles the data transfer from Rhino receiver to the edge device.  Upon starting, the thread will
+send a start_rx command to the Rhino receiver that will enable the data transmission.  It will then
+continuously receive raw packets through the specified comport, make sure they were not corrupted during the
+transmission and then save them to a flushQ for further processing.</p>
+<p>This thread will look for <em>pktlen</em> data chunks and will confirm that the beginning of frame and end of frame
+bits are <code class="docutils literal notranslate"><span class="pre">0x002</span></code> and <code class="docutils literal notranslate"><span class="pre">0x003</span></code> respectively.  If the size is correct and the expected bits are found,
+the packet is deemed good and saved in the flushQ.  If not, the corrupt_packets property is incremented by one
+and the serial handler will begin  reading one bit at a time until the next <code class="docutils literal notranslate"><span class="pre">0x003</span></code> is found.  At this
+point it is assumed that we reached  another end of frame bit and will read another 21 bits assuming that we
+are reading a new packet.  If this  new assumed packet passes the validity test, it is then saved to the
+flusQ and we resume the process  normally.  Otherwise, we return to reading one bit at a time trying to find
+the next end of frame bit until we successfully read a new packet.</p>
+<p>If no data is received through the comport, the thread will run start_rx and print the message
+<em>ATEMPTING TO RESTART ACQUISITION</em> until new data is received.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>comport</strong> – str: Comport where the Rhino Receiver is connected to the edge device</p></li>
+<li><p><strong>brate</strong> – int: Baud rate for the Comport</p></li>
+<li><p><strong>pktlen</strong> – int: Expected bit size of the packet</p></li>
+<li><p><strong>flushq</strong> – obj: Instance of a Queue. This is where the raw data packages will be saved</p></li>
+<li><p><strong>logQ</strong> – obj: Instance of a Queue. This is where all the messages will be saved and then written to a log file</p></li>
+<li><p><strong>displayQ</strong> – obj: Instance of a Queue. This is where all the messages will be saved and then displayed on the log display console</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <em>pktlen</em> and <em>brate</em> parameters are read from the config file and can be updated in the
+acquisition_settings.cfg file</p>
+</div>
+<dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.SerialThread.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.SerialThread.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method representing the thread’s activity.</p>
+<p>You may override this method in a subclass. The standard run() method
+invokes the callable object passed to the object’s constructor as the
+target argument, if any, with sequential and keyword arguments taken
+from the args and kwargs arguments, respectively.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.SimulationThread">
+<em class="property">class </em><code class="sig-prename descclassname">dcrhino3.acquisition.real_time_acquisition_v4.</code><code class="sig-name descname">SimulationThread</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_input</span></em>, <em class="sig-param"><span class="n">file_flusher</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.SimulationThread" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.SimulationThread.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.SimulationThread.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method representing the thread’s activity.</p>
+<p>You may override this method in a subclass. The standard run() method
+invokes the callable object passed to the object’s constructor as the
+target argument, if any, with sequential and keyword arguments taken
+from the args and kwargs arguments, respectively.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="dcrhino3.acquisition.real_time_acquisition_v4.get_rhino_ttyusb">
+<code class="sig-prename descclassname">dcrhino3.acquisition.real_time_acquisition_v4.</code><code class="sig-name descname">get_rhino_ttyusb</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcrhino3.acquisition.real_time_acquisition_v4.get_rhino_ttyusb" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Finds the USB port where the Rhino receiver is connected</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>USB port where Rhino receiver is connected. None if it can’t be found.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
 </dd>
 </dl>
 </dd></dl>

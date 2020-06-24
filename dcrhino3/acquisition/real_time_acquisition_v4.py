@@ -1,6 +1,13 @@
-# Serial logger with no QT.
-# This version is with threads.
-# v0.2
+"""
+Real Time Acquisition Module
+
+This module handles all the rhino data acuisition related tasks.  It is divided in 5 threads:\n
+ - SerialThread: Receives individual data packets from Rhino receiver, filters corrupt packets and places the remaining good packets in a queue for further processing.
+ - FileFlusher.  Receives packets from serial queue, decodes them and splits them into info and data packets.  Data packets are saved into a flushQ for further processing
+ - CollectionDaemonThread: Reads packets from flushQ, generates the traces
+ -
+
+"""
 from __future__ import absolute_import, division, print_function
 import serial
 import threading
@@ -43,6 +50,12 @@ config = Config(acquisition_config=True)
 
 
 def get_rhino_ttyusb():
+    """
+        Finds the USB port where the Rhino receiver is connected
+    Returns:
+        str: USB port where Rhino receiver is connected. None if it can't be found.
+
+    """
     try:
         p = subprocess.check_output('ls -l /dev/serial/by-id/ | grep "usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_" | grep -Po -- "../../\K\w*"',shell=True)
         p = p.decode("utf-8")
@@ -76,6 +89,13 @@ run_folder_path = os.path.join(local_folder,
 
 
 class LogFileDaemonThread(threading.Thread):
+    """
+        Writes messages from the logQ to a log file.  Each file is one hour long and it changes on the hour.
+    Note:
+        The path where the logs are stored is read from constants.py
+    Args:
+        logQ: obj. Instance of a queue used to collect logging messages from various threads and write them to a file
+    """
     def __init__(self, logQ):
         threading.Thread.__init__(self)
         self.daemon = True
@@ -84,6 +104,10 @@ class LogFileDaemonThread(threading.Thread):
         self.output_file = open(self.filename, 'a')
 
     def run(self):
+        """
+            Thread activity.  Will change filenames when necessary and call the log method to write all the log
+            messages to a file
+        """
         m = "Started LogFileDaemon\n"
         logger.debug(m)
         self.logQ.put(m)
@@ -95,6 +119,11 @@ class LogFileDaemonThread(threading.Thread):
             time.sleep(1)
 
     def stop(self):
+        """
+           Runs at the end of the logging process.  It will write all the messages from the logQ to the current file
+           until the queue is empty and close the file.
+
+        """
         while not self.logQ.empty():
             message = self.logQ.get_nowait()
             self.output_file.write(message)
@@ -102,10 +131,20 @@ class LogFileDaemonThread(threading.Thread):
         self.output_file.close()
 
     def change_files(self, filename):
+        """
+            Close the current file and create one with the new filename
+        Args:
+            filename: str. Full path for the new file to be created.  The it will have the following format '%Y_%m_%d_%H.log'
+
+        """
         self.output_file.close()
         self.output_file = open(filename, 'a')
 
     def log(self):
+        """
+            Write all the messages from logQ into the current file, but does not close the file.
+
+        """
         while not self.logQ.empty():
             message = self.logQ.get_nowait()
             self.output_file.write(message)
@@ -113,6 +152,19 @@ class LogFileDaemonThread(threading.Thread):
 
 
 class Packet_v11(object):
+    """
+        Class used to handle the raw data transmitted from the Rhino receiver (Firmware version 1.1) and
+        convert it into a packet object that contains all the necessary information as attributes and is easier to
+        handle and pass long.
+
+        Each raw packet is 21 bits long (for v1.1) and contains a begin of frame bit, a message identifyer bit (data or
+        info), rx_sequence (sequence number assigned at the receiver), data bits (tx_sequence, x, y, z, rssi for data
+        packets and rssi, temp, voltage, and sleep_time for info packets) and an end of frame bit.
+
+        tx_sequence is assigned at the Rhino Transmitter.
+    Args:
+        q_data: struct: raw data packet from Rhino receiver
+    """
     def __init__(self, q_data=None):
         self.packet_type = 0  # 0=data_packet, 1=info_packet
         self.rx_sequence = 0
@@ -129,6 +181,19 @@ class Packet_v11(object):
         self.packet_decoder(q_data)
 
     def calc_rssi_value(self, rssi_val):
+        """
+            Convert the reported signal strength to dBs.  This formula was provided by the firmware developer as is.
+            In order to conver the signal strength to dB's there needs to be an offset of -72 applied to the
+            calculated value.  Ideally, this offset is applied in the Rhino receiver, but if for any reason it is
+            not, then it can be applied in this conversion. This rssi_offset is read directly from the configuration
+            file and can be found and edited in the acquisition_settings.cfg
+        Args:
+            rssi_val: int: Signal strength value as reported by the Rhino receiver
+
+        Returns:
+            float: Calculated signal strength in dB's
+
+        """
         offset = config.rssi_offset
         if rssi_val >= 128:
             calc_val = ((rssi_val - 256)/2.) - offset
@@ -137,16 +202,42 @@ class Packet_v11(object):
         return calc_val
 
     def calc_temp_in_c(self, val):
+        """
+            Converts the temperature value reported by the Rhino receiver to Celsius. This formula was provided by the
+            firmware developer as is
+        Args:
+            val: int: Value representing the board temperature
+
+        Returns:
+            float: Calculated board temperature in Celsius
+
+        """
         if val & 0x8000:
             val = val - 0xFFF0
         val = (val >> 4) * 0.0625
         return val
 
     def calc_batt(self, val):
+        """
+            Converts the battery level value reported by the Rhino receiver to voltage. This formula was provided by
+            the firmware developer as is
+        Args:
+            val: int: Value representing the battery level
+
+        Returns:
+            float: Calculated battery voltage
+
+        """
         val = ((val/4096.)*13.2)  # +0.5
         return round(val, 2)
 
     def packet_decoder(self, pkt):
+        """
+            Decodes the raw packet struct into a packet object and sets it's attributes accordingly
+        Args:
+            pkt: struct: Raw value as transmitted to the edge device by the Rhino Receiver
+
+        """
         if pkt is None:
             return
         try:
@@ -173,7 +264,20 @@ class Packet_v11(object):
             self.rssi=self.calc_rssi_value(lst[7])
 
 
+#TODO: Rename Class since it no longer handles files and it only unpacks the information from each raw packet
 class FileFlusher(threading.Thread):
+    """
+    This class will read a raw packet from the serial Q (flushQ), unpack it, and classify it as an info or data
+    packet.  If it is a data packet, it will save a dictionary with the decoded packet along with other necessary
+    identifying information into a bufferQ for further processing in another thread.  In case of an info packet,
+    a message will be displayed in the log display console and the system's temperature, battery level and sleep
+    interval will be updated.
+
+    Args:
+            flushq: obj: Instance of a Queue.  Contains the raw packets that have been received by the SerialThread
+            logQ: obj: Instance of a Queue.  Global variable that is accessed by all threads for logging purposes
+            displayQ: obj: Instance of a Queue.  Global variable that is accessed by all threads to display information on the system's log display console.
+    """
 
     def __init__(self, flushq, logQ, displayQ):
         threading.Thread.__init__(self)
@@ -200,6 +304,18 @@ class FileFlusher(threading.Thread):
         self._drift = 0
 
     def first_packet_received(self, packet, timestamp):
+        """
+            This method is run when the first packet of the the acquisition session is received or when the Rhino
+            transmitter's clock counter rolls over, and it assigns the packet an epoch timestamp based on the
+            system's clock. This timestamp is recorded when the packet is read from the serial queue.  This timestamp
+            does not take into account the latency between the packet generation in the Rhino Transmitter and when
+            this process takes place.  However, this time offset is negligible for our application.
+
+            A few class variables are updated for subsequent timing calculations.
+        Args:
+            packet: obj: Instance of class Packet_V11
+            timestamp: float: Epoch based timestamp generated when the packet was read from the serial queue
+        """
         m = "First packet received at t0 {} with delta T of {}\n".format(repr(timestamp), delta_t)
         logger.debug(m)
         self.logQ.put(m)
@@ -217,9 +333,48 @@ class FileFlusher(threading.Thread):
         logger.info(m)
 
     def get_data_from_q(self):
+        """
+            Reads a raw packet from the flushQ (serial queue)
+        Returns:
+            struct: Raw packet
+        """
         return self.flushq.get(False, 0.001)
 
     def calculate_packet_timestamp(self, packet):
+        """
+            Receives a packet and calculates the timestamp associated with it based on the sequence number generated
+            on the Rhino transmitter.  This method calculates the elapsed_tx_sequences by comparing the system's last
+            saved sequence and the current packet's sequence. Ideally only one sequence has elapsed meaning that
+            there was no missed packets in the transmission. The current packet's timestamp is calculating by
+            multiplying elapsed_tx_sequences by delta_t (this global variable is 1/sampling_rate, 500 ms for a 2000
+            Hz sampling rate) and adding that to the system's last saved timestamp.
+
+            Another important aspect of this method is that it updates a flag on each packet to identify if there
+            were more than a predetermined number of allowed missing packets in a row.  This flag will be used later
+            in the trace processing to select an appropriate interpolation method.
+
+            We know that we are expecting sampling_rate samples per second (usually 2000).  So we can use the
+            elapsed_tx_sequences to calculate an index of each packet in the trace.  We use this index instead
+            of a simple counter because we have to account for the possibility of missed pakets.  However,
+            sometimes that index number can be slightly larger, so we track that surplus of packets in the variable
+            offset.  This variable will be used once we change from one second in time to the next to adjust the
+            position of the first packet received for the next second.
+
+            Once we reach the expected number of packets per second, we check and adjust for clock drift. Since each
+            packet's timestamp is calculated based on the edge device's clock, there is drift associated
+            with this calculation.  We have determined an acceptable clock drift. When the calculated drift is
+            greater than the pre-established threshold, the current's packet time will not be calculated anymore but
+            instead will be set as the system's current time.
+
+            Every time we swithc from one second to the next or there is a clock drift adjustment, a message is
+            displayed in the log display console.  The variable counter_changes represents the number of times we
+            have switched from one second in time to the next.
+        Args:
+            packet: obj: Instance of Packet_v11
+
+        Returns: obj: Same packet that was received with an updated timestamp
+
+        """
         reference = time.time()
         self.elapsed_tx_sequences = packet.tx_sequence - self.sequence
         if self.elapsed_tx_sequences > missed_packets_threshold:
@@ -259,9 +414,21 @@ class FileFlusher(threading.Thread):
 
     @property
     def drift(self):
+        """
+        Returns:
+            float: Calculated clock drift on the last second in time processed
+
+        """
         return self._drift
 
     def save_row_to_processing_q(self, packet):
+        """
+            Saves dictionary with the packet and extra identifiers information to the bufferQ that will be accessed
+            by other threads to generate traces
+        Args:
+            packet: obj. Instance of Packet_v11
+
+        """
         row = {"timestamp": np.float64(self.current_timestamp),
                "packet": packet,
                "sequence": self.sequence,
@@ -269,13 +436,37 @@ class FileFlusher(threading.Thread):
                "serial_number": self.rhino_serial_number}
         self.bufferQ.put(row)
 
+#TODO: Evaluate the need of this event
     def stop(self):
+        """
+            Intended to trigger an event when the thread is stopped.
+
+        """
         self.stope.set()
 
     def run(self):
+        """
+            Thread activity.  It will run the method run_v11
+
+        """
         self.run_v11()
 
     def run_v11(self):
+        """
+            Retrieves a packet from the serial q, unpacks it's information and classifies it as a
+            data or info packet.  If it is an info packet, the values for current_temperature (degC), current_batt
+            (voltage) and sleep_time (sec) will be updated. These values will be used for all subsequent packets
+            until a new info message is received.
+
+            if it is a data packet, the timestamp is calculated and saved in a dictionary to a bufferQ for further
+            processing on the CollectionDaemonThread.
+
+            This method will log/display a message when the first packet in the acquisition session is received,
+            it will ignore duplicated packets (same tx_sequence as previous packet) and will adjust for clock
+            rollover (tx_sequence less than previous packet).  Another message will be displayed when the an info
+            packet is received.
+
+        """
         m = "Started File Flusher 1.1\n"
         logger.debug(m)
         self.logQ.put(m)
@@ -341,11 +532,45 @@ class FileFlusher(threading.Thread):
 
 
 class DummyComport:
+    """
+        Dummy class needed only to run acquisition simulations.  It only has one variable, corrupt_packets and it's
+        always set at zero.
+    """
     def __init__(self):
         self.corrupt_packets = 0
 
 
 class SerialThread(threading.Thread):
+    """
+        Class that handles the data transfer from Rhino receiver to the edge device.  Upon starting, the thread will
+        send a start_rx command to the Rhino receiver that will enable the data transmission.  It will then
+        continuously receive raw packets through the specified comport, make sure they were not corrupted during the
+        transmission and then save them to a flushQ for further processing.
+
+        This thread will look for *pktlen* data chunks and will confirm that the beginning of frame and end of frame
+        bits are ``0x002`` and ``0x003`` respectively.  If the size is correct and the expected bits are found,
+        the packet is deemed good and saved in the flushQ.  If not, the corrupt_packets property is incremented by one
+        and the serial handler will begin  reading one bit at a time until the next ``0x003`` is found.  At this
+        point it is assumed that we reached  another end of frame bit and will read another 21 bits assuming that we
+        are reading a new packet.  If this  new assumed packet passes the validity test, it is then saved to the
+        flusQ and we resume the process  normally.  Otherwise, we return to reading one bit at a time trying to find
+        the next end of frame bit until we successfully read a new packet.
+
+        If no data is received through the comport, the thread will run start_rx and print the message
+        *ATEMPTING TO RESTART ACQUISITION* until new data is received.
+    Args:
+        comport: str: Comport where the Rhino Receiver is connected to the edge device
+        brate: int: Baud rate for the Comport
+        pktlen: int: Expected bit size of the packet
+        flushq: obj: Instance of a Queue. This is where the raw data packages will be saved
+        logQ: obj: Instance of a Queue. This is where all the messages will be saved and then written to a log file
+        displayQ: obj: Instance of a Queue. This is where all the messages will be saved and then displayed on the log display console
+
+    Note:
+        The *pktlen* and *brate* parameters are read from the config file and can be updated in the
+        acquisition_settings.cfg file
+
+    """
     def __init__(self, comport, brate, pktlen, flushq, logQ, displayQ):
         threading.Thread.__init__(self)
         self.daemon = True
@@ -478,6 +703,7 @@ class SerialThread(threading.Thread):
                 #             time.sleep(1)
                 #             self.cport.close()
                 #             self.cport = serial.Serial(get_rhino_ttyusb(), self.brate, timeout=1.0)
+
 
 class SimulationThread(threading.Thread):
     def __init__(self, file_input, file_flusher):

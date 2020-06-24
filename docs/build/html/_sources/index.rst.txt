@@ -18,6 +18,9 @@ Indices and tables
 .. automodule:: bin.rhino_gui
    :members:
 
+.. automodule:: dcrhino3.acquisition.merge_gui
+   :members:
+
 .. automodule:: dcrhino3.acquisition.rhino_threads
    :members: NetworkThread, GPSThread
 
@@ -25,6 +28,9 @@ Indices and tables
    :members:
 
 .. automodule:: dcrhino3.acquisition.daily_health_plotter
+   :members:
+
+.. automodule:: dcrhino3.acquisition.real_time_acquisition_v4
    :members:
 
 .. automodule:: dcrhino3.feature_extraction.external_feature_derivations

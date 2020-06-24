@@ -43,7 +43,8 @@ logger.info("Python version is {}".format(sys.version))
 
 def goodbye():
     """
-        Clean-up when the GUI is closed.  It wull run stop_rx and will finalize the realtime temporary h5 files
+        Clean-up when the GUI is closed without properly stoping all other subprocesses and using the exit button.  It
+        will run stop_rx and finalize the realtime temporary h5 files
 
     """
     global BAUD_RATE
@@ -52,11 +53,11 @@ def goodbye():
 
 def stop_rx(active, baud_rate):
     """
-    Will close the usb serial port and send a command to Rhino receiver to stop sending data to ege device
+    Will close the usb serial port and send a command to Rhino receiver to stop sending data to ege device and
+    prepares it to listen for a new start_rx command
 
     Args:
-        active: bool:  Represents the active status of data transmission from Rhino receiver and edge device. If
-        true, transmission was active
+        active: bool:  Represents the active status of data transmission from Rhino receiver and edge device. If true, transmission was active
         baud_rate: int: baud rate of usb serial connection
     """
     try:
@@ -271,12 +272,22 @@ class GUI():
             logging.info("Rsync Started")
 
     def rsync_daemon_stop(self):
+        """
+
+            Kills the rsync process to stop uploading files to the cloud
+        """
         if self.rsync_daemon_process is not None:
             os.system("pkill -f sendfiles.sh --signal SIGTERM")
             self.rsync_daemon_process = None
             logging.info("Rsync Stopped")
 
+    #TODO: Rename because it is not a daemon
     def playback_daemon(self):
+        """
+
+            Prompts the file that needs to be played back and runs another python script. This only works for raw
+            data (RTR*.h5 files).
+        """
         fname = tkFileDialog.askopenfilename(initialdir=DATA_PATH, defaultextension=".h5")
         if fname is None:
             return
@@ -290,26 +301,57 @@ class GUI():
         logging.info("Played back file {}".format(fname))
 
     def playback_daemon_stop(self):
+        """
+
+            Kill the payback process if there is one active
+        """
         if self.playback_daemon_process is not None:
             self.playback_daemon_process.terminate()
             self.playback_daemon_process = None
 
     def rhino_installation_settings(self):
+        """
+
+            Launches the Configuration File GUI
+        """
         rig.main(self.config)
 
     def update_h5_headers(self):
+        """
+
+            Launches the Header Updating GUI
+        """
         uhg.main(self.config)
 
     def merge_files(self):
+        """
+
+            Launches the File Merging GUI
+        """
         mfg.main(self.config)
 
     def stop_rx(self, active):
+        """
+            Stops the data transfer from the Rhino receiver to the edge device by calling this module's stop_rx method
+        Args:
+            active: bool. Represents the active status of data transmission from Rhino receiver and edge device. If true, transmission was active
+        """
         stop_rx(active, self.config.baud_rate)
 
     def rename_temp_files(self):
+        """
+
+            Renames temporary rhino files by calling this module's rename_temp_files method
+        """
         rename_temp_files(self.config.local_folder)
 
     def exit(self):
+        """
+
+
+            Clean-up routine executed when the exit button is pressed.  Stops all other subprocesses and closes the
+            GUI window.
+        """
         m = ("{}: GUI EXITED".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
         self.acquisition_daemon_stop()
         self.playback_daemon_stop()
