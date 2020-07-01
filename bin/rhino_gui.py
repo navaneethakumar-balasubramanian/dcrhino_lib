@@ -179,6 +179,10 @@ class GUI():
             Main daemon that controls the data acquisition of rhino data.  It will start the other required
             subprocesses, system_health_plotter, sensor_stats_plotter, and the experimental rhino_gps_tracker.  These
             subprocesses are assigned to different processors to avoid interference with the main acquisition routine.
+
+            If the daemon is started in debug mode, all the error messages and exceptions encountered will be
+            displayed in the terminal that started the rhino_gui.py process.  Otherwise, they will be saved in a run
+            error log file located in the default logs folder.
         """
         # load_config_file()
         if self.acquisition_process is None:

@@ -372,7 +372,8 @@ class FileFlusher(threading.Thread):
         Args:
             packet: obj: Instance of Packet_v11
 
-        Returns: obj: Same packet that was received with an updated timestamp
+        Returns:
+            obj: Same packet that was received with an updated timestamp
 
         """
         reference = time.time()
@@ -415,9 +416,7 @@ class FileFlusher(threading.Thread):
     @property
     def drift(self):
         """
-        Returns:
             float: Calculated clock drift on the last second in time processed
-
         """
         return self._drift
 
@@ -606,8 +605,6 @@ class SerialThread(threading.Thread):
         """
             Sends a *stop* command to the Rhino receiver to discontinue the data transmission to the edge device and
             closes the serial port. It also triggers a stop event for the thread
-        Returns:
-
         """
         self.cport.write(bytearray("stop\r\n", "utf-8"))
         self.cport.close()
@@ -830,6 +827,12 @@ class CollectionDaemonThread(threading.Thread):
 
         The raw packets will be saved into an RTR file without any processing, so that the raw data is always
         available.  A dictionary containig the resulting acorr traces will be saved to tracesQ for further handling
+    Args:
+        bufferQ: obj. Instance of a Queue.  This is where FileFlusher thread saved the non-corrupt data packets as Packet_v11 objects
+        tracesQ: obj. Instance of a Queue. This is where the acorr_traces will be saved as part of a dictionary
+        logQ: obj: Instance of a Queue. This is where all the messages will be saved and then written to a log file
+        displayQ: obj: Instance of a Queue. This is where all the messages will be saved and then displayed on the log display console
+
     """
     def __init__(self, bufferQ, tracesQ, logQ, displayQ):
         threading.Thread.__init__(self)
@@ -842,11 +845,55 @@ class CollectionDaemonThread(threading.Thread):
         self.displayQ = displayQ
 
     def calculate_initial_tracetime_from_timestamp(self, timestamp):
+        """
+            Calculates the initial timestamp of a trace based on the timestamp from the first packet recorded for
+            said trace.  The initial timestamp is rounded to the closest multiple of *delta_t* (1/*sampling_rate*)
+        Args:
+            timestamp: float: Epoch timestamp from the first recorded packet of a trace
+
+        Returns:
+            float: Trace's initial epoch timestamp rounded to the closest multiple of *delta_t* (1/*sampling_rate*)
+
+        """
         fraction = timestamp - int(timestamp)
         offset = int(fraction / delta_t)
         return timestamp - delta_t * offset
 
     def run(self):
+        """
+            Main thread activity. This method will read a packet from the bufferQ and append it to a temporary list,
+            *buffer_this_second*.  It will repeat this process until a packet is read and it does not belong to the
+            second in time that is being currently being processed.  At this point, the data from
+            *buffer_this_second* will be saved into a realtime raw file (RTR.h5).  There is a check to see if the RTR
+            file needs to be changed, depending on the length of files pre-established in the configuration file.
+
+            At this point, the data of the each indivivual raw axis (X, Y, Z) is mapped into the desired components,
+            *components_to_process* (axial, tangential, radial), will then be calibrated (in reality there is no
+            calibration, it is simply transformed from ADC counts to voltage and then G's), interpolated and then auto
+            correlated.
+
+            The interpolation process is done in order to ensure that there are always *sampling_rate* samples in
+            each trace, no more and no less.  There are two possible types of interpolation performed, quadratic and
+            linear;  quadratic interpolation is the default.  However, if there is at least one packet in the trace
+            that was labeled as invalid (meaning that between that packet and the previous packet there were more
+            than the maximum amount of missing packets in a row permitted), linear interpolation will be used.  The
+            interpolation is done at equally spaced samples, 1/*sampling_rate* and beginning at the calculated
+            *initial_trace_timestamp*.
+
+            The resulting acorr traces are placed in a dictionary, along with the raw data, trace timestamp,
+            original timestamps, interpolated timestamps, health information (battery, rssi, temperature),
+            maximum/minimum acceleration for each component, how many seconds have been processed (*counter_changes*),
+            edge device's disk usage and the file name where the raw data was saved.  This dictionary is then saved
+            in the tracesQ for further processing.
+
+            There is an option that allows the system to remove the acceleration mean for each component prior to
+            calculate the maximum/minimum acceleration seen in the trace.  This is used in case there is a DC
+            component in the accelerometer.  This does not change the raw data or the interpolated/calibrated data.
+            It is only used to calculate the magnitude of the maximum acceleration peak in the trace.
+
+            There is also a messaged logged and display that shows the timestamp of the trace and how many samples
+            were received for that particular second in time.
+        """
         m = "Started Collection Daemon\n"
         logger.debug(m)
         self.logQ.put(m)
@@ -987,8 +1034,38 @@ class CollectionDaemonThread(threading.Thread):
                 self.bufferThisSecond = list()
                 interp_kind = "quadratic"
 
-
+#TODO: split all of this routine's task into smaller, specific routines
+#TODO: move away from reading and writing the numpy file and using a Q instead
 def main_run(run=True, **kwargs):
+    """
+        Main routine of the thread.  It instantiates and runs all the threads associated with the rhino data
+        acquisition, handles the plotting of the raw data, displays the messages on the logging console,
+        updates the system health indicators in the dashboard, plots the health line charts,  saves the acorr traces
+        to a file, and saves the health data to a temporary numpy file (system_health.npy, located in the default
+        *RAM_PATH*)
+
+        if the simulation option is not selected, the rhino data acquisition via the serial port will commence.
+        Otherwise, a raw RTR file will be read and the data sent upstream the processing.
+
+        All the threads are started in different processors so that they won't interfere with each other.
+
+        To handle all the health plots, all the necessary health indicators are appended to a numpy array every
+        second.  This array is stored in a RAM folder as a physical file and is used for the health line charts.
+
+        The signal plots have two components. Both components are configurable via the configuration file.  By
+        default the plotter will show the axial component in the main, upper plot and the tangential component in the
+        secondary, bottom plot.  The y axis for both plots will be G's and are auto scaled and the x axis represents
+        the number of samples.  The data plotted is the interpolated data.  In this section there is also the option
+        to remove the mean, in order to center it at the zero axis.  These plots are updated every second.
+
+        
+    Args:
+        run:
+        **kwargs:
+
+    Returns:
+
+    """
 
     if "args" in kwargs.keys():
         simulation = kwargs["args"].simulation
