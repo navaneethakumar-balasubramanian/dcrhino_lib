@@ -3,8 +3,8 @@ Real Time Acquisition Module
 
 This module handles all the rhino data acuisition related tasks.  It is divided in 5 threads:\n
  - SerialThread: Receives individual data packets from Rhino receiver, filters corrupt packets and places the remaining good packets in a queue for further processing.
- - FileFlusher.  Receives packets from serial queue, decodes them and splits them into info and data packets.  Data packets are saved into a flushQ for further processing
- - CollectionDaemonThread: Reads packets from flushQ, generates the traces
+ - FileFlusher.  Receives packets from serial queue, decodes them and splits them into info and data packets.  Data packets are saved into a bufferQ for further processing
+ - CollectionDaemonThread: Reads packets from bufferQ, generates the traces
  -
 
 """
@@ -544,7 +544,7 @@ class SerialThread(threading.Thread):
     """
         Class that handles the data transfer from Rhino receiver to the edge device.  Upon starting, the thread will
         send a start_rx command to the Rhino receiver that will enable the data transmission.  It will then
-        continuously receive raw packets through the specified comport, make sure they were not corrupted during the
+        continuously receive raw packets through the specified serial port, make sure they were not corrupted during the
         transmission and then save them to a flushQ for further processing.
 
         This thread will look for *pktlen* data chunks and will confirm that the beginning of frame and end of frame
@@ -556,11 +556,11 @@ class SerialThread(threading.Thread):
         flusQ and we resume the process  normally.  Otherwise, we return to reading one bit at a time trying to find
         the next end of frame bit until we successfully read a new packet.
 
-        If no data is received through the comport, the thread will run start_rx and print the message
+        If no data is received through the serial port, the thread will run start_rx and print the message
         *ATEMPTING TO RESTART ACQUISITION* until new data is received.
     Args:
-        comport: str: Comport where the Rhino Receiver is connected to the edge device
-        brate: int: Baud rate for the Comport
+        comport: str: Serial port where the Rhino Receiver is connected to the edge device
+        brate: int: Baud rate for the serial port
         pktlen: int: Expected bit size of the packet
         flushq: obj: Instance of a Queue. This is where the raw data packages will be saved
         logQ: obj: Instance of a Queue. This is where all the messages will be saved and then written to a log file
@@ -589,20 +589,44 @@ class SerialThread(threading.Thread):
         self.cmd = "stop\r\n"
 
     def get_cport(self):
+        """
+
+        Returns:
+            obj: instance of a serial port class used for communications between Rhino Receiver and the edge device
+        """
         return self.cport
 
     def start_rx(self):
+        """
+            Sends a *ready* command to the Rhino receiver to trigger the data transmission to the edge device
+        """
         self.cport.write(bytearray("ready\r\n", "utf-8"))
 
     def stop_rx(self):
+        """
+            Sends a *stop* command to the Rhino receiver to discontinue the data transmission to the edge device and
+            closes the serial port. It also triggers a stop event for the thread
+        Returns:
+
+        """
         self.cport.write(bytearray("stop\r\n", "utf-8"))
         self.cport.close()
         self.stope.set()
 
     def do_stop_cmd(self):
+        """
+            Sends a *stop* command to the Rhino receiver to discontinue the data transmission to the edge device while
+            maintaining the serial port open
+        """
         self.cport.write(bytearray("stop\r\n", "utf-8"))
 
+    #TODO: Implement the use of this method
     def restart_rx(self):
+        """
+            This method is intended to restart the serial port when necessar.  It is not currently being used and
+            needs further testing
+
+        """
         self.cport.write(bytearray("stop\r\n", "utf-8"))
         m = '{}: STOPPING SERIAL PORT\n'.format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
         logger.debug(m)
@@ -621,12 +645,44 @@ class SerialThread(threading.Thread):
 
     @property
     def corrupt_packets(self):
+        """
+
+        Returns:
+            int: Number of corrupt packets found since the beggingng of the acquisition session
+        """
         return self._corrupt_packets
 
     def run(self):
+        """
+            Thread activity. Will run the *run_v11* routine
+        """
         self.run_v11()
 
     def run_v11(self):
+        """
+            This method will look for *pktlen* data chunks and will confirm that the beginning of frame and end of frame
+            bits are ``0x002`` and ``0x003`` respectively.  If the size is correct and the expected bits are found,
+            the packet is deemed good and saved in the flushQ.  If not, the corrupt_packets property is incremented by one
+            and the serial handler will begin  reading one bit at a time until the next ``0x003`` is found.  At this
+            point it is assumed that we reached  another end of frame bit and will read another 21 bits assuming that we
+            are reading a new packet.  If this  new assumed packet passes the validity test, it is then saved to the
+            flusQ and we resume the process  normally.  Otherwise, we return to reading one bit at a time trying to find
+            the next end of frame bit until we successfully read a new packet. A message will be displayed showing if
+            the corrupt packet found was of the correct expected length or if it was truncated (e.g. loss of
+            communication between edge device and rhino receiver during transmission)
+
+            The Rhino firmware is designed so that after an info message the Rhino transmitter will go to sleep for a
+            set amount of time and then it will wake up and continue transmitting data.  This method assumes that
+            after receiving an info message the transmitter will go to sleep and will set the rhino acquisition
+            system's transmission status as sleeping (tx_status = 0).  Once a new data packet is received,
+            the status will be changed back to transmitting (tx_status = 1).
+
+            If no data is received through the serial port, the thread will run start_rx and print the message
+            *ATEMPTING TO RESTART ACQUISITION* until new data is received.
+
+            Any exception encountered will be diplayed and logged, but the thread will attempt to resume normal
+            operations
+        """
         m = "Started Serial 1.1\n"
         logger.debug(m)
         self.logQ.put(m)
@@ -706,6 +762,20 @@ class SerialThread(threading.Thread):
 
 
 class SimulationThread(threading.Thread):
+    """
+        This thread allows to read a previously recorded raw file (RTR) and stream it's data through the acquisition
+        system as if it was recording real time from a rhino sensor.  This is useful to troubleshoot some of the
+        rhino data processing tasks or for demonstrations.
+
+        This process will also generate another RTR and RTA files accordingly depending on the settings in the
+        configuration file.
+
+        The read packets are then saved into the flushQ so that the remaining threads can be run seamlessly
+
+    Args:
+        file_input: str: Path to the RTR file that will be used for the simulation
+        file_flusher: obj: Instance of a FileFlusher class
+    """
     def __init__(self, file_input, file_flusher):
         threading.Thread.__init__(self)
         self.daemon = True
@@ -714,6 +784,10 @@ class SimulationThread(threading.Thread):
         self.h5 = H5Helper(h5py.File(file_input, "r"), load_ts=True, load_xyz=True)
 
     def run(self):
+        """
+            Thread main activity. Will read a raw RTR file and create a Packet_v11 instance for each row in the file
+            and save that packet into the flushQ
+        """
         seq = self.h5.load_axis("seq")
         ts = self.h5.load_axis("ts")
         batt = self.h5.load_axis("batt")
@@ -746,8 +820,17 @@ class SimulationThread(threading.Thread):
             self.file_flusher.save_row_to_processing_q(packet)
         sys.exit(0)
 
-
+#TODO: Make traces a variable time length
 class CollectionDaemonThread(threading.Thread):
+    """
+        This thread will read raw packets from bufferQ and group them into a trace.  At the moment, each trace is one
+        second long.  The thread will calculate the timestamp of the thread based on the timestamp of the initial
+        packet received for said trace, calibrate, interpolate, and auto correlate each of the axis components and
+        produce the acorr traces.
+
+        The raw packets will be saved into an RTR file without any processing, so that the raw data is always
+        available.  A dictionary containig the resulting acorr traces will be saved to tracesQ for further handling
+    """
     def __init__(self, bufferQ, tracesQ, logQ, displayQ):
         threading.Thread.__init__(self)
         self.daemon = True
