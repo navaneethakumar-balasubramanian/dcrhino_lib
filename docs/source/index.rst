@@ -33,6 +33,9 @@ Indices and tables
 .. automodule:: dcrhino3.acquisition.real_time_acquisition_v4
    :members:
 
+.. automodule:: dcrhino3.acquisition.rhino_installation_gui
+   :members:
+
 .. automodule:: dcrhino3.feature_extraction.external_feature_derivations
    :members:
 .. automodule:: dcrhino3.feature_extraction.feature_extractor_j2

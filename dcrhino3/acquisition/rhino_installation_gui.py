@@ -3,6 +3,8 @@
 """
 Created on Tue Aug 24 00:58:14 2018
 
+This module generates the main GUI where the user can modify the configuration file and some of its parameters
+
 @author: natal
 """
 
@@ -31,6 +33,12 @@ file_logger = init_logging_to_file(__name__)
 
 
 def get_rhino_ttyusb():
+    """
+    Search the USB port where the rhino receiver is connected to the edge device
+
+    Returns:
+        str: USB port where the rhino receiver is connected to edge device
+    """
     # p = subprocess.check_output('ls -l /dev/serial/by-id/ | grep "usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_" | grep -Po -- "../../\K\w*"',shell=True)
     p = subprocess.check_output('ls -l /dev/serial/by-id/ | grep "UART" | grep -Po -- "../../\K\w*"', shell=True)
     p = p.decode("utf-8")
@@ -73,8 +81,62 @@ client_names = [StandardString(str(x["name"])) for x in clients_json["clients"]]
 mine_names = ["SELECT_CLIENT_FIRST"]
 
 
+#TODO: The logic that calculates and updates Sensor position and distances needs to be fixed.  The calculations are
+# correct, but sometimes it will not update the values properly until the GUI is reloaded.
 
+#TODO: Populate the 4th tab with the parameters to control the graphical displays
+
+#TODO: Incorporate the firmware GUI actions into the rhino gui to have everythin unified
 class GUI():
+    """
+    Graphical User Interface that allows the user to modify the configuration file and its most common
+    parameters. This interface is split into 5 tabs.
+
+    The first tab, General, is where the higher level
+    identification information is specified (client, mine, country, rig info, etc)
+
+    The second tab, Installation, contains the parameters of the physical information related to the sensor and
+    drill.  In here, the user specifies the drillstring and sensor configuration.
+
+    Note:
+        It is important to note that the *Sensor Ideal Sampling Rate" is the expected number of samples per second
+        according to what the sensor has been configured to in the firmware.  However, this will not be used for any
+        of the processing steps.
+        
+    The third tab, Processing, has the parameters that will be used to process the data both in the edge device
+    and in the cloud.  This is not a full list, but it sets the minimum parameters that are needed during the
+    initial steps of the processing.
+
+    It also contains the parameters used in the serial port configuration to communicate with the rhino receiver,
+    as well as transmission parameters to upload data to the cloud.
+
+    The playback parameters are the sensitivity settings used to correctly convert the voltage output of the
+    accelerometer into G's.  This values are automatically set once the user selects the rhino sensor version (1.0 or
+    1.1) and G Range (25, 50, 100, 200, 500, 2000).  These values are only applied to rhino sensor data; data from
+    rhino recorder is already output in G's.  The user can adjust these values as needed but confirmation of the
+    correct values is imperative.
+
+    Note:
+         If for any reason the sensitivity values were entered incorrectly, the user will need to playback the raw data
+         with the corrected values and regenerate the RTA files.  The raw data, however, is not affected by an
+         incorrect value and, therefore, no loss of data will result in incorrect settings.
+
+    Note:
+        The parameter *Output Sampling Rate* is the value that will be used during the interpolation and to calculate
+        further upsampling values along the processing pipeline.  This value should not be lower than
+        *Ideal Sampling Rate* because that would decimate the data and there is no antialias filter being applied.
+
+    The fourth tab, Rhino, is empty at the moment but it was intented to have the parameters to control the graphical 
+    displays in the edge device
+    
+    The fith tab, Firmware, allows the user to enter to the GUI to adjust firmware settings in the transmitter and 
+    receiver.  These GUI were developed by the manufactured and so we are only providing an interface to launch them.
+
+
+    Args:
+        master: obj: Instance of tkinter.Tk()
+        config: obj: Instance of Config2
+    """
     def __init__(self, master, config):
         self.loaded = False
         self.tx_configuration_process = None
@@ -806,6 +868,9 @@ class GUI():
 
 
     def load_file(self):
+        """
+        Populate all the fields with the current values in the config attribute
+        """
 
         self.country.set(StandardString(self.config.country))
         self.company.set(StandardString(self.config.company))
@@ -1048,7 +1113,16 @@ class GUI():
 
 
     def save_file(self, write_to_disk=True):
-        # pass
+        """
+        Update the config attribute based on what the values in the GUI are. By default, only the config attribute
+        will be updated in memory and the changes won't be saved to the physical file unless the user saves them.
+        This is so that the user can load a previous file, make the necessary changes and save as a new file without
+        overwriting the config file of the local environment.
+
+        Args:
+            write_to_disk: boolean: If true, the changes will be written to a file.  Otherwise, they will remain in memory only.
+
+        """
         if float(self.sensor_distance_to_shocksub.get().split(" ")[0]) < 0 or \
                 float(self.sensor_distance_to_source.get().split(" ")[0]) < 0:
             tkMessageBox.showinfo("Short between the chair and the keyboard",

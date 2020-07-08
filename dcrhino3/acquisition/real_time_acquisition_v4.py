@@ -1,11 +1,15 @@
 """
 Real Time Acquisition Module
 
-This module handles all the rhino data acuisition related tasks.  It is divided in 5 threads:\n
- - SerialThread: Receives individual data packets from Rhino receiver, filters corrupt packets and places the remaining good packets in a queue for further processing.
- - FileFlusher.  Receives packets from serial queue, decodes them and splits them into info and data packets.  Data packets are saved into a bufferQ for further processing
- - CollectionDaemonThread: Reads packets from bufferQ, generates the traces
- -
+This module handles all the rhino data acuisition related tasks.  It is divided in 6 threads:
+ - LogFileDaemonThread: Logs information and errors into the log display console and a physical log file
+ - SerialThread: Receives individual data packets from Rhino receiver, filters corrupt packets and places the remaining good packets in a queue (flushQ) for further processing.
+ - FileFlusher:  Receives packets from serial queue (flushQ), decodes them and splits them into info and data packets.  Data packets are saved into a bufferQ for further processing
+ - CollectionDaemonThread: Reads packets from bufferQ, generates the traces and save them to tracesQ for further processing.
+ - SimulationThread: Will take the place of SerialThread and instead of receiving packets from serial port, it will read a raw RTR file and stream that data to the remaining threads
+ - main_run: Will read traces from traceQ and handle all the plotting and system health display.
+
+ @author: Natal
 
 """
 from __future__ import absolute_import, division, print_function
@@ -267,11 +271,11 @@ class Packet_v11(object):
 #TODO: Rename Class since it no longer handles files and it only unpacks the information from each raw packet
 class FileFlusher(threading.Thread):
     """
-    This class will read a raw packet from the serial Q (flushQ), unpack it, and classify it as an info or data
-    packet.  If it is a data packet, it will save a dictionary with the decoded packet along with other necessary
-    identifying information into a bufferQ for further processing in another thread.  In case of an info packet,
-    a message will be displayed in the log display console and the system's temperature, battery level and sleep
-    interval will be updated.
+        This class will read a raw packet from the serial Q (flushQ), unpack it, and classify it as an info or data
+        packet.  If it is a data packet, it will save a dictionary with the decoded packet along with other necessary
+        identifying information into a bufferQ for further processing in another thread.  In case of an info packet,
+        a message will be displayed in the log display console and the system's temperature, battery level and sleep
+        interval will be updated.
 
     Args:
             flushq: obj: Instance of a Queue.  Contains the raw packets that have been received by the SerialThread
@@ -1056,15 +1060,22 @@ def main_run(run=True, **kwargs):
         default the plotter will show the axial component in the main, upper plot and the tangential component in the
         secondary, bottom plot.  The y axis for both plots will be G's and are auto scaled and the x axis represents
         the number of samples.  The data plotted is the interpolated data.  In this section there is also the option
-        to remove the mean, in order to center it at the zero axis.  These plots are updated every second.
+        to remove the mean, in order to center it at the zero axis.  These plots are updated every second.  All the
+        configuration settings for the health line charts (warning limits, x/y scale limits, ticks intervals) can be
+        set via the *display_settings.cfg* configuration file.  The rhino acquisition GUI needs to be restarted for
+        the settings to take effect.
+
+        This routine has a continuous loop in which it reads a trace dictionary from the tracesQ in order to plot and
+        display data. There is a timeout of two seconds while retrieving data from the Q.  If the timeout is reached
+        and no new data arrived, there is a message displayed in the log display console and and empty row of health
+        information is added to the numpy file.
+
+        Any other error will be logged and displayed but the loop will continue to be executed.
 
         
     Args:
-        run:
-        **kwargs:
-
-    Returns:
-
+        run: bool. Flag used to determine if the other FileFlusher, CollectionDaemonThread, and LogFileDaemonThread instances need to be started and the threads set to exclusive cpu's
+        **args: ArgParser: Contains a *simulation* boolean flag and a *file_input* string.  If the flag is set to true, the system will start in simulation mode and the source file will be read from the *file_input* string
     """
 
     if "args" in kwargs.keys():
@@ -1367,6 +1378,15 @@ def main_run(run=True, **kwargs):
 
 
 def write_data_to_h5_files(h5f_path, trace_data, trace):
+    """
+        This method will append trace and health data to the RTA file.  It takes the *trace_data* dictionary and
+        transforms it into a dataframe.  That dataframe is stored in the *df* attribute of the *trace* object and
+        then appended to an h5 file located in *h5f_path*
+    Args:
+        h5f_path: str: absolute path of the file where data is going to be written
+        trace_data: dict: Dictionary with all the trace and health data
+        trace: obj: Instance of RawTraceData class.  It is only used to access the
+    """
     # pdb.set_trace()
     columns = ["timestamp", "rssi", "batt", "temp", "packets"]
 
@@ -1405,6 +1425,37 @@ def add_empty_health_row_to_Q(rssi, temp, batt, packets, delay, trace_time_array
                               max_axial_acceleration, min_axial_acceleration, max_tangential_acceleration,
                               min_tangential_acceleration, max_radial_acceleration, min_radial_acceleration,
                               disk_usage, drift_list, current_drift):
+    """
+        When there is no trace data retrieved for more than two seconds, an empty row of health data will be appended
+        to the *system_health_npy* file so that the health line charts reflect the gaps of data.  There are two
+        cases when no new trace data is received. The first case is the system should be transmitting data
+        (tx_status = 1) but there is a problem with communications or when the rhino transmitter went to sleep
+        (tx_status = 0).  In the case where communication was lost, all values appended will be NaNs.  In the case
+        where the transmitter is sleeping, the last available values will be appended.
+    Args:
+        rssi: list: List with rssi values
+        temp: list: List with board temperature values
+        batt: list: List with battery voltage values
+        packets: list: List with number of packets received for that particular trace
+        delay: list: List of the plotting delay values
+        trace_time_array: list: List of the timestamps of the processed traces
+        now_array: list: List of epoch timestamps of every time the health update/plotting is performed
+        system_healthQ: queue: Queue where all the health information is stored for access in the histograms plots
+        last_tracetime: float: Epoch timestamp of the last trace processed
+        last_counterchanges: int: Last valid value of the total number of traces processed
+        corrupt_packets: int: Number of corrupt packets found since the start of the acquisition session
+        tx_status: int: Expected status of the rhino transmitter. 1 for transmitting and 0 for sleeping
+        max_axial_acceleration: list: List with the maximum axial acceleration values recorded
+        min_axial_acceleration: list: List with the minimum axial acceleration values recorded
+        max_tangential_acceleration: list: List with the maximum tangential acceleration values recorded
+        min_tangential_acceleration: list: List with the minimum tangential acceleration values recorded
+        max_radial_acceleration: list: List with the maximum radial acceleration values recorded
+        min_radial_acceleration: list: List with the minimum radial acceleration values recorded
+        disk_usage: list: list: List with the values of percentage of disk usage in the edge device
+        drift_list: list: list: List with the values of the calculated drift for each trace
+        current_drift: float: Last calculated trace drift value
+
+    """
     now = time.time()
     rssi.pop(0)
     temp.pop(0)

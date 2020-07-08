@@ -26,9 +26,9 @@ class GUI():
     """
     def __init__(self, master, config):
         """
-            Args:
-                master: obj. Instance of tkinter.Tk()
-                config: obj. Instance of Config2
+        Args:
+            master: obj. Instance of tkinter.Tk()
+            config: obj. Instance of Config2
         """
         row = 0
 
@@ -94,9 +94,9 @@ class GUI():
 
     def get_cfg_path(self):
         """
-Launches a file dialog for the user to select the configuration file that will be saved in the merged file
-Returns:
-str: Absolute path to desired folder
+            Launches a file dialog for the user to select the configuration file that will be saved in the merged file
+        Returns:
+        str: Absolute path to desired folder
         """
         extension = [('Config File', '*.cfg')]
         f = self.get_file_path(extension)

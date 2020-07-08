@@ -1,3 +1,9 @@
+"""
+    This is still an experimental thread that is intended to read positional GPS data and save them in an h5 file.
+    It hasn't been thoroughly tested and debugged.
+
+    @author: Natal
+"""
 from gps3 import agps3
 import h5py
 from dcrhino3.helpers.h5_helper import H5Helper
@@ -12,6 +18,11 @@ import numpy as np
 
 
 class RhinoGPSTracker(threading.Thread):
+    """
+        Thread that will read positional data from GPSd, decode it and save it in an h5 file in the *LOGS_PATH*
+        directory.  As of now, the files are changed every hour on the hour.  It saves latitude, longitude,
+        altitude and time.
+    """
     def __init__(self):
         threading.Thread.__init__(self)
         # self.daemon = True

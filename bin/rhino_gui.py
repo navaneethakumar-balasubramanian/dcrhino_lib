@@ -53,8 +53,8 @@ def goodbye():
 
 def stop_rx(active, baud_rate):
     """
-    Will close the usb serial port and send a command to Rhino receiver to stop sending data to ege device and
-    prepares it to listen for a new start_rx command
+        Will close the usb serial port and send a command to Rhino receiver to stop sending data to ege device and
+        prepares it to listen for a new start_rx command
 
     Args:
         active: bool:  Represents the active status of data transmission from Rhino receiver and edge device. If true, transmission was active
@@ -83,9 +83,9 @@ atexit.register(goodbye)
 
 def rename_temp_files(data_path):
     """
-    Realtime files are saved locally in the Edge device with a tmp extension so that they are not transmitted to the
-    cloud until they are finalized.  This methold will rename those files so they are ready to be uploaded.  This
-    method is called when the GUI is closed or when there is a filename change based on the file recording length
+        Realtime files are saved locally in the Edge device with a tmp extension so that they are not transmitted to
+        the cloud until they are finalized.  This methold will rename those files so they are ready to be uploaded.
+        This method is called when the GUI is closed or when there is a filename change based on the file recording length
 
     Args:
         data_path: str: Path to local directory where files exist
@@ -102,9 +102,9 @@ def rename_temp_files(data_path):
 
 class GUI():
     """
-    Graphical User Interface that allows creation of the configuration file, start/stop acquisition, upload files to
-    the cloud, playback of local files, editing of header information, merging h5 files.  It is built upon the
-    tkinter platform
+        Graphical User Interface that allows creation of the configuration file, start/stop acquisition, upload files to
+        the cloud, playback of local files, editing of header information, merging h5 files.  It is built upon the
+        tkinter platform
     """
 
     def __init__(self, master):
@@ -250,18 +250,18 @@ class GUI():
             Data transmission daemon.  Will run the shell script 'send_files.sh' enabling an rsync command to upload
             files to the cloud.
 
-            Note:
-                All the required control parameters passed to shell script are read directly from the
-                configuration file. If there are any changes in the configuration file, the upload process must be
-                restarted.  The configuration file where these parameters can be found is
-                dcrhino3/acquisition/data_transmission_settings.cfg
+        Note:
+            All the required control parameters passed to shell script are read directly from the
+            configuration file. If there are any changes in the configuration file, the upload process must be
+            restarted.  The configuration file where these parameters can be found is
+            dcrhino3/acquisition/data_transmission_settings.cfg
 
-            Args:
-                  local_folder: str: path to the local folder where the files exist
-                  server: str: in the form of user@server.ip.address for rsync connection
-                  remote_folder: str: path to the folder in the server where the pre-established folder structure will be created and files uploaded
-                  sleep_interval: int: waiting period in seconds between looking for new data after upload has been completed
-                  stats_folder: str: path to the local folder where the stats numpy folder is being generated.
+    Args:
+          local_folder: str: path to the local folder where the files exist
+          server: str: in the form of user@server.ip.address for rsync connection
+          remote_folder: str: path to the folder in the server where the pre-established folder structure will be created and files uploaded
+          sleep_interval: int: waiting period in seconds between looking for new data after upload has been completed
+          stats_folder: str: path to the local folder where the stats numpy folder is being generated.
         """
         if self.rsync_daemon_process is None:
             local_folder = self.config.local_folder
