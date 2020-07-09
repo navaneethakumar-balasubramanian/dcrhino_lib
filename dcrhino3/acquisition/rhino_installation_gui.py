@@ -1432,7 +1432,17 @@ class GUI():
             value = round(value, 2)
         return value
 
+
     def update_ds_length(self,sv):
+        """
+        Calculates the total drill string length in meters based on the lenghts of all the individual components
+        entered into the GUI.  It sets the calculated value in the *Drill String Total Lenght* label and also calls
+        the method *update_sensor_distance_to_source*
+        
+        Args:
+            sv: tkinter.StringVar: StringVar associated with the component that is triggering the command
+
+        """
         #print (sv)
         if self.loaded:
             ds_comp_length_vars =[self.drill_string_component1_length,self.drill_string_component2_length,self.drill_string_component3_length,
@@ -1469,11 +1479,21 @@ class GUI():
             return
 
     def update_sensor_position(self):
+        """
+        Updates the *Sensor position to top of Drillstring* label and sets the new calculated distance in meters.
+        The new distance is obtained by calling the *calculate_sensor_position* method
+
+        """
         if self.loaded:
             self.sensor_position.set("{} m".format(self.calculate_sensor_position()))
 
 
     def update_sensor_distance_to_source(self):
+        """
+            Calls the method *calculate_sensor_distance_to_source* and updates the appropriate label with the
+            calculated distance in meters.  It also makes calls to *update_sensor_distance_to_shocksub* and
+            *update_sensor_position* methods.
+        """
         if self.loaded:
 
             # value = self.calculate_sensor_position()
@@ -1492,6 +1512,10 @@ class GUI():
 
 
     def update_sensor_distance_to_shocksub(self):
+        """
+            Calls the method *calculate_sensor_distance_to_shocksub* and updates the appropriate label with the
+            calculated distance in meters.
+        """
         distance = self.calculate_sensor_distance_to_shocksub()
         if distance < 0:
             self.sensor_distance_to_shocksub_lbl.config(fg="red")
@@ -1502,6 +1526,15 @@ class GUI():
 
 
     def update_mine_names(self, sv=None, clear_selection=True):
+        """
+        Updates the list of available mines in the dropdown menu.  Once a new client is selected, the mines
+        associates with that client will be made available for selection
+
+        Args:
+            sv: tkinter.StringVar: StringVar associated with the component that is triggering the command
+            clear_selection: boolean: If true, the selection in the dropdown menu will be cleared. Otherwise the current selection will remain
+
+        """
         # pdb.set_trace()
         selected_client = self.company.get()
         if selected_client.lower() == "company":
@@ -1532,6 +1565,13 @@ class GUI():
         var.set(not var.get())
 
     def calculate_sensor_position(self):
+        """
+        Calculates the sensor position in the drillstring. This is the distance in meters from the middle of the
+        sensor to the top part of the upper-most component in the string.
+        Returns:
+            float: sensor position in meters
+
+        """
         value = self.sensor_distance_to_ss_btm_shoulder.get()
         if value != "" or value != " ":
             sensor_distance_to_ss_btm_shoulder = Measurement((value,
@@ -1541,13 +1581,37 @@ class GUI():
 
     def calculate_sensor_distance_to_source(self):
         """
-        it looks like the sensor_distance_to_source is drill_string_total_length - sensor_position
+            Calculates the distance from the middle of the sensor to the bottom of the drill bit.  This is calculated by
+            subtracting the *sensor_position* from the total drillstring length.
+
+        Returns:
+            float: Distance from sensor to bottom of drillbit, in meters.
         """
         # m = Measurement((self.calculate_sensor_position(), measurement_units_options.index(
         #     self.sensor_position_units.get())+1))
         return round(float(self.drill_string_total_length.get()) - self.calculate_sensor_position(), 2)
 
     def calculate_sensor_distance_to_shocksub(self):
+        """
+        Calculates the distance from the middle of the sensor to the shock absorber element in the shocksub,
+        effectively calculating the drillstring resonance length
+                                             _________
+                                            |        |
+                                        ____|        |____
+                                       |    Shocksub     |  ------> Shock absorber element
+                                       |____         ____|  ------> Shock absorber element
+                                           |        |       ------> Shocksub tail
+                                           |________|       ------> Shocksub tail
+                                                ^------------------ Shocksub bottom shoulder
+
+        This distance is found by adding the shocksub tail length plus the distance from the middle of the sensor to
+        the shokcsub bottom shoulder.  If there is no shocksub, this distance will be equal to the distance from the
+        sensor to the top of the drillstring.
+
+        Returns:
+            float: Distance from sensor to bottom of shock absober element in shocksub, in meters.
+
+        """
         value = self.shocksub_tail_length.get()
         if value not in ["", " ", '']:
             tail = Measurement((float(value), measurement_units_options.index(
@@ -1570,6 +1634,18 @@ class GUI():
         self.timestamp.set(str(self.create_ts()))
 
     def get_status_from_index(self, index):
+        """
+        Finds out the status of a drillstring component based on the selection in the dropdown menu.  The selection
+        options in the dropdown menu are Installed, Variable, and not Installed.  If the first option is selected,
+        then the status of the component is 1, installed.  A variable component has a status of 0 and a component
+        that is not installed has a status of -1.  This is the status that will be saved in the configuration file.
+        Args:
+            index: int: Index of the option selected in the dropdown menu
+
+        Returns:
+            int: Status of the drillstring component
+        """
+
         if index == 3:
             return -1
         elif index == 2:
@@ -1578,6 +1654,10 @@ class GUI():
             return 1
 
     def save_as(self):
+        """
+        Will open a save as dialog for the user to save the current configuration object as a JSON file with only the
+        parameters that are necessary for the pipeline processing.
+        """
         try:
             extension = [('JSON','*.json')]
             f = tkFileDialog.asksaveasfile(initialdir=PATH, mode='w', defaultextension=".json", filetypes=extension)
@@ -1595,6 +1675,9 @@ class GUI():
             tkMessageBox.showerror("Error", "File not saved")
 
     def load_from(self):
+        """
+        Loads a previously saved JSON file into the configuration object
+        """
         extension = [('JSON', '*.json')]
         f = tkFileDialog.askopenfilename(initialdir = PATH, defaultextension=".cfg",filetypes = extension)
         if f is None: # asksaveasfile return `None` if dialog closed with "cancel".
@@ -1609,6 +1692,16 @@ class GUI():
         # cfg_fname =tmp_cfg
 
     def get_accelerometer_channel(self,accel_type):
+        """
+        Will convert the acceleometer type selected in the GUI to the legacy data channel for SSX.  Channel 8 was
+        reserved for Piezoelectric sensors and 32 for MEMS.  We added 9 for Piezoresistive although that is not a
+        channel used in SSX
+        Args:
+            accel_type: str: Sensor type selected by the user
+
+        Returns:
+            int: Legacy data channel from SSX
+        """
         if accel_type == "PIEZO" or accel_type == "PE":
             return 8
         elif accel_type == "MEMS":
@@ -1634,6 +1727,12 @@ class GUI():
         return datetime(year,month,day).strftime("%Y-%m-%d")
 
     def set_default_sensitivities(self,sv):
+        """
+        Sets the appropriate sensitivity based on the sensor G range selected.  These values are rounded averages based on manufacturer specifications
+
+        Args:
+            sv: tkinter.StringVar: StringVar associated with the component that is triggering the command
+        """
         if int(self.sensor_saturation_g.get()) == 25:
             sensitivity = 50
         elif int(self.sensor_saturation_g.get()) == 50:
@@ -1656,6 +1755,9 @@ class GUI():
         self.z_sensitivity.insert(0,str(sensitivity))
 
     def set_default_orientation(self):
+        """
+        Sets the default axial and tangential orientation depending on what sensor was selected
+        """
         if self.sensor_type.get() == "RHINO":
             self.sensor_axial_axis.set("Y")
             self.sensor_tangential_axis.set("X")
@@ -1664,12 +1766,20 @@ class GUI():
             self.sensor_tangential_axis.set("Y")
 
     def run_rx_configuration(self):
+        """
+        Will run an external program that will launch the configuration GUI for the receiver firmware parameters. This
+        GUI was developed by phyzika.
+        """
         if self.rx_configuration_process == None:
             #self.rx_configuration_process = Popen(['python', os.path.abspath(os.path.join(PATH,"phyzika","rh_rx_config_ui.py {}".format(rhino_port)))])
             cmd = "source acivate py36; python {} {}".format(os.path.join(PATH,"phyzika","rh_rx_config_ui.py"),rhino_port)
             self.rx_configuration_process = Popen(cmd,shell=True)
 
     def run_tx_configuration(self):
+        """
+        Will run an external program that will launch the configuration GUI for the transmitter firmware parameters.
+        This GUI was developed by phyzika.
+        """
         if self.tx_configuration_process == None:
             #self.tx_configuration_process = Popen(['python', os.path.abspath(os.path.join(PATH,"phyzika","rh_config.py {}".format(rhino_port)))])
             # cmd = "source acivate py36; python {} {}".format(os.path.join(PATH,"phyzika","rh_config.py"),rhino_port)
@@ -1677,12 +1787,23 @@ class GUI():
             self.tx_configuration_process = Popen(cmd,shell=True)
 
     def toggle_rhino_version(self):
+        """
+        Will enable/disable the version dropdown menu depending if a Rhino or an SSX sensor was selected. Only rhino
+        sensors have different versions.
+        """
         if self.sensor_type.get() == "RHINO":
             self.rhino_version_popupMenu.config(state="normal")
         else:
             self.rhino_version_popupMenu.config(state="disabled")
 
     def rhino_version_changed(self,sv):
+        """
+        Will change the serial communication parameters as well as acclerometer excitation voltage depending on the
+        selected rhino version of the hardware
+        Args:
+            sv: tkinter.StringVar: StringVar associated with the component that is triggering the command
+
+        """
         if float(self.rhino_version.get()) == 1.0:
             packet_length = '22'
             sampling_rate = '2800'
@@ -1714,6 +1835,14 @@ class GUI():
 
 
 def main(config):
+    """
+    Main routine. It creates and launches the GUI
+    Args:
+        config: obj: Instance of Config2
+
+    Returns:
+
+    """
     master = Tk()
     #default_font = tkFont.nametofont("TkDefaultFont")
     #default_font.configure(size=36)
@@ -1724,6 +1853,9 @@ def main(config):
 
 
 if __name__ == "__main__":
+    """
+    Reads the configuration files and generates the config instance.  Then calls the mai routine
+    """
     from dcrhino3.models.config2 import Config
     c = Config(acquisition_config=True)
     main(c)
