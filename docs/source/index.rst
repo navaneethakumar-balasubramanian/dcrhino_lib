@@ -53,6 +53,10 @@ Indices and tables
    :members:
    :exclude-members: main
 
+.. automodule:: dcrhino3.acquisition.playback_raw_data
+   :members:
+   :exclude-members: onclick
+
 .. automodule:: dcrhino3.feature_extraction.external_feature_derivations
    :members:
 .. automodule:: dcrhino3.feature_extraction.feature_extractor_j2

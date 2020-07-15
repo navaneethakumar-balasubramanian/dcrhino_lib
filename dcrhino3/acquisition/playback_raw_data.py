@@ -1,3 +1,12 @@
+"""
+Playback Raw Data
+
+This module allows the user to playback a raw data file, whether it's an RTR or an SSX file.  The user has several
+control parameters that can be set in order to plot, save files, change interpolation method, use a repeat file,
+or perform a time adjustment.
+
+@author: Natal
+"""
 import argparse
 import calendar
 import h5py
@@ -27,6 +36,75 @@ file_logger = init_logging_to_file(__name__)
 
 
 def main(args):
+    """
+    Main function.  It receives an instance of an ArgParser, *args* with different control parameters to control the
+    behavior of the playback routine.  The data will be read from the raw file, calibrated, interpolated, and plotted
+    according to the control parameters specified.  Png's of the resulting plots will be saved in the same path as
+    the input raw data file.
+
+    Args:
+        args: obj: Instance of ArgParser that has the following options:
+
+            **st**: string: Start time of the data to playback. Follows the format 'YYYY-MM-DD HH:MM:SS' and
+            it is in UTC Time. Default value is None. In this instance, the data will be played back from the
+            initial time recorded in the file. This is an Optional parameter.
+
+            **et**: string: End time of the data to playback. Follows the format 'YYYY-MM-DD HH:MM:SS' and it
+            is in UTC Time. Default value is None. In this instance, the data will be played back to the end
+            of the file. This is an Optional Parameter
+
+            **sr**: int: Resampling Rate for Output Data.  Default is None and in this instance the native
+            sampling rate stored in the file's configuration file will be used. This is an Optional Parameter
+
+            **source**: str: Path to source file. Default is None.  This is a Required parameter
+
+            **plot**: boolean: Show plot for axial axis. Default value is True. This is an Optional Parameter
+
+            **kind**: str: Interpolation Method. Choices are "linear" or "quadratic". Default is linear. This is an Optional Parameter
+
+            **rm**: boolean: Remove mean flag.  If True, the mean value of the whole dataset will be
+            removed.  This is useful when there is a DC offset value.  Default is False. This is an Optional Parameter
+
+            **raw**: boolean: Plot raw data instead of interpolated data. Default is False. This is an Optional Parameter
+
+            **save_raw**: boolean: Save raw data in a csv format. The output file will be in the same
+            directory as the raw data file. Default is False. This is an Optional Parameter
+
+            **save_csv**: boolean: Save interpolated data in a csv format. The output file will be in the same
+            directory as the raw data file. Default is True. This is an Optional Parameter
+
+            **save_numpy**: boolean: Save interpolated data as numpy arrays. This does not have a time component,
+            it is just the G output. The output file will be in folders named after each component and they will be in
+            the same directory as the raw data file. Default is False. This is an Optional Parameter
+
+            **spectrum**: boolean: Generate a frequency content spectrum plot. Default is True. This is an Optional
+            Parameter.
+
+            **to**: float: Time offset (in seconds) applied to the data. For example, a time ofset of -3600 means
+            that the data will be shifted 3600 seconds (1 hr) to an earlier time from when it was recorded.
+            Similarly a positive number will mean that the data will be moved to a later time than when it was
+            recorded.  This is useful when there is a time difference in both sensors and they need to be placed in
+            the same timeframe for analysis.  If the time offset is different than zero, a new h5 file with the time
+            correction will be saved in the same directory, while leaving the original file intact. Default value is
+            zero.  This is an optional parameter.
+
+            **repeat**: str: Absolute Path to a repeat file.  This repeat file will be calibrated, interpolated
+            and plotted alongside the calibrated, interpolated data of the original input file.  The same
+            interpolation kind will be used for both datasets.  This is useful to compare amplitude differences
+            between different sensors placed in the same drill or to estimate time differences between two sensors.
+            If the value is set default (None) no repeat data will be plotted.  This is an optional parameter.
+
+            **filter**: tuple: Lower and upper limits for a Bandpass filter to be applied to the raw data. For
+            example *-filter 5,90* will apply a bandpass from 5 to 90 Hz.  Default is None.  In this case the data
+            will not be filtered.  This is an optional parameter.
+
+            **debug**: boolean: Run in debug mode.  This is intended for advanced users that can set a custom
+            combination of all the above parameters by modifying the code directly.  In this case only one parameter
+            neets to be sent in the command line.  Default is False.  This is an Optional Parameter.
+
+    Returns:
+        None
+    """
     debug = args.debug == "True"
     repeat = args.repeat_file
 
