@@ -1,3 +1,11 @@
+"""
+System Health Display GUI
+
+This module displays the logs and instant system health indicators
+
+@author: Natal
+"""
+
 from tkinter import *
 from datetime import datetime
 import os
@@ -23,16 +31,38 @@ ignore_gpsd = True
 
 
 class SystemHealthLogger():
+    """
+    Class that writes incoming messages to an hourly health log file
+    """
     def __init__(self):
         self.filename = ""
         self.output_file = None
 
     def change_files(self, filename):
+        """
+        Closes the current health log file and creates the new one
+        Args:
+            filename: str: Absolute path to the new health log file that will be appended
+        """
         if self.output_file is not None:
             self.output_file.close()
         self.output_file = open(filename, 'a')
 
     def log(self, message):
+        """
+        Calculates the name of the health log file that should be active (based on the current date and hour).  If
+        the file needs to be changed, then a new file is created and set as the active file.  The log message is
+        saved to the active file.
+
+        Args:
+            message: list: List containing the following elements, and in that particular order:
+                           tracetime("%Y-%m-%d %H:%M:%S"), samples of the trace, current battery voltage,
+                           current board temperature, current rssi, current plotting delay, current counter_changes,
+                           total accumulated corrupt_packets, transmitter status, current drift, calculated delay,
+                           disk usage percentage, ram usage percentage, edge device temperature, edge device battery
+                           status, edge device battery percentage, edge device estimated battery life, edge device
+                           cpu usage
+        """
         filename = os.path.join(LOGS_PATH, datetime.now().strftime('%Y_%m_%d_%H')+'_health.log')
         if self.filename != filename:
             self.change_files(filename)
@@ -42,6 +72,15 @@ class SystemHealthLogger():
         self.output_file.flush()
 
 class GUI():
+    """
+    Graphical User Interface that displays the logs of the different threads working during the rhino data
+    acquisition as well as the instant health indicators of the rhino transmitter, rhino data and edge device.
+
+    Args:
+            displayQ: obj: Instance of a Queue that contains all the log messages that will de displayed in the log
+                           console
+            system_healthQ: obj: Instance of a Queue that contains all the health information that will be displayed
+    """
     def __init__(self, displayQ, system_healthQ):
         self.master = Tk()
         self.master.title("DataCloud Rhino System Health")
@@ -310,6 +349,11 @@ class GUI():
             self.master.grid_rowconfigure(i, weight=1)
 
     def print_line(self):
+        """
+        Reads a message from the displayQ and prints it in the display console.  If the message contains the keyword
+        *"Changed"* it will extract the drift from that message and update the health indicator.  The display has a
+        maximum of 1000 lines
+        """
         while not self.displayQ.empty():
             line = self.displayQ.get_nowait()
             line_components = line.split(",")
@@ -327,6 +371,9 @@ class GUI():
         self.master.update()
 
     def update_system_health(self):
+        """
+        Reads an entry from the healthQ, extracts the information and updates all the health indicators in the display.
+        """
         #Structure of system_healthQ = [0=rssi,1=packets,2=delay,3=temp,4=batt,5=counterchanges,6=tracetime])
         try:
             while not self.system_healthQ.empty():
@@ -460,7 +507,38 @@ class GUI():
         pass
 
     def colors(self, component, value):
+        """
+        Calculates the color coding of a component based on the value and the limits set in the configuration file.
+        There are four methods of calculating the color:
 
+        *Normal* means that the color will be green (good) when the value is avobe the upper limit, yellow (warning)
+        when the value is between the upper and lower limit, and red (danger)  when the value is below the lower
+        limit.  An example of this is the battery level.
+
+        *Contained* is when the  color is green (good) when the value is within the boundaries of the upper an lower
+        limits and red (danger) when the value is outside these limits.  An example of this is acceleration.
+
+        *Inverted* is when the color is green (good) when the value is lower than the lower limit, yellow (warning)
+        when the value is between the lower and upper limit and red (danger) when the value is greater than the
+        higher limit. Plotting delay is an example of this instance.
+
+        *Both* is a method used when we have two sets of upper and lower limits, positive and negative.  The color
+        will be green (ok) when the value is contained between the negative upper limit (closer to zero) and the
+        positive lower limit (closer to zero). It will be yellow (warning) when the value is contained between
+        positive or negative upper and lower limits.  And finally, the color will be red (danger) if the value is
+        higher than the positive upper limit (closer to inf) or lower than the lower negative limit (closer to -inf).
+        An example of this situation is board temperature.
+
+        Args:
+            component: str: Health component.  For example, battery, rssi, acceleration, etc
+            value: float: Numerical value of the health component
+
+        Returns:
+            tuple: Tuple containing:
+                bgcolor: str: Background color for the health indicator
+                fgcolor: str: Foreground color for the health indicator
+
+        """
         if self.tx_status.get() == "TRANSMITTING" and not math.isnan(value):
             method = "normal"
             upper_limit_2 = None
@@ -535,6 +613,16 @@ class GUI():
         return bgcolor, fgcolor
 
     def calculate_battery_percentage(self, current_voltage):
+        """
+        Calculates the battery percentage left in the Rhino Transmitter based on the upper and lower limits specified
+        in the configuration file
+        Args:
+            current_voltage: float: Last reported battery voltage level in the rhino transmitter
+
+        Returns:
+            float: Calculated battery percentage left in the rhino transmitter
+
+        """
         battery_max_voltage = config.battery_max_voltage
         battery_lower_limit = config.battery_min_voltage
         value = calculate_battery_percentage(battery_max_voltage, battery_lower_limit, current_voltage)

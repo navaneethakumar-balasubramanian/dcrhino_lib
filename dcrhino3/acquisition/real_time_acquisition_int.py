@@ -1,3 +1,7 @@
+"""
+This module was intended to change the all the plotting from matplotlib and TKinter GUI to web browser and INT
+"""
+
 from __future__ import absolute_import, division, print_function
 import serial
 import threading

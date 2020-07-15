@@ -1,3 +1,10 @@
+"""
+Sensor Stats Plotter
+
+This module is responsible for generating and plotting histograms of system health data.  The value used to generate
+the plots are read from the file *system_health.npy*
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
@@ -22,6 +29,17 @@ def get_min_max_values(config_value):
     return min, max
 
 class StatsPlotter():
+    """
+    Class that will create and uptade histogram plots for system health. It will read the number of traces to use for
+    the histograms.  By default, it will take the last 3600 traces.
+
+    Note:
+        There may be sleeping times or missed traces in between, so the time span presented in the histogram title
+        might be more than one hour in order to present all 3600 traces.
+
+    Args:
+        global_config: obj: Instance of Config2 with the configuration settings
+    """
 
     def __init__(self, global_config):
         self.fig = plt.figure("DataCloud Rhino Sensor Stats", figsize=(6, 4))
@@ -32,6 +50,10 @@ class StatsPlotter():
         self.global_config = global_config
 
     def create_plots(self):
+        """
+        Generates the axes for the histograms.  As of now, it creates a 3 x 2 plot where the Packet Loss Percentage,
+        RSSI signal strenght, Board Temperature, and Axial, Radial and Tangential accelerations.
+        """
         rows = 3
         columns = 2
 
@@ -92,10 +114,30 @@ class StatsPlotter():
         row += 1
 
     def set_title(self, title):
+        """
+        Sets the title on the plots
+
+        Args:
+            title: str: Title to be used
+        """
         plt.suptitle(title, fontsize=10)
 
     def plot(self, packets, temp, rssi, max_axial_accel, min_axial_accel, max_tangential_accel, min_tangential_accel,
              max_radial_accel, min_radial_accel):
+        """
+        Creates the histograms and plots them on the appropriate axis
+
+        Args:
+            packets: list: List containing the number of packets received for the last *length* traces
+            temp: list: List containing the board temperature recorded for the last *length* traces
+            rssi: list: List containing the signal strength recorded for the last *length* traces
+            max_axial_accel: list: List containing the maximun axial acceleration recorded for the last *length* traces
+            min_axial_accel: list: List containing the minimum axial acceleration recorded for the last *length* traces
+            max_tangential_accel: list: List containing maximun tangential acceleration recorded for the last *length* traces
+            min_tangential_accel: list: List containing the minimum tangential acceleration recorded for the last *length* traces
+            max_radial_accel: list: List containing the maximun radial acceleration recorded for the last *length* traces
+            min_radial_accel: list: List containing the minimum radial acceleration recorded for the last *length* traces
+        """
         packets_array = np.absolute(np.asarray(packets) / ideal_packets - 1) * 100
         packets_array = packets_array[~np.isnan(packets_array)]
         packets_array[packets_array > self.packet_bins[-1]] = self.packet_bins[-1]
@@ -136,9 +178,17 @@ class StatsPlotter():
                                     align="left")
 
     def save_figure(self, path):
+        """
+        Save the generated plot as a png
+        Args:
+            path: str: absolute path where the plot will be saved
+        """
         self.fig.savefig(path)
 
     def draw(self):
+        """
+        Redraws the canvas, effectively updating the plots
+        """
         self.fig.canvas.draw()
         plt.pause(0.15)
         time.sleep(.15)

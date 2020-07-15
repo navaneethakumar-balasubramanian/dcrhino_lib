@@ -1,3 +1,14 @@
+"""
+System Health Plotter
+
+This module will read the system_health.npy file from the default RAM_PATH location and will generate the system
+health line charts.  The configuration parameters for the plots (limits, x-axis scale, y-axis scale) can be found and
+updated in the display_settings.cfg file
+
+@author: Natal
+"""
+#TODO: Convert this to a class that reads values from a queue instead of the numpy file
+
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
@@ -42,7 +53,8 @@ fig1.canvas.draw()
 
 
 
-while True:
+while False: #True I changed this to false in this branch so that I can build the documentation, otherwise it was
+    # getting stuck here
     #rows,columns
     try:
         # pdb.set_trace()

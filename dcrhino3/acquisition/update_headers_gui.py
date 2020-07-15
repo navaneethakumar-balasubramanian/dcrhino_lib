@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Aug 14 00:58:14 2018
-
+This module launches a GUI that will allow the user to select a folder with a batch of h5 files or an individual h5
+file and a configuration file.  The calues from the configuration file will be used to update the headers in each of
+the h5 files in case it is a batch job, or the individual h5 file selected.
 @author: natal
 """
 
@@ -23,6 +25,20 @@ config = Config(acquisition_config=True)
 
 
 class GUI():
+    """
+    Graphical User Interface that allows the user to select a folder with a batch of h5 files or an individual h5
+    file and a configuration file.  The calues from the configuration file will be used to update the headers in each
+    of the h5 files in case it is a batch job, or the individual h5 file selected.
+
+    Args:
+        master: obj: Instance of tkinter.Tk()
+        config: obj: Instance of Config2
+
+    Note:
+        The local configuration file is sent to the GUI but it is only used to read the local data folder to be used
+        as an initial path to the file/directory dialogs.  This is NOT necessarily the same configuration file that
+        will be used to replace the headers.  It can be, but in most cases a different config file will be used.
+    """
     def __init__(self, master, config):
         self.config = config
         row = 0
@@ -57,6 +73,12 @@ class GUI():
         row += 1
 
     def get_h5f_path(self):
+        """
+        Gets the path to h5 file or directory and places it in the text area in the GUI
+
+        Returns:
+            None
+        """
         extension = [('h5 file', '*.h5')]
         f = self.get_path(extension)
         if len(f) > 0:
@@ -66,6 +88,12 @@ class GUI():
         return
 
     def get_cfg_path(self):
+        """
+        Gets the path to the configuration file and places it in the text area in the GUI
+
+        Returns:
+            None
+        """
         initial_path = self.config.local_folder
         extension = [('Config File', '*.json'), ('Old Config File', '*.cfg')]
         f = tkFileDialog.askopenfilename(initialdir=initial_path, title="Select file", filetypes=extension)
@@ -76,6 +104,19 @@ class GUI():
         return
 
     def get_path(self, extension):
+        """
+        Launches an open file dialog for the user to select the path of the h5 file, h5 files parent direcotory of
+        the configuration file.  The extension parameter is used to filter the files that show up in the dialog.  If
+        the attribute *batch* is set to 1 (checked box in the GUI), then the open file dialog becomes an open
+        directory dialog
+        Args:
+            extension: list: list of tuples with the extension of the files that the user wants to see. The first
+                             item of the tuple is a string with the description of the file and the second term of
+                             the tuple is also a string with the extension.  For example *("h5 file", "*.h5")*
+
+        Returns:
+            str: absolute path to the file or directory selected
+        """
         initial_path = self.config.local_folder
         if self.batch.get() == 1:
             f = tkFileDialog.askdirectory(initialdir=initial_path, title="Select Directory")
@@ -85,8 +126,12 @@ class GUI():
 
     def update_h5f(self):
         """
-        This new version ignores the metadata saved in the h5 attrs and only operates on the global_config_jsons
-        :return:
+        Takes a configuration file that is being read from the path that the user selected and copies all the values
+        into the *global_config_jsons* attributes of the h5 file(s).  This method is only meant to work for Raw files
+        (RTR or SSX) and not RTA files.
+
+        This new version ignores the metadata (legacy) saved in the h5 attrs and only operates on the
+        global_config_jsons
         """
         logger.warn("Ignoring any present metadata in the file(s)")
         path = self.h5f_path.get()

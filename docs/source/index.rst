@@ -35,6 +35,23 @@ Indices and tables
 
 .. automodule:: dcrhino3.acquisition.rhino_installation_gui
    :members:
+   :exclude-members: format_numeric_value, select_local_folder, toggle, create_ts, update_ts_label, get_date, sensor_type_changed
+
+.. automodule:: dcrhino3.acquisition.sensor_stats_plotter
+   :members:
+   :exclude-members:get_min_max_values
+
+.. automodule:: dcrhino3.acquisition.system_health_display_gui
+   :members:
+   :exclude-members: disable_element, do_nothing, main
+
+.. automodule:: dcrhino3.acquisition.system_health_plotter
+   :members:
+   :exclude-members: get_min_max_values
+
+.. automodule:: dcrhino3.acquisition.update_headers_gui
+   :members:
+   :exclude-members: main
 
 .. automodule:: dcrhino3.feature_extraction.external_feature_derivations
    :members:

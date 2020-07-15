@@ -1568,6 +1568,7 @@ class GUI():
         """
         Calculates the sensor position in the drillstring. This is the distance in meters from the middle of the
         sensor to the top part of the upper-most component in the string.
+
         Returns:
             float: sensor position in meters
 
@@ -1639,6 +1640,7 @@ class GUI():
         options in the dropdown menu are Installed, Variable, and not Installed.  If the first option is selected,
         then the status of the component is 1, installed.  A variable component has a status of 0 and a component
         that is not installed has a status of -1.  This is the status that will be saved in the configuration file.
+
         Args:
             index: int: Index of the option selected in the dropdown menu
 
@@ -1696,6 +1698,7 @@ class GUI():
         Will convert the acceleometer type selected in the GUI to the legacy data channel for SSX.  Channel 8 was
         reserved for Piezoelectric sensors and 32 for MEMS.  We added 9 for Piezoresistive although that is not a
         channel used in SSX
+
         Args:
             accel_type: str: Sensor type selected by the user
 
@@ -1800,6 +1803,7 @@ class GUI():
         """
         Will change the serial communication parameters as well as acclerometer excitation voltage depending on the
         selected rhino version of the hardware
+
         Args:
             sv: tkinter.StringVar: StringVar associated with the component that is triggering the command
 
@@ -1837,10 +1841,9 @@ class GUI():
 def main(config):
     """
     Main routine. It creates and launches the GUI
+
     Args:
         config: obj: Instance of Config2
-
-    Returns:
 
     """
     master = Tk()
